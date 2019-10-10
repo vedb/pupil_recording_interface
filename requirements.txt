@@ -1,0 +1,6 @@
+numpy
+pandas
+xarray
+opencv
+msgpack
+netcdf4
