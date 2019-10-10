@@ -6,7 +6,7 @@ from unittest import TestCase
 import numpy as np
 import xarray as xr
 
-from pupil_recording_interface.core import Exporter
+from pupil_recording_interface.core import export, Exporter
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -146,4 +146,15 @@ class TestExporter(TestCase):
             'gaze_confidence', 'gaze_point', 'gaze_norm_pos']
 
         ds.close()
+        shutil.rmtree(os.path.join(self.folder, 'exports'))
+
+    def test_export(self):
+        """"""
+        export(self.folder)
+
+        assert os.path.exists(
+            os.path.join(self.folder, 'exports', 'odometry.nc'))
+        assert os.path.exists(
+            os.path.join(self.folder, 'exports', 'gaze.nc'))
+
         shutil.rmtree(os.path.join(self.folder, 'exports'))

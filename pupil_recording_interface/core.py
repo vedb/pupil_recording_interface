@@ -6,7 +6,13 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from pupil_recording_interface.externals.file_methods import load_pldata_file, load_object
+from pupil_recording_interface.externals.file_methods import \
+    load_pldata_file, load_object
+
+
+def export(folder):
+    """"""
+    Exporter(folder).run()
 
 
 class Exporter(object):
@@ -154,3 +160,8 @@ class Exporter(object):
 
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)
+
+    def run(self, filename=None):
+        """"""
+        self.write_odometry_dataset(filename=filename)
+        self.write_gaze_dataset(filename=filename)
