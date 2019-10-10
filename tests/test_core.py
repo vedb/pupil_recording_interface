@@ -6,7 +6,7 @@ from unittest import TestCase
 import numpy as np
 import xarray as xr
 
-from pupil_exporter.core import Exporter
+from pupil_recording_interface.core import Exporter
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
 

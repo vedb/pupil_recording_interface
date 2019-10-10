@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from pupil_exporter.externals.file_methods import load_pldata_file, load_object
+from pupil_recording_interface.externals.file_methods import load_pldata_file, load_object
 
 
 class Exporter(object):
@@ -22,6 +22,7 @@ class Exporter(object):
     @staticmethod
     def _load_info(folder, filename='info.player.json'):
         """"""
+        # TODO maybe support older versions
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
                 f'File {filename} not found in folder {folder}')

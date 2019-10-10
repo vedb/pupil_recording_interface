@@ -1,2 +1,2 @@
-# pupil_exporter
-Python backend and cli for exporting pupil recordings
+# pupil_recording_interface
+Python backend and cli for pupil recordings
