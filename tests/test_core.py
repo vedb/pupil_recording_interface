@@ -16,7 +16,8 @@ class TestExporter(TestCase):
     def setUp(self):
         """"""
         self.folder = os.path.join(test_data_dir, 'test_recording')
-        self.n_samples = 4220
+        self.n_odometry = 4220
+        self.n_gaze = 5160
 
     def test_constructor(self):
         """"""
@@ -44,20 +45,37 @@ class TestExporter(TestCase):
         with self.assertRaises(FileNotFoundError):
             Exporter._load_info(self.folder, 'not_a_file')
 
+    def test_pldata_as_dataframe(self):
+        """"""
+        df = Exporter._pldata_as_dataframe(self.folder, 'odometry')
+
+        assert set(df.columns) == {'topic', 'timestamp', 'confidence',
+                                   'linear_velocity', 'angular_velocity',
+                                   'position', 'orientation'}
+
+        with self.assertRaises(FileNotFoundError):
+            Exporter._pldata_as_dataframe(self.folder, 'not_a_topic')
+
     def test_load_odometry(self):
         """"""
         t, c, p, q, v, w = Exporter._load_odometry(self.folder)
 
-        assert t.shape == (self.n_samples,)
-        assert c.shape == (self.n_samples,)
+        assert t.shape == (self.n_odometry,)
+        assert c.shape == (self.n_odometry,)
         assert c.dtype == int
-        assert p.shape == (self.n_samples, 3)
-        assert q.shape == (self.n_samples, 4)
-        assert v.shape == (self.n_samples, 3)
-        assert w.shape == (self.n_samples, 3)
+        assert p.shape == (self.n_odometry, 3)
+        assert q.shape == (self.n_odometry, 4)
+        assert v.shape == (self.n_odometry, 3)
+        assert w.shape == (self.n_odometry, 3)
 
-        with self.assertRaises(FileNotFoundError):
-            Exporter._load_odometry(self.folder, 'not_a_topic')
+    def test_load_gaze(self):
+        """"""
+        t, c, n, p = Exporter._load_gaze(self.folder)
+
+        assert t.shape == (self.n_gaze,)
+        assert c.shape == (self.n_gaze,)
+        assert n.shape == (self.n_gaze, 2)
+        assert p.shape == (self.n_gaze, 3)
 
     def test_get_encoding(self):
         """"""
@@ -83,12 +101,12 @@ class TestExporter(TestCase):
         ds = Exporter(self.folder).load_odometry_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
-            'time': self.n_samples,
+            'time': self.n_odometry,
             'cartesian_axis': 3,
             'quaternion_axis': 4})
 
         assert list(ds.data_vars) == [
-            'confidence', 'linear_velocity', 'angular_velocity',
+            'tracker_confidence', 'linear_velocity', 'angular_velocity',
             'linear_position', 'angular_position']
 
     def test_write_odometry_dataset(self):
@@ -99,8 +117,33 @@ class TestExporter(TestCase):
             os.path.join(self.folder, 'exports', 'odometry.nc'))
 
         assert list(ds.data_vars) == [
-            'confidence', 'linear_velocity', 'angular_velocity',
+            'tracker_confidence', 'linear_velocity', 'angular_velocity',
             'linear_position', 'angular_position']
+
+        ds.close()
+        shutil.rmtree(os.path.join(self.folder, 'exports'))
+
+    def test_load_gaze_dataset(self):
+        """"""
+        ds = Exporter(self.folder).load_gaze_dataset()
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_gaze,
+            'cartesian_axis': 3,
+            'pixel_axis': 2})
+
+        assert list(ds.data_vars) == [
+            'gaze_confidence', 'gaze_point', 'gaze_norm_pos']
+
+    def test_write_gaze_dataset(self):
+        """"""
+        Exporter(self.folder).write_gaze_dataset()
+
+        ds = xr.open_dataset(
+            os.path.join(self.folder, 'exports', 'gaze.nc'))
+
+        assert list(ds.data_vars) == [
+            'gaze_confidence', 'gaze_point', 'gaze_norm_pos']
 
         ds.close()
         shutil.rmtree(os.path.join(self.folder, 'exports'))
