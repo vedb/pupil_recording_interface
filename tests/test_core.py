@@ -6,7 +6,7 @@ from unittest import TestCase
 import numpy as np
 import xarray as xr
 
-from pupil_recording_interface.core import export, Exporter
+from pupil_recording_interface.core import export, load, Exporter
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -18,6 +18,9 @@ class TestExporter(TestCase):
         self.folder = os.path.join(test_data_dir, 'test_recording')
         self.n_odometry = 4220
         self.n_gaze = 5160
+        self.n_gaze_offline = 5134
+        self.gaze_mappers = {'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
+
 
     def test_constructor(self):
         """"""
@@ -77,6 +80,31 @@ class TestExporter(TestCase):
         assert n.shape == (self.n_gaze, 2)
         assert p.shape == (self.n_gaze, 3)
 
+        t, c, n, p = Exporter._load_gaze(self.folder, is_2d=True)
+        assert p is None
+
+    def test_load_merged_gaze(self):
+        """"""
+        t, c, n, p = Exporter._load_merged_gaze(self.folder, self.gaze_mappers)
+
+        assert t.shape == (self.n_gaze_offline,)
+        assert c[0].shape == (self.n_gaze_offline,)
+        assert c[1].shape == (self.n_gaze_offline,)
+        assert n.shape == (self.n_gaze_offline, 2)
+        assert p.shape == (self.n_gaze_offline, 3)
+
+    def test_get_offline_gaze_mapper(self):
+        """"""
+        mappers = Exporter._get_offline_gaze_mappers(self.folder)
+
+        assert set(mappers.keys()) == {'3d Gaze Mapper', '2d Gaze Mapper '}
+        for v in mappers.values():
+            assert os.path.exists(os.path.join(
+                self.folder, 'offline_data', 'gaze-mappings', v + '.pldata'))
+
+        with self.assertRaises(FileNotFoundError):
+            Exporter._get_offline_gaze_mappers('not_a_folder')
+
     def test_get_encoding(self):
         """"""
         encoding = Exporter._get_encoding(['test_var'])
@@ -94,7 +122,7 @@ class TestExporter(TestCase):
         Exporter._create_export_folder(os.path.join(export_folder, 'test.nc'))
 
         assert os.path.exists(export_folder)
-        os.removedirs(export_folder)
+        shutil.rmtree(export_folder)
 
     def test_load_odometry_dataset(self):
         """"""
@@ -105,9 +133,9 @@ class TestExporter(TestCase):
             'cartesian_axis': 3,
             'quaternion_axis': 4})
 
-        assert list(ds.data_vars) == [
+        assert set(ds.data_vars) == {
             'tracker_confidence', 'linear_velocity', 'angular_velocity',
-            'linear_position', 'angular_position']
+            'linear_position', 'angular_position'}
 
     def test_write_odometry_dataset(self):
         """"""
@@ -116,9 +144,9 @@ class TestExporter(TestCase):
         ds = xr.open_dataset(
             os.path.join(self.folder, 'exports', 'odometry.nc'))
 
-        assert list(ds.data_vars) == [
+        assert set(ds.data_vars) == {
             'tracker_confidence', 'linear_velocity', 'angular_velocity',
-            'linear_position', 'angular_position']
+            'linear_position', 'angular_position'}
 
         ds.close()
         shutil.rmtree(os.path.join(self.folder, 'exports'))
@@ -132,8 +160,25 @@ class TestExporter(TestCase):
             'cartesian_axis': 3,
             'pixel_axis': 2})
 
-        assert list(ds.data_vars) == [
-            'gaze_confidence', 'gaze_point', 'gaze_norm_pos']
+        assert set(ds.data_vars) == {
+            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
+
+        # merged 2d/3d gaze
+        ds = Exporter(
+            self.folder, gaze_mapper=self.gaze_mappers).load_gaze_dataset()
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_gaze_offline,
+            'cartesian_axis': 3,
+            'pixel_axis': 2})
+
+        assert set(ds.data_vars) == {
+            'gaze_confidence_2d', 'gaze_confidence_3d', 'gaze_point',
+            'gaze_norm_pos'}
+
+        with self.assertRaises(ValueError):
+            Exporter(
+                self.folder, gaze_mapper='not_gaze_mapper').load_gaze_dataset()
 
     def test_write_gaze_dataset(self):
         """"""
@@ -142,11 +187,21 @@ class TestExporter(TestCase):
         ds = xr.open_dataset(
             os.path.join(self.folder, 'exports', 'gaze.nc'))
 
-        assert list(ds.data_vars) == [
-            'gaze_confidence', 'gaze_point', 'gaze_norm_pos']
+        assert set(ds.data_vars) == {
+            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
 
         ds.close()
         shutil.rmtree(os.path.join(self.folder, 'exports'))
+
+    def test_load(self):
+        """"""
+        gaze, odometry = load(self.folder)
+
+        assert set(gaze.data_vars) == {
+            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
+        assert set(odometry.data_vars) == {
+            'tracker_confidence', 'linear_velocity', 'angular_velocity',
+            'linear_position', 'angular_position'}
 
     def test_export(self):
         """"""
