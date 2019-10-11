@@ -1,4 +1,5 @@
 # pupil_recording_interface
+
 Python backend and cli for pupil recordings
 
 ## Installation
@@ -12,11 +13,17 @@ This will trigger a username/password prompt. Alternatively, if you have an
 
 ## Usage
 
-Export a pupil recording (gaze + odometry) to netCDF:
+Export gaze data to netCDF:
 
     import pupil_recording_interface as pri
     
-    pri.export('/path/to/recording')
+    pri.write_netcdf('/path/to/recording')
     
-This will create `odometry.nc` and `gaze.nc` files in the `/path/to
-/recording/exports` folder.
+This will create a `gaze.nc` file in the `/path/to /recording/exports`
+folder.
+
+Load gaze and odometry data as xarray datasets:
+
+    import pupil_recording_interface as pri
+    
+    gaze, odometry = pri.load_dataset('/path/to/recording', odometry='recording')

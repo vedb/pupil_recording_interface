@@ -6,12 +6,13 @@ from unittest import TestCase
 import numpy as np
 import xarray as xr
 
-from pupil_recording_interface.core import export, load, Exporter
+from pupil_recording_interface.core import \
+    write_netcdf, load_dataset, NetcdfInterface
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
 
 
-class TestExporter(TestCase):
+class TestNetcdfInterface(TestCase):
 
     def setUp(self):
         """"""
@@ -20,19 +21,21 @@ class TestExporter(TestCase):
         self.n_gaze = 5160
         self.n_gaze_offline = 5134
         self.gaze_mappers = {'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
+        self.export_folder = os.path.join(self.folder, 'exports')
 
+        shutil.rmtree(self.export_folder, ignore_errors=True)
 
     def test_constructor(self):
         """"""
-        exporter = Exporter(self.folder)
+        exporter = NetcdfInterface(self.folder)
         assert exporter.folder == self.folder
 
         with self.assertRaises(FileNotFoundError):
-            Exporter('not_a_folder')
+            NetcdfInterface('not_a_folder')
 
     def test_load_info(self):
         """"""
-        self.assertDictEqual(Exporter._load_info(self.folder), {
+        self.assertDictEqual(NetcdfInterface._load_info(self.folder), {
             "duration_s": 21.111775958999715,
             "meta_version": "2.0",
             "min_player_version": "1.16",
@@ -46,22 +49,22 @@ class TestExporter(TestCase):
         })
 
         with self.assertRaises(FileNotFoundError):
-            Exporter._load_info(self.folder, 'not_a_file')
+            NetcdfInterface._load_info(self.folder, 'not_a_file')
 
     def test_pldata_as_dataframe(self):
         """"""
-        df = Exporter._pldata_as_dataframe(self.folder, 'odometry')
+        df = NetcdfInterface._pldata_as_dataframe(self.folder, 'odometry')
 
         assert set(df.columns) == {'topic', 'timestamp', 'confidence',
                                    'linear_velocity', 'angular_velocity',
                                    'position', 'orientation'}
 
         with self.assertRaises(FileNotFoundError):
-            Exporter._pldata_as_dataframe(self.folder, 'not_a_topic')
+            NetcdfInterface._pldata_as_dataframe(self.folder, 'not_a_topic')
 
     def test_load_odometry(self):
         """"""
-        t, c, p, q, v, w = Exporter._load_odometry(self.folder)
+        t, c, p, q, v, w = NetcdfInterface._load_odometry(self.folder)
 
         assert t.shape == (self.n_odometry,)
         assert c.shape == (self.n_odometry,)
@@ -73,19 +76,17 @@ class TestExporter(TestCase):
 
     def test_load_gaze(self):
         """"""
-        t, c, n, p = Exporter._load_gaze(self.folder)
+        t, c, n, p = NetcdfInterface._load_gaze(self.folder)
 
         assert t.shape == (self.n_gaze,)
         assert c.shape == (self.n_gaze,)
         assert n.shape == (self.n_gaze, 2)
         assert p.shape == (self.n_gaze, 3)
 
-        t, c, n, p = Exporter._load_gaze(self.folder, is_2d=True)
-        assert p is None
-
     def test_load_merged_gaze(self):
         """"""
-        t, c, n, p = Exporter._load_merged_gaze(self.folder, self.gaze_mappers)
+        t, c, n, p = NetcdfInterface._load_merged_gaze(
+            self.folder, self.gaze_mappers)
 
         assert t.shape == (self.n_gaze_offline,)
         assert c[0].shape == (self.n_gaze_offline,)
@@ -95,7 +96,7 @@ class TestExporter(TestCase):
 
     def test_get_offline_gaze_mapper(self):
         """"""
-        mappers = Exporter._get_offline_gaze_mappers(self.folder)
+        mappers = NetcdfInterface._get_offline_gaze_mappers(self.folder)
 
         assert set(mappers.keys()) == {'3d Gaze Mapper', '2d Gaze Mapper '}
         for v in mappers.values():
@@ -103,11 +104,11 @@ class TestExporter(TestCase):
                 self.folder, 'offline_data', 'gaze-mappings', v + '.pldata'))
 
         with self.assertRaises(FileNotFoundError):
-            Exporter._get_offline_gaze_mappers('not_a_folder')
+            NetcdfInterface._get_offline_gaze_mappers('not_a_folder')
 
     def test_get_encoding(self):
         """"""
-        encoding = Exporter._get_encoding(['test_var'])
+        encoding = NetcdfInterface._get_encoding(['test_var'])
 
         self.assertDictEqual(encoding['test_var'], {
             'zlib': True,
@@ -118,42 +119,19 @@ class TestExporter(TestCase):
 
     def test_create_export_folder(self):
         """"""
-        export_folder = os.path.join(self.folder, 'exports')
-        Exporter._create_export_folder(os.path.join(export_folder, 'test.nc'))
+        NetcdfInterface._create_export_folder(
+            os.path.join(self.export_folder, 'test.nc'))
 
-        assert os.path.exists(export_folder)
-        shutil.rmtree(export_folder)
-
-    def test_load_odometry_dataset(self):
-        """"""
-        ds = Exporter(self.folder).load_odometry_dataset()
-
-        self.assertDictEqual(dict(ds.sizes), {
-            'time': self.n_odometry,
-            'cartesian_axis': 3,
-            'quaternion_axis': 4})
-
-        assert set(ds.data_vars) == {
-            'tracker_confidence', 'linear_velocity', 'angular_velocity',
-            'linear_position', 'angular_position'}
-
-    def test_write_odometry_dataset(self):
-        """"""
-        Exporter(self.folder).write_odometry_dataset()
-
-        ds = xr.open_dataset(
-            os.path.join(self.folder, 'exports', 'odometry.nc'))
-
-        assert set(ds.data_vars) == {
-            'tracker_confidence', 'linear_velocity', 'angular_velocity',
-            'linear_position', 'angular_position'}
-
-        ds.close()
-        shutil.rmtree(os.path.join(self.folder, 'exports'))
+        assert os.path.exists(self.export_folder)
 
     def test_load_gaze_dataset(self):
         """"""
-        ds = Exporter(self.folder).load_gaze_dataset()
+        # no gaze
+        assert NetcdfInterface(
+            self.folder, gaze=None).load_gaze_dataset() is None
+
+        # from recording
+        ds = NetcdfInterface(self.folder).load_gaze_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
             'time': self.n_gaze,
@@ -163,9 +141,20 @@ class TestExporter(TestCase):
         assert set(ds.data_vars) == {
             'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
 
+        # offline 2d mapper
+        ds = NetcdfInterface(
+            self.folder, gaze=self.gaze_mappers['2d']).load_gaze_dataset()
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_gaze_offline,
+            'pixel_axis': 2})
+
+        assert set(ds.data_vars) == {
+            'gaze_confidence', 'gaze_norm_pos'}
+
         # merged 2d/3d gaze
-        ds = Exporter(
-            self.folder, gaze_mapper=self.gaze_mappers).load_gaze_dataset()
+        ds = NetcdfInterface(
+            self.folder, gaze=self.gaze_mappers).load_gaze_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
             'time': self.n_gaze_offline,
@@ -176,26 +165,62 @@ class TestExporter(TestCase):
             'gaze_confidence_2d', 'gaze_confidence_3d', 'gaze_point',
             'gaze_norm_pos'}
 
+        # bad gaze argument
         with self.assertRaises(ValueError):
-            Exporter(
-                self.folder, gaze_mapper='not_gaze_mapper').load_gaze_dataset()
+            NetcdfInterface(
+                self.folder, gaze='not_gaze_mapper').load_gaze_dataset()
 
     def test_write_gaze_dataset(self):
         """"""
-        Exporter(self.folder).write_gaze_dataset()
+        NetcdfInterface(self.folder).write_gaze_dataset()
 
-        ds = xr.open_dataset(
-            os.path.join(self.folder, 'exports', 'gaze.nc'))
+        ds = xr.open_dataset(os.path.join(self.export_folder, 'gaze.nc'))
 
         assert set(ds.data_vars) == {
             'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
 
         ds.close()
-        shutil.rmtree(os.path.join(self.folder, 'exports'))
 
-    def test_load(self):
+    def test_load_odometry_dataset(self):
         """"""
-        gaze, odometry = load(self.folder)
+        # no odometry
+        assert NetcdfInterface(
+            self.folder, odometry=None).load_odometry_dataset() is None
+
+        # from recording
+        ds = NetcdfInterface(
+            self.folder, odometry='recording').load_odometry_dataset()
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_odometry,
+            'cartesian_axis': 3,
+            'quaternion_axis': 4})
+
+        assert set(ds.data_vars) == {
+            'tracker_confidence', 'linear_velocity', 'angular_velocity',
+            'linear_position', 'angular_position'}
+
+        # bad odometry argument
+        with self.assertRaises(ValueError):
+            NetcdfInterface(
+                self.folder, odometry='not_supported').load_odometry_dataset()
+
+    def test_write_odometry_dataset(self):
+        """"""
+        NetcdfInterface(
+            self.folder, odometry='recording').write_odometry_dataset()
+
+        ds = xr.open_dataset(os.path.join(self.export_folder, 'odometry.nc'))
+
+        assert set(ds.data_vars) == {
+            'tracker_confidence', 'linear_velocity', 'angular_velocity',
+            'linear_position', 'angular_position'}
+
+        ds.close()
+
+    def test_load_dataset(self):
+        """"""
+        gaze, odometry = load_dataset(self.folder, odometry='recording')
 
         assert set(gaze.data_vars) == {
             'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
@@ -203,13 +228,11 @@ class TestExporter(TestCase):
             'tracker_confidence', 'linear_velocity', 'angular_velocity',
             'linear_position', 'angular_position'}
 
-    def test_export(self):
+    def test_write_netcdf(self):
         """"""
-        export(self.folder)
+        write_netcdf(self.folder, odometry='recording')
 
         assert os.path.exists(
             os.path.join(self.folder, 'exports', 'odometry.nc'))
         assert os.path.exists(
             os.path.join(self.folder, 'exports', 'gaze.nc'))
-
-        shutil.rmtree(os.path.join(self.folder, 'exports'))

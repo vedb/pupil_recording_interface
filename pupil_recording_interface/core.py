@@ -1,36 +1,37 @@
 """"""
 import os
-import json
-from msgpack import Unpacker
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 
-from pupil_recording_interface.externals.file_methods import \
-    load_pldata_file, load_object
+import json
+from msgpack import Unpacker
+from pupil_recording_interface.externals.file_methods import load_pldata_file
 
 
-def load(folder, gaze_mapper='recording'):
+def load_dataset(folder, gaze='recording', odometry=None):
     """"""
-    return Exporter(folder, gaze_mapper=gaze_mapper).load()
+    return NetcdfInterface(folder, gaze=gaze, odometry=odometry).load()
 
 
-def export(folder, gaze_mapper='recording'):
+def write_netcdf(folder, gaze='recording', odometry=None):
     """"""
-    Exporter(folder, gaze_mapper=gaze_mapper).export()
+    NetcdfInterface(folder, gaze=gaze, odometry=odometry).write()
 
 
-class Exporter(object):
+class NetcdfInterface(object):
 
-    def __init__(self, folder, gaze_mapper='recording'):
+    def __init__(self, folder, gaze='recording', odometry=None):
         """"""
         if not os.path.exists(folder):
             raise FileNotFoundError(f'No such folder: {folder}')
 
         self.folder = folder
-        self.gaze_mapper = gaze_mapper
+        self.gaze = gaze
+        self.odometry = odometry
         self.info = self._load_info(self.folder)
+        self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
 
     @staticmethod
     def _load_info(folder, filename='info.player.json'):
@@ -59,7 +60,7 @@ class Exporter(object):
     @staticmethod
     def _load_odometry(folder, topic='odometry'):
         """"""
-        df = Exporter._pldata_as_dataframe(folder, topic)
+        df = NetcdfInterface._pldata_as_dataframe(folder, topic)
 
         t = df.timestamp
         c = df.confidence
@@ -71,15 +72,15 @@ class Exporter(object):
         return t, c, p, q, v, w
 
     @staticmethod
-    def _load_gaze(folder, topic='gaze', is_2d=False):
+    def _load_gaze(folder, topic='gaze'):
         """"""
-        df = Exporter._pldata_as_dataframe(folder, topic)
+        df = NetcdfInterface._pldata_as_dataframe(folder, topic)
 
         t = df.timestamp
         c = df.confidence
         n = np.array(df.norm_pos.to_list())
 
-        if is_2d:
+        if 'gaze_point_3d' not in df.columns:
             p = None
         else:
             p = np.nan * np.ones(t.shape + (3,))
@@ -116,15 +117,15 @@ class Exporter(object):
     @staticmethod
     def _load_merged_gaze(folder, gaze_mapper):
         """"""
-        offline_mappers = Exporter._get_offline_gaze_mappers(folder)
+        offline_mappers = NetcdfInterface._get_offline_gaze_mappers(folder)
 
         mapper_folder = os.path.join(folder, 'offline_data', 'gaze-mappings')
-        gaze_2d = Exporter._load_gaze(
-            mapper_folder, offline_mappers[gaze_mapper['2d']], is_2d=True)
-        gaze_3d = Exporter._load_gaze(
+        gaze_2d = NetcdfInterface._load_gaze(
+            mapper_folder, offline_mappers[gaze_mapper['2d']])
+        gaze_3d = NetcdfInterface._load_gaze(
             mapper_folder, offline_mappers[gaze_mapper['3d']])
 
-        return Exporter._merge_2d_3d_gaze(gaze_2d, gaze_3d)
+        return NetcdfInterface._merge_2d_3d_gaze(gaze_2d, gaze_3d)
 
     @staticmethod
     def _get_encoding(data_vars, dtype='int32'):
@@ -146,9 +147,56 @@ class Exporter(object):
         folder = os.path.dirname(filename)
         os.makedirs(folder, exist_ok=True)
 
+    def load_gaze_dataset(self):
+        """"""
+        if self.gaze is None:
+            return None
+        elif self.gaze == 'recording':
+            t, c, n, p = self._load_gaze(self.folder)
+        elif isinstance(self.gaze, str) and self.gaze in self.gaze_mappers:
+            t, c, n, p = self._load_gaze(
+                os.path.join(self.folder, 'offline_data', 'gaze-mappings'),
+                self.gaze_mappers[self.gaze])
+        elif isinstance(self.gaze, dict) \
+                and set(self.gaze.keys()) == {'2d', '3d'}:
+            t, c, n, p = self._load_merged_gaze(self.folder, self.gaze)
+        else:
+            raise ValueError(f'Invalid gaze selector: {self.gaze}')
+
+        t = pd.to_datetime(t - self.info['start_time_synced_s']
+                           + self.info['start_time_system_s'], unit='s')
+        coords = {
+            'time': t.values,
+            'pixel_axis': ['x', 'y'],
+        }
+
+        data_vars = {
+            'gaze_norm_pos': (['time', 'pixel_axis'], n),
+        }
+
+        # gaze point only available from 3d mapper
+        if p is not None:
+            coords['cartesian_axis'] = ['x', 'y', 'z']
+            data_vars['gaze_point'] = (['time', 'cartesian_axis'], p)
+
+        # two confidence values from merged 2d/3d gaze
+        if isinstance(c, tuple):
+            assert len(c) == 2
+            data_vars['gaze_confidence_2d'] = ('time', c[0])
+            data_vars['gaze_confidence_3d'] = ('time', c[1])
+        else:
+            data_vars['gaze_confidence'] = ('time', c)
+
+        return xr.Dataset(data_vars, coords)
+
     def load_odometry_dataset(self):
         """"""
-        t, c, p, q, v, w = self._load_odometry(self.folder)
+        if self.odometry is None:
+            return None
+        elif self.odometry == 'recording':
+            t, c, p, q, v, w = self._load_odometry(self.folder)
+        else:
+            raise ValueError(f'Invalid odometry selector: {self.odometry}')
 
         t = pd.to_datetime(t - self.info['start_time_synced_s']
                            + self.info['start_time_system_s'], unit='s')
@@ -168,56 +216,11 @@ class Exporter(object):
 
         return xr.Dataset(data_vars, coords)
 
-    def load_gaze_dataset(self):
-        """"""
-        if self.gaze_mapper == 'recording':
-            t, c, n, p = self._load_gaze(self.folder)
-        elif isinstance(self.gaze_mapper, dict) \
-                and set(self.gaze_mapper.keys()) == {'2d', '3d'}:
-            t, c, n, p = self._load_merged_gaze(self.folder, self.gaze_mapper)
-        else:
-            raise ValueError(
-                f'Invalid gaze mapper selector: {self.gaze_mapper}')
-
-        t = pd.to_datetime(t - self.info['start_time_synced_s']
-                           + self.info['start_time_system_s'], unit='s')
-        coords = {
-            'time': t.values,
-            'cartesian_axis': ['x', 'y', 'z'],
-            'pixel_axis': ['x', 'y'],
-        }
-
-        data_vars = {
-            'gaze_norm_pos': (['time', 'pixel_axis'], n),
-        }
-
-        # gaze point only available from 3d mapper
-        if p is not None:
-            data_vars['gaze_point'] = (['time', 'cartesian_axis'], p)
-
-        # two confidence values from merged 2d/3d gaze
-        if isinstance(c, tuple):
-            assert len(c) == 2
-            data_vars['gaze_confidence_2d'] = ('time', c[0])
-            data_vars['gaze_confidence_3d'] = ('time', c[1])
-        else:
-            data_vars['gaze_confidence'] = ('time', c)
-
-        return xr.Dataset(data_vars, coords)
-
-    def write_odometry_dataset(self, filename=None):
-        """"""
-        ds = self.load_odometry_dataset()
-        encoding = self._get_encoding(ds.data_vars)
-
-        if filename is None:
-            filename = os.path.join(self.folder, 'exports', 'odometry.nc')
-
-        self._create_export_folder(filename)
-        ds.to_netcdf(filename, encoding=encoding)
-
     def write_gaze_dataset(self, filename=None):
         """"""
+        if self.gaze is None:
+            return
+
         ds = self.load_gaze_dataset()
         encoding = self._get_encoding(ds.data_vars)
 
@@ -227,11 +230,41 @@ class Exporter(object):
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)
 
+    def write_odometry_dataset(self, filename=None):
+        """"""
+        if self.odometry is None:
+            return
+
+        ds = self.load_odometry_dataset()
+        encoding = self._get_encoding(ds.data_vars)
+
+        if filename is None:
+            filename = os.path.join(self.folder, 'exports', 'odometry.nc')
+
+        self._create_export_folder(filename)
+        ds.to_netcdf(filename, encoding=encoding)
+
     def load(self):
         """"""
-        return self.load_gaze_dataset(), self.load_odometry_dataset()
+        return_vals = tuple()
+        if self.gaze is not None:
+            return_vals += (self.load_gaze_dataset(),)
+        if self.odometry is not None:
+            return_vals += (self.load_odometry_dataset(),)
 
-    def export(self, filename=None):
+        return return_vals
+
+    def write(self, output_folder=None):
         """"""
-        self.write_gaze_dataset(filename=filename)
-        self.write_odometry_dataset(filename=filename)
+        if self.gaze is not None:
+            if output_folder is not None:
+                filename = os.path.join(output_folder, 'gaze.nc')
+            else:
+                filename = None
+            self.write_gaze_dataset(filename=filename)
+        if self.odometry is not None:
+            if output_folder is not None:
+                filename = os.path.join(output_folder, 'odometry.nc')
+            else:
+                filename = None
+            self.write_odometry_dataset(filename=filename)
