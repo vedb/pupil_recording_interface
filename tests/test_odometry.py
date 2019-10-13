@@ -1,8 +1,4 @@
-import os
-
 from .test_base import InterfaceTester
-
-import xarray as xr
 
 from pupil_recording_interface import OdometryInterface
 
@@ -28,10 +24,6 @@ class TestOdometryInterface(InterfaceTester):
 
     def test_load_dataset(self):
         """"""
-        # no odometry
-        assert OdometryInterface(
-            self.folder, source=None).load_dataset() is None
-
         # from recording
         ds = OdometryInterface(self.folder).load_dataset()
 
@@ -48,15 +40,3 @@ class TestOdometryInterface(InterfaceTester):
         with self.assertRaises(ValueError):
             OdometryInterface(
                 self.folder, source='not_supported').load_dataset()
-
-    def test_write_netcdf(self):
-        """"""
-        OdometryInterface(self.folder).write_netcdf()
-
-        ds = xr.open_dataset(os.path.join(self.export_folder, 'odometry.nc'))
-
-        assert set(ds.data_vars) == {
-            'tracker_confidence', 'linear_velocity', 'angular_velocity',
-            'linear_position', 'angular_position'}
-
-        ds.close()

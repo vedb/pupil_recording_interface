@@ -4,8 +4,9 @@ import shutil
 from unittest import TestCase
 
 import numpy as np
+import xarray as xr
 
-from pupil_recording_interface import load_dataset, write_netcdf
+from pupil_recording_interface import GazeInterface, load_dataset, write_netcdf
 from pupil_recording_interface.base import BaseInterface
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -99,6 +100,17 @@ class TestBaseInterface(InterfaceTester):
             os.path.join(self.export_folder, 'test.nc'))
 
         assert os.path.exists(self.export_folder)
+
+    def test_write_netcdf(self):
+        """"""
+        GazeInterface(self.folder).write_netcdf()
+
+        ds = xr.open_dataset(os.path.join(self.export_folder, 'gaze.nc'))
+
+        assert set(ds.data_vars) == {
+            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
+
+        ds.close()
 
 
 class TestFunctionalInterface(InterfaceTester):

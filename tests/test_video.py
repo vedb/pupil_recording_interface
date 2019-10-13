@@ -16,8 +16,18 @@ class TestVideoInterface(InterfaceTester):
     def setUp(self):
         """"""
         super(TestVideoInterface, self).setUp()
+        self.n_valid_frames = 474
         self.frame_shape = (720, 1280, 3)
         self.roi_size = 128
+
+    def test_get_encoding(self):
+        """"""
+        encoding = VideoInterface._get_encoding(['frames'])
+
+        self.assertDictEqual(encoding['frames'], {
+            'zlib': True,
+            'dtype': 'uint8',
+        })
 
     def test_get_capture(self):
         """"""
@@ -70,6 +80,12 @@ class TestVideoInterface(InterfaceTester):
         roi = VideoInterface.get_roi(frame, (0.5, 0.5), self.roi_size)
         assert roi.shape == (self.roi_size, self.roi_size, 3)
 
+    def test_frame_as_uint8(self):
+        """"""
+        frame = VideoInterface.frame_as_uint8(np.nan*np.ones(self.frame_shape))
+        np.testing.assert_equal(
+            frame, np.zeros(self.frame_shape, dtype='uint8'))
+
     def test_read_frames(self):
         """"""
         # full frame
@@ -96,6 +112,23 @@ class TestVideoInterface(InterfaceTester):
         for frame in interface.read_frames():
             assert frame.shape == (
                 self.roi_size, self.roi_size, self.frame_shape[2])
+
+    def test_load_dataset(self):
+        """"""
+        norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
+        interface = VideoInterface(
+            self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
+
+        ds = interface.load_dataset(dropna=True)
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_valid_frames,
+            'frame_x': self.roi_size,
+            'frame_y': self.roi_size,
+            'color': 3})
+
+        assert set(ds.data_vars) == {'frames'}
+        assert ds.frames.dtype == 'uint8'
 
 
 class TestOpticalFlowInterface(InterfaceTester):

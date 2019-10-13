@@ -2,7 +2,6 @@
 import os
 
 import numpy as np
-import pandas as pd
 import xarray as xr
 from msgpack import Unpacker
 
@@ -15,6 +14,10 @@ class GazeInterface(BaseInterface):
         """"""
         super(GazeInterface, self).__init__(folder, source=source)
         self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
+
+    @property
+    def nc_name(self):
+        return 'gaze'
 
     @staticmethod
     def _load_gaze(folder, topic='gaze'):
@@ -78,9 +81,7 @@ class GazeInterface(BaseInterface):
 
     def load_dataset(self):
         """"""
-        if self.source is None:
-            return None
-        elif self.source == 'recording':
+        if self.source == 'recording':
             t, c, n, p = self._load_gaze(self.folder)
         elif isinstance(self.source, str) and self.source in self.gaze_mappers:
             t, c, n, p = self._load_gaze(
@@ -117,17 +118,3 @@ class GazeInterface(BaseInterface):
             data_vars['gaze_confidence'] = ('time', c)
 
         return xr.Dataset(data_vars, coords)
-
-    def write_netcdf(self, filename=None):
-        """"""
-        if self.source is None:
-            return
-
-        ds = self.load_dataset()
-        encoding = self._get_encoding(ds.data_vars)
-
-        if filename is None:
-            filename = os.path.join(self.folder, 'exports', 'gaze.nc')
-
-        self._create_export_folder(filename)
-        ds.to_netcdf(filename, encoding=encoding)

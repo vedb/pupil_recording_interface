@@ -1,5 +1,6 @@
 """"""
 import os
+import abc
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,10 @@ class BaseInterface(object):
         self.folder = folder
         self.source = source
         self.info = self._load_info(self.folder)
+
+    @property
+    def nc_name(self):
+        return 'base'
 
     @staticmethod
     def _load_info(folder, filename='info.player.json'):
@@ -68,15 +73,29 @@ class BaseInterface(object):
             'zlib': True,
             'dtype': dtype,
             'scale_factor': 0.0001,
-            '_FillValue': np.iinfo(dtype).min
+            '_FillValue': np.iinfo(dtype).min,
         }
 
-        encoding = {v: comp for v in data_vars}
-
-        return encoding
+        return {v: comp for v in data_vars}
 
     @staticmethod
     def _create_export_folder(filename):
         """"""
         folder = os.path.dirname(filename)
         os.makedirs(folder, exist_ok=True)
+
+    @abc.abstractmethod
+    def load_dataset(self):
+        """"""
+
+    def write_netcdf(self, filename=None):
+        """"""
+        ds = self.load_dataset()
+        encoding = self._get_encoding(ds.data_vars)
+
+        if filename is None:
+            filename = os.path.join(
+                self.folder, 'exports', self.nc_name + '.nc')
+
+        self._create_export_folder(filename)
+        ds.to_netcdf(filename, encoding=encoding)

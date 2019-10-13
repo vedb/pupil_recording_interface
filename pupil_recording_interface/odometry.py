@@ -1,14 +1,15 @@
 """"""
-import os
-
 import numpy as np
-import pandas as pd
 import xarray as xr
 
 from pupil_recording_interface.base import BaseInterface
 
 
 class OdometryInterface(BaseInterface):
+
+    @property
+    def nc_name(self):
+        return 'odometry'
 
     @staticmethod
     def _load_odometry(folder, topic='odometry'):
@@ -26,9 +27,7 @@ class OdometryInterface(BaseInterface):
 
     def load_dataset(self):
         """"""
-        if self.source is None:
-            return None
-        elif self.source == 'recording':
+        if self.source == 'recording':
             t, c, p, q, v, w = self._load_odometry(self.folder)
         else:
             raise ValueError(f'Invalid odometry source: {self.source}')
@@ -50,17 +49,3 @@ class OdometryInterface(BaseInterface):
         }
 
         return xr.Dataset(data_vars, coords)
-
-    def write_netcdf(self, filename=None):
-        """"""
-        if self.source is None:
-            return
-
-        ds = self.load_dataset()
-        encoding = self._get_encoding(ds.data_vars)
-
-        if filename is None:
-            filename = os.path.join(self.folder, 'exports', 'odometry.nc')
-
-        self._create_export_folder(filename)
-        ds.to_netcdf(filename, encoding=encoding)

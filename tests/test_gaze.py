@@ -50,9 +50,6 @@ class TestGazeInterface(InterfaceTester):
 
     def test_load_dataset(self):
         """"""
-        # no gaze
-        assert GazeInterface(self.folder, source=None).load_dataset() is None
-
         # from recording
         ds = GazeInterface(self.folder).load_dataset()
 

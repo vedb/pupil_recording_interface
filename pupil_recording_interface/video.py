@@ -22,6 +22,10 @@ class VideoInterface(BaseInterface):
         self.camera_matrix, self.distortion_coefs = self._load_intrinsics(
             self.folder)
 
+    @property
+    def nc_name(self):
+        return self.source
+
     @staticmethod
     def _load_intrinsics(folder):
         """"""
@@ -41,6 +45,23 @@ class VideoInterface(BaseInterface):
                 f'File {topic}.mp4 not found in folder {folder}')
 
         return cv2.VideoCapture(filepath)
+
+    @staticmethod
+    def _get_encoding(data_vars, dtype='int32'):
+        """"""
+        comp = {
+            'zlib': True,
+            'dtype': dtype,
+            'scale_factor': 0.0001,
+            '_FillValue': np.iinfo(dtype).min
+        }
+
+        comp_f = {
+            'zlib': True,
+            'dtype': 'uint8',
+        }
+
+        return {v: (comp if v != 'frames' else comp_f) for v in data_vars}
 
     @staticmethod
     def convert_color(frame, color_format):
@@ -122,6 +143,12 @@ class VideoInterface(BaseInterface):
 
         return roi
 
+    @staticmethod
+    def frame_as_uint8(frame):
+        """"""
+        frame[np.isnan(frame)] = 0.
+        return frame.astype('uint8')
+
     def load_timestamps(self):
         """"""
         return self._load_timestamps_as_datetimeindex(
@@ -167,6 +194,39 @@ class VideoInterface(BaseInterface):
 
         capture.release()
 
+    def load_dataset(self, dropna=False):
+        """"""
+        t = self.load_timestamps()
+        if dropna:
+            t_gen, flow_gen = zip(
+                *((t, f)
+                  for t, f in zip(t, self.read_frames())
+                  if not np.any(np.isnan(f))))
+            t = pd.DatetimeIndex(t_gen)
+            frames = np.array(flow_gen)
+        else:
+            frames = np.array(f for f in self.read_frames())
+
+        frames = self.frame_as_uint8(frames)
+
+        dims = ['time', 'frame_y', 'frame_x']
+
+        coords = {
+            'time': t.values,
+            'frame_x': np.arange(frames.shape[2]),
+            'frame_y': np.arange(frames.shape[1]),
+        }
+
+        if frames.ndim == 4:
+            coords['color'] = ['B', 'G', 'R']
+            dims += ['color']
+
+        data_vars = {
+            'frames': (dims, frames)
+        }
+
+        return xr.Dataset(data_vars, coords)
+
 
 class OpticalFlowInterface(VideoInterface):
 
@@ -176,6 +236,10 @@ class OpticalFlowInterface(VideoInterface):
         super(OpticalFlowInterface, self).__init__(
             folder, source=source, color_format='gray', norm_pos=norm_pos,
             roi_size=roi_size, subsampling=subsampling)
+
+    @property
+    def nc_name(self):
+        return 'optical_flow'
 
     @staticmethod
     def calculate_flow(frame, last_frame):
@@ -222,17 +286,3 @@ class OpticalFlowInterface(VideoInterface):
         }
 
         return xr.Dataset(data_vars, coords)
-
-    def write_netcdf(self, filename=None):
-        """"""
-        if self.source is None:
-            return
-
-        ds = self.load_dataset()
-        encoding = self._get_encoding(ds.data_vars)
-
-        if filename is None:
-            filename = os.path.join(self.folder, 'exports', 'optical_flow.nc')
-
-        self._create_export_folder(filename)
-        ds.to_netcdf(filename, encoding=encoding)
