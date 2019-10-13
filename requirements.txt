@@ -1,6 +1,7 @@
 numpy
 pandas
 xarray
+scipy
 opencv
 msgpack
 netcdf4

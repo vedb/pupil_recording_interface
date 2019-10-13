@@ -67,6 +67,10 @@ class TestBaseInterface(InterfaceTester):
 
         assert idx.values[0].astype(float) / 1e9 == 1570725800.149778
 
+        with self.assertRaises(FileNotFoundError):
+            BaseInterface._load_timestamps_as_datetimeindex(
+                self.folder, 'not_a_topic', self.info)
+
     def test_load_pldata_as_dataframe(self):
         """"""
         df = BaseInterface._load_pldata_as_dataframe(self.folder, 'odometry')

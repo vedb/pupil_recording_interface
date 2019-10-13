@@ -3,6 +3,7 @@ import os
 
 from .odometry import OdometryInterface
 from .gaze import GazeInterface
+from .video import VideoInterface, OpticalFlowInterface
 
 
 def load_dataset(folder, gaze=None, odometry=None):
@@ -14,6 +15,9 @@ def load_dataset(folder, gaze=None, odometry=None):
     if odometry is not None:
         return_vals += (
             OdometryInterface(folder, source=odometry).load_dataset(),)
+
+    if len(return_vals) == 1:
+        return_vals = return_vals[0]
 
     return return_vals
 
