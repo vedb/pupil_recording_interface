@@ -5,10 +5,8 @@ from unittest import TestCase
 
 import numpy as np
 
-from pupil_recording_interface import load_dataset, write_netcdf, \
-    OdometryInterface
-from pupil_recording_interface.base import \
-    BaseInterface
+from pupil_recording_interface import load_dataset, write_netcdf
+from pupil_recording_interface.base import BaseInterface
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -66,7 +64,7 @@ class TestBaseInterface(InterfaceTester):
 
     def test_get_encoding(self):
         """"""
-        encoding = OdometryInterface._get_encoding(['test_var'])
+        encoding = BaseInterface._get_encoding(['test_var'])
 
         self.assertDictEqual(encoding['test_var'], {
             'zlib': True,
@@ -77,7 +75,7 @@ class TestBaseInterface(InterfaceTester):
 
     def test_create_export_folder(self):
         """"""
-        OdometryInterface._create_export_folder(
+        BaseInterface._create_export_folder(
             os.path.join(self.export_folder, 'test.nc'))
 
         assert os.path.exists(self.export_folder)
