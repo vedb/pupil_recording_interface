@@ -13,7 +13,7 @@ class OdometryInterface(BaseInterface):
     @staticmethod
     def _load_odometry(folder, topic='odometry'):
         """"""
-        df = BaseInterface._pldata_as_dataframe(folder, topic)
+        df = BaseInterface._load_pldata_as_dataframe(folder, topic)
 
         t = df.timestamp
         c = df.confidence
@@ -33,8 +33,8 @@ class OdometryInterface(BaseInterface):
         else:
             raise ValueError(f'Invalid odometry source: {self.source}')
 
-        t = pd.to_datetime(t - self.info['start_time_synced_s']
-                           + self.info['start_time_system_s'], unit='s')
+        t = self._timestamps_to_datetimeindex(t, self.info)
+
         coords = {
             'time': t.values,
             'cartesian_axis': ['x', 'y', 'z'],

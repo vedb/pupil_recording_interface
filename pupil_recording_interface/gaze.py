@@ -19,7 +19,7 @@ class GazeInterface(BaseInterface):
     @staticmethod
     def _load_gaze(folder, topic='gaze'):
         """"""
-        df = BaseInterface._pldata_as_dataframe(folder, topic)
+        df = BaseInterface._load_pldata_as_dataframe(folder, topic)
 
         if df.size == 0:
             raise ValueError(f'No gaze data in '
@@ -92,8 +92,8 @@ class GazeInterface(BaseInterface):
         else:
             raise ValueError(f'Invalid gaze source: {self.source}')
 
-        t = pd.to_datetime(t - self.info['start_time_synced_s']
-                           + self.info['start_time_system_s'], unit='s')
+        t = self._timestamps_to_datetimeindex(t, self.info)
+
         coords = {
             'time': t.values,
             'pixel_axis': ['x', 'y'],

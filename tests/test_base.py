@@ -17,6 +17,18 @@ class InterfaceTester(TestCase):
         """"""
         self.folder = os.path.join(test_data_dir, 'test_recording')
         self.export_folder = os.path.join(self.folder, 'exports')
+        self.info = {
+            "duration_s": 21.111775958999715,
+            "meta_version": "2.0",
+            "min_player_version": "1.16",
+            "recording_name": "2019_10_10",
+            "recording_software_name": "Pupil Capture",
+            "recording_software_version": "1.16.95",
+            "recording_uuid": "e5059604-26f1-42ed-8e35-354198b56021",
+            "start_time_synced_s": 2294.807856069,
+            "start_time_system_s": 1570725800.220913,
+            "system_info": "User: test_user, Platform: Linux"
+        }
 
     def tearDown(self):
         """"""
@@ -35,32 +47,36 @@ class TestBaseInterface(InterfaceTester):
 
     def test_load_info(self):
         """"""
-        self.assertDictEqual(BaseInterface._load_info(self.folder), {
-            "duration_s": 21.111775958999715,
-            "meta_version": "2.0",
-            "min_player_version": "1.16",
-            "recording_name": "2019_10_10",
-            "recording_software_name": "Pupil Capture",
-            "recording_software_version": "1.16.95",
-            "recording_uuid": "e5059604-26f1-42ed-8e35-354198b56021",
-            "start_time_synced_s": 2294.807856069,
-            "start_time_system_s": 1570725800.220913,
-            "system_info": "User: test_user, Platform: Linux"
-        })
+        self.assertDictEqual(BaseInterface._load_info(self.folder), self.info)
 
         with self.assertRaises(FileNotFoundError):
             BaseInterface._load_info(self.folder, 'not_a_file')
 
-    def test_pldata_as_dataframe(self):
+    def test_timestamps_to_datetimeindex(self):
         """"""
-        df = BaseInterface._pldata_as_dataframe(self.folder, 'odometry')
+        timestamps = np.array([2295., 2296., 2297.])
+
+        idx = BaseInterface._timestamps_to_datetimeindex(timestamps, self.info)
+
+        assert idx.values[0].astype(float) / 1e9 == 1570725800.4130569
+
+    def test_load_timestamps_as_datetimeindex(self):
+        """"""
+        idx = BaseInterface._load_timestamps_as_datetimeindex(
+            self.folder, 'gaze', self.info)
+
+        assert idx.values[0].astype(float) / 1e9 == 1570725800.149778
+
+    def test_load_pldata_as_dataframe(self):
+        """"""
+        df = BaseInterface._load_pldata_as_dataframe(self.folder, 'odometry')
 
         assert set(df.columns) == {'topic', 'timestamp', 'confidence',
                                    'linear_velocity', 'angular_velocity',
                                    'position', 'orientation'}
 
         with self.assertRaises(FileNotFoundError):
-            BaseInterface._pldata_as_dataframe(self.folder, 'not_a_topic')
+            BaseInterface._load_pldata_as_dataframe(self.folder, 'not_a_topic')
 
     def test_get_encoding(self):
         """"""

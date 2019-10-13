@@ -33,7 +33,7 @@ class BaseInterface(object):
         return info
 
     @staticmethod
-    def _pldata_as_dataframe(folder, topic):
+    def _load_pldata_as_dataframe(folder, topic):
         """"""
         if not os.path.exists(os.path.join(folder, topic + '.pldata')):
             raise FileNotFoundError(
@@ -41,6 +41,25 @@ class BaseInterface(object):
 
         pldata = load_pldata_file(folder, topic)
         return pd.DataFrame([dict(d) for d in pldata.data])
+
+    @staticmethod
+    def _timestamps_to_datetimeindex(timestamps, info):
+        """"""
+        return pd.to_datetime(timestamps
+                              - info['start_time_synced_s']
+                              + info['start_time_system_s'],
+                              unit='s')
+
+    @staticmethod
+    def _load_timestamps_as_datetimeindex(folder, topic, info):
+        """"""
+        filepath = os.path.join(folder, topic + '_timestamps.npy')
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(
+                f'File {topic}_timestamps.npy not found in folder {folder}')
+
+        timestamps = np.load(filepath)
+        return BaseInterface._timestamps_to_datetimeindex(timestamps, info)
 
     @staticmethod
     def _get_encoding(data_vars, dtype='int32'):
@@ -61,5 +80,3 @@ class BaseInterface(object):
         """"""
         folder = os.path.dirname(filename)
         os.makedirs(folder, exist_ok=True)
-
-
