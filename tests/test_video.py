@@ -103,6 +103,7 @@ class TestOpticalFlowInterface(InterfaceTester):
     def setUp(self):
         """"""
         super(TestOpticalFlowInterface, self).setUp()
+        self.n_valid_frames = 463
         self.frame_shape = (720, 1280, 3)
         self.roi_size = 128
 
@@ -127,3 +128,19 @@ class TestOpticalFlowInterface(InterfaceTester):
         for flow in interface.estimate_optical_flow():
             assert flow.shape == (
                 self.roi_size, self.roi_size, 2)
+
+    def test_load_dataset(self):
+        """"""
+        norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
+        interface = OpticalFlowInterface(
+            self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
+
+        ds = interface.load_dataset(dropna=True)
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_valid_frames,
+            'roi_x': self.roi_size,
+            'roi_y': self.roi_size,
+            'pixel_axis': 2})
+
+        assert set(ds.data_vars) == {'optical_flow'}

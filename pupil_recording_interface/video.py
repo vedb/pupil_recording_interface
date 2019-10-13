@@ -2,6 +2,8 @@
 import os
 
 import numpy as np
+import pandas as pd
+import xarray as xr
 import cv2
 
 from pupil_recording_interface.base import BaseInterface
@@ -120,6 +122,11 @@ class VideoInterface(BaseInterface):
 
         return roi
 
+    def load_timestamps(self):
+        """"""
+        return self._load_timestamps_as_datetimeindex(
+            self.folder, self.source, self.info)
+
     def read_frames(self):
         """"""
         topic = self.source
@@ -128,8 +135,7 @@ class VideoInterface(BaseInterface):
             if self.roi_size is None:
                 raise ValueError(
                     'roi_size must be specified when norm_pos is specified')
-            idx = self._load_timestamps_as_datetimeindex(
-                self.folder, topic, self.info)
+            idx = self.load_timestamps()
             norm_pos = (n for n in self.norm_pos.interp({'time': idx}).values)
         else:
             norm_pos = None
@@ -188,3 +194,45 @@ class OpticalFlowInterface(VideoInterface):
         for frame in self.read_frames():
             yield self.calculate_flow(frame, last_frame)
             last_frame = frame
+
+    def load_dataset(self, dropna=False):
+        """"""
+        t = self.load_timestamps()
+
+        if dropna:
+            t_gen, flow_gen = zip(
+                *((t, f)
+                  for t, f in zip(t, self.estimate_optical_flow())
+                  if not np.any(np.isnan(f))))
+            t = pd.DatetimeIndex(t_gen)
+            flow = np.array(flow_gen)
+        else:
+            flow = np.array(f for f in self.estimate_optical_flow())
+
+        coords = {
+            'time': t.values,
+            'pixel_axis': ['x', 'y'],
+            'roi_x': np.arange(flow.shape[2]),
+            'roi_y': np.arange(flow.shape[1])
+        }
+
+        data_vars = {
+            'optical_flow':
+                (['time', 'roi_y', 'roi_x', 'pixel_axis'], flow)
+        }
+
+        return xr.Dataset(data_vars, coords)
+
+    def write_netcdf(self, filename=None):
+        """"""
+        if self.source is None:
+            return
+
+        ds = self.load_dataset()
+        encoding = self._get_encoding(ds.data_vars)
+
+        if filename is None:
+            filename = os.path.join(self.folder, 'exports', 'optical_flow.nc')
+
+        self._create_export_folder(filename)
+        ds.to_netcdf(filename, encoding=encoding)
