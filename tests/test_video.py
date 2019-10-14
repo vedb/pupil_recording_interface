@@ -86,6 +86,12 @@ class TestVideoInterface(InterfaceTester):
         np.testing.assert_equal(
             frame, np.zeros(self.frame_shape, dtype='uint8'))
 
+        # regression test for frame already as uint8
+        frame = VideoInterface.frame_as_uint8(
+            np.zeros(self.frame_shape, dtype='uint8'))
+        np.testing.assert_equal(
+            frame, np.zeros(self.frame_shape, dtype='uint8'))
+
     def test_read_frames(self):
         """"""
         # full frame

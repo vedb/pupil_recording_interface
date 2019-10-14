@@ -146,8 +146,11 @@ class VideoInterface(BaseInterface):
     @staticmethod
     def frame_as_uint8(frame):
         """"""
-        frame[np.isnan(frame)] = 0.
-        return frame.astype('uint8')
+        if frame.dtype != 'uint8':
+            frame[np.isnan(frame)] = 0.
+            return frame.astype('uint8')
+        else:
+            return frame
 
     def load_timestamps(self):
         """"""
