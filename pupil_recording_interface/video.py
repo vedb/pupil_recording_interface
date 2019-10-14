@@ -19,6 +19,7 @@ class VideoInterface(BaseInterface):
         self.norm_pos = norm_pos
         self.roi_size = roi_size
         self.subsampling = subsampling
+
         self.camera_matrix, self.distortion_coefs = self._load_intrinsics(
             self.folder)
 
@@ -45,6 +46,17 @@ class VideoInterface(BaseInterface):
                 f'File {topic}.mp4 not found in folder {folder}')
 
         return cv2.VideoCapture(filepath)
+
+    @staticmethod
+    def _get_resolution(folder, topic):
+        """"""
+        capture = VideoInterface._get_capture(folder, topic)
+        return (capture.get(cv2.CAP_PROP_FRAME_WIDTH),
+                capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    def _get_frame_shape(self):
+        """"""
+        return next(self.read_frames()).shape
 
     @staticmethod
     def _get_encoding(data_vars, dtype='int32'):
@@ -146,11 +158,8 @@ class VideoInterface(BaseInterface):
     @staticmethod
     def frame_as_uint8(frame):
         """"""
-        if frame.dtype != 'uint8':
-            frame[np.isnan(frame)] = 0.
-            return frame.astype('uint8')
-        else:
-            return frame
+        frame[np.isnan(frame)] = 0.
+        return frame.astype('uint8')
 
     def load_timestamps(self):
         """"""
@@ -193,7 +202,7 @@ class VideoInterface(BaseInterface):
             if norm_pos is not None:
                 frame = self.get_roi(frame, next(norm_pos), self.roi_size)
 
-            yield frame
+            yield frame.astype(float)
 
         capture.release()
 
@@ -208,7 +217,9 @@ class VideoInterface(BaseInterface):
             t = pd.DatetimeIndex(t_gen)
             frames = np.array(flow_gen)
         else:
-            frames = np.array(f for f in self.read_frames())
+            frames = np.empty((t.size,) + self._get_frame_shape())
+            for idx, f in enumerate(self.read_frames()):
+                frames[idx] = f
 
         frames = self.frame_as_uint8(frames)
 
@@ -244,6 +255,10 @@ class OpticalFlowInterface(VideoInterface):
     def nc_name(self):
         return 'optical_flow'
 
+    def _get_frame_shape(self):
+        """"""
+        return next(self.estimate_optical_flow()).shape
+
     @staticmethod
     def calculate_flow(frame, last_frame):
         """"""
@@ -274,7 +289,9 @@ class OpticalFlowInterface(VideoInterface):
             t = pd.DatetimeIndex(t_gen)
             flow = np.array(flow_gen)
         else:
-            flow = np.array(f for f in self.estimate_optical_flow())
+            flow = np.empty((t.size,) + self._get_frame_shape())
+            for idx, f in enumerate(self.estimate_optical_flow()):
+                flow[idx] = f
 
         coords = {
             'time': t.values,

@@ -16,6 +16,7 @@ class TestVideoInterface(InterfaceTester):
     def setUp(self):
         """"""
         super(TestVideoInterface, self).setUp()
+        self.n_frames = 504
         self.n_valid_frames = 474
         self.frame_shape = (720, 1280, 3)
         self.roi_size = 128
@@ -37,6 +38,16 @@ class TestVideoInterface(InterfaceTester):
 
         with self.assertRaises(FileNotFoundError):
             VideoInterface._get_capture(self.folder, 'not_a_topic')
+
+    def test_get_resolution(self):
+        """"""
+        resolution = VideoInterface._get_resolution(self.folder, 'world')
+        assert resolution == (1280, 720)
+
+    def test_get_frame_shape_and_dtype(self):
+        """"""
+        shape = VideoInterface(self.folder)._get_frame_shape()
+        assert shape == (720, 1280, 3)
 
     def test_get_bounds(self):
         """"""
@@ -86,12 +97,6 @@ class TestVideoInterface(InterfaceTester):
         np.testing.assert_equal(
             frame, np.zeros(self.frame_shape, dtype='uint8'))
 
-        # regression test for frame already as uint8
-        frame = VideoInterface.frame_as_uint8(
-            np.zeros(self.frame_shape, dtype='uint8'))
-        np.testing.assert_equal(
-            frame, np.zeros(self.frame_shape, dtype='uint8'))
-
     def test_read_frames(self):
         """"""
         # full frame
@@ -121,6 +126,20 @@ class TestVideoInterface(InterfaceTester):
 
     def test_load_dataset(self):
         """"""
+        interface = VideoInterface(self.folder, subsampling=8.)
+
+        ds = interface.load_dataset()
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_frames,
+            'frame_x': 160,
+            'frame_y': 90,
+            'color': 3})
+
+        assert set(ds.data_vars) == {'frames'}
+        assert ds.frames.dtype == 'uint8'
+
+        # ROI around norm_pos
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
         interface = VideoInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
@@ -142,6 +161,7 @@ class TestOpticalFlowInterface(InterfaceTester):
     def setUp(self):
         """"""
         super(TestOpticalFlowInterface, self).setUp()
+        self.n_frames = 504
         self.n_valid_frames = 463
         self.frame_shape = (720, 1280, 3)
         self.roi_size = 128
@@ -170,6 +190,19 @@ class TestOpticalFlowInterface(InterfaceTester):
 
     def test_load_dataset(self):
         """"""
+        interface = OpticalFlowInterface(self.folder, subsampling=8.)
+
+        ds = interface.load_dataset()
+
+        self.assertDictEqual(dict(ds.sizes), {
+            'time': self.n_frames,
+            'roi_x': 160,
+            'roi_y': 90,
+            'pixel_axis': 2})
+
+        assert set(ds.data_vars) == {'optical_flow'}
+
+        # ROI around norm_pos
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
         interface = OpticalFlowInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
@@ -181,5 +214,3 @@ class TestOpticalFlowInterface(InterfaceTester):
             'roi_x': self.roi_size,
             'roi_y': self.roi_size,
             'pixel_axis': 2})
-
-        assert set(ds.data_vars) == {'optical_flow'}
