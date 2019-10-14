@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 
-requirements = ['numpy', 'pandas', 'xarray', 'scipy', 'msgpack', 'opencv']
+requirements = [
+    'numpy', 'pandas', 'xarray', 'scipy', 'msgpack', 'opencv-python']
 
 setup(
     name='pupil_recording_interface',
