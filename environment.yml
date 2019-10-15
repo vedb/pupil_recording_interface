@@ -1,0 +1,16 @@
+name: pupil-recording-interface
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.6
+  - pip
+  - numpy
+  - scipy
+  - pandas
+  - xarray
+  - opencv
+  - netcdf4
+  - msgpack-python
+  - pip:
+    - pyrealsense2
+    - git+https://github.com/pupil-labs/pyuvc.git
