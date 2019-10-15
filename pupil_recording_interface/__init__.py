@@ -1,7 +1,7 @@
 """"""
 import os
 
-from .odometry import OdometryInterface
+from .odometry import OdometryInterface, OdometryRecorder
 from .gaze import GazeInterface
 from .video import VideoInterface, OpticalFlowInterface
 

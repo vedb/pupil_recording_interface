@@ -19,6 +19,7 @@ class BaseInterface(object):
 
         self.folder = folder
         self.source = source
+
         if os.path.exists(os.path.join(self.folder, 'info.csv')):
             self.info = self._load_info(self.folder, 'info.csv')
         else:
