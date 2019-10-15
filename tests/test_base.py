@@ -48,7 +48,13 @@ class TestBaseInterface(InterfaceTester):
 
     def test_load_info(self):
         """"""
-        self.assertDictEqual(BaseInterface._load_info(self.folder), self.info)
+        info = BaseInterface._load_info(self.folder)
+        self.assertDictEqual(info, self.info)
+
+        # legacy format
+        info = BaseInterface._load_info(self.folder, 'info.csv')
+        self.info['duration_s'] = 21.
+        self.assertDictEqual(info, self.info)
 
         with self.assertRaises(FileNotFoundError):
             BaseInterface._load_info(self.folder, 'not_a_file')

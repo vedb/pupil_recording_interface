@@ -1,11 +1,12 @@
 """"""
 import os
 import abc
+import csv
+import json
 
 import numpy as np
 import pandas as pd
 
-import json
 from pupil_recording_interface.externals.file_methods import load_pldata_file
 
 
@@ -18,11 +19,37 @@ class BaseInterface(object):
 
         self.folder = folder
         self.source = source
-        self.info = self._load_info(self.folder)
+        if os.path.exists(os.path.join(self.folder, 'info.csv')):
+            self.info = self._load_info(self.folder, 'info.csv')
+        else:
+            self.info = self._load_info(self.folder)
 
     @property
     def nc_name(self):
         return 'base'
+
+    @staticmethod
+    def _load_legacy_info(file_handle):
+        """"""
+        reader = csv.reader(file_handle)
+        info = {rows[0]: rows[1] for rows in reader}
+
+        info = {
+            "duration_s":
+                sum(float(x) * 60 ** i for i, x in
+                    enumerate(reversed(info['Duration Time'].split(":")))),
+            "meta_version": "2.0",
+            "min_player_version": info['Data Format Version'],
+            "recording_name": info['Recording Name'],
+            "recording_software_name": "Pupil Capture",
+            "recording_software_version": info['Capture Software Version'],
+            "recording_uuid": info['Recording UUID'],
+            "start_time_synced_s": float(info['Start Time (Synced)']),
+            "start_time_system_s": float(info['Start Time (System)']),
+            "system_info": info['System Info']
+        }
+
+        return info
 
     @staticmethod
     def _load_info(folder, filename='info.player.json'):
@@ -33,7 +60,12 @@ class BaseInterface(object):
                 f'File {filename} not found in folder {folder}')
 
         with open(os.path.join(folder, filename)) as f:
-            info = json.load(f)
+            if filename.endswith('.json'):
+                info = json.load(f)
+            elif filename.endswith('.csv'):
+                info = BaseInterface._load_legacy_info(f)
+            else:
+                raise ValueError('Unsupported info file type.')
 
         return info
 
