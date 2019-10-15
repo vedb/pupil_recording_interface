@@ -8,5 +8,6 @@ setup(
     version='0.0.1',
     packages=find_packages(),
     long_description=open('README.md').read(),
+    scripts=['scripts/pri'],
     install_requires=requirements,
 )

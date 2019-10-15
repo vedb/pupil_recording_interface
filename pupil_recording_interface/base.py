@@ -27,7 +27,7 @@ class BaseInterface(object):
     @staticmethod
     def _load_info(folder, filename='info.player.json'):
         """"""
-        # TODO maybe support older versions
+        # TODO support csv
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
                 f'File {filename} not found in folder {folder}')
@@ -99,3 +99,13 @@ class BaseInterface(object):
 
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)
+
+
+class BaseRecorder(object):
+
+    def __init__(self, folder):
+        """"""
+        if not os.path.exists(folder):
+            raise FileNotFoundError(f'No such folder: {folder}')
+
+        self.folder = folder

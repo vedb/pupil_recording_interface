@@ -5,3 +5,5 @@ scipy
 opencv
 msgpack
 netcdf4
+pyrealsense2
+git+https://github.com/pupil-labs/pyuvc.git
