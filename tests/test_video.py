@@ -111,11 +111,19 @@ class TestVideoInterface(InterfaceTester):
     def test_get_frame(self):
         """"""
         interface = VideoInterface(self.folder)
-
         frame = interface.get_frame(0)
         assert frame.shape == self.frame_shape
 
+        # ROI around norm pos
+        norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
+        interface = VideoInterface(
+            self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
+        frame = interface.get_frame(0)
+        assert frame.shape == (
+            self.roi_size, self.roi_size, self.frame_shape[2])
+
         # with timestamp
+        interface = VideoInterface(self.folder)
         t, frame = interface.get_frame(0, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2383718
 

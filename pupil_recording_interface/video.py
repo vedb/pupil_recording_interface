@@ -16,9 +16,17 @@ class VideoInterface(BaseInterface):
         """"""
         super(VideoInterface, self).__init__(folder, source=source)
         self.color_format = color_format
-        self.norm_pos = norm_pos
         self.roi_size = roi_size
         self.subsampling = subsampling
+
+        if norm_pos is not None:
+            if self.roi_size is None:
+                raise ValueError(
+                    'roi_size must be specified when norm_pos is specified')
+            idx = self.load_timestamps()
+            self.norm_pos = norm_pos.interp({'time': idx}).values
+        else:
+            self.norm_pos = None
 
         self.camera_matrix, self.distortion_coefs = self._load_intrinsics(
             self.folder)
@@ -190,7 +198,7 @@ class VideoInterface(BaseInterface):
             frame = self.subsample_frame(frame)
 
         if norm_pos is not None:
-            frame = self.get_roi(frame, next(norm_pos), self.roi_size)
+            frame = self.get_roi(frame, norm_pos, self.roi_size)
 
         return frame.astype(float)
 
@@ -200,33 +208,34 @@ class VideoInterface(BaseInterface):
             raise ValueError('Frame index out of range')
 
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
-
         _, frame = self.capture.read()
 
-        if return_timestamp:
-            timestamps = self.load_timestamps()
-            return timestamps[idx], self.process_frame(frame)
-        else:
-            return self.process_frame(frame)
-
-    def read_frames(self):
-        """"""
         if self.norm_pos is not None:
-            if self.roi_size is None:
-                raise ValueError(
-                    'roi_size must be specified when norm_pos is specified')
-            idx = self.load_timestamps()
-            norm_pos = (n for n in self.norm_pos.interp({'time': idx}).values)
+            norm_pos = self.norm_pos[idx]
         else:
             norm_pos = None
 
+        if return_timestamp:
+            ts = self.load_timestamps()
+            return ts[idx], self.process_frame(frame, norm_pos=norm_pos)
+        else:
+            return self.process_frame(frame, norm_pos=norm_pos)
+
+    def read_frames(self):
+        """"""
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+        if self.norm_pos is not None:
+            norm_pos = (n for n in self.norm_pos)
+        else:
+            # infinite generator returning None
+            norm_pos = iter(lambda: None, 1)
 
         while True:
             ret, frame = self.capture.read()
             if not ret:
                 break
-            yield self.process_frame(frame, norm_pos)
+            yield self.process_frame(frame, next(norm_pos))
 
     def load_dataset(self, dropna=False):
         """"""
