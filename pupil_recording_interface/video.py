@@ -282,7 +282,7 @@ class OpticalFlowInterface(VideoInterface):
             folder, source=source, color_format='gray', norm_pos=norm_pos,
             roi_size=roi_size, subsampling=subsampling)
 
-        self.frame_shape = next(self.estimate_optical_flow()).shape
+        self.flow_shape = next(self.estimate_optical_flow()).shape
 
     @property
     def nc_name(self):
@@ -305,7 +305,7 @@ class OpticalFlowInterface(VideoInterface):
             raise ValueError('Frame index out of range')
 
         if idx == 0:
-            flow = np.nan * np.ones(self.frame_shape)
+            flow = np.nan * np.ones(self.flow_shape)
         else:
             flow = self.calculate_flow(
                 self.get_frame(idx - 1), self.get_frame(idx))
@@ -335,7 +335,7 @@ class OpticalFlowInterface(VideoInterface):
             t = pd.DatetimeIndex(t_gen)
             flow = np.array(flow_gen)
         else:
-            flow = np.empty((t.size,) + self.frame_shape)
+            flow = np.empty((t.size,) + self.flow_shape)
             for idx, f in enumerate(self.estimate_optical_flow()):
                 flow[idx] = f
 
