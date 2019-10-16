@@ -25,25 +25,14 @@ class VideoInterface(BaseInterface):
 
         self.capture = self._get_capture(self.folder, source)
 
+        self.resolution = self._get_resolution(self.capture)
+        self.frame_count = self._get_frame_count(self.capture)
+        self.frame_shape = next(self.read_frames()).shape
+        self.fps = self._get_fps(self.capture)
+
     @property
     def nc_name(self):
         return self.source
-
-    @property
-    def resolution(self):
-        return self._get_resolution(self.capture)
-
-    @property
-    def frame_count(self):
-        return self._get_frame_count(self.capture)
-
-    @property
-    def frame_shape(self):
-        return next(self.read_frames()).shape
-
-    @property
-    def fps(self):
-        return self._get_fps(self.capture)
 
     @staticmethod
     def _load_intrinsics(folder):
@@ -284,14 +273,11 @@ class OpticalFlowInterface(VideoInterface):
             folder, source=source, color_format='gray', norm_pos=norm_pos,
             roi_size=roi_size, subsampling=subsampling)
 
+        self.frame_shape = next(self.estimate_optical_flow()).shape
+
     @property
     def nc_name(self):
         return 'optical_flow'
-
-    @property
-    def frame_shape(self):
-        """"""
-        return next(self.estimate_optical_flow()).shape
 
     @staticmethod
     def calculate_flow(frame, last_frame):
@@ -304,9 +290,22 @@ class OpticalFlowInterface(VideoInterface):
         else:
             return np.nan * np.ones(frame.shape + (2,))
 
-    def get_frame(self, idx, return_timestamp=False):
+    def get_optical_flow(self, idx, return_timestamp=False):
         """"""
-        raise NotImplementedError
+        if idx < 0 or idx >= self.frame_count:
+            raise ValueError('Frame index out of range')
+
+        if idx == 0:
+            flow = np.nan * np.ones(self.frame_shape)
+        else:
+            flow = self.calculate_flow(
+                self.get_frame(idx - 1), self.get_frame(idx))
+
+        if return_timestamp:
+            timestamps = self.load_timestamps()
+            return timestamps[idx], flow
+        else:
+            return flow
 
     def estimate_optical_flow(self):
         """"""
