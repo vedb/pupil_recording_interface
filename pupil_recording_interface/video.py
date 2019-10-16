@@ -23,9 +23,27 @@ class VideoInterface(BaseInterface):
         self.camera_matrix, self.distortion_coefs = self._load_intrinsics(
             self.folder)
 
+        self.capture = self._get_capture(self.folder, source)
+
     @property
     def nc_name(self):
         return self.source
+
+    @property
+    def resolution(self):
+        return self._get_resolution(self.capture)
+
+    @property
+    def frame_count(self):
+        return self._get_frame_count(self.capture)
+
+    @property
+    def frame_shape(self):
+        return next(self.read_frames()).shape
+
+    @property
+    def fps(self):
+        return self._get_fps(self.capture)
 
     @staticmethod
     def _load_intrinsics(folder):
@@ -48,15 +66,20 @@ class VideoInterface(BaseInterface):
         return cv2.VideoCapture(filepath)
 
     @staticmethod
-    def _get_resolution(folder, topic):
+    def _get_resolution(capture):
         """"""
-        capture = VideoInterface._get_capture(folder, topic)
-        return (capture.get(cv2.CAP_PROP_FRAME_WIDTH),
-                capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        return (int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-    def _get_frame_shape(self):
+    @staticmethod
+    def _get_frame_count(capture):
         """"""
-        return next(self.read_frames()).shape
+        return capture.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    @staticmethod
+    def _get_fps(capture):
+        """"""
+        return capture.get(cv2.CAP_PROP_FPS)
 
     @staticmethod
     def _get_encoding(data_vars, dtype='int32'):
@@ -166,10 +189,39 @@ class VideoInterface(BaseInterface):
         return self._load_timestamps_as_datetimeindex(
             self.folder, self.source, self.info)
 
+    def process_frame(self, frame, norm_pos=None):
+        """"""
+        if self.color_format is not None:
+            frame = self.convert_color(frame, self.color_format)
+
+        if self.distortion_coefs is not None:
+            frame = self.undistort_frame(frame)
+
+        if self.subsampling is not None:
+            frame = self.subsample_frame(frame)
+
+        if norm_pos is not None:
+            frame = self.get_roi(frame, next(norm_pos), self.roi_size)
+
+        return frame.astype(float)
+
+    def get_frame(self, idx, return_timestamp=False):
+        """"""
+        if idx < 0 or idx >= self.frame_count:
+            raise ValueError('Frame index out of range')
+
+        self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
+
+        _, frame = self.capture.read()
+
+        if return_timestamp:
+            timestamps = self.load_timestamps()
+            return timestamps[idx], self.process_frame(frame)
+        else:
+            return self.process_frame(frame)
+
     def read_frames(self):
         """"""
-        topic = self.source
-
         if self.norm_pos is not None:
             if self.roi_size is None:
                 raise ValueError(
@@ -179,32 +231,13 @@ class VideoInterface(BaseInterface):
         else:
             norm_pos = None
 
-        capture = self._get_capture(self.folder, topic)
+        self.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
         while True:
-            ret, frame = capture.read()
+            ret, frame = self.capture.read()
             if not ret:
                 break
-
-            # convert color format
-            if self.color_format is not None:
-                frame = self.convert_color(frame, self.color_format)
-
-            # undistort
-            if self.distortion_coefs is not None:
-                frame = self.undistort_frame(frame)
-
-            # sub-sample
-            if self.subsampling is not None:
-                frame = self.subsample_frame(frame)
-
-            # get ROI around gaze position
-            if norm_pos is not None:
-                frame = self.get_roi(frame, next(norm_pos), self.roi_size)
-
-            yield frame.astype(float)
-
-        capture.release()
+            yield self.process_frame(frame, norm_pos)
 
     def load_dataset(self, dropna=False):
         """"""
@@ -217,7 +250,7 @@ class VideoInterface(BaseInterface):
             t = pd.DatetimeIndex(t_gen)
             frames = np.array(flow_gen)
         else:
-            frames = np.empty((t.size,) + self._get_frame_shape())
+            frames = np.empty((t.size,) + self.frame_shape)
             for idx, f in enumerate(self.read_frames()):
                 frames[idx] = f
 
@@ -255,7 +288,8 @@ class OpticalFlowInterface(VideoInterface):
     def nc_name(self):
         return 'optical_flow'
 
-    def _get_frame_shape(self):
+    @property
+    def frame_shape(self):
         """"""
         return next(self.estimate_optical_flow()).shape
 
@@ -269,6 +303,10 @@ class OpticalFlowInterface(VideoInterface):
                 iterations=3, poly_n=7, poly_sigma=1.5, flags=0)
         else:
             return np.nan * np.ones(frame.shape + (2,))
+
+    def get_frame(self, idx, return_timestamp=False):
+        """"""
+        raise NotImplementedError
 
     def estimate_optical_flow(self):
         """"""
@@ -289,7 +327,7 @@ class OpticalFlowInterface(VideoInterface):
             t = pd.DatetimeIndex(t_gen)
             flow = np.array(flow_gen)
         else:
-            flow = np.empty((t.size,) + self._get_frame_shape())
+            flow = np.empty((t.size,) + self.frame_shape)
             for idx, f in enumerate(self.estimate_optical_flow()):
                 flow[idx] = f
 

@@ -20,6 +20,7 @@ class TestVideoInterface(InterfaceTester):
         self.n_valid_frames = 474
         self.frame_shape = (720, 1280, 3)
         self.roi_size = 128
+        self.fps = 23.98741572903148
 
     def test_get_encoding(self):
         """"""
@@ -39,15 +40,25 @@ class TestVideoInterface(InterfaceTester):
         with self.assertRaises(FileNotFoundError):
             VideoInterface._get_capture(self.folder, 'not_a_topic')
 
-    def test_get_resolution(self):
+    def test_resolution(self):
         """"""
-        resolution = VideoInterface._get_resolution(self.folder, 'world')
-        assert resolution == (1280, 720)
+        resolution = VideoInterface(self.folder, 'world').resolution
+        assert resolution == self.frame_shape[-2::-1]
 
-    def test_get_frame_shape_and_dtype(self):
+    def test_frame_count(self):
         """"""
-        shape = VideoInterface(self.folder)._get_frame_shape()
-        assert shape == (720, 1280, 3)
+        frame_count = VideoInterface(self.folder, 'world').frame_count
+        assert frame_count == self.n_frames
+
+    def test_frame_shape(self):
+        """"""
+        shape = VideoInterface(self.folder).frame_shape
+        assert shape == self.frame_shape
+
+    def test_fps(self):
+        """"""
+        fps = VideoInterface(self.folder).fps
+        assert fps == self.fps
 
     def test_get_bounds(self):
         """"""
@@ -97,44 +108,56 @@ class TestVideoInterface(InterfaceTester):
         np.testing.assert_equal(
             frame, np.zeros(self.frame_shape, dtype='uint8'))
 
+    def test_get_frame(self):
+        """"""
+        interface = VideoInterface(self.folder)
+
+        frame = interface.get_frame(0)
+        assert frame.shape == self.frame_shape
+
+        # with timestamp
+        t, frame = interface.get_frame(0, return_timestamp=True)
+        assert float(t.value) / 1e9 == 1570725800.2383718
+
+        # invalid index
+        with self.assertRaises(ValueError):
+            interface.get_frame(self.n_frames)
+
     def test_read_frames(self):
         """"""
+        # TODO move this to process_frame test
         # full frame
         interface = VideoInterface(self.folder)
-        for frame in interface.read_frames():
-            assert frame.shape == self.frame_shape
+        assert next(interface.read_frames()).shape == self.frame_shape
 
         # grayscale
         interface = VideoInterface(self.folder, color_format='gray')
-        for frame in interface.read_frames():
-            assert frame.shape == self.frame_shape[:2]
+        assert next(interface.read_frames()).shape == self.frame_shape[:2]
 
         # sub-sampled frame
         interface = VideoInterface(self.folder, subsampling=2.)
-        for frame in interface.read_frames():
-            assert frame.shape == (
-                self.frame_shape[0] / 2, self.frame_shape[1] / 2,
-                self.frame_shape[2])
+        assert next(interface.read_frames()).shape == (
+            self.frame_shape[0] / 2, self.frame_shape[1] / 2,
+            self.frame_shape[2])
 
         # ROI around gaze position
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
         interface = VideoInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
-        for frame in interface.read_frames():
-            assert frame.shape == (
-                self.roi_size, self.roi_size, self.frame_shape[2])
+        assert next(interface.read_frames()).shape == (
+            self.roi_size, self.roi_size, self.frame_shape[2])
 
     def test_load_dataset(self):
         """"""
-        interface = VideoInterface(self.folder, subsampling=8.)
+        interface = VideoInterface(
+            self.folder, subsampling=8., color_format='gray')
 
         ds = interface.load_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
             'time': self.n_frames,
             'frame_x': 160,
-            'frame_y': 90,
-            'color': 3})
+            'frame_y': 90})
 
         assert set(ds.data_vars) == {'frames'}
         assert ds.frames.dtype == 'uint8'
