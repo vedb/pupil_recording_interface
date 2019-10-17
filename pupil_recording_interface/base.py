@@ -89,7 +89,7 @@ class BaseInterface(object):
                               unit='s')
 
     @staticmethod
-    def _load_timestamps_as_datetimeindex(folder, topic, info):
+    def _load_timestamps_as_datetimeindex(folder, topic, info, offset=0.):
         """"""
         filepath = os.path.join(folder, topic + '_timestamps.npy')
         if not os.path.exists(filepath):
@@ -97,7 +97,8 @@ class BaseInterface(object):
                 f'File {topic}_timestamps.npy not found in folder {folder}')
 
         timestamps = np.load(filepath)
-        return BaseInterface._timestamps_to_datetimeindex(timestamps, info)
+        idx = BaseInterface._timestamps_to_datetimeindex(timestamps, info)
+        return idx + pd.to_timedelta(offset, unit='s')
 
     @staticmethod
     def _get_encoding(data_vars, dtype='int32'):

@@ -13,7 +13,7 @@ class VideoInterface(BaseInterface):
 
     def __init__(self, folder, source='world', color_format=None,
                  norm_pos=None, roi_size=None, subsampling=None,
-                 interpolation_method='linear'):
+                 interpolation_method='linear', video_offset=0.):
         """"""
         super(VideoInterface, self).__init__(folder, source=source)
         self.color_format = color_format
@@ -21,7 +21,7 @@ class VideoInterface(BaseInterface):
         self.subsampling = subsampling
 
         self.timestamps = self._load_timestamps_as_datetimeindex(
-            self.folder, self.source, self.info)
+            self.folder, self.source, self.info, video_offset)
 
         # resample norm pos to video timestamps
         if norm_pos is not None:

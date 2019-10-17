@@ -4,6 +4,7 @@ import shutil
 from unittest import TestCase
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 from pupil_recording_interface import GazeInterface, load_dataset, write_netcdf
@@ -71,8 +72,12 @@ class TestBaseInterface(InterfaceTester):
         """"""
         idx = BaseInterface._load_timestamps_as_datetimeindex(
             self.folder, 'gaze', self.info)
-
         assert idx.values[0].astype(float) / 1e9 == 1570725800.149778
+
+        # with offset
+        idx_with_offs = BaseInterface._load_timestamps_as_datetimeindex(
+            self.folder, 'gaze', self.info, 1.)
+        assert np.all(idx_with_offs == idx + pd.to_timedelta('1s'))
 
         with self.assertRaises(FileNotFoundError):
             BaseInterface._load_timestamps_as_datetimeindex(
