@@ -45,7 +45,7 @@ class GazeInterface(BaseInterface):
     def _merge_2d_3d_gaze(gaze_2d, gaze_3d):
         """"""
         t, idx_2d, idx_3d = np.intersect1d(
-            gaze_2d[0], gaze_3d[0], assume_unique=True, return_indices=True)
+            gaze_2d[0], gaze_3d[0], return_indices=True)
 
         return t, (gaze_2d[1][idx_2d], gaze_3d[1][idx_3d]), \
                gaze_2d[2][idx_2d], gaze_3d[3][idx_3d]
@@ -114,7 +114,9 @@ class GazeInterface(BaseInterface):
             assert len(c) == 2
             data_vars['gaze_confidence_2d'] = ('time', c[0])
             data_vars['gaze_confidence_3d'] = ('time', c[1])
+        elif p is None:
+            data_vars['gaze_confidence_2d'] = ('time', c)
         else:
-            data_vars['gaze_confidence'] = ('time', c)
+            data_vars['gaze_confidence_3d'] = ('time', c)
 
         return xr.Dataset(data_vars, coords)
