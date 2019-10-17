@@ -12,19 +12,24 @@ from pupil_recording_interface.base import BaseInterface
 class VideoInterface(BaseInterface):
 
     def __init__(self, folder, source='world', color_format=None,
-                 norm_pos=None, roi_size=None, subsampling=None):
+                 norm_pos=None, roi_size=None, subsampling=None,
+                 interpolation_method='linear'):
         """"""
         super(VideoInterface, self).__init__(folder, source=source)
         self.color_format = color_format
         self.roi_size = roi_size
         self.subsampling = subsampling
 
+        self.timestamps = self._load_timestamps_as_datetimeindex(
+            self.folder, self.source, self.info)
+
+        # resample norm pos to video timestamps
         if norm_pos is not None:
             if self.roi_size is None:
                 raise ValueError(
                     'roi_size must be specified when norm_pos is specified')
-            idx = self.load_timestamps()
-            self.norm_pos = norm_pos.interp({'time': idx}).values
+            self.norm_pos = norm_pos.interp(
+                {'time': self.timestamps}, method=interpolation_method)
         else:
             self.norm_pos = None
 
@@ -32,10 +37,9 @@ class VideoInterface(BaseInterface):
             self.folder)
 
         self.capture = self._get_capture(self.folder, source)
-
         self.resolution = self._get_resolution(self.capture)
         self.frame_count = self._get_frame_count(self.capture)
-        self.frame_shape = next(self.read_frames()).shape
+        self.frame_shape = self.get_frame(0).shape
         self.fps = self._get_fps(self.capture)
 
     @property
@@ -128,7 +132,7 @@ class VideoInterface(BaseInterface):
             newCameraMatrix=new_camera_matrix)
 
         frame_roi = np.nan * np.ones((h, w))
-        frame_roi[ry:ry+rh, rx:rx+rw] = frame[ry:ry+rh, rx:rx+rw]
+        frame_roi[ry:ry + rh, rx:rx + rw] = frame[ry:ry + rh, rx:rx + rw]
 
         return frame_roi
 
@@ -143,8 +147,8 @@ class VideoInterface(BaseInterface):
     @staticmethod
     def get_bounds(p, frame_size, roi_size):
         """"""
-        p0 = p - roi_size//2
-        p1 = p + roi_size//2
+        p0 = p - roi_size // 2
+        p1 = p + roi_size // 2
 
         p0_frame = np.clip(p0, 0, frame_size)
         p1_frame = np.clip(p1, 0, frame_size)
@@ -169,7 +173,7 @@ class VideoInterface(BaseInterface):
                     int(x * frame.shape[1]), frame.shape[1], roi_size)
             (y0_roi, y1_roi), (y0_frame, y1_frame) = \
                 VideoInterface.get_bounds(
-                    int((1-y) * frame.shape[0]), frame.shape[0], roi_size)
+                    int((1 - y) * frame.shape[0]), frame.shape[0], roi_size)
             roi[y0_roi:y1_roi, x0_roi:x1_roi, ...] = \
                 frame[y0_frame:y1_frame, x0_frame:x1_frame, ...]
 
@@ -202,7 +206,7 @@ class VideoInterface(BaseInterface):
 
         return frame.astype(float)
 
-    def get_frame(self, idx, return_timestamp=False):
+    def get_raw_frame(self, idx):
         """"""
         if idx < 0 or idx >= self.frame_count:
             raise ValueError('Frame index out of range')
@@ -210,14 +214,20 @@ class VideoInterface(BaseInterface):
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
         _, frame = self.capture.read()
 
+        return frame
+
+    def get_frame(self, idx, return_timestamp=False):
+        """"""
+        frame = self.get_raw_frame(idx)
+
         if self.norm_pos is not None:
-            norm_pos = self.norm_pos[idx]
+            norm_pos = self.norm_pos.values[idx]
         else:
             norm_pos = None
 
         if return_timestamp:
-            ts = self.load_timestamps()
-            return ts[idx], self.process_frame(frame, norm_pos=norm_pos)
+            return (self.timestamps[idx],
+                    self.process_frame(frame, norm_pos=norm_pos))
         else:
             return self.process_frame(frame, norm_pos=norm_pos)
 
@@ -226,7 +236,7 @@ class VideoInterface(BaseInterface):
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
         if self.norm_pos is not None:
-            norm_pos = (n for n in self.norm_pos)
+            norm_pos = (n for n in self.norm_pos.values)
         else:
             # infinite generator returning None
             norm_pos = iter(lambda: None, 1)
@@ -239,7 +249,8 @@ class VideoInterface(BaseInterface):
 
     def load_dataset(self, dropna=False):
         """"""
-        t = self.load_timestamps()
+        t = self.timestamps
+
         if dropna:
             t_gen, flow_gen = zip(
                 *((t, f)
@@ -275,14 +286,12 @@ class VideoInterface(BaseInterface):
 
 class OpticalFlowInterface(VideoInterface):
 
-    def __init__(self, folder, source='world',
-                 norm_pos=None, roi_size=None, subsampling=None):
+    def __init__(self, folder, source='world', **kwargs):
         """"""
         super(OpticalFlowInterface, self).__init__(
-            folder, source=source, color_format='gray', norm_pos=norm_pos,
-            roi_size=roi_size, subsampling=subsampling)
+            folder, source=source, color_format='gray', **kwargs)
 
-        self.flow_shape = next(self.estimate_optical_flow()).shape
+        self.flow_shape = self.get_optical_flow(0).shape
 
     @property
     def nc_name(self):
@@ -305,14 +314,14 @@ class OpticalFlowInterface(VideoInterface):
             raise ValueError('Frame index out of range')
 
         if idx == 0:
-            flow = np.nan * np.ones(self.flow_shape)
+            last_frame = None
         else:
-            flow = self.calculate_flow(
-                self.get_frame(idx - 1), self.get_frame(idx))
+            last_frame = self.get_frame(idx - 1)
+
+        flow = self.calculate_flow(self.get_frame(idx), last_frame)
 
         if return_timestamp:
-            timestamps = self.load_timestamps()
-            return timestamps[idx], flow
+            return self.timestamps[idx], flow
         else:
             return flow
 
@@ -325,7 +334,7 @@ class OpticalFlowInterface(VideoInterface):
 
     def load_dataset(self, dropna=False):
         """"""
-        t = self.load_timestamps()
+        t = self.timestamps
 
         if dropna:
             t_gen, flow_gen = zip(

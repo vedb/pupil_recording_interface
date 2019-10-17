@@ -108,6 +108,16 @@ class TestVideoInterface(InterfaceTester):
         np.testing.assert_equal(
             frame, np.zeros(self.frame_shape, dtype='uint8'))
 
+    def test_get_raw_frame(self):
+        """"""
+        interface = VideoInterface(self.folder)
+        frame = interface.get_raw_frame(0)
+        assert frame.shape == self.frame_shape
+
+        # invalid index
+        with self.assertRaises(ValueError):
+            interface.get_raw_frame(self.n_frames)
+
     def test_get_frame(self):
         """"""
         interface = VideoInterface(self.folder)
@@ -126,10 +136,6 @@ class TestVideoInterface(InterfaceTester):
         interface = VideoInterface(self.folder)
         t, frame = interface.get_frame(0, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2383718
-
-        # invalid index
-        with self.assertRaises(ValueError):
-            interface.get_frame(self.n_frames)
 
     def test_read_frames(self):
         """"""
