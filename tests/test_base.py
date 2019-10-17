@@ -119,7 +119,7 @@ class TestBaseInterface(InterfaceTester):
         ds = xr.open_dataset(os.path.join(self.export_folder, 'gaze.nc'))
 
         assert set(ds.data_vars) == {
-            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
+            'gaze_confidence_3d', 'gaze_point', 'gaze_norm_pos'}
 
         ds.close()
 
@@ -132,7 +132,7 @@ class TestFunctionalInterface(InterfaceTester):
             self.folder, gaze='recording', odometry='recording')
 
         assert set(gaze.data_vars) == {
-            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
+            'gaze_confidence_3d', 'gaze_point', 'gaze_norm_pos'}
         assert set(odometry.data_vars) == {
             'tracker_confidence', 'linear_velocity', 'angular_velocity',
             'linear_position', 'angular_position'}

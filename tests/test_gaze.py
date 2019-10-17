@@ -59,7 +59,7 @@ class TestGazeInterface(InterfaceTester):
             'pixel_axis': 2})
 
         assert set(ds.data_vars) == {
-            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
+            'gaze_confidence_3d', 'gaze_point', 'gaze_norm_pos'}
 
         # offline 2d mapper
         ds = GazeInterface(
@@ -70,7 +70,7 @@ class TestGazeInterface(InterfaceTester):
             'pixel_axis': 2})
 
         assert set(ds.data_vars) == {
-            'gaze_confidence', 'gaze_norm_pos'}
+            'gaze_confidence_2d', 'gaze_norm_pos'}
 
         # merged 2d/3d gaze
         ds = GazeInterface(
@@ -97,6 +97,6 @@ class TestGazeInterface(InterfaceTester):
         ds = xr.open_dataset(os.path.join(self.export_folder, 'gaze.nc'))
 
         assert set(ds.data_vars) == {
-            'gaze_confidence', 'gaze_point', 'gaze_norm_pos'}
+            'gaze_confidence_3d', 'gaze_point', 'gaze_norm_pos'}
 
         ds.close()
