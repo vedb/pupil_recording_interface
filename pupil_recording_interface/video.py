@@ -302,7 +302,7 @@ class OpticalFlowInterface(VideoInterface):
         """"""
         if last_frame is not None:
             # TODO make configurable
-            return cv2.calcOpticalFlowFarneback(
+            return -cv2.calcOpticalFlowFarneback(
                 last_frame, frame, None, pyr_scale=0.5, levels=3, winsize=20,
                 iterations=3, poly_n=7, poly_sigma=1.5, flags=0)
         else:
