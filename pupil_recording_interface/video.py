@@ -75,7 +75,7 @@ class VideoInterface(BaseInterface):
     @staticmethod
     def _get_frame_count(capture):
         """"""
-        return capture.get(cv2.CAP_PROP_FRAME_COUNT)
+        return int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
 
     @staticmethod
     def _get_fps(capture):

@@ -44,11 +44,14 @@ class TestVideoInterface(InterfaceTester):
         """"""
         resolution = VideoInterface(self.folder, 'world').resolution
         assert resolution == self.frame_shape[-2::-1]
+        assert isinstance(resolution[0], int)
+        assert isinstance(resolution[1], int)
 
     def test_frame_count(self):
         """"""
         frame_count = VideoInterface(self.folder, 'world').frame_count
         assert frame_count == self.n_frames
+        assert isinstance(frame_count, int)
 
     def test_frame_shape(self):
         """"""
