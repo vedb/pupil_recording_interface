@@ -60,6 +60,23 @@ class TestBaseInterface(InterfaceTester):
         with self.assertRaises(FileNotFoundError):
             BaseInterface._load_info(self.folder, 'not_a_file')
 
+    def test_load_user_info(self):
+        """"""
+        user_info = BaseInterface._load_user_info(
+            self.folder, self.info['start_time_system_s'])
+        
+        t0 = pd.to_datetime(self.info['start_time_system_s'], unit='s')
+
+        self.assertDictEqual(user_info, {
+            'name': 'TEST',
+            'pre_calibration_start': t0 + pd.to_timedelta('1s'),
+            'pre_calibration_end': t0 + pd.to_timedelta('2s'),
+            'experiment_start': t0 + pd.to_timedelta('3s'),
+            'experiment_end': t0 + pd.to_timedelta('4s'),
+            'post_calibration_start': t0 + pd.to_timedelta('5s'),
+            'post_calibration_end': t0 + pd.to_timedelta('6s'),
+        })
+
     def test_timestamps_to_datetimeindex(self):
         """"""
         timestamps = np.array([2295., 2296., 2297.])

@@ -25,6 +25,9 @@ class BaseInterface(object):
         else:
             self.info = self._load_info(self.folder)
 
+        self.user_info = self._load_user_info(
+            self.folder, self.info['start_time_system_s'])
+
     @property
     def nc_name(self):
         return 'base'
@@ -55,7 +58,6 @@ class BaseInterface(object):
     @staticmethod
     def _load_info(folder, filename='info.player.json'):
         """"""
-        # TODO support csv
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
                 f'File {filename} not found in folder {folder}')
@@ -67,6 +69,24 @@ class BaseInterface(object):
                 info = BaseInterface._load_legacy_info(f)
             else:
                 raise ValueError('Unsupported info file type.')
+
+        return info
+
+    @staticmethod
+    def _load_user_info(folder, start_time, filename='user_info.csv'):
+        """"""
+        if not os.path.exists(os.path.join(folder, filename)):
+            raise FileNotFoundError(
+                f'File {filename} not found in folder {folder}')
+
+        with open(os.path.join(folder, filename)) as f:
+            reader = csv.reader(f)
+            info = {rows[0]: rows[1] for rows in reader if rows[0] != 'key'}
+
+        for k, v in info.items():
+            if k.endswith(('start', 'end')):
+                info[k] = \
+                    pd.to_timedelta(v) + pd.to_datetime(start_time, unit='s')
 
         return info
 
