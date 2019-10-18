@@ -291,7 +291,7 @@ class TestOpticalFlowInterface(InterfaceTester):
         assert ds.indexes['time'][-1] < interface.user_info['experiment_end']
         assert set(ds.data_vars) == {'optical_flow'}
 
-        # ROI around norm_pos and start/end
+        # ROI around norm_pos
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
         interface = OpticalFlowInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
@@ -303,3 +303,11 @@ class TestOpticalFlowInterface(InterfaceTester):
             'roi_x': self.roi_size,
             'roi_y': self.roi_size,
             'pixel_axis': 2})
+
+        # start/end with dropna
+        ds = interface.load_dataset(
+            dropna=True,
+            start=interface.user_info['experiment_start'],
+            end=interface.user_info['experiment_end'])
+
+        assert ds.sizes['time'] == 21

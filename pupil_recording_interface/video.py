@@ -260,7 +260,8 @@ class VideoInterface(BaseInterface):
         for idx in range(end - start):
             _, frame = self.capture.read()
             if self.norm_pos is not None:
-                yield self.process_frame(frame, self.norm_pos.values[idx])
+                yield self.process_frame(
+                    frame, self.norm_pos.values[idx - start])
             else:
                 yield self.process_frame(frame)
 
@@ -362,11 +363,11 @@ class OpticalFlowInterface(VideoInterface):
 
         if start is not None:
             start = t.get_loc(start, method='nearest')
-            t = t[start:]
 
         if end is not None:
             end = t.get_loc(end, method='nearest')
-            t = t[:end]
+
+        t = t[start:end]
 
         if dropna:
             # TODO fix get_valid_idx to get actual number of samples
@@ -374,8 +375,7 @@ class OpticalFlowInterface(VideoInterface):
             valid_idx = np.zeros(t.size, dtype=bool)
             idx = 0
             for f in iter_wrapper(
-                    self.estimate_optical_flow(start, end),
-                    total=self.frame_count):
+                    self.estimate_optical_flow(start, end), total=t.size):
                 if not np.any(np.isnan(f)):
                     flow[idx] = f
                     valid_idx[idx] = True
@@ -384,9 +384,8 @@ class OpticalFlowInterface(VideoInterface):
             t = t[valid_idx]
         else:
             flow = np.empty((t.size,) + self.flow_shape)
-            for idx, f in iter_wrapper(
-                    enumerate(self.estimate_optical_flow(start, end)),
-                    total=self.frame_count):
+            for idx, f in iter_wrapper(enumerate(
+                    self.estimate_optical_flow(start, end)), total=t.size):
                 flow[idx] = f
 
         coords = {
