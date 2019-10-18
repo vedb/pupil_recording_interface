@@ -1,6 +1,7 @@
 """"""
 import os
 
+from .base import BaseInterface
 from .odometry import OdometryInterface, OdometryRecorder
 from .gaze import GazeInterface
 from .video import VideoInterface, OpticalFlowInterface
@@ -38,3 +39,13 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
             filename = None
         OdometryInterface(
             folder, source=odometry).write_netcdf(filename=filename)
+
+
+def load_info(folder):
+    """"""
+    return BaseInterface(folder).info
+
+
+def load_user_info(folder):
+    """"""
+    return BaseInterface(folder).user_info
