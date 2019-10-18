@@ -250,21 +250,19 @@ class VideoInterface(BaseInterface):
         else:
             return self.process_frame(frame, norm_pos=norm_pos)
 
-    def read_frames(self):
+    def read_frames(self, start=None, end=None):
         """"""
-        self.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        start = start or 0
+        end = end or self.frame_count
 
-        if self.norm_pos is not None:
-            norm_pos = (n for n in self.norm_pos.values)
-        else:
-            # infinite generator returning None
-            norm_pos = iter(lambda: None, 1)
+        self.capture.set(cv2.CAP_PROP_POS_FRAMES, start)
 
-        while True:
-            ret, frame = self.capture.read()
-            if not ret:
-                break
-            yield self.process_frame(frame, next(norm_pos))
+        for idx in range(end - start):
+            _, frame = self.capture.read()
+            if self.norm_pos is not None:
+                yield self.process_frame(frame, self.norm_pos.values[idx])
+            else:
+                yield self.process_frame(frame)
 
     def load_dataset(self, dropna=False):
         """"""
@@ -350,23 +348,33 @@ class OpticalFlowInterface(VideoInterface):
         else:
             return flow
 
-    def estimate_optical_flow(self):
+    def estimate_optical_flow(self, start=None, end=None):
         """"""
         last_frame = None
-        for frame in self.read_frames():
+        for frame in self.read_frames(start, end):
             yield self.calculate_flow(frame, last_frame)
             last_frame = frame
 
-    def load_dataset(self, dropna=False, iter_wrapper=iter_wrapper):
+    def load_dataset(self, dropna=False, start=None, end=None,
+                     iter_wrapper=iter_wrapper):
         """"""
         t = self.timestamps
 
+        if start is not None:
+            start = t.get_loc(start, method='nearest')
+            t = t[start:]
+
+        if end is not None:
+            end = t.get_loc(end, method='nearest')
+            t = t[:end]
+
         if dropna:
+            # TODO fix get_valid_idx to get actual number of samples
             flow = np.empty((t.size,) + self.flow_shape)
             valid_idx = np.zeros(t.size, dtype=bool)
             idx = 0
             for f in iter_wrapper(
-                    self.estimate_optical_flow(),
+                    self.estimate_optical_flow(start, end),
                     total=self.frame_count):
                 if not np.any(np.isnan(f)):
                     flow[idx] = f
@@ -377,7 +385,7 @@ class OpticalFlowInterface(VideoInterface):
         else:
             flow = np.empty((t.size,) + self.flow_shape)
             for idx, f in iter_wrapper(
-                    enumerate(self.estimate_optical_flow()),
+                    enumerate(self.estimate_optical_flow(start, end)),
                     total=self.frame_count):
                 flow[idx] = f
 

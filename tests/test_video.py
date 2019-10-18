@@ -278,17 +278,20 @@ class TestOpticalFlowInterface(InterfaceTester):
 
         interface = OpticalFlowInterface(self.folder, subsampling=8.)
 
-        ds = interface.load_dataset()
+        ds = interface.load_dataset(
+            start=interface.user_info['experiment_start'],
+            end=interface.user_info['experiment_end'])
 
         self.assertDictEqual(dict(ds.sizes), {
-            'time': self.n_frames,
+            'time': 22,
             'roi_x': 160,
             'roi_y': 90,
             'pixel_axis': 2})
-
+        assert ds.indexes['time'][0] >= interface.user_info['experiment_start']
+        assert ds.indexes['time'][-1] < interface.user_info['experiment_end']
         assert set(ds.data_vars) == {'optical_flow'}
 
-        # ROI around norm_pos
+        # ROI around norm_pos and start/end
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
         interface = OpticalFlowInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
