@@ -9,6 +9,10 @@ import cv2
 from pupil_recording_interface.base import BaseInterface
 
 
+def iter_wrapper(it, **kwargs):
+    return it
+
+
 class VideoInterface(BaseInterface):
 
     def __init__(self, folder, source='world', color_format=None,
@@ -109,7 +113,7 @@ class VideoInterface(BaseInterface):
 
     def undistort_point(self, point, frame_size):
         """"""
-        # TODO move somewhere else
+        # TODO test
         u = point[0] * frame_size[1]
         v = (1 - point[1]) * frame_size[0]
 
@@ -124,6 +128,7 @@ class VideoInterface(BaseInterface):
 
     def undistort_frame(self, frame):
         """"""
+        # TODO test
         h, w = frame.shape[:2]
         new_camera_matrix, (rx, ry, rw, rh) = cv2.getOptimalNewCameraMatrix(
             self.camera_matrix, self.distortion_coefs, (w, h), 0, (w, h))
@@ -143,6 +148,20 @@ class VideoInterface(BaseInterface):
             fy=1. / self.subsampling, interpolation=cv2.INTER_AREA)
 
         return frame
+
+    @staticmethod
+    def get_valid_idx(norm_pos, frame_shape, roi_size):
+        """"""
+        norm_pos[:, 0] = norm_pos[:, 0] * frame_shape[1]
+        norm_pos[:, 1] = (1 - norm_pos[:, 1]) * frame_shape[0]
+
+        left_lower = norm_pos - roi_size // 2
+        right_upper = norm_pos + roi_size // 2
+
+        idx = np.all(left_lower > 0, axis=1) \
+            & np.all(right_upper <= frame_shape, axis=1)
+
+        return idx
 
     @staticmethod
     def get_bounds(p, frame_size, roi_size):
@@ -298,6 +317,12 @@ class OpticalFlowInterface(VideoInterface):
         return 'optical_flow'
 
     @staticmethod
+    def get_valid_idx(norm_pos, frame_shape, roi_size):
+        """"""
+        idx = VideoInterface.get_valid_idx(norm_pos, frame_shape, roi_size)
+        return np.hstack((False, idx[1:] & idx[:-1]))
+
+    @staticmethod
     def calculate_flow(frame, last_frame):
         """"""
         if last_frame is not None:
@@ -332,20 +357,28 @@ class OpticalFlowInterface(VideoInterface):
             yield self.calculate_flow(frame, last_frame)
             last_frame = frame
 
-    def load_dataset(self, dropna=False):
+    def load_dataset(self, dropna=False, iter_wrapper=iter_wrapper):
         """"""
         t = self.timestamps
 
         if dropna:
-            t_gen, flow_gen = zip(
-                *((t, f)
-                  for t, f in zip(t, self.estimate_optical_flow())
-                  if not np.any(np.isnan(f))))
-            t = pd.DatetimeIndex(t_gen)
-            flow = np.array(flow_gen)
+            flow = np.empty((t.size,) + self.flow_shape)
+            valid_idx = np.zeros(t.size, dtype=bool)
+            idx = 0
+            for f in iter_wrapper(
+                    self.estimate_optical_flow(),
+                    total=self.frame_count):
+                if not np.any(np.isnan(f)):
+                    flow[idx] = f
+                    valid_idx[idx] = True
+                    idx += 1
+            flow = flow[:idx]
+            t = t[valid_idx]
         else:
             flow = np.empty((t.size,) + self.flow_shape)
-            for idx, f in enumerate(self.estimate_optical_flow()):
+            for idx, f in iter_wrapper(
+                    enumerate(self.estimate_optical_flow()),
+                    total=self.frame_count):
                 flow[idx] = f
 
         coords = {

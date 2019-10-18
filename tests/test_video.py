@@ -63,6 +63,18 @@ class TestVideoInterface(InterfaceTester):
         fps = VideoInterface(self.folder).fps
         assert fps == self.fps
 
+    def test_get_valid_idx(self):
+        """"""
+        norm_pos = np.array([[0.5, 0.5],
+                             [0.5, 0.5],
+                             [0.5, 0.9],
+                             [0.9, 0.5],
+                             [0.5, 0.5]])
+
+        idx = VideoInterface.get_valid_idx(norm_pos, (512, 512), self.roi_size)
+
+        np.testing.assert_equal(idx, (True, True, False, False, True))
+
     def test_get_bounds(self):
         """"""
         # completely inside
@@ -206,6 +218,19 @@ class TestOpticalFlowInterface(InterfaceTester):
         self.frame_shape = (720, 1280, 2)
         self.roi_size = 128
 
+    def test_get_valid_idx(self):
+        """"""
+        norm_pos = np.array([[0.5, 0.5],
+                             [0.5, 0.5],
+                             [0.5, 0.9],
+                             [0.9, 0.5],
+                             [0.5, 0.5]])
+
+        idx = OpticalFlowInterface.get_valid_idx(
+            norm_pos, (512, 512), self.roi_size)
+
+        np.testing.assert_equal(idx, (False, True, False, False, False))
+
     def test_calculate_flow(self):
         """"""
         flow = OpticalFlowInterface.calculate_flow(
@@ -249,6 +274,8 @@ class TestOpticalFlowInterface(InterfaceTester):
 
     def test_load_dataset(self):
         """"""
+        import tqdm
+
         interface = OpticalFlowInterface(self.folder, subsampling=8.)
 
         ds = interface.load_dataset()
@@ -266,7 +293,7 @@ class TestOpticalFlowInterface(InterfaceTester):
         interface = OpticalFlowInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
 
-        ds = interface.load_dataset(dropna=True)
+        ds = interface.load_dataset(dropna=True, iter_wrapper=tqdm.tqdm)
 
         self.assertDictEqual(dict(ds.sizes), {
             'time': self.n_valid_frames,
