@@ -2,14 +2,16 @@
 
 Python backend and cli for pupil recordings
 
+**This is the Python 2.7 compat branch which is not actively maintained!**
+
 ## Installation
 
-    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install git+https://github.com/vedb/pupil_recording_interface.git@py27-compat
     
 This will trigger a username/password prompt. Alternatively, if you have an
  ssh keypair set up:
  
-    $ pip install git+ssh://git@github.com/vedb/pupil_recording_interface.git
+    $ pip install git+ssh://git@github.com/vedb/pupil_recording_interface.git@py27-compat
 
 ## Usage
 

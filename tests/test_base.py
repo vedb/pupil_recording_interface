@@ -12,6 +12,8 @@ from pupil_recording_interface.base import BaseInterface
 
 test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
 
+FileNotFoundError = OSError
+
 
 class InterfaceTester(TestCase):
 

@@ -10,14 +10,11 @@ See COPYING and COPYING.LESSER for license details.
 """
 
 import collections
-import collections.abc
 import logging
 import os
 import pickle
 import traceback as tb
-import types
 from glob import iglob
-from pathlib import Path
 
 import msgpack
 import numpy as np
@@ -33,24 +30,44 @@ UnpicklingError = pickle.UnpicklingError
 PLData = collections.namedtuple("PLData", ["data", "timestamps", "topics"])
 
 
+class DictWrapper(collections.Mapping):
+
+    def __init__(self, data):
+        self._data = data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __str__(self):
+        return self._data.__str__()
+
+    def __repr__(self):
+        return self._data.__repr__()
+
+
 class Persistent_Dict(dict):
-    """a dict class that uses pickle to save inself to file"""
+    """a dict class that uses pickle to save itself to file"""
 
     def __init__(self, file_path, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Persistent_Dict, self).__init__(*args, **kwargs)
         self.file_path = os.path.expanduser(file_path)
         try:
             self.update(**load_object(self.file_path, allow_legacy=False))
         except IOError:
             logger.debug(
-                f"Session settings file '{self.file_path}' not found."
-                " Will make new one on exit."
+                "Session settings file '{}' not found. "
+                "Will make new one on exit.".format(self.file_path)
             )
-        except Exception:  # KeyError, EOFError
+        except:  # KeyError, EOFError
             logger.warning(
-                f"Session settings file '{self.file_path}'could not be read."
-                " Will overwrite on exit."
-            )
+                "Session settings file '{}'could not be read. "
+                "Will overwrite on exit.".format(self.file_path))
             logger.debug(tb.format_exc())
 
     def save(self):
@@ -72,8 +89,8 @@ def _load_object_legacy(file_path):
 def load_object(file_path, allow_legacy=True):
     import gc
 
-    file_path = Path(file_path).expanduser()
-    with file_path.open("rb") as fh:
+    file_path = os.path.expanduser(file_path)
+    with open(file_path, "rb") as fh:
         try:
             gc.disable()  # speeds deserialization up.
             data = msgpack.unpack(fh, raw=False)
@@ -82,10 +99,8 @@ def load_object(file_path, allow_legacy=True):
                 raise e
             else:
                 logger.info(
-                    "{} has a deprecated format: Will be updated on save".format(
-                        file_path
-                    )
-                )
+                    "{} has a deprecated format: "
+                    "Will be updated on save".format(file_path))
                 data = _load_object_legacy(file_path)
         finally:
             gc.enable()
@@ -106,8 +121,8 @@ def save_object(object_, file_path):
             return o.tolist()
         return o
 
-    file_path = Path(file_path).expanduser()
-    with file_path.open("wb") as fh:
+    file_path = os.path.expanduser(file_path)
+    with open(file_path, "wb") as fh:
         msgpack.pack(object_, fh, use_bin_type=True, default=ndarrray_to_list)
 
 
@@ -117,7 +132,8 @@ class Incremental_Legacy_Pupil_Data_Loader(object):
 
     def __enter__(self):
         self.file_handle = open(self.file_loc, "rb")
-        self.unpacker = msgpack.Unpacker(self.file_handle, raw=False, use_list=False)
+        self.unpacker = msgpack.Unpacker(
+            self.file_handle, raw=False, use_list=False)
         self.num_key_value_pairs = self.unpacker.read_map_header()
         self._skipped = True
         return self
@@ -142,10 +158,11 @@ def load_pldata_file(directory, topic):
         topics = collections.deque()
         data_ts = np.load(ts_file)
         with open(msgpack_file, "rb") as fh:
-            for topic, payload in msgpack.Unpacker(fh, raw=False, use_list=False):
+            for topic, payload in \
+                    msgpack.Unpacker(fh, raw=False, use_list=False):
                 data.append(Serialized_Dict(msgpack_bytes=payload))
                 topics.append(topic)
-    except FileNotFoundError:
+    except IOError:
         data = []
         data_ts = []
         topics = []
@@ -157,7 +174,7 @@ class PLData_Writer(object):
     """docstring for PLData_Writer"""
 
     def __init__(self, directory, name):
-        super().__init__()
+        super(PLData_Writer, self).__init__()
         self.directory = directory
         self.name = name
         self.ts_queue = collections.deque()
@@ -166,7 +183,8 @@ class PLData_Writer(object):
 
     def append(self, datum):
         datum_serialized = msgpack.packb(datum, use_bin_type=True)
-        self.append_serialized(datum["timestamp"], datum["topic"], datum_serialized)
+        self.append_serialized(
+            datum["timestamp"], datum["topic"], datum_serialized)
 
     def append_serialized(self, timestamp, topic, datum_serialized):
         self.ts_queue.append(timestamp)
@@ -252,7 +270,8 @@ class Serialized_Dict(object):
     @classmethod
     def unpacking_object_hook(self, obj):
         if type(obj) is dict:
-            return types.MappingProxyType(obj)
+            return DictWrapper(obj)
+            # return obj
 
     @classmethod
     def packing_hook(self, obj):

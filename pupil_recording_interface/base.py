@@ -9,13 +9,15 @@ import pandas as pd
 
 from pupil_recording_interface.externals.file_methods import load_pldata_file
 
+FileNotFoundError = OSError
+
 
 class BaseInterface(object):
 
     def __init__(self, folder, source='recording'):
         """"""
         if not os.path.exists(folder):
-            raise FileNotFoundError(f'No such folder: {folder}')
+            raise FileNotFoundError('No such folder: {}'.format(folder))
 
         self.folder = folder
         self.source = source
@@ -60,7 +62,7 @@ class BaseInterface(object):
         """"""
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
-                f'File {filename} not found in folder {folder}')
+                'File {} not found in folder {}'.format(filename, folder))
 
         with open(os.path.join(folder, filename)) as f:
             if filename.endswith('.json'):
@@ -77,7 +79,7 @@ class BaseInterface(object):
         """"""
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
-                f'File {filename} not found in folder {folder}')
+                'File {} not found in folder {}'.format(filename, folder))
 
         with open(os.path.join(folder, filename)) as f:
             reader = csv.reader(f)
@@ -95,7 +97,7 @@ class BaseInterface(object):
         """"""
         if not os.path.exists(os.path.join(folder, topic + '.pldata')):
             raise FileNotFoundError(
-                f'File {topic}.pldata not found in folder {folder}')
+                'File {}.pldata not found in folder {}'.format(topic, folder))
 
         pldata = load_pldata_file(folder, topic)
         return pd.DataFrame([dict(d) for d in pldata.data])
@@ -114,7 +116,8 @@ class BaseInterface(object):
         filepath = os.path.join(folder, topic + '_timestamps.npy')
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                f'File {topic}_timestamps.npy not found in folder {folder}')
+                'File {}_timestamps.npy not found in folder {}'.format(
+                    topic, folder))
 
         timestamps = np.load(filepath)
         idx = BaseInterface._timestamps_to_datetimeindex(timestamps, info)
@@ -136,7 +139,10 @@ class BaseInterface(object):
     def _create_export_folder(filename):
         """"""
         folder = os.path.dirname(filename)
-        os.makedirs(folder, exist_ok=True)
+        try:
+            os.makedirs(folder)
+        except OSError:
+            pass
 
     @abc.abstractmethod
     def load_dataset(self):
@@ -160,6 +166,6 @@ class BaseRecorder(object):
     def __init__(self, folder):
         """"""
         if not os.path.exists(folder):
-            raise FileNotFoundError(f'No such folder: {folder}')
+            raise FileNotFoundError('No such folder: {}'.format(folder))
 
         self.folder = folder

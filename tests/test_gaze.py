@@ -6,6 +6,8 @@ import xarray as xr
 
 from pupil_recording_interface import GazeInterface
 
+FileNotFoundError = OSError
+
 
 class TestGazeInterface(InterfaceTester):
 

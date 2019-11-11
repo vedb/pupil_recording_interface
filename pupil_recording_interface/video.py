@@ -8,6 +8,8 @@ import cv2
 
 from pupil_recording_interface.base import BaseInterface
 
+FileNotFoundError = OSError
+
 
 def iter_wrapper(it, **kwargs):
     return it
@@ -66,7 +68,7 @@ class VideoInterface(BaseInterface):
         filepath = os.path.join(folder, topic + '.mp4')
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                f'File {topic}.mp4 not found in folder {folder}')
+                'File {}.mp4 not found in folder {}'.format(topic, folder))
 
         return cv2.VideoCapture(filepath)
 
@@ -109,7 +111,7 @@ class VideoInterface(BaseInterface):
         if color_format == 'gray':
             return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
-            raise ValueError(f'Unsupported color format: {color_format}')
+            raise ValueError('Unsupported color format: {}'.format(color_format))
 
     def undistort_point(self, point, frame_size):
         """"""
