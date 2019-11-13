@@ -6,8 +6,7 @@ import xarray as xr
 from msgpack import Unpacker
 
 from pupil_recording_interface.base import BaseInterface
-
-FileNotFoundError = OSError
+from pupil_recording_interface.errors import FileNotFoundError
 
 
 class GazeInterface(BaseInterface):

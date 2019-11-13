@@ -2,8 +2,6 @@
 
 Python backend and cli for pupil recordings
 
-**This is the Python 2.7 compat branch which is not actively maintained!**
-
 ## Installation
 
     $ pip install git+https://github.com/vedb/pupil_recording_interface.git@py27-compat
