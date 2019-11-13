@@ -6,6 +6,7 @@ import xarray as xr
 from msgpack import Unpacker
 
 from pupil_recording_interface.base import BaseInterface
+from pupil_recording_interface.errors import FileNotFoundError
 
 
 class GazeInterface(BaseInterface):
@@ -25,8 +26,8 @@ class GazeInterface(BaseInterface):
         df = BaseInterface._load_pldata_as_dataframe(folder, topic)
 
         if df.size == 0:
-            raise ValueError(f'No gaze data in '
-                             f'{os.path.join(folder, topic + ".pldata")}')
+            raise ValueError('No gaze data in '
+                             '{}'.format(os.path.join(folder, topic + ".pldata")))
 
         t = df.timestamp
         c = df.confidence
@@ -91,7 +92,7 @@ class GazeInterface(BaseInterface):
                 and set(self.source.keys()) == {'2d', '3d'}:
             t, c, n, p = self._load_merged_gaze(self.folder, self.source)
         else:
-            raise ValueError(f'Invalid gaze source: {self.source}')
+            raise ValueError('Invalid gaze source: {}'.format(self.source))
 
         t = self._timestamps_to_datetimeindex(t, self.info)
 

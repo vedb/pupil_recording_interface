@@ -1,5 +1,6 @@
-import os
+import sys
 
+import pytest
 from .test_base import InterfaceTester
 import numpy.testing as npt
 
@@ -9,6 +10,8 @@ import cv2
 
 from pupil_recording_interface import \
     VideoInterface, OpticalFlowInterface, load_dataset
+
+from pupil_recording_interface.errors import FileNotFoundError
 
 
 class TestVideoInterface(InterfaceTester):
@@ -31,6 +34,8 @@ class TestVideoInterface(InterfaceTester):
             'dtype': 'uint8',
         })
 
+    @pytest.mark.xfail(
+        sys.version_info < (3, 0), reason='isinstance check fails')
     def test_get_capture(self):
         """"""
         capture = VideoInterface._get_capture(self.folder, 'world')

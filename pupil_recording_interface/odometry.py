@@ -1,4 +1,6 @@
 """"""
+from __future__ import print_function
+
 import os
 from collections import deque
 
@@ -34,7 +36,7 @@ class OdometryInterface(BaseInterface):
         if self.source == 'recording':
             t, c, p, q, v, w = self._load_odometry(self.folder)
         else:
-            raise ValueError(f'Invalid odometry source: {self.source}')
+            raise ValueError('Invalid odometry source: {}'.format(self.source))
 
         t = self._timestamps_to_datetimeindex(t, self.info)
 
@@ -82,7 +84,8 @@ class OdometryRecorder(BaseRecorder):
         # pldata writer
         self.filename = os.path.join(folder, topic + '.pldata')
         if os.path.exists(self.filename):
-            raise IOError(f'{self.filename} exists, will not overwrite')
+            raise IOError('{} exists, will not overwrite'.format(
+                self.filename))
         self.writer = PLData_Writer(folder, topic)
 
         super(OdometryRecorder, self).__init__(folder)
@@ -127,7 +130,7 @@ class OdometryRecorder(BaseRecorder):
         buffer = deque(maxlen=200)
 
         if self.verbose:
-            print(f'Started recording to {self.filename}')
+            print('Started recording to {}'.format(self.filename))
 
         t = 0.
         while True:
@@ -137,7 +140,7 @@ class OdometryRecorder(BaseRecorder):
                 t = odometry_data[0]
                 if self.verbose:
                     f = self._moving_average(odometry_data[1], buffer)
-                    print(f'\rSampling rate: {f:.2f}', end='')
+                    print('\rSampling rate: {:.2f}'.format(f), end='')
                 self.writer.append(self._odometry_to_dict(odometry_data))
             except (KeyboardInterrupt, RuntimeError):
                 break
