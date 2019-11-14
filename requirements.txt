@@ -2,7 +2,7 @@ numpy
 pandas
 xarray
 scipy
-opencv
+opencv-python
 msgpack
 netcdf4
 pyrealsense2

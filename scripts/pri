@@ -1,31 +1,8 @@
 #!/usr/bin/env python
+import sys
 
-import argparse
-
-from pupil_recording_interface.odometry import OdometryRecorder
+from pupil_recording_interface.cli import CLI
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser('pri')
-    parser.add_argument(
-        'command', help='Command to execute. Can be "record".')
-    parser.add_argument(
-        'topic', help='Topic to record/export. Can be "odometry".')
-    parser.add_argument(
-        'folder', help='Path to the recording folder.')
-    parser.add_argument(
-        '-q', '--quiet', action='store_false',
-        help='Set this flag to suppress output')
-
-    args = parser.parse_args()
-
-    try:
-        if args.command == 'record':
-            if args.topic == 'odometry':
-                OdometryRecorder(args.folder, verbose=args.quiet).run()
-            else:
-                parser.error(f'Unsupported topic: {args.topic}')
-        else:
-            parser.error(f'Unsupported command: {args.mode}')
-    except Exception as e:
-        parser.error(str(e))
+    CLI().run(sys.argv)

@@ -12,5 +12,6 @@ dependencies:
   - netcdf4
   - msgpack-python
   - pip:
+    - opencv-python # reinstall through pip because cli breaks otherwise
     - pyrealsense2
     - git+https://github.com/pupil-labs/pyuvc.git
