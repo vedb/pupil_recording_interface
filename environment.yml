@@ -11,6 +11,8 @@ dependencies:
   - opencv
   - netcdf4
   - msgpack-python
+  - tqdm
+  - pytest
   - pip:
     - opencv-python # reinstall through pip because cli breaks otherwise
     - pyrealsense2

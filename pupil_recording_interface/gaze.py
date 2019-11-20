@@ -120,4 +120,11 @@ class GazeInterface(BaseInterface):
         else:
             data_vars['gaze_confidence_3d'] = ('time', c)
 
-        return xr.Dataset(data_vars, coords)
+        ds = xr.Dataset(data_vars, coords)
+
+        # sort and remove duplicate samples
+        ds.sortby('time')
+        _, index = np.unique(ds['time'], return_index=True)
+        ds = ds.isel(time=index)
+
+        return ds
