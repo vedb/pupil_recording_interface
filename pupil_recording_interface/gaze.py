@@ -26,8 +26,9 @@ class GazeInterface(BaseInterface):
         df = BaseInterface._load_pldata_as_dataframe(folder, topic)
 
         if df.size == 0:
-            raise ValueError('No gaze data in '
-                             '{}'.format(os.path.join(folder, topic + ".pldata")))
+            raise ValueError(
+                'No gaze data in {}'.format(
+                    os.path.join(folder, topic + ".pldata")))
 
         t = df.timestamp
         c = df.confidence
@@ -39,6 +40,7 @@ class GazeInterface(BaseInterface):
             p = np.nan * np.ones(t.shape + (3,))
             idx_notnan = df.gaze_point_3d.apply(lambda x: isinstance(x, tuple))
             p[idx_notnan, :] = np.array(df.gaze_point_3d[idx_notnan].to_list())
+            p /= 1000.
 
         return t, c, n, p
 
