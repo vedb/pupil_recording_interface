@@ -77,6 +77,7 @@ class TestBaseInterface(InterfaceTester):
             'experiment_end': t0 + pd.to_timedelta('4s'),
             'post_calibration_start': t0 + pd.to_timedelta('5s'),
             'post_calibration_end': t0 + pd.to_timedelta('6s'),
+            'height': 1.80,
         })
 
     def test_timestamps_to_datetimeindex(self):

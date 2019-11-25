@@ -115,8 +115,8 @@ class OdometryRecorder(BaseRecorder):
         t, f, c, p, q, v, w = odometry_data
         return {
             'topic': 'odometry', 'timestamp': t, 'confidence': c,
-             'position': p, 'orientation': q,
-             'linear_velocity': v, 'angular_velocity': w}
+            'position': p, 'orientation': q,
+            'linear_velocity': v, 'angular_velocity': w}
 
     @staticmethod
     def _moving_average(value, buffer):

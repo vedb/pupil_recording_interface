@@ -88,6 +88,8 @@ class BaseInterface(object):
             if k.endswith(('start', 'end')):
                 info[k] = \
                     pd.to_timedelta(v) + pd.to_datetime(start_time, unit='s')
+            elif k == 'height':
+                info[k] = float(v) / 100.
 
         return info
 
