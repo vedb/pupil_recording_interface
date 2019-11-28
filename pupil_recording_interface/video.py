@@ -1,4 +1,6 @@
 """"""
+from __future__ import division
+
 import os
 
 import numpy as np
@@ -361,6 +363,7 @@ class OpticalFlowInterface(VideoInterface):
                      iter_wrapper=iter_wrapper):
         """"""
         t = self.timestamps
+        ss = self.subsampling or 1.
 
         if start is not None:
             start = t.get_loc(start, method='nearest')
@@ -389,11 +392,14 @@ class OpticalFlowInterface(VideoInterface):
                     self.estimate_optical_flow(start, end)), total=t.size):
                 flow[idx] = f
 
+        # ROI coordinate system is centered and y-axis points upwards
         coords = {
             'time': t.values,
             'pixel_axis': ['x', 'y'],
-            'roi_x': np.arange(flow.shape[2]),
-            'roi_y': np.arange(flow.shape[1])
+            'roi_x': np.arange(
+                -flow.shape[2] / 2 + 0.5, flow.shape[2] / 2 + 0.5) * ss,
+            'roi_y': -np.arange(
+                -flow.shape[1] / 2 + 0.5, flow.shape[1] / 2 + 0.5) * ss
         }
 
         data_vars = {

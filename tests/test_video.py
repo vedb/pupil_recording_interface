@@ -309,6 +309,13 @@ class TestOpticalFlowInterface(InterfaceTester):
             'roi_y': self.roi_size,
             'pixel_axis': 2})
 
+        npt.assert_allclose(
+            ds.roi_x, np.arange(
+                -self.roi_size / 2 + 0.5, self.roi_size / 2 + 0.5))
+        npt.assert_allclose(
+            ds.roi_y, np.arange(
+                self.roi_size / 2 - 0.5, -self.roi_size / 2 - 0.5, -1))
+
         # start/end with dropna
         ds = interface.load_dataset(
             dropna=True,
