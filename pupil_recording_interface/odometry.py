@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import os
+import warnings
 from collections import deque
 
 import numpy as np
@@ -66,15 +67,17 @@ class OdometryRecorder(BaseRecorder):
         except ImportError:
             raise ImportError(
                 'You need to install the pyrealsense2 library in order to '
-                'use the odometry recorder')
+                'use the odometry recorder.')
 
         try:
             import uvc
             self.monotonic = uvc.get_time_monotonic
         except ImportError:
-            raise ImportError(
-                'You need to install the pyuvc library in order to '
-                'use the odometry recorder')
+            warnings.warn(
+                'pyuvc library not found. Timestamps might not be perfectly '
+                'synchronized with gaze and video.')
+            from monotonic import monotonic
+            self.monotonic = monotonic
 
         # realsense pipeline
         self.pipeline = rs.pipeline()
