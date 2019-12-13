@@ -51,7 +51,7 @@ class GazeInterface(BaseInterface):
             gaze_2d[0], gaze_3d[0], return_indices=True)
 
         return t, (gaze_2d[1][idx_2d], gaze_3d[1][idx_3d]), \
-               gaze_2d[2][idx_2d], gaze_3d[3][idx_3d]
+            gaze_2d[2][idx_2d], gaze_3d[3][idx_3d]
 
     @staticmethod
     def _get_offline_gaze_mappers(folder):

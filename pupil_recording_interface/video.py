@@ -112,7 +112,8 @@ class VideoInterface(BaseInterface):
         if color_format == 'gray':
             return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
-            raise ValueError('Unsupported color format: {}'.format(color_format))
+            raise ValueError(
+                'Unsupported color format: {}'.format(color_format))
 
     def undistort_point(self, point, frame_size):
         """"""

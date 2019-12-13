@@ -64,7 +64,7 @@ class Persistent_Dict(dict):
                 "Session settings file '{}' not found. "
                 "Will make new one on exit.".format(self.file_path)
             )
-        except:  # KeyError, EOFError
+        except (KeyError, EOFError):  # KeyError, EOFError
             logger.warning(
                 "Session settings file '{}'could not be read. "
                 "Will overwrite on exit.".format(self.file_path))

@@ -7,6 +7,15 @@ from .gaze import GazeInterface
 from .video import VideoInterface, OpticalFlowInterface
 
 
+__all__ = [
+    'GazeInterface',
+    'OdometryInterface',
+    'VideoInterface',
+    'OpticalFlowInterface',
+    'OdometryRecorder'
+]
+
+
 def load_dataset(folder, gaze=None, odometry=None):
     """"""
     return_vals = tuple()

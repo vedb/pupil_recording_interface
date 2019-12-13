@@ -13,6 +13,7 @@ dependencies:
   - msgpack-python
   - tqdm
   - pytest
+  - flake8
   - pip:
     - opencv-python # reinstall through pip because cli breaks otherwise
     - pyrealsense2

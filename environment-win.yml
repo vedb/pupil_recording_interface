@@ -11,3 +11,4 @@ dependencies:
   - opencv
   - netcdf4
   - msgpack-python
+  - flake8
