@@ -7,3 +7,4 @@ msgpack
 netcdf4
 pyrealsense2
 monotonic
+tqdm

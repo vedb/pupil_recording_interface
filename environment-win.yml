@@ -11,4 +11,8 @@ dependencies:
   - opencv
   - netcdf4
   - msgpack-python
-  - flake8
+  - tqdm
+  - monotonic
+  - pip:
+    - opencv-python # reinstall through pip because cli breaks otherwise
+    - pyrealsense2
