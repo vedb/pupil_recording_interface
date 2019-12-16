@@ -32,8 +32,14 @@ jobs:
       run: |
         pip install pytest
         pytest
+
+  docs:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v1
     - name: Build documentation with sphinx
       uses: ammaraskar/sphinx-action@0.1
       with:
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
         args: "docs/"
