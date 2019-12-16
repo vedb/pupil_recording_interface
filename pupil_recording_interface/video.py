@@ -21,7 +21,19 @@ class VideoInterface(BaseInterface):
     def __init__(self, folder, source='world', color_format=None,
                  norm_pos=None, roi_size=None, subsampling=None,
                  interpolation_method='linear', video_offset=0.):
-        """"""
+        """
+
+        Parameters
+        ----------
+        folder
+        source
+        color_format
+        norm_pos
+        roi_size
+        subsampling
+        interpolation_method
+        video_offset
+        """
         super(VideoInterface, self).__init__(folder, source=source)
         self.color_format = color_format
         self.roi_size = roi_size
@@ -108,7 +120,17 @@ class VideoInterface(BaseInterface):
 
     @staticmethod
     def convert_color(frame, color_format):
-        """"""
+        """
+
+        Parameters
+        ----------
+        frame
+        color_format
+
+        Returns
+        -------
+
+        """
         if color_format == 'gray':
             return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
@@ -116,7 +138,17 @@ class VideoInterface(BaseInterface):
                 'Unsupported color format: {}'.format(color_format))
 
     def undistort_point(self, point, frame_size):
-        """"""
+        """
+
+        Parameters
+        ----------
+        point
+        frame_size
+
+        Returns
+        -------
+
+        """
         # TODO test
         u = point[0] * frame_size[1]
         v = (1 - point[1]) * frame_size[0]
@@ -131,7 +163,16 @@ class VideoInterface(BaseInterface):
         return x, y
 
     def undistort_frame(self, frame):
-        """"""
+        """
+
+        Parameters
+        ----------
+        frame
+
+        Returns
+        -------
+
+        """
         # TODO test
         h, w = frame.shape[:2]
         new_camera_matrix, (rx, ry, rw, rh) = cv2.getOptimalNewCameraMatrix(
@@ -146,7 +187,16 @@ class VideoInterface(BaseInterface):
         return frame_roi
 
     def subsample_frame(self, frame):
-        """"""
+        """
+
+        Parameters
+        ----------
+        frame
+
+        Returns
+        -------
+
+        """
         frame = cv2.resize(
             frame, None, fx=1. / self.subsampling,
             fy=1. / self.subsampling, interpolation=cv2.INTER_AREA)
@@ -155,7 +205,18 @@ class VideoInterface(BaseInterface):
 
     @staticmethod
     def get_valid_idx(norm_pos, frame_shape, roi_size):
-        """"""
+        """
+
+        Parameters
+        ----------
+        norm_pos
+        frame_shape
+        roi_size
+
+        Returns
+        -------
+
+        """
         norm_pos[:, 0] = norm_pos[:, 0] * frame_shape[1]
         norm_pos[:, 1] = (1 - norm_pos[:, 1]) * frame_shape[0]
 
@@ -169,7 +230,18 @@ class VideoInterface(BaseInterface):
 
     @staticmethod
     def get_bounds(p, frame_size, roi_size):
-        """"""
+        """
+
+        Parameters
+        ----------
+        p
+        frame_size
+        roi_size
+
+        Returns
+        -------
+
+        """
         p0 = p - roi_size // 2
         p1 = p + roi_size // 2
 
@@ -183,7 +255,18 @@ class VideoInterface(BaseInterface):
 
     @staticmethod
     def get_roi(frame, norm_pos, roi_size):
-        """"""
+        """
+
+        Parameters
+        ----------
+        frame
+        norm_pos
+        roi_size
+
+        Returns
+        -------
+
+        """
         roi_shape = list(frame.shape)
         roi_shape[:2] = (roi_size, roi_size)
         roi = np.nan * np.ones(roi_shape)
@@ -204,17 +287,41 @@ class VideoInterface(BaseInterface):
 
     @staticmethod
     def frame_as_uint8(frame):
-        """"""
+        """
+
+        Parameters
+        ----------
+        frame
+
+        Returns
+        -------
+
+        """
         frame[np.isnan(frame)] = 0.
         return frame.astype('uint8')
 
     def load_timestamps(self):
-        """"""
+        """
+
+        Returns
+        -------
+
+        """
         return self._load_timestamps_as_datetimeindex(
             self.folder, self.source, self.info)
 
     def process_frame(self, frame, norm_pos=None):
-        """"""
+        """
+
+        Parameters
+        ----------
+        frame
+        norm_pos
+
+        Returns
+        -------
+
+        """
         if self.color_format is not None:
             frame = self.convert_color(frame, self.color_format)
 
@@ -230,7 +337,16 @@ class VideoInterface(BaseInterface):
         return frame.astype(float)
 
     def get_raw_frame(self, idx):
-        """"""
+        """
+
+        Parameters
+        ----------
+        idx
+
+        Returns
+        -------
+
+        """
         if idx < 0 or idx >= self.frame_count:
             raise ValueError('Frame index out of range')
 
@@ -240,7 +356,17 @@ class VideoInterface(BaseInterface):
         return frame
 
     def get_frame(self, idx, return_timestamp=False):
-        """"""
+        """
+
+        Parameters
+        ----------
+        idx
+        return_timestamp
+
+        Returns
+        -------
+
+        """
         frame = self.get_raw_frame(idx)
 
         if self.norm_pos is not None:
@@ -255,7 +381,17 @@ class VideoInterface(BaseInterface):
             return self.process_frame(frame, norm_pos=norm_pos)
 
     def read_frames(self, start=None, end=None):
-        """"""
+        """
+
+        Parameters
+        ----------
+        start
+        end
+
+        Returns
+        -------
+
+        """
         start = start or 0
         end = end or self.frame_count
 
@@ -270,7 +406,16 @@ class VideoInterface(BaseInterface):
                 yield self.process_frame(frame)
 
     def load_dataset(self, dropna=False):
-        """"""
+        """
+
+        Parameters
+        ----------
+        dropna
+
+        Returns
+        -------
+
+        """
         t = self.timestamps
 
         if dropna:
@@ -321,13 +466,34 @@ class OpticalFlowInterface(VideoInterface):
 
     @staticmethod
     def get_valid_idx(norm_pos, frame_shape, roi_size):
-        """"""
+        """
+
+        Parameters
+        ----------
+        norm_pos
+        frame_shape
+        roi_size
+
+        Returns
+        -------
+
+        """
         idx = VideoInterface.get_valid_idx(norm_pos, frame_shape, roi_size)
         return np.hstack((False, idx[1:] & idx[:-1]))
 
     @staticmethod
     def calculate_flow(frame, last_frame):
-        """"""
+        """
+
+        Parameters
+        ----------
+        frame
+        last_frame
+
+        Returns
+        -------
+
+        """
         if last_frame is not None:
             # TODO make configurable
             return -cv2.calcOpticalFlowFarneback(
@@ -337,7 +503,17 @@ class OpticalFlowInterface(VideoInterface):
             return np.nan * np.ones(frame.shape + (2,))
 
     def get_optical_flow(self, idx, return_timestamp=False):
-        """"""
+        """
+
+        Parameters
+        ----------
+        idx
+        return_timestamp
+
+        Returns
+        -------
+
+        """
         if idx < 0 or idx >= self.frame_count:
             raise ValueError('Frame index out of range')
 
@@ -354,7 +530,17 @@ class OpticalFlowInterface(VideoInterface):
             return flow
 
     def estimate_optical_flow(self, start=None, end=None):
-        """"""
+        """
+
+        Parameters
+        ----------
+        start
+        end
+
+        Returns
+        -------
+
+        """
         last_frame = None
         for frame in self.read_frames(start, end):
             yield self.calculate_flow(frame, last_frame)
@@ -362,7 +548,19 @@ class OpticalFlowInterface(VideoInterface):
 
     def load_dataset(self, dropna=False, start=None, end=None,
                      iter_wrapper=iter_wrapper):
-        """"""
+        """
+
+        Parameters
+        ----------
+        dropna
+        start
+        end
+        iter_wrapper
+
+        Returns
+        -------
+
+        """
         t = self.timestamps
         ss = self.subsampling or 1.
 

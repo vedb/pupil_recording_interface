@@ -8,6 +8,10 @@ from .video import VideoInterface, OpticalFlowInterface
 
 
 __all__ = [
+    'load_dataset',
+    'load_info',
+    'load_user_info',
+    'write_netcdf',
     'GazeInterface',
     'OdometryInterface',
     'VideoInterface',
@@ -17,7 +21,18 @@ __all__ = [
 
 
 def load_dataset(folder, gaze=None, odometry=None):
-    """"""
+    """ Load a recording as an xarray.Dataset.
+
+    Parameters
+    ----------
+    folder
+    gaze
+    odometry
+
+    Returns
+    -------
+
+    """
     return_vals = tuple()
     if gaze is not None:
         return_vals += (
@@ -33,7 +48,19 @@ def load_dataset(folder, gaze=None, odometry=None):
 
 
 def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
-    """"""
+    """ Export a recording in the netCDF format.
+
+    Parameters
+    ----------
+    folder
+    output_folder
+    gaze
+    odometry
+
+    Returns
+    -------
+
+    """
     if gaze is not None:
         if output_folder is not None:
             filename = os.path.join(output_folder, 'gaze.nc')
@@ -51,10 +78,28 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
 
 
 def load_info(folder):
-    """"""
+    """ Load recording info.
+
+    Parameters
+    ----------
+    folder
+
+    Returns
+    -------
+
+    """
     return BaseInterface(folder).info
 
 
 def load_user_info(folder):
-    """"""
+    """ Load user info.
+
+    Parameters
+    ----------
+    folder
+
+    Returns
+    -------
+
+    """
     return BaseInterface(folder).user_info

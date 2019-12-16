@@ -12,7 +12,13 @@ from pupil_recording_interface.errors import FileNotFoundError
 class GazeInterface(BaseInterface):
 
     def __init__(self, folder, source='recording'):
-        """"""
+        """
+
+        Parameters
+        ----------
+        folder
+        source
+        """
         super(GazeInterface, self).__init__(folder, source=source)
         self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
 
@@ -83,7 +89,12 @@ class GazeInterface(BaseInterface):
         return GazeInterface._merge_2d_3d_gaze(gaze_2d, gaze_3d)
 
     def load_dataset(self):
-        """"""
+        """
+
+        Returns
+        -------
+
+        """
         if self.source == 'recording':
             t, c, n, p = self._load_gaze(self.folder)
         elif isinstance(self.source, str) and self.source in self.gaze_mappers:

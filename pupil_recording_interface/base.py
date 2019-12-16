@@ -14,7 +14,13 @@ from pupil_recording_interface.errors import FileNotFoundError
 class BaseInterface(object):
 
     def __init__(self, folder, source='recording'):
-        """"""
+        """
+
+        Parameters
+        ----------
+        folder
+        source
+        """
         if not os.path.exists(folder):
             raise FileNotFoundError('No such folder: {}'.format(folder))
 
@@ -150,7 +156,16 @@ class BaseInterface(object):
         """"""
 
     def write_netcdf(self, filename=None):
-        """"""
+        """
+
+        Parameters
+        ----------
+        filename
+
+        Returns
+        -------
+
+        """
         ds = self.load_dataset()
         encoding = self._get_encoding(ds.data_vars)
 

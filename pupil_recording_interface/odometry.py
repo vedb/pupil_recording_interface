@@ -33,7 +33,12 @@ class OdometryInterface(BaseInterface):
         return t, c, p, q, v, w
 
     def load_dataset(self):
-        """"""
+        """
+
+        Returns
+        -------
+
+        """
         if self.source == 'recording':
             t, c, p, q, v, w = self._load_odometry(self.folder)
         else:

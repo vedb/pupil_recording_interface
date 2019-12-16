@@ -1,14 +1,13 @@
-.. pupil_recording_interface documentation master file, created by
-   sphinx-quickstart on Tue Nov 26 18:00:59 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+pupil_recording_interface
+=========================
 
-Welcome to pupil_recording_interface's documentation!
-=====================================================
+Python backend and cli for pupil recordings.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
+
+   api
 
 
 
