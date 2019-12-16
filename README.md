@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/vedb/pupil_recording_interface/workflows/build/badge.svg)](https://github.com/vedb/pupil_recording_interface/actions)
+
 # pupil_recording_interface
 
 Python backend and cli for pupil recordings
