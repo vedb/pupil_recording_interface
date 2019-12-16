@@ -34,3 +34,6 @@ jobs:
         pytest
     - name: Build documentation with sphinx
       uses: ammaraskar/sphinx-action@0.1
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        args: "docs/"
