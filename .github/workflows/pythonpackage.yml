@@ -49,7 +49,7 @@ jobs:
     - name: Build Sphinx docs
       run: |
         make -C docs/ html
-    - if: success()
+    - if: success() && github.ref == 'refs/heads/master'
       uses: crazy-max/ghaction-github-pages@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
