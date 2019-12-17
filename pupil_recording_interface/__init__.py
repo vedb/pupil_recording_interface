@@ -6,6 +6,8 @@ from .odometry import OdometryInterface, OdometryRecorder
 from .gaze import GazeInterface
 from .video import VideoInterface, OpticalFlowInterface
 
+DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+
 
 __all__ = [
     'load_dataset',

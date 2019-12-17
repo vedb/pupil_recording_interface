@@ -1,0 +1,2 @@
+include requirements.txt
+recursive-include pupil_recording_interface/data *

@@ -10,8 +10,8 @@ import xarray as xr
 from pupil_recording_interface import GazeInterface, load_dataset, write_netcdf
 from pupil_recording_interface.base import BaseInterface
 
-test_data_dir = os.path.join(os.path.dirname(__file__), 'test_data')
 
+from pupil_recording_interface import DATA_DIR
 from pupil_recording_interface.errors import FileNotFoundError
 
 
@@ -19,7 +19,7 @@ class InterfaceTester(TestCase):
 
     def setUp(self):
         """"""
-        self.folder = os.path.join(test_data_dir, 'test_recording')
+        self.folder = os.path.join(DATA_DIR, 'test_recording')
         self.export_folder = os.path.join(self.folder, 'exports')
         self.info = {
             "duration_s": 21.111775958999715,
