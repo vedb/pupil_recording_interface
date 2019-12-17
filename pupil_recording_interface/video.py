@@ -18,7 +18,7 @@ def _iter_wrapper(it, **kwargs):
 
 
 class VideoInterface(BaseInterface):
-    """ Interface for video recordings. """
+    """ Interface for video data. """
 
     def __init__(self, folder, source='world', color_format=None,
                  norm_pos=None, roi_size=None, interpolation_method='linear',
@@ -211,16 +211,20 @@ class VideoInterface(BaseInterface):
                 'Unsupported color format: {}'.format(self.color_format))
 
     def get_roi(self, frame, norm_pos):
-        """
+        """ Extract the ROI from a video frame.
 
         Parameters
         ----------
-        frame
-        norm_pos
+        frame : numpy.ndarray
+            The input frame.
+
+        norm_pos : iterable, len 2
+            The norm pos of the ROI center.
 
         Returns
         -------
-
+        numpy.ndarray
+            The extracted ROI.
         """
         roi_shape = list(frame.shape)
         roi_shape[:2] = (self.roi_size, self.roi_size)
@@ -314,26 +318,36 @@ class VideoInterface(BaseInterface):
         return frame
 
     def load_timestamps(self):
-        """
+        """ Load the timestamps for the video file.
 
         Returns
         -------
-
+        pandas.DatetimeIndex
+            The timestamps for each frame.
         """
         return self._load_timestamps_as_datetimeindex(
             self.folder, self.source, self.info)
 
     def process_frame(self, frame, norm_pos=None):
-        """
+        """ Process a video frame.
+
+        Processing includes color conversion, un-distortion, sub-sampling
+        and ROI extraction, provided that the corresponding parameters have
+        been specified for this instance.
 
         Parameters
         ----------
-        frame
-        norm_pos
+        frame : numpy.ndarray
+            The input frame.
+
+        norm_pos : iterable, len 2, optional
+            The norm pos of the ROI center. If not specified, no ROI
+            extraction will be performed.
 
         Returns
         -------
-
+        numpy.ndarray
+            The processed frame.
         """
         if self.color_format is not None:
             frame = self.convert_color(frame)
@@ -350,15 +364,17 @@ class VideoInterface(BaseInterface):
         return frame.astype(float)
 
     def load_raw_frame(self, idx):
-        """
+        """ Load a single un-processed video frame.
 
         Parameters
         ----------
-        idx
+        idx : int
+            The index of the frame
 
         Returns
         -------
-
+        numpy.ndarray
+            The loaded frame.
         """
         if idx < 0 or idx >= self.frame_count:
             raise ValueError('Frame index out of range')
@@ -369,16 +385,23 @@ class VideoInterface(BaseInterface):
         return frame
 
     def load_frame(self, idx, return_timestamp=False):
-        """
+        """ Load a single processed video frame,
 
         Parameters
         ----------
-        idx
-        return_timestamp
+        idx : int
+            The index of the frame
+
+        return_timestamp : bool, default False
+            If True, also return the timestamp of the frame.
 
         Returns
         -------
+        frame: numpy.ndarray
+            The loaded frame.
 
+        timestamp: Timestamp
+            The timestamp of the frame.
         """
         frame = self.load_raw_frame(idx)
 
@@ -394,16 +417,20 @@ class VideoInterface(BaseInterface):
             return self.process_frame(frame, norm_pos=norm_pos)
 
     def read_frames(self, start=None, end=None):
-        """
+        """ Generator for processed frames.
 
         Parameters
         ----------
-        start
-        end
+        start : int, optional
+            If specified, start the generator at this frame index.
 
-        Returns
+        end : int, optional
+            If specified, stop the generator at this frame index.
+
+        Yields
         -------
-
+        numpy.ndarray
+            The loaded frame.
         """
         start = start or 0
         end = end or self.frame_count
@@ -419,15 +446,19 @@ class VideoInterface(BaseInterface):
                 yield self.process_frame(frame)
 
     def load_dataset(self, dropna=False):
-        """
+        """ Load video data as an xarray Dataset
 
         Parameters
         ----------
-        dropna
+        dropna : bool, default False
+            If True, drop all frames containing NaN values. This can happen
+            with ROI extraction when the ROI is (partially) outside of the
+            frame.
 
         Returns
         -------
-
+        xarray.Dataset:
+            The video data as a dataset.
         """
         t = self.timestamps
 
@@ -465,21 +496,31 @@ class VideoInterface(BaseInterface):
 
 
 class OpticalFlowInterface(VideoInterface):
-    """ Interface for extracting optical flow from video files. """
+    """ Interface for extracting optical flow from video data. """
 
     def __init__(self, folder, source='world', **kwargs):
-        """
+        """ Constructor.
 
         Parameters
         ----------
-        folder
-        source
-        kwargs
+        folder : str
+            Path to the recording folder.
+
+        source : str, default 'world'
+            The source of the data. If 'recording', the recorded data will
+            be used.
+
+        **kwargs : optional
+            Additional parameters passed to the ``VideoInterface`` constructor.
+
+        See Also
+        --------
+        VideoInterface
         """
         super(OpticalFlowInterface, self).__init__(
             folder, source=source, color_format='gray', **kwargs)
 
-        self.flow_shape = self.get_optical_flow(0).shape
+        self.flow_shape = self.load_optical_flow(0).shape
 
     @property
     def _nc_name(self):
@@ -488,33 +529,26 @@ class OpticalFlowInterface(VideoInterface):
 
     @staticmethod
     def _get_valid_idx(norm_pos, frame_shape, roi_size):
-        """
-
-        Parameters
-        ----------
-        norm_pos
-        frame_shape
-        roi_size
-
-        Returns
-        -------
-
-        """
+        """ Get idx of norm_pos where all ROI pixels are inside the frame. """
         idx = VideoInterface._get_valid_idx(norm_pos, frame_shape, roi_size)
         return np.hstack((False, idx[1:] & idx[:-1]))
 
     @staticmethod
-    def calculate_flow(frame, last_frame):
-        """
+    def calculate_optical_flow(frame, last_frame):
+        """ Calculate dense optical flow between two frames.
 
         Parameters
         ----------
-        frame
-        last_frame
+        frame : numpy.ndarray
+            The input frame.
+
+        last_frame : numpy.ndarray
+            The previous frame.
 
         Returns
         -------
-
+        numpy.ndarray
+            The dense optical flow between the frames.
         """
         if last_frame is not None:
             # TODO make configurable
@@ -524,17 +558,21 @@ class OpticalFlowInterface(VideoInterface):
         else:
             return np.nan * np.ones(frame.shape + (2,))
 
-    def get_optical_flow(self, idx, return_timestamp=False):
-        """
+    def load_optical_flow(self, idx, return_timestamp=False):
+        """ Load a single optical flow frame.
 
         Parameters
         ----------
-        idx
-        return_timestamp
+        idx : int
+            The index of the frame
+
+        return_timestamp : bool, default False
+            If True, also return the timestamp of the frame.
 
         Returns
         -------
-
+        numpy.ndarray
+            The loaded optical flow frame.
         """
         if idx < 0 or idx >= self.frame_count:
             raise ValueError('Frame index out of range')
@@ -544,44 +582,59 @@ class OpticalFlowInterface(VideoInterface):
         else:
             last_frame = self.load_frame(idx - 1)
 
-        flow = self.calculate_flow(self.load_frame(idx), last_frame)
+        flow = self.calculate_optical_flow(self.load_frame(idx), last_frame)
 
         if return_timestamp:
             return self.timestamps[idx], flow
         else:
             return flow
 
-    def estimate_optical_flow(self, start=None, end=None):
-        """
+    def read_optical_flow(self, start=None, end=None):
+        """ Generator for optical flow frames.
 
         Parameters
         ----------
-        start
-        end
+        start : int, optional
+            If specified, start the generator at this frame index.
 
-        Returns
+        end : int, optional
+            If specified, stop the generator at this frame index.
+
+        Yields
         -------
-
+        numpy.ndarray
+            The loaded optical flow frame.
         """
         last_frame = None
         for frame in self.read_frames(start, end):
-            yield self.calculate_flow(frame, last_frame)
+            yield self.calculate_optical_flow(frame, last_frame)
             last_frame = frame
 
     def load_dataset(self, dropna=False, start=None, end=None,
                      iter_wrapper=_iter_wrapper):
-        """
+        """ Load optical flow data as an xarray Dataset
 
         Parameters
         ----------
-        dropna
-        start
-        end
-        iter_wrapper
+        dropna : bool, default False
+            If True, drop all frames containing NaN values. This can happen
+            with ROI extraction when the ROI is (partially) outside of the
+            frame.
+
+        start : Timestamp, optional
+            If specified, load the dataset starting at this video timestamp.
+
+        end : Timestamp, optional
+            If specified, load the dataset until this video timestamp.
+
+        iter_wrapper : callable, optional
+            A wrapper around the optical flow generator. Works with ``tqdm``
+            as a progress bar.
 
         Returns
         -------
-
+        xarray.Dataset:
+            The optical flow data as a dataset.
         """
         t = self.timestamps
         ss = self.subsampling or 1.
@@ -600,7 +653,7 @@ class OpticalFlowInterface(VideoInterface):
             valid_idx = np.zeros(t.size, dtype=bool)
             idx = 0
             for f in iter_wrapper(
-                    self.estimate_optical_flow(start, end), total=t.size):
+                    self.read_optical_flow(start, end), total=t.size):
                 if not np.any(np.isnan(f)):
                     flow[idx] = f
                     valid_idx[idx] = True
@@ -610,7 +663,7 @@ class OpticalFlowInterface(VideoInterface):
         else:
             flow = np.empty((t.size,) + self.flow_shape)
             for idx, f in iter_wrapper(enumerate(
-                    self.estimate_optical_flow(start, end)), total=t.size):
+                    self.read_optical_flow(start, end)), total=t.size):
                 flow[idx] = f
 
         # ROI coordinate system is centered and y-axis points upwards

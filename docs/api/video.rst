@@ -50,8 +50,8 @@ I/O functions
 
     OpticalFlowInterface.load_dataset
     OpticalFlowInterface.write_netcdf
-    OpticalFlowInterface.get_optical_flow
-    OpticalFlowInterface.estimate_optical_flow
+    OpticalFlowInterface.load_optical_flow
+    OpticalFlowInterface.read_optical_flow
 
 Optical flow calculation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,4 +60,4 @@ Optical flow calculation
     :nosignatures:
     :toctree: _generated
 
-    OpticalFlowInterface.calculate_flow
+    OpticalFlowInterface.calculate_optical_flow

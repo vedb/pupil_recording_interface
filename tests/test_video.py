@@ -241,45 +241,45 @@ class TestOpticalFlowInterface(InterfaceTester):
 
         np.testing.assert_equal(idx, (False, True, False, False, False))
 
-    def test_calculate_flow(self):
+    def test_calculate_optical_flow(self):
         """"""
-        flow = OpticalFlowInterface.calculate_flow(
+        flow = OpticalFlowInterface.calculate_optical_flow(
             np.random.rand(128, 128), np.random.rand(128, 128))
         self.assertEqual(flow.shape, (128, 128, 2))
         assert not np.any(np.isnan(flow))
 
         # no last roi
-        flow = OpticalFlowInterface.calculate_flow(
+        flow = OpticalFlowInterface.calculate_optical_flow(
             np.random.rand(128, 128), None)
         npt.assert_equal(flow, np.nan * np.ones((128, 128, 2)))
 
-    def test_get_optical_flow(self):
+    def test_load_optical_flow(self):
         """"""
         interface = OpticalFlowInterface(self.folder)
 
-        flow = interface.get_optical_flow(1)
+        flow = interface.load_optical_flow(1)
         assert flow.shape == self.frame_shape
 
         # first frame
-        flow = interface.get_optical_flow(0)
+        flow = interface.load_optical_flow(0)
         assert flow.shape == self.frame_shape
         assert np.all(np.isnan(flow))
 
         # with timestamp
-        t, flow = interface.get_optical_flow(1, return_timestamp=True)
+        t, flow = interface.load_optical_flow(1, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2718818
 
         # invalid index
         with self.assertRaises(ValueError):
-            interface.get_optical_flow(self.n_frames)
+            interface.load_optical_flow(self.n_frames)
 
-    def test_estimate_optical_flow(self):
+    def test_read_optical_flow(self):
         """"""
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
         interface = OpticalFlowInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
 
-        assert next(interface.estimate_optical_flow()).shape == (
+        assert next(interface.read_optical_flow()).shape == (
             self.roi_size, self.roi_size, 2)
 
     def test_load_dataset(self):
