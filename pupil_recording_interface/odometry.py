@@ -13,14 +13,16 @@ from pupil_recording_interface.externals.file_methods import PLData_Writer
 
 
 class OdometryInterface(BaseInterface):
+    """ Interface for odometry data. """
 
     @property
-    def nc_name(self):
+    def _nc_name(self):
+        """ Name of exported netCDF file. """
         return 'odometry'
 
     @staticmethod
     def _load_odometry(folder, topic='odometry'):
-        """"""
+        """ Load odometry data from a .pldata file. """
         df = BaseInterface._load_pldata_as_dataframe(folder, topic)
 
         t = df.timestamp
@@ -33,11 +35,12 @@ class OdometryInterface(BaseInterface):
         return t, c, p, q, v, w
 
     def load_dataset(self):
-        """
+        """ Load odometry data as an xarray Dataset.
 
         Returns
         -------
-
+        xarray.Dataset
+            The odometry data as a dataset.
         """
         if self.source == 'recording':
             t, c, p, q, v, w = self._load_odometry(self.folder)
@@ -64,9 +67,23 @@ class OdometryInterface(BaseInterface):
 
 
 class OdometryRecorder(BaseRecorder):
+    """ Recorder for odometry data from the T265 tracking camera. """
 
-    def __init__(self, folder, topic='odometry', verbose=False):
-        """"""
+    def __init__(self, folder, topic='odometry', verbose=True):
+        """ Constructor.
+
+        Parameters
+        ----------
+        folder : str
+            Path to the recording folder.
+
+        topic : str, default 'odometry'
+            Name of the topic of the recorded data. Is also used as the file
+            name.
+
+        verbose : bool, default True
+            If True, display the current sampling rate during recording.
+        """
         try:
             import pyrealsense2 as rs
         except ImportError:
@@ -101,7 +118,7 @@ class OdometryRecorder(BaseRecorder):
 
     @staticmethod
     def _get_odometry(rs_frame, t_last, monotonic):
-        """"""
+        """ Get odometry data from realsense pose frame. """
         t = monotonic()
         f = 1. / (t - t_last)
 
@@ -119,7 +136,7 @@ class OdometryRecorder(BaseRecorder):
 
     @staticmethod
     def _odometry_to_dict(odometry_data):
-        """"""
+        """ Convert odometry data to dict. """
         t, f, c, p, q, v, w = odometry_data
         return {
             'topic': 'odometry', 'timestamp': t, 'confidence': c,
@@ -128,12 +145,12 @@ class OdometryRecorder(BaseRecorder):
 
     @staticmethod
     def _moving_average(value, buffer):
-        """"""
+        """ Buffer values and compute moving average. """
         buffer.append(value)
         return sum(buffer) / len(buffer)
 
     def run(self):
-        """"""
+        """ Start the recording. """
         self.pipeline.start(self.config)
         buffer = deque(maxlen=200)
 
