@@ -23,17 +23,28 @@ __all__ = [
 
 
 def load_dataset(folder, gaze=None, odometry=None):
-    """ Load a recording as an xarray.Dataset.
+    """ Load a recording as an xarray Dataset.
 
     Parameters
     ----------
-    folder
-    gaze
-    odometry
+    folder : str
+        Path to the recording folder.
+
+    gaze : str, optional
+        The source of the gaze data. If 'recording', the recorded data will
+        be used. Can also be the name of a gaze mapper or a dict in the
+        format ``{'2d': '<2d_gaze_mapper>', '3d': '<3d_gaze_mapper>'}`` in
+        which case the norm pos from the 2d mapper and the gaze point
+        from the 3d mapper will be used.
+
+    odometry : str, optional
+        The source of the odometry data. Can be 'recording'.
 
     Returns
     -------
-
+    xarray.Dataset or tuple thereof
+        The recording data as a dataset or tuple thereof if both `gaze` and
+        `odometry` are specified.
     """
     return_vals = tuple()
     if gaze is not None:
@@ -54,14 +65,22 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
 
     Parameters
     ----------
-    folder
-    output_folder
-    gaze
-    odometry
+    folder : str
+        Path to the recording folder.
 
-    Returns
-    -------
+    output_folder : str, optional
+        Path to the folder where the recording will be exported to. Defaults
+        to ``<folder>/exports``.
 
+    gaze : str, optional
+        The source of the gaze data. If 'recording', the recorded data will
+        be used. Can also be the name of a gaze mapper or a dict in the
+        format ``{'2d': '<2d_gaze_mapper>', '3d': '<3d_gaze_mapper>'}`` in
+        which case the norm pos from the 2d mapper and the gaze point
+        from the 3d mapper will be used.
+
+    odometry : str, optional
+        The source of the odometry data. Can be 'recording'.
     """
     if gaze is not None:
         if output_folder is not None:
@@ -84,11 +103,13 @@ def load_info(folder):
 
     Parameters
     ----------
-    folder
+    folder : str
+        Path to the recording folder.
 
     Returns
     -------
-
+    dict:
+        The recording info.
     """
     return BaseInterface(folder).info
 
@@ -98,10 +119,12 @@ def load_user_info(folder):
 
     Parameters
     ----------
-    folder
+    folder : str
+        Path to the recording folder.
 
     Returns
     -------
-
+    dict:
+        The user info.
     """
     return BaseInterface(folder).user_info

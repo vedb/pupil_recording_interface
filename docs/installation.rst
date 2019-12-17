@@ -34,6 +34,10 @@ by installing these packages:
 
     pip install pyrealsense2 monotonic
 
-Installing the `PyUVC`_ library will make sure that the timestamps of the
-odometry recording are properly synchronized with those recorded through
-Pupil Capture.
+.. note::
+
+    Installing the `PyUVC`_ library will make sure that the timestamps of the
+    odometry recording are properly synchronized with those recorded through
+    Pupil Capture.
+
+.. _PyUVC: https://github.com/pupil-labs/pyuvc
