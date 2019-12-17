@@ -7,7 +7,7 @@ setup(
     name='pupil_recording_interface',
     version='0.0.1',
     packages=find_packages(),
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     scripts=['scripts/pri'],
     install_requires=requirements,
 )
