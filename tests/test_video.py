@@ -76,85 +76,90 @@ class TestVideoInterface(InterfaceTester):
                              [0.9, 0.5],
                              [0.5, 0.5]])
 
-        idx = VideoInterface.get_valid_idx(norm_pos, (512, 512), self.roi_size)
+        idx = VideoInterface._get_valid_idx(
+            norm_pos, (512, 512), self.roi_size)
 
         np.testing.assert_equal(idx, (True, True, False, False, True))
 
     def test_get_bounds(self):
         """"""
+        interface = VideoInterface(self.folder, roi_size=self.roi_size)
+
         # completely inside
-        bounds = VideoInterface.get_bounds(256, 512, self.roi_size)
+        bounds = interface._get_bounds(256, 512, self.roi_size)
         npt.assert_equal(bounds, ((0, 128), (192, 320)))
 
         # partially inside
-        bounds = VideoInterface.get_bounds(0, 512, self.roi_size)
+        bounds = interface._get_bounds(0, 512, self.roi_size)
         npt.assert_equal(bounds, ((64, 128), (0, 64)))
-        bounds = VideoInterface.get_bounds(512, 512, self.roi_size)
+        bounds = interface._get_bounds(512, 512, self.roi_size)
         npt.assert_equal(bounds, ((0, 64), (448, 512)))
 
         # completely outside
-        bounds = VideoInterface.get_bounds(1024, 512, self.roi_size)
+        bounds = interface._get_bounds(1024, 512, self.roi_size)
         npt.assert_equal(bounds, ((0, 0), (512, 512)))
-        bounds = VideoInterface.get_bounds(-512, 512, self.roi_size)
+        bounds = interface._get_bounds(-512, 512, self.roi_size)
         npt.assert_equal(bounds, ((576, 128), (0, 0)))
 
     def test_get_roi(self):
         """"""
         frame = np.random.rand(512, 512)
+        interface = VideoInterface(self.folder, roi_size=self.roi_size)
 
         # completely inside
-        roi = VideoInterface.get_roi(frame, (0.5, 0.5), self.roi_size)
+        roi = interface.get_roi(frame, (0.5, 0.5))
         npt.assert_equal(roi, frame[192:320, 192:320])
 
         # partially inside
-        roi = VideoInterface.get_roi(frame, (0., 0.), self.roi_size)
+        roi = interface.get_roi(frame, (0., 0.))
         npt.assert_equal(roi[:64, 64:128], frame[448:, :64])
 
         # completely outside
-        roi = VideoInterface.get_roi(frame, (2., 2.), self.roi_size)
+        roi = interface.get_roi(frame, (2., 2.))
         npt.assert_equal(roi, np.nan * np.ones((128, 128)))
 
         # regression test for valid negative indexes
-        VideoInterface.get_roi(frame, (0., 1.3), self.roi_size)
+        interface.get_roi(frame, (0., 1.3))
 
         # color frame
         frame = np.random.rand(512, 512, 3)
-        roi = VideoInterface.get_roi(frame, (0.5, 0.5), self.roi_size)
+        roi = interface.get_roi(frame, (0.5, 0.5))
         assert roi.shape == (self.roi_size, self.roi_size, 3)
 
-    def test_frame_as_uint8(self):
+    def test_convert_to_uint8(self):
         """"""
-        frame = VideoInterface.frame_as_uint8(np.nan*np.ones(self.frame_shape))
+        frame = VideoInterface.convert_to_uint8(
+            np.nan * np.ones(self.frame_shape))
         np.testing.assert_equal(
             frame, np.zeros(self.frame_shape, dtype='uint8'))
 
-    def test_get_raw_frame(self):
+    def test_load_raw_frame(self):
         """"""
         interface = VideoInterface(self.folder)
-        frame = interface.get_raw_frame(0)
+        frame = interface.load_raw_frame(0)
         assert frame.shape == self.frame_shape
 
         # invalid index
         with self.assertRaises(ValueError):
-            interface.get_raw_frame(self.n_frames)
+            interface.load_raw_frame(self.n_frames)
 
-    def test_get_frame(self):
+    def test_load_frame(self):
         """"""
         interface = VideoInterface(self.folder)
-        frame = interface.get_frame(0)
+        frame = interface.load_frame(0)
         assert frame.shape == self.frame_shape
 
         # ROI around norm pos
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
         interface = VideoInterface(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
-        frame = interface.get_frame(0)
+        frame = interface.load_frame(0)
         assert frame.shape == (
             self.roi_size, self.roi_size, self.frame_shape[2])
 
         # with timestamp
         interface = VideoInterface(self.folder)
-        t, frame = interface.get_frame(0, return_timestamp=True)
+        t, frame = interface.load_frame(0, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2383718
 
     def test_read_frames(self):
@@ -231,7 +236,7 @@ class TestOpticalFlowInterface(InterfaceTester):
                              [0.9, 0.5],
                              [0.5, 0.5]])
 
-        idx = OpticalFlowInterface.get_valid_idx(
+        idx = OpticalFlowInterface._get_valid_idx(
             norm_pos, (512, 512), self.roi_size)
 
         np.testing.assert_equal(idx, (False, True, False, False, False))

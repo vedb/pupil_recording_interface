@@ -15,3 +15,13 @@ I/O functions
 
     OdometryInterface.load_dataset
     OdometryInterface.write_netcdf
+
+
+OdometryRecorder
+----------------
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    OdometryRecorder.run

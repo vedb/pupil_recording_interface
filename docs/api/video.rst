@@ -13,8 +13,8 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    VideoInterface.get_frame
-    VideoInterface.get_raw_frame
+    VideoInterface.load_frame
+    VideoInterface.load_raw_frame
     VideoInterface.read_frames
     VideoInterface.load_timestamps
     VideoInterface.load_dataset
@@ -27,22 +27,12 @@ Frame processing
     :nosignatures:
     :toctree: _generated
 
+    VideoInterface.convert_to_uint8
     VideoInterface.convert_color
+    VideoInterface.get_roi
     VideoInterface.undistort_frame
     VideoInterface.subsample_frame
-    VideoInterface.frame_as_uint8
-    VideoInterface.get_roi
     VideoInterface.process_frame
-
-Other
-~~~~~
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    VideoInterface.get_bounds
-    VideoInterface.get_valid_idx
 
 
 
