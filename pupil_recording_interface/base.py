@@ -12,9 +12,20 @@ from pupil_recording_interface.errors import FileNotFoundError
 
 
 class BaseInterface(object):
+    """ Base class for all interfaces. """
 
     def __init__(self, folder, source='recording'):
-        """"""
+        """ Constructor.
+
+        Parameters
+        ----------
+        folder : str
+            Path to the recording folder.
+
+        source : str, default 'recording'
+            The source of the data. If 'recording', the recorded data will
+            be used.
+        """
         if not os.path.exists(folder):
             raise FileNotFoundError('No such folder: {}'.format(folder))
 
@@ -30,12 +41,13 @@ class BaseInterface(object):
             self.folder, self.info['start_time_system_s'])
 
     @property
-    def nc_name(self):
+    def _nc_name(self):
+        """ Name of exported netCDF file. """
         return 'base'
 
     @staticmethod
     def _load_legacy_info(file_handle):
-        """"""
+        """ Load recording info from legacy file as dict. """
         reader = csv.reader(file_handle)
         info = {rows[0]: rows[1] for rows in reader}
 
@@ -58,7 +70,7 @@ class BaseInterface(object):
 
     @staticmethod
     def _load_info(folder, filename='info.player.json'):
-        """"""
+        """ Load recording info file as dict. """
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
                 'File {} not found in folder {}'.format(filename, folder))
@@ -75,7 +87,7 @@ class BaseInterface(object):
 
     @staticmethod
     def _load_user_info(folder, start_time, filename='user_info.csv'):
-        """"""
+        """ Load data from user_info.csv file as dict. """
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
                 'File {} not found in folder {}'.format(filename, folder))
@@ -95,7 +107,7 @@ class BaseInterface(object):
 
     @staticmethod
     def _load_pldata_as_dataframe(folder, topic):
-        """"""
+        """ Load data from a .pldata file into a pandas.DataFrame. """
         if not os.path.exists(os.path.join(folder, topic + '.pldata')):
             raise FileNotFoundError(
                 'File {}.pldata not found in folder {}'.format(topic, folder))
@@ -105,7 +117,7 @@ class BaseInterface(object):
 
     @staticmethod
     def _timestamps_to_datetimeindex(timestamps, info):
-        """"""
+        """ Convert timestamps from float to pandas.DatetimeIndex. """
         return pd.to_datetime(timestamps
                               - info['start_time_synced_s']
                               + info['start_time_system_s'],
@@ -113,7 +125,7 @@ class BaseInterface(object):
 
     @staticmethod
     def _load_timestamps_as_datetimeindex(folder, topic, info, offset=0.):
-        """"""
+        """ Load timestamps as pandas.DatetimeIndex. """
         filepath = os.path.join(folder, topic + '_timestamps.npy')
         if not os.path.exists(filepath):
             raise FileNotFoundError(
@@ -126,7 +138,7 @@ class BaseInterface(object):
 
     @staticmethod
     def _get_encoding(data_vars, dtype='int32'):
-        """"""
+        """ Get encoding for each data var in the netCDF export. """
         comp = {
             'zlib': True,
             'dtype': dtype,
@@ -138,7 +150,7 @@ class BaseInterface(object):
 
     @staticmethod
     def _create_export_folder(filename):
-        """"""
+        """ Create the export folder. """
         folder = os.path.dirname(filename)
         try:
             os.makedirs(folder)
@@ -147,25 +159,40 @@ class BaseInterface(object):
 
     @abc.abstractmethod
     def load_dataset(self):
-        """"""
+        """ Load data as an xarray Dataset. """
 
     def write_netcdf(self, filename=None):
-        """"""
+        """ Export data to netCDF.
+
+        Parameters
+        ----------
+        filename : str, optional
+            The name of the exported file. Defaults to
+            `<recording_folder>/exports/<datatype>.nc` where `<datatype>` is
+            `gaze`, `odometry` etc.
+        """
         ds = self.load_dataset()
         encoding = self._get_encoding(ds.data_vars)
 
         if filename is None:
             filename = os.path.join(
-                self.folder, 'exports', self.nc_name + '.nc')
+                self.folder, 'exports', self._nc_name + '.nc')
 
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)
 
 
 class BaseRecorder(object):
+    """ Base class for all recorders. """
 
     def __init__(self, folder):
-        """"""
+        """ Constructor.
+
+        Parameters
+        ----------
+        folder : str
+            Path to the recording folder.
+        """
         if not os.path.exists(folder):
             raise FileNotFoundError('No such folder: {}'.format(folder))
 

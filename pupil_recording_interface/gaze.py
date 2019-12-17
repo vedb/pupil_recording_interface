@@ -10,19 +10,34 @@ from pupil_recording_interface.errors import FileNotFoundError
 
 
 class GazeInterface(BaseInterface):
+    """ Interface for gaze data. """
 
     def __init__(self, folder, source='recording'):
-        """"""
+        """ Constructor.
+
+        Parameters
+        ----------
+        folder : str
+            Path to the recording folder.
+
+        source : str or dict, default 'recording'
+            The source of the data. If 'recording', the recorded data will
+            be used. Can also be the name of a gaze mapper or a dict in the
+            format ``{'2d': '<2d_gaze_mapper>', '3d': '<3d_gaze_mapper>'}`` in
+            which case the norm pos from the 2d mapper and the gaze point
+            from the 3d mapper will be used.
+        """
         super(GazeInterface, self).__init__(folder, source=source)
         self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
 
     @property
-    def nc_name(self):
+    def _nc_name(self):
+        """ Name of exported netCDF file. """
         return 'gaze'
 
     @staticmethod
     def _load_gaze(folder, topic='gaze'):
-        """"""
+        """ Load gaze data from a .pldata file. """
         df = BaseInterface._load_pldata_as_dataframe(folder, topic)
 
         if df.size == 0:
@@ -46,7 +61,7 @@ class GazeInterface(BaseInterface):
 
     @staticmethod
     def _merge_2d_3d_gaze(gaze_2d, gaze_3d):
-        """"""
+        """ Merge data from a 2d and a 3d gaze mapper. """
         t, idx_2d, idx_3d = np.intersect1d(
             gaze_2d[0], gaze_3d[0], return_indices=True)
 
@@ -55,7 +70,7 @@ class GazeInterface(BaseInterface):
 
     @staticmethod
     def _get_offline_gaze_mappers(folder):
-        """"""
+        """ Get the topic names of all offline gaze mappers. """
         filepath = os.path.join(folder, 'offline_data', 'gaze_mappers.msgpack')
 
         if not os.path.exists(filepath):
@@ -71,7 +86,7 @@ class GazeInterface(BaseInterface):
 
     @staticmethod
     def _load_merged_gaze(folder, gaze_mapper):
-        """"""
+        """ Load and merge gaze from different mappers (2d and 3d). """
         offline_mappers = GazeInterface._get_offline_gaze_mappers(folder)
 
         mapper_folder = os.path.join(folder, 'offline_data', 'gaze-mappings')
@@ -83,7 +98,13 @@ class GazeInterface(BaseInterface):
         return GazeInterface._merge_2d_3d_gaze(gaze_2d, gaze_3d)
 
     def load_dataset(self):
-        """"""
+        """ Load gaze data as an xarray Dataset.
+
+        Returns
+        -------
+        xarray.Dataset
+            The gaze data as a dataset.
+        """
         if self.source == 'recording':
             t, c, n, p = self._load_gaze(self.folder)
         elif isinstance(self.source, str) and self.source in self.gaze_mappers:
