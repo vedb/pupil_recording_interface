@@ -1,3 +1,5 @@
+.. _api-reference:
+
 API Reference
 =============
 
@@ -5,9 +7,6 @@ Top-level functions and classes
 -------------------------------
 
 .. currentmodule:: pupil_recording_interface
-
-Module: :py:mod:`pupil_recording_interface`
-
 
 I/O functions
 ~~~~~~~~~~~~~
@@ -33,6 +32,16 @@ Interface classes
     OdometryInterface
     VideoInterface
     OpticalFlowInterface
+
+
+Recorder classes
+~~~~~~~~~~~~~~~~
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    OdometryRecorder
 
 
 Class member details

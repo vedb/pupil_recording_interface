@@ -7,6 +7,8 @@ Python backend and cli for pupil recordings.
    :maxdepth: 1
    :caption: Contents:
 
+   installation
+   usage
    api
 
 
