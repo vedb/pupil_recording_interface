@@ -1,10 +1,12 @@
 """"""
 import os
+import sys
 
 from .base import BaseInterface
 from .odometry import OdometryInterface, OdometryRecorder
 from .gaze import GazeInterface
 from .video import VideoInterface, OpticalFlowInterface
+from .cli import CLI
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 TEST_RECORDING = os.path.join(DATA_DIR, 'test_recording')
@@ -22,6 +24,11 @@ __all__ = [
     'OpticalFlowInterface',
     'OdometryRecorder'
 ]
+
+
+def _run_cli():
+    """ CLI entry point. """
+    CLI().run(sys.argv)
 
 
 def load_dataset(folder, gaze=None, odometry=None):
