@@ -9,7 +9,10 @@
 pupil_recording_interface
 =========================
 
-Python backend and cli for pupil recordings
+This Python package provides a user-friendly way of working with recordings
+from the Pupil Core eye tracking system. It includes interfaces for gaze and
+video data as well as some additional features such as optical flow
+calculation or recording of head tracking data.
 
 Documentation
 -------------
@@ -29,6 +32,6 @@ If you are using the conda package manager, install these dependencies first:
 
 .. code-block:: console
 
-    conda install numpy pandas xarray scipy msgpack-python opencv
+    conda install xarray scipy msgpack-python opencv
 
 Afterwards, install the package via ``pip`` as detailed above.

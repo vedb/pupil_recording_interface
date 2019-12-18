@@ -45,6 +45,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
     'numpydoc',
+    'matplotlib.sphinxext.plot_directive',
 ]
 
 autosummary_generate = True

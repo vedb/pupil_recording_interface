@@ -8,6 +8,8 @@ setup(
     version='0.0.1',
     packages=find_packages(),
     long_description=open('README.rst').read(),
-    scripts=['scripts/pri'],
+    entry_points={
+        'console_scripts': ['pri = pupil_recording_interface:_run_cli']},
     install_requires=requirements,
+    include_package_data=True,
 )

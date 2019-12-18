@@ -29,7 +29,7 @@ class CLI(object):
     @staticmethod
     def record(argv):
         """"""
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser('pri record')
         parser.add_argument('topic', help='Topic to record.')
         parser.add_argument('folder', help='Path to the recording folder.')
         parser.add_argument('-q', '--quiet', action='store_false',
@@ -45,7 +45,7 @@ class CLI(object):
     @staticmethod
     def export(argv):
         """"""
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser('pri export')
         parser.add_argument('topic', help='Topic to export.')
         parser.add_argument('folder', help='Path to the recording folder.')
         parser.add_argument('-s', '--source', help='Data source.',

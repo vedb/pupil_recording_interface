@@ -14,9 +14,11 @@ If you are using the conda package manager, install these dependencies first:
 
 .. code-block:: console
 
-    conda install numpy pandas xarray scipy msgpack-python opencv
+    conda install xarray scipy msgpack-python opencv
 
 Afterwards, install the package via ``pip`` as detailed above.
+
+.. _optional_dependencies:
 
 Optional dependencies
 ---------------------

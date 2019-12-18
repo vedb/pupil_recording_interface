@@ -9,6 +9,8 @@ See COPYING and COPYING.LESSER for license details.
 ---------------------------------------------------------------------------~(*)
 """
 
+# TODO simplify pldata writer and remove unnecessary methods and classes
+
 import collections
 import logging
 import os

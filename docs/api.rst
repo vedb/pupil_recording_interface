@@ -19,6 +19,7 @@ I/O functions
     write_netcdf
     load_info
     load_user_info
+    get_gaze_mappers
 
 
 Interface classes

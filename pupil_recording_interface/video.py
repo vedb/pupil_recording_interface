@@ -92,6 +92,15 @@ class VideoInterface(BaseInterface):
         """ Name of exported netCDF file. """
         return self.source
 
+    @property
+    def video_info(self):
+        """ Video metadata. """
+        return {
+            'resolution': self.resolution,
+            'frame_count': self.frame_count,
+            'fps': np.round(self.fps, 3)
+        }
+
     @staticmethod
     def _load_intrinsics(folder):
         """ Load world camera intrinsics. """
@@ -188,6 +197,8 @@ class VideoInterface(BaseInterface):
         numpy.ndarray
             The converted frame.
         """
+        # TODO rename to convert_range or similar?
+        frame *= 255.
         frame[np.isnan(frame)] = 0.
         return frame.astype('uint8')
 
@@ -361,7 +372,7 @@ class VideoInterface(BaseInterface):
         if norm_pos is not None:
             frame = self.get_roi(frame, norm_pos)
 
-        return frame.astype(float)
+        return frame.astype(float) / 255.
 
     def load_raw_frame(self, idx):
         """ Load a single un-processed video frame.
@@ -432,6 +443,7 @@ class VideoInterface(BaseInterface):
         numpy.ndarray
             The loaded frame.
         """
+        # TODO accept timestamps for start and end
         start = start or 0
         end = end or self.frame_count
 
@@ -445,7 +457,7 @@ class VideoInterface(BaseInterface):
             else:
                 yield self.process_frame(frame)
 
-    def load_dataset(self, dropna=False):
+    def load_dataset(self, dropna=False, start=None, end=None):
         """ Load video data as an xarray Dataset
 
         Parameters
@@ -455,6 +467,12 @@ class VideoInterface(BaseInterface):
             with ROI extraction when the ROI is (partially) outside of the
             frame.
 
+        start : Timestamp, optional
+            If specified, load the dataset starting at this video timestamp.
+
+        end : Timestamp, optional
+            If specified, load the dataset until this video timestamp.
+
         Returns
         -------
         xarray.Dataset:
@@ -462,16 +480,24 @@ class VideoInterface(BaseInterface):
         """
         t = self.timestamps
 
+        if start is not None:
+            start = t.get_loc(start, method='nearest')
+
+        if end is not None:
+            end = t.get_loc(end, method='nearest')
+
+        t = t[start:end]
+
         if dropna:
             t_gen, flow_gen = zip(
                 *((t, f)
-                  for t, f in zip(t, self.read_frames())
+                  for t, f in zip(t, self.read_frames(start, end))
                   if not np.any(np.isnan(f))))
             t = pd.DatetimeIndex(t_gen)
             frames = np.array(flow_gen)
         else:
             frames = np.empty((t.size,) + self.frame_shape)
-            for idx, f in enumerate(self.read_frames()):
+            for idx, f in enumerate(self.read_frames(start, end)):
                 frames[idx] = f
 
         frames = self.convert_to_uint8(frames)
@@ -550,6 +576,7 @@ class OpticalFlowInterface(VideoInterface):
         numpy.ndarray
             The dense optical flow between the frames.
         """
+        # TODO fix scale for float images?
         if last_frame is not None:
             # TODO make configurable
             return -cv2.calcOpticalFlowFarneback(

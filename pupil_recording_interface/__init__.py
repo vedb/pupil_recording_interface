@@ -1,12 +1,15 @@
 """"""
 import os
+import sys
 
 from .base import BaseInterface
 from .odometry import OdometryInterface, OdometryRecorder
 from .gaze import GazeInterface
 from .video import VideoInterface, OpticalFlowInterface
+from .cli import CLI
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+TEST_RECORDING = os.path.join(DATA_DIR, 'test_recording')
 
 
 __all__ = [
@@ -14,12 +17,18 @@ __all__ = [
     'load_info',
     'load_user_info',
     'write_netcdf',
+    'get_gaze_mappers',
     'GazeInterface',
     'OdometryInterface',
     'VideoInterface',
     'OpticalFlowInterface',
     'OdometryRecorder'
 ]
+
+
+def _run_cli():
+    """ CLI entry point. """
+    CLI().run(sys.argv)
 
 
 def load_dataset(folder, gaze=None, odometry=None):
@@ -58,6 +67,26 @@ def load_dataset(folder, gaze=None, odometry=None):
         return_vals = return_vals[0]
 
     return return_vals
+
+
+def get_gaze_mappers(folder):
+    """ Get available gaze mappers for a recording.
+
+    Parameters
+    ----------
+    folder : str
+        Path to the recording folder.
+
+    Returns
+    -------
+    set
+        The set of available mappers.
+    """
+    mappers = set(GazeInterface._get_offline_gaze_mappers(folder).keys())
+    if os.path.exists(os.path.join(folder, 'gaze.pldata')):
+        mappers = mappers.union({'recording'})
+
+    return mappers
 
 
 def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):

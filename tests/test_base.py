@@ -7,7 +7,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from pupil_recording_interface import GazeInterface, load_dataset, write_netcdf
+from pupil_recording_interface import \
+    GazeInterface, load_dataset, write_netcdf, get_gaze_mappers
 from pupil_recording_interface.base import BaseInterface
 
 
@@ -19,6 +20,7 @@ class InterfaceTester(TestCase):
 
     def setUp(self):
         """"""
+        # TODO replace with fixture in confest.py
         self.folder = os.path.join(DATA_DIR, 'test_recording')
         self.export_folder = os.path.join(self.folder, 'exports')
         self.info = {
@@ -36,6 +38,7 @@ class InterfaceTester(TestCase):
 
     def tearDown(self):
         """"""
+        # TODO replace with fixture in confest.py
         shutil.rmtree(self.export_folder, ignore_errors=True)
 
 
@@ -166,3 +169,9 @@ class TestFunctionalInterface(InterfaceTester):
             os.path.join(self.folder, 'exports', 'odometry.nc'))
         assert os.path.exists(
             os.path.join(self.folder, 'exports', 'gaze.nc'))
+
+    def test_get_gaze_mappers(self):
+        """"""
+        mappers = get_gaze_mappers(self.folder)
+
+        assert mappers == {'recording', '2d Gaze Mapper ', '3d Gaze Mapper'}

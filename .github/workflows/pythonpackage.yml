@@ -46,10 +46,11 @@ jobs:
     - name: Install dependencies and package
       run: |
         pip install -r requirements.txt -r requirements_dev.txt
-        python setup.py install
-    - name: Build Sphinx docs
+        pip install .
+    - name: Build Sphinx docs and run doctests
       run: |
         make -C docs/ html
+        make -C docs/ doctest
     - if: success() && github.ref == 'refs/heads/master'
       uses: crazy-max/ghaction-github-pages@master
       env:
