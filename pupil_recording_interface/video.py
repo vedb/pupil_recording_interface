@@ -92,6 +92,15 @@ class VideoInterface(BaseInterface):
         """ Name of exported netCDF file. """
         return self.source
 
+    @property
+    def video_info(self):
+        """ Video metadata. """
+        return {
+            'resolution': self.resolution,
+            'frame_count': self.frame_count,
+            'fps': np.round(self.fps, 3)
+        }
+
     @staticmethod
     def _load_intrinsics(folder):
         """ Load world camera intrinsics. """
@@ -188,6 +197,8 @@ class VideoInterface(BaseInterface):
         numpy.ndarray
             The converted frame.
         """
+        # TODO rename to convert_range or similar?
+        frame *= 255.
         frame[np.isnan(frame)] = 0.
         return frame.astype('uint8')
 
@@ -361,7 +372,7 @@ class VideoInterface(BaseInterface):
         if norm_pos is not None:
             frame = self.get_roi(frame, norm_pos)
 
-        return frame.astype(float)
+        return frame.astype(float) / 255.
 
     def load_raw_frame(self, idx):
         """ Load a single un-processed video frame.
@@ -432,6 +443,7 @@ class VideoInterface(BaseInterface):
         numpy.ndarray
             The loaded frame.
         """
+        # TODO accept timestamps for start and end
         start = start or 0
         end = end or self.frame_count
 
@@ -550,6 +562,7 @@ class OpticalFlowInterface(VideoInterface):
         numpy.ndarray
             The dense optical flow between the frames.
         """
+        # TODO fix scale for float images?
         if last_frame is not None:
             # TODO make configurable
             return -cv2.calcOpticalFlowFarneback(
