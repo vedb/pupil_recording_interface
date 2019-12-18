@@ -11,4 +11,5 @@ setup(
     entry_points={
         'console_scripts': ['pri = pupil_recording_interface:_run_cli']},
     install_requires=requirements,
+    include_package_data=True,
 )
