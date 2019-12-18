@@ -457,7 +457,7 @@ class VideoInterface(BaseInterface):
             else:
                 yield self.process_frame(frame)
 
-    def load_dataset(self, dropna=False):
+    def load_dataset(self, dropna=False, start=None, end=None):
         """ Load video data as an xarray Dataset
 
         Parameters
@@ -467,6 +467,12 @@ class VideoInterface(BaseInterface):
             with ROI extraction when the ROI is (partially) outside of the
             frame.
 
+        start : Timestamp, optional
+            If specified, load the dataset starting at this video timestamp.
+
+        end : Timestamp, optional
+            If specified, load the dataset until this video timestamp.
+
         Returns
         -------
         xarray.Dataset:
@@ -474,16 +480,24 @@ class VideoInterface(BaseInterface):
         """
         t = self.timestamps
 
+        if start is not None:
+            start = t.get_loc(start, method='nearest')
+
+        if end is not None:
+            end = t.get_loc(end, method='nearest')
+
+        t = t[start:end]
+
         if dropna:
             t_gen, flow_gen = zip(
                 *((t, f)
-                  for t, f in zip(t, self.read_frames())
+                  for t, f in zip(t, self.read_frames(start, end))
                   if not np.any(np.isnan(f))))
             t = pd.DatetimeIndex(t_gen)
             frames = np.array(flow_gen)
         else:
             frames = np.empty((t.size,) + self.frame_shape)
-            for idx, f in enumerate(self.read_frames()):
+            for idx, f in enumerate(self.read_frames(start, end)):
                 frames[idx] = f
 
         frames = self.convert_to_uint8(frames)

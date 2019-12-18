@@ -191,12 +191,12 @@ class TestVideoInterface(InterfaceTester):
         interface = VideoInterface(
             self.folder, subsampling=8., color_format='gray')
 
-        ds = interface.load_dataset()
+        ds = interface.load_dataset(
+            start=interface.user_info['experiment_start'],
+            end=interface.user_info['experiment_end'])
 
         self.assertDictEqual(dict(ds.sizes), {
-            'time': self.n_frames,
-            'frame_x': 160,
-            'frame_y': 90})
+            'time': 22, 'frame_x': 160, 'frame_y': 90})
 
         assert set(ds.data_vars) == {'frames'}
         assert ds.frames.dtype == 'uint8'
@@ -209,10 +209,8 @@ class TestVideoInterface(InterfaceTester):
         ds = interface.load_dataset(dropna=True)
 
         self.assertDictEqual(dict(ds.sizes), {
-            'time': self.n_valid_frames,
-            'frame_x': self.roi_size,
-            'frame_y': self.roi_size,
-            'color': 3})
+            'time': self.n_valid_frames, 'frame_x': self.roi_size,
+            'frame_y': self.roi_size, 'color': 3})
 
         assert set(ds.data_vars) == {'frames'}
         assert ds.frames.dtype == 'uint8'
@@ -293,10 +291,7 @@ class TestOpticalFlowInterface(InterfaceTester):
             end=interface.user_info['experiment_end'])
 
         self.assertDictEqual(dict(ds.sizes), {
-            'time': 22,
-            'roi_x': 160,
-            'roi_y': 90,
-            'pixel_axis': 2})
+            'time': 22, 'roi_x': 160, 'roi_y': 90, 'pixel_axis': 2})
         assert ds.indexes['time'][0] >= interface.user_info['experiment_start']
         assert ds.indexes['time'][-1] < interface.user_info['experiment_end']
         assert set(ds.data_vars) == {'optical_flow'}
@@ -309,10 +304,8 @@ class TestOpticalFlowInterface(InterfaceTester):
         ds = interface.load_dataset(dropna=True, iter_wrapper=tqdm.tqdm)
 
         self.assertDictEqual(dict(ds.sizes), {
-            'time': self.n_valid_frames,
-            'roi_x': self.roi_size,
-            'roi_y': self.roi_size,
-            'pixel_axis': 2})
+            'time': self.n_valid_frames, 'roi_x': self.roi_size,
+            'roi_y': self.roi_size, 'pixel_axis': 2})
 
         npt.assert_allclose(
             ds.roi_x, np.arange(
