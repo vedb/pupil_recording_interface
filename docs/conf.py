@@ -185,3 +185,5 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
+def setup(app):
+    app.add_javascript('copybutton.js')

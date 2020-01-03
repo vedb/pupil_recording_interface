@@ -113,12 +113,13 @@ frame by index:
     (720, 1280, 3)
 
 If you have the ``matplotlib`` library installed, you can show the frame
-with ``imshow()``:
+with ``imshow()``. Note that you have to reverse the last axis as the frame
+is loaded as a BGR image but imshow expects RGB:
 
 .. code-block:: python
 
-    import matplotlib.pyplot as plt
-    plt.imshow(frame)
+    >>> import matplotlib.pyplot as plt
+    >>> plt.imshow(frame[:, :, ::-1])
 
 .. plot::
 
@@ -131,7 +132,7 @@ with ``imshow()``:
     ax = plt.axes([0,0,1,1], frameon=False)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-    ax.imshow(frame)
+    ax.imshow(frame[:, :, ::-1])
 
 ROI extraction
 ..............
@@ -148,6 +149,7 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
     >>> frame = interface.load_frame(100)
     >>> frame.shape
     (64, 64, 3)
+    >>> plt.imshow(frame[:, :, ::-1]) # doctest:+SKIP
 
 .. plot::
 
@@ -162,7 +164,7 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
     ax = plt.axes([0,0,1,1], frameon=False)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-    ax.imshow(frame)
+    ax.imshow(frame[:, :, ::-1])
 
 Other frame processing
 ......................
@@ -228,7 +230,7 @@ The recording metadata file created by Pupil Capture can be loaded with:
 
 .. doctest::
 
-    >>> pri.load_info(pri.TEST_RECORDING) # doctest: +NORMALIZE_WHITESPACE
+    >>> pri.load_info(pri.TEST_RECORDING) # doctest:+NORMALIZE_WHITESPACE
     {'duration_s': 21.0,
      'meta_version': '2.0',
      'min_player_version': '1.16',
@@ -244,7 +246,7 @@ You can also load the user info with:
 
 .. doctest::
 
-    >>> pri.load_user_info(pri.TEST_RECORDING) # doctest: +NORMALIZE_WHITESPACE
+    >>> pri.load_user_info(pri.TEST_RECORDING) # doctest:+NORMALIZE_WHITESPACE
     {'name': 'TEST',
      'pre_calibration_start': Timestamp('2019-10-10 16:43:21.220912933'),
      'pre_calibration_end': Timestamp('2019-10-10 16:43:22.220912933'),
