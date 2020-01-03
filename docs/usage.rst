@@ -113,12 +113,13 @@ frame by index:
     (720, 1280, 3)
 
 If you have the ``matplotlib`` library installed, you can show the frame
-with ``imshow()``:
+with ``imshow()``. Note that you have to reverse the last axis as the frame
+is loaded as a BGR image but imshow expects RGB:
 
 .. code-block:: python
 
     import matplotlib.pyplot as plt
-    plt.imshow(frame)
+    plt.imshow(frame[:, :, ::-1])
 
 .. plot::
 
@@ -131,7 +132,7 @@ with ``imshow()``:
     ax = plt.axes([0,0,1,1], frameon=False)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-    ax.imshow(frame)
+    ax.imshow(frame[:, :, ::-1])
 
 ROI extraction
 ..............
