@@ -2,17 +2,19 @@ name: pupil-recording-interface
 channels:
   - conda-forge
 dependencies:
-  - python>=3.6
+  - python=3.7
   - pip
   - numpy
   - scipy
   - pandas
   - xarray
-  - opencv
+  - ffmpeg=4.1.3
+  - x264=1!152.20180806
+  - opencv=4.1.0
   - netcdf4
   - msgpack-python
   - tqdm
   - pip:
-    - opencv-python # reinstall through pip because cli breaks otherwise
+    - opencv-python=4.1.0.25 # reinstall through pip because cli breaks otherwise
     - pyrealsense2
     - git+https://github.com/pupil-labs/pyuvc.git
