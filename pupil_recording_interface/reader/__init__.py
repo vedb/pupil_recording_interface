@@ -1,18 +1,16 @@
-""""""
-import os
 import abc
 import csv
 import json
+import os
 
 import numpy as np
 import pandas as pd
 
 from pupil_recording_interface.externals.file_methods import load_pldata_file
-from pupil_recording_interface.errors import FileNotFoundError
 
 
-class BaseInterface(object):
-    """ Base class for all interfaces. """
+class BaseReader(object):
+    """ Base class for all readers. """
 
     def __init__(self, folder, source='recording'):
         """ Constructor.
@@ -79,7 +77,7 @@ class BaseInterface(object):
             if filename.endswith('.json'):
                 info = json.load(f)
             elif filename.endswith('.csv'):
-                info = BaseInterface._load_legacy_info(f)
+                info = BaseReader._load_legacy_info(f)
             else:
                 raise ValueError('Unsupported info file type.')
 
@@ -133,7 +131,7 @@ class BaseInterface(object):
                     topic, folder))
 
         timestamps = np.load(filepath)
-        idx = BaseInterface._timestamps_to_datetimeindex(timestamps, info)
+        idx = BaseReader._timestamps_to_datetimeindex(timestamps, info)
         return idx + pd.to_timedelta(offset, unit='s')
 
     @staticmethod
@@ -180,20 +178,3 @@ class BaseInterface(object):
 
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)
-
-
-class BaseRecorder(object):
-    """ Base class for all recorders. """
-
-    def __init__(self, folder):
-        """ Constructor.
-
-        Parameters
-        ----------
-        folder : str
-            Path to the recording folder.
-        """
-        if not os.path.exists(folder):
-            raise FileNotFoundError('No such folder: {}'.format(folder))
-
-        self.folder = folder

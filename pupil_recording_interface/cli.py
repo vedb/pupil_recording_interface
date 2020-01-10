@@ -1,10 +1,8 @@
 """"""
 import argparse
 
-from pupil_recording_interface.gaze import GazeInterface
-from pupil_recording_interface.video import VideoInterface
-from pupil_recording_interface.odometry import OdometryInterface, \
-    OdometryRecorder
+from pupil_recording_interface import OdometryRecorder, OdometryReader, \
+    GazeReader, VideoReader
 
 
 class CLI(object):
@@ -58,11 +56,11 @@ class CLI(object):
         args = parser.parse_args(argv[2:])
 
         if args.topic == 'gaze':
-            interface = GazeInterface(args.folder, source=args.source)
+            interface = GazeReader(args.folder, source=args.source)
         elif args.topic == 'video':
-            interface = VideoInterface(args.folder, source=args.source)
+            interface = VideoReader(args.folder, source=args.source)
         elif args.topic == 'odometry':
-            interface = OdometryInterface(args.folder, source=args.source)
+            interface = OdometryReader(args.folder, source=args.source)
         else:
             raise ValueError('Unsupported topic: {}'.format(args.topic))
 

@@ -1,7 +1,7 @@
 import sys
 
 import pytest
-from .test_base import InterfaceTester
+from .test_base import ReaderTester
 import numpy.testing as npt
 
 import numpy as np
@@ -9,16 +9,16 @@ import xarray as xr
 import cv2
 
 from pupil_recording_interface import \
-    VideoInterface, OpticalFlowInterface, load_dataset
+    VideoReader, OpticalFlowReader, load_dataset
 
 from pupil_recording_interface.errors import FileNotFoundError
 
 
-class TestVideoInterface(InterfaceTester):
+class TestVideoReader(ReaderTester):
 
     def setUp(self):
         """"""
-        super(TestVideoInterface, self).setUp()
+        super(TestVideoReader, self).setUp()
         self.n_frames = 504
         self.n_valid_frames = 474
         self.frame_shape = (720, 1280, 3)
@@ -27,7 +27,7 @@ class TestVideoInterface(InterfaceTester):
 
     def test_get_encoding(self):
         """"""
-        encoding = VideoInterface._get_encoding(['frames'])
+        encoding = VideoReader._get_encoding(['frames'])
 
         self.assertDictEqual(encoding['frames'], {
             'zlib': True,
@@ -38,34 +38,34 @@ class TestVideoInterface(InterfaceTester):
         sys.version_info < (3, 0), reason='isinstance check fails')
     def test_get_capture(self):
         """"""
-        capture = VideoInterface._get_capture(self.folder, 'world')
+        capture = VideoReader._get_capture(self.folder, 'world')
 
         assert isinstance(capture, cv2.VideoCapture)
 
         with self.assertRaises(FileNotFoundError):
-            VideoInterface._get_capture(self.folder, 'not_a_topic')
+            VideoReader._get_capture(self.folder, 'not_a_topic')
 
     def test_resolution(self):
         """"""
-        resolution = VideoInterface(self.folder, 'world').resolution
+        resolution = VideoReader(self.folder, 'world').resolution
         assert resolution == self.frame_shape[-2::-1]
         assert isinstance(resolution[0], int)
         assert isinstance(resolution[1], int)
 
     def test_frame_count(self):
         """"""
-        frame_count = VideoInterface(self.folder, 'world').frame_count
+        frame_count = VideoReader(self.folder, 'world').frame_count
         assert frame_count == self.n_frames
         assert isinstance(frame_count, int)
 
     def test_frame_shape(self):
         """"""
-        shape = VideoInterface(self.folder).frame_shape
+        shape = VideoReader(self.folder).frame_shape
         assert shape == self.frame_shape
 
     def test_fps(self):
         """"""
-        fps = VideoInterface(self.folder).fps
+        fps = VideoReader(self.folder).fps
         assert fps == self.fps
 
     def test_get_valid_idx(self):
@@ -76,14 +76,14 @@ class TestVideoInterface(InterfaceTester):
                              [0.9, 0.5],
                              [0.5, 0.5]])
 
-        idx = VideoInterface._get_valid_idx(
+        idx = VideoReader._get_valid_idx(
             norm_pos, (512, 512), self.roi_size)
 
         np.testing.assert_equal(idx, (True, True, False, False, True))
 
     def test_get_bounds(self):
         """"""
-        interface = VideoInterface(self.folder, roi_size=self.roi_size)
+        interface = VideoReader(self.folder, roi_size=self.roi_size)
 
         # completely inside
         bounds = interface._get_bounds(256, 512, self.roi_size)
@@ -104,7 +104,7 @@ class TestVideoInterface(InterfaceTester):
     def test_get_roi(self):
         """"""
         frame = np.random.rand(512, 512)
-        interface = VideoInterface(self.folder, roi_size=self.roi_size)
+        interface = VideoReader(self.folder, roi_size=self.roi_size)
 
         # completely inside
         roi = interface.get_roi(frame, (0.5, 0.5))
@@ -128,14 +128,14 @@ class TestVideoInterface(InterfaceTester):
 
     def test_convert_to_uint8(self):
         """"""
-        frame = VideoInterface.convert_to_uint8(
+        frame = VideoReader.convert_to_uint8(
             np.nan * np.ones(self.frame_shape))
         np.testing.assert_equal(
             frame, np.zeros(self.frame_shape, dtype='uint8'))
 
     def test_load_raw_frame(self):
         """"""
-        interface = VideoInterface(self.folder)
+        interface = VideoReader(self.folder)
         frame = interface.load_raw_frame(0)
         assert frame.shape == self.frame_shape
 
@@ -145,20 +145,20 @@ class TestVideoInterface(InterfaceTester):
 
     def test_load_frame(self):
         """"""
-        interface = VideoInterface(self.folder)
+        interface = VideoReader(self.folder)
         frame = interface.load_frame(0)
         assert frame.shape == self.frame_shape
 
         # ROI around norm pos
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
-        interface = VideoInterface(
+        interface = VideoReader(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
         frame = interface.load_frame(0)
         assert frame.shape == (
             self.roi_size, self.roi_size, self.frame_shape[2])
 
         # with timestamp
-        interface = VideoInterface(self.folder)
+        interface = VideoReader(self.folder)
         t, frame = interface.load_frame(0, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2383718
 
@@ -166,29 +166,29 @@ class TestVideoInterface(InterfaceTester):
         """"""
         # TODO move this to process_frame test
         # full frame
-        interface = VideoInterface(self.folder)
+        interface = VideoReader(self.folder)
         assert next(interface.read_frames()).shape == self.frame_shape
 
         # grayscale
-        interface = VideoInterface(self.folder, color_format='gray')
+        interface = VideoReader(self.folder, color_format='gray')
         assert next(interface.read_frames()).shape == self.frame_shape[:2]
 
         # sub-sampled frame
-        interface = VideoInterface(self.folder, subsampling=2.)
+        interface = VideoReader(self.folder, subsampling=2.)
         assert next(interface.read_frames()).shape == (
             self.frame_shape[0] / 2, self.frame_shape[1] / 2,
             self.frame_shape[2])
 
         # ROI around gaze position
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
-        interface = VideoInterface(
+        interface = VideoReader(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
         assert next(interface.read_frames()).shape == (
             self.roi_size, self.roi_size, self.frame_shape[2])
 
     def test_load_dataset(self):
         """"""
-        interface = VideoInterface(
+        interface = VideoReader(
             self.folder, subsampling=8., color_format='gray')
 
         ds = interface.load_dataset(
@@ -203,7 +203,7 @@ class TestVideoInterface(InterfaceTester):
 
         # ROI around norm_pos
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
-        interface = VideoInterface(
+        interface = VideoReader(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
 
         ds = interface.load_dataset(dropna=True)
@@ -216,11 +216,17 @@ class TestVideoInterface(InterfaceTester):
         assert ds.frames.dtype == 'uint8'
 
 
-class TestOpticalFlowInterface(InterfaceTester):
+class TestVideoRecorder(object):
+
+    def test_constructor(self):
+        """"""
+
+
+class TestOpticalFlowReader(ReaderTester):
 
     def setUp(self):
         """"""
-        super(TestOpticalFlowInterface, self).setUp()
+        super(TestOpticalFlowReader, self).setUp()
         self.n_frames = 504
         self.n_valid_frames = 463
         self.frame_shape = (720, 1280, 2)
@@ -234,26 +240,26 @@ class TestOpticalFlowInterface(InterfaceTester):
                              [0.9, 0.5],
                              [0.5, 0.5]])
 
-        idx = OpticalFlowInterface._get_valid_idx(
+        idx = OpticalFlowReader._get_valid_idx(
             norm_pos, (512, 512), self.roi_size)
 
         np.testing.assert_equal(idx, (False, True, False, False, False))
 
     def test_calculate_optical_flow(self):
         """"""
-        flow = OpticalFlowInterface.calculate_optical_flow(
+        flow = OpticalFlowReader.calculate_optical_flow(
             np.random.rand(128, 128), np.random.rand(128, 128))
         self.assertEqual(flow.shape, (128, 128, 2))
         assert not np.any(np.isnan(flow))
 
         # no last roi
-        flow = OpticalFlowInterface.calculate_optical_flow(
+        flow = OpticalFlowReader.calculate_optical_flow(
             np.random.rand(128, 128), None)
         npt.assert_equal(flow, np.nan * np.ones((128, 128, 2)))
 
     def test_load_optical_flow(self):
         """"""
-        interface = OpticalFlowInterface(self.folder)
+        interface = OpticalFlowReader(self.folder)
 
         flow = interface.load_optical_flow(1)
         assert flow.shape == self.frame_shape
@@ -274,7 +280,7 @@ class TestOpticalFlowInterface(InterfaceTester):
     def test_read_optical_flow(self):
         """"""
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
-        interface = OpticalFlowInterface(
+        interface = OpticalFlowReader(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
 
         assert next(interface.read_optical_flow()).shape == (
@@ -284,7 +290,7 @@ class TestOpticalFlowInterface(InterfaceTester):
         """"""
         import tqdm
 
-        interface = OpticalFlowInterface(self.folder, subsampling=8.)
+        interface = OpticalFlowReader(self.folder, subsampling=8.)
 
         ds = interface.load_dataset(
             start=interface.user_info['experiment_start'],
@@ -298,7 +304,7 @@ class TestOpticalFlowInterface(InterfaceTester):
 
         # ROI around norm_pos
         norm_pos = load_dataset(self.folder, gaze='recording').gaze_norm_pos
-        interface = OpticalFlowInterface(
+        interface = OpticalFlowReader(
             self.folder, norm_pos=norm_pos, roi_size=self.roi_size)
 
         ds = interface.load_dataset(dropna=True, iter_wrapper=tqdm.tqdm)

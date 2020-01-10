@@ -22,17 +22,17 @@ I/O functions
     get_gaze_mappers
 
 
-Interface classes
-.................
+Reader classes
+..............
 
 .. autosummary::
     :nosignatures:
     :toctree: _generated
 
-    GazeInterface
-    OdometryInterface
-    VideoInterface
-    OpticalFlowInterface
+    GazeReader
+    OdometryReader
+    VideoReader
+    OpticalFlowReader
 
 
 Recorder classes
@@ -49,7 +49,7 @@ Recorder classes
 Class member details
 --------------------
 
-GazeInterface
+GazeReader
 .............
 
 I/O functions
@@ -59,10 +59,10 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    GazeInterface.load_dataset
-    GazeInterface.write_netcdf
+    GazeReader.load_dataset
+    GazeReader.write_netcdf
 
-OdometryInterface
+OdometryReader
 .................
 
 I/O functions
@@ -72,11 +72,11 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    OdometryInterface.load_dataset
-    OdometryInterface.write_netcdf
+    OdometryReader.load_dataset
+    OdometryReader.write_netcdf
 
 
-VideoInterface
+VideoReader
 ..............
 
 I/O functions
@@ -86,12 +86,12 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    VideoInterface.load_frame
-    VideoInterface.load_raw_frame
-    VideoInterface.read_frames
-    VideoInterface.load_timestamps
-    VideoInterface.load_dataset
-    VideoInterface.write_netcdf
+    VideoReader.load_frame
+    VideoReader.load_raw_frame
+    VideoReader.read_frames
+    VideoReader.load_timestamps
+    VideoReader.load_dataset
+    VideoReader.write_netcdf
 
 Frame processing
 ~~~~~~~~~~~~~~~~
@@ -100,18 +100,18 @@ Frame processing
     :nosignatures:
     :toctree: _generated
 
-    VideoInterface.convert_to_uint8
-    VideoInterface.convert_color
-    VideoInterface.get_roi
-    VideoInterface.undistort_frame
-    VideoInterface.subsample_frame
-    VideoInterface.process_frame
+    VideoReader.convert_to_uint8
+    VideoReader.convert_color
+    VideoReader.get_roi
+    VideoReader.undistort_frame
+    VideoReader.subsample_frame
+    VideoReader.process_frame
 
 
-OpticalFlowInterface
+OpticalFlowReader
 ....................
 
-See the parent `VideoInterface`_ class for additional methods.
+See the parent `VideoReader`_ class for additional methods.
 
 I/O functions
 ~~~~~~~~~~~~~
@@ -120,10 +120,10 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    OpticalFlowInterface.load_dataset
-    OpticalFlowInterface.write_netcdf
-    OpticalFlowInterface.load_optical_flow
-    OpticalFlowInterface.read_optical_flow
+    OpticalFlowReader.load_dataset
+    OpticalFlowReader.write_netcdf
+    OpticalFlowReader.load_optical_flow
+    OpticalFlowReader.read_optical_flow
 
 Optical flow calculation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,7 +132,7 @@ Optical flow calculation
     :nosignatures:
     :toctree: _generated
 
-    OpticalFlowInterface.calculate_optical_flow
+    OpticalFlowReader.calculate_optical_flow
 
 
 

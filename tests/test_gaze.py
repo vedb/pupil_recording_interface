@@ -1,26 +1,26 @@
 import os
 
-from .test_base import InterfaceTester
+from .test_base import ReaderTester
 
 import xarray as xr
 
-from pupil_recording_interface import GazeInterface
+from pupil_recording_interface import GazeReader
 
 from pupil_recording_interface.errors import FileNotFoundError
 
 
-class TestGazeInterface(InterfaceTester):
+class TestGazeReader(ReaderTester):
 
     def setUp(self):
         """"""
-        super(TestGazeInterface, self).setUp()
+        super(TestGazeReader, self).setUp()
         self.n_gaze = 5160
         self.n_gaze_offline = 5134
         self.gaze_mappers = {'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
 
     def test_load_gaze(self):
         """"""
-        t, c, n, p = GazeInterface._load_gaze(self.folder)
+        t, c, n, p = GazeReader._load_gaze(self.folder)
 
         assert t.shape == (self.n_gaze,)
         assert c.shape == (self.n_gaze,)
@@ -29,7 +29,7 @@ class TestGazeInterface(InterfaceTester):
 
     def test_load_merged_gaze(self):
         """"""
-        t, c, n, p = GazeInterface._load_merged_gaze(
+        t, c, n, p = GazeReader._load_merged_gaze(
             self.folder, self.gaze_mappers)
 
         assert t.shape == (self.n_gaze_offline,)
@@ -40,7 +40,7 @@ class TestGazeInterface(InterfaceTester):
 
     def test_get_offline_gaze_mapper(self):
         """"""
-        mappers = GazeInterface._get_offline_gaze_mappers(self.folder)
+        mappers = GazeReader._get_offline_gaze_mappers(self.folder)
 
         assert set(mappers.keys()) == {'3d Gaze Mapper', '2d Gaze Mapper '}
         for v in mappers.values():
@@ -48,12 +48,12 @@ class TestGazeInterface(InterfaceTester):
                 self.folder, 'offline_data', 'gaze-mappings', v + '.pldata'))
 
         with self.assertRaises(FileNotFoundError):
-            GazeInterface._get_offline_gaze_mappers('not_a_folder')
+            GazeReader._get_offline_gaze_mappers('not_a_folder')
 
     def test_load_dataset(self):
         """"""
         # from recording
-        ds = GazeInterface(self.folder).load_dataset()
+        ds = GazeReader(self.folder).load_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
             'time': self.n_gaze,
@@ -64,7 +64,7 @@ class TestGazeInterface(InterfaceTester):
             'gaze_confidence_3d', 'gaze_point', 'gaze_norm_pos'}
 
         # offline 2d mapper
-        ds = GazeInterface(
+        ds = GazeReader(
             self.folder, source=self.gaze_mappers['2d']).load_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
@@ -75,7 +75,7 @@ class TestGazeInterface(InterfaceTester):
             'gaze_confidence_2d', 'gaze_norm_pos'}
 
         # merged 2d/3d gaze
-        ds = GazeInterface(
+        ds = GazeReader(
             self.folder, source=self.gaze_mappers).load_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
@@ -89,12 +89,12 @@ class TestGazeInterface(InterfaceTester):
 
         # bad gaze argument
         with self.assertRaises(ValueError):
-            GazeInterface(
+            GazeReader(
                 self.folder, source='not_gaze_mapper').load_dataset()
 
     def test_write_netcdf(self):
         """"""
-        GazeInterface(self.folder).write_netcdf()
+        GazeReader(self.folder).write_netcdf()
 
         ds = xr.open_dataset(os.path.join(self.export_folder, 'gaze.nc'))
 

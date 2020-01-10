@@ -8,15 +8,13 @@ import pandas as pd
 import xarray as xr
 
 from pupil_recording_interface import \
-    GazeInterface, load_dataset, write_netcdf, get_gaze_mappers
-from pupil_recording_interface.base import BaseInterface
-
+    GazeReader, load_dataset, write_netcdf, get_gaze_mappers, BaseReader
 
 from pupil_recording_interface import DATA_DIR
 from pupil_recording_interface.errors import FileNotFoundError
 
 
-class InterfaceTester(TestCase):
+class ReaderTester(TestCase):
 
     def setUp(self):
         """"""
@@ -42,32 +40,32 @@ class InterfaceTester(TestCase):
         shutil.rmtree(self.export_folder, ignore_errors=True)
 
 
-class TestBaseInterface(InterfaceTester):
+class TestBaseReader(ReaderTester):
 
     def test_constructor(self):
         """"""
-        exporter = BaseInterface(self.folder)
+        exporter = BaseReader(self.folder)
         assert exporter.folder == self.folder
 
         with self.assertRaises(FileNotFoundError):
-            BaseInterface('not_a_folder')
+            BaseReader('not_a_folder')
 
     def test_load_info(self):
         """"""
-        info = BaseInterface._load_info(self.folder)
+        info = BaseReader._load_info(self.folder)
         self.assertDictEqual(info, self.info)
 
         # legacy format
-        info = BaseInterface._load_info(self.folder, 'info.csv')
+        info = BaseReader._load_info(self.folder, 'info.csv')
         self.info['duration_s'] = 21.
         self.assertDictEqual(info, self.info)
 
         with self.assertRaises(FileNotFoundError):
-            BaseInterface._load_info(self.folder, 'not_a_file')
+            BaseReader._load_info(self.folder, 'not_a_file')
 
     def test_load_user_info(self):
         """"""
-        user_info = BaseInterface._load_user_info(
+        user_info = BaseReader._load_user_info(
             self.folder, self.info['start_time_system_s'])
         
         t0 = pd.to_datetime(self.info['start_time_system_s'], unit='s')
@@ -87,39 +85,39 @@ class TestBaseInterface(InterfaceTester):
         """"""
         timestamps = np.array([2295., 2296., 2297.])
 
-        idx = BaseInterface._timestamps_to_datetimeindex(timestamps, self.info)
+        idx = BaseReader._timestamps_to_datetimeindex(timestamps, self.info)
 
         assert idx.values[0].astype(float) / 1e9 == 1570725800.4130569
 
     def test_load_timestamps_as_datetimeindex(self):
         """"""
-        idx = BaseInterface._load_timestamps_as_datetimeindex(
+        idx = BaseReader._load_timestamps_as_datetimeindex(
             self.folder, 'gaze', self.info)
         assert idx.values[0].astype(float) / 1e9 == 1570725800.149778
 
         # with offset
-        idx_with_offs = BaseInterface._load_timestamps_as_datetimeindex(
+        idx_with_offs = BaseReader._load_timestamps_as_datetimeindex(
             self.folder, 'gaze', self.info, 1.)
         assert np.all(idx_with_offs == idx + pd.to_timedelta('1s'))
 
         with self.assertRaises(FileNotFoundError):
-            BaseInterface._load_timestamps_as_datetimeindex(
+            BaseReader._load_timestamps_as_datetimeindex(
                 self.folder, 'not_a_topic', self.info)
 
     def test_load_pldata_as_dataframe(self):
         """"""
-        df = BaseInterface._load_pldata_as_dataframe(self.folder, 'odometry')
+        df = BaseReader._load_pldata_as_dataframe(self.folder, 'odometry')
 
         assert set(df.columns) == {'topic', 'timestamp', 'confidence',
                                    'linear_velocity', 'angular_velocity',
                                    'position', 'orientation'}
 
         with self.assertRaises(FileNotFoundError):
-            BaseInterface._load_pldata_as_dataframe(self.folder, 'not_a_topic')
+            BaseReader._load_pldata_as_dataframe(self.folder, 'not_a_topic')
 
     def test_get_encoding(self):
         """"""
-        encoding = BaseInterface._get_encoding(['test_var'])
+        encoding = BaseReader._get_encoding(['test_var'])
 
         self.assertDictEqual(encoding['test_var'], {
             'zlib': True,
@@ -130,14 +128,14 @@ class TestBaseInterface(InterfaceTester):
 
     def test_create_export_folder(self):
         """"""
-        BaseInterface._create_export_folder(
+        BaseReader._create_export_folder(
             os.path.join(self.export_folder, 'test.nc'))
 
         assert os.path.exists(self.export_folder)
 
     def test_write_netcdf(self):
         """"""
-        GazeInterface(self.folder).write_netcdf()
+        GazeReader(self.folder).write_netcdf()
 
         ds = xr.open_dataset(os.path.join(self.export_folder, 'gaze.nc'))
 
@@ -147,7 +145,7 @@ class TestBaseInterface(InterfaceTester):
         ds.close()
 
 
-class TestFunctionalInterface(InterfaceTester):
+class TestFunctionalReader(ReaderTester):
 
     def test_load_dataset(self):
         """"""

@@ -1,18 +1,18 @@
-from .test_base import InterfaceTester
+from .test_base import ReaderTester
 
-from pupil_recording_interface import OdometryInterface
+from pupil_recording_interface import OdometryReader
 
 
-class TestOdometryInterface(InterfaceTester):
+class TestOdometryReader(ReaderTester):
 
     def setUp(self):
         """"""
-        super(TestOdometryInterface, self).setUp()
+        super(TestOdometryReader, self).setUp()
         self.n_odometry = 4220
 
     def test_load_odometry(self):
         """"""
-        t, c, p, q, v, w = OdometryInterface._load_odometry(self.folder)
+        t, c, p, q, v, w = OdometryReader._load_odometry(self.folder)
 
         assert t.shape == (self.n_odometry,)
         assert c.shape == (self.n_odometry,)
@@ -25,7 +25,7 @@ class TestOdometryInterface(InterfaceTester):
     def test_load_dataset(self):
         """"""
         # from recording
-        ds = OdometryInterface(self.folder).load_dataset()
+        ds = OdometryReader(self.folder).load_dataset()
 
         self.assertDictEqual(dict(ds.sizes), {
             'time': self.n_odometry,
@@ -38,5 +38,5 @@ class TestOdometryInterface(InterfaceTester):
 
         # bad odometry argument
         with self.assertRaises(ValueError):
-            OdometryInterface(
+            OdometryReader(
                 self.folder, source='not_supported').load_dataset()

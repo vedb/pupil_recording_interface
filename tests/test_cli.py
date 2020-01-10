@@ -1,11 +1,11 @@
 import os
 
-from .test_base import InterfaceTester
+from .test_base import ReaderTester
 
 from pupil_recording_interface.cli import CLI
 
 
-class TestCLI(InterfaceTester):
+class TestCLI(ReaderTester):
 
     def test_record(self):
         """"""

@@ -1,15 +1,11 @@
-""""""
-from __future__ import division
-
 import os
 
+import cv2
 import numpy as np
 import pandas as pd
 import xarray as xr
-import cv2
 
-from pupil_recording_interface.base import BaseInterface
-from pupil_recording_interface.errors import FileNotFoundError
+from pupil_recording_interface import BaseReader
 
 
 def _iter_wrapper(it, **kwargs):
@@ -17,8 +13,8 @@ def _iter_wrapper(it, **kwargs):
     return it
 
 
-class VideoInterface(BaseInterface):
-    """ Interface for video data. """
+class VideoReader(BaseReader):
+    """ Reader for video data. """
 
     def __init__(self, folder, source='world', color_format=None,
                  norm_pos=None, roi_size=None, interpolation_method='linear',
@@ -60,7 +56,7 @@ class VideoInterface(BaseInterface):
             If specified, sub-sample each frame by this factor. Sub-sampling
             is applied before ROI extraction.
         """
-        super(VideoInterface, self).__init__(folder, source=source)
+        super(VideoReader, self).__init__(folder, source=source)
         self.color_format = color_format
         self.roi_size = roi_size
         self.subsampling = subsampling
@@ -245,10 +241,10 @@ class VideoInterface(BaseInterface):
 
         if not np.isnan(x) and not np.isnan(y):
             (x0_roi, x1_roi), (x0_frame, x1_frame) = \
-                VideoInterface._get_bounds(
+                VideoReader._get_bounds(
                     int(x * frame.shape[1]), frame.shape[1], self.roi_size)
             (y0_roi, y1_roi), (y0_frame, y1_frame) = \
-                VideoInterface._get_bounds(
+                VideoReader._get_bounds(
                     int((1 - y) * frame.shape[0]), frame.shape[0],
                     self.roi_size)
             roi[y0_roi:y1_roi, x0_roi:x1_roi, ...] = \
@@ -521,8 +517,8 @@ class VideoInterface(BaseInterface):
         return xr.Dataset(data_vars, coords)
 
 
-class OpticalFlowInterface(VideoInterface):
-    """ Interface for extracting optical flow from video data. """
+class OpticalFlowReader(VideoReader):
+    """ Reader for extracting optical flow from video data. """
 
     def __init__(self, folder, source='world', **kwargs):
         """ Constructor.
@@ -537,13 +533,13 @@ class OpticalFlowInterface(VideoInterface):
             be used.
 
         **kwargs : optional
-            Additional parameters passed to the ``VideoInterface`` constructor.
+            Additional parameters passed to the ``VideoReader`` constructor.
 
         See Also
         --------
-        VideoInterface
+        VideoReader
         """
-        super(OpticalFlowInterface, self).__init__(
+        super(OpticalFlowReader, self).__init__(
             folder, source=source, color_format='gray', **kwargs)
 
         self.flow_shape = self.load_optical_flow(0).shape
@@ -556,7 +552,7 @@ class OpticalFlowInterface(VideoInterface):
     @staticmethod
     def _get_valid_idx(norm_pos, frame_shape, roi_size):
         """ Get idx of norm_pos where all ROI pixels are inside the frame. """
-        idx = VideoInterface._get_valid_idx(norm_pos, frame_shape, roi_size)
+        idx = VideoReader._get_valid_idx(norm_pos, frame_shape, roi_size)
         return np.hstack((False, idx[1:] & idx[:-1]))
 
     @staticmethod

@@ -53,12 +53,12 @@ velocity as well as the confidence of the tracking.
 Optical flow
 ------------
 
-:py:class:`OpticalFlowInterface` is a subclass of :py:class:`VideoInterface`
+:py:class:`OpticalFlowReader` is a subclass of :py:class:`VideoReader`
 that provides methods for calculating optical flow between consecutive frames:
 
 .. doctest::
 
-    >>> interface = pri.OpticalFlowInterface(pri.TEST_RECORDING, subsampling=8.)
+    >>> interface = pri.OpticalFlowReader(pri.TEST_RECORDING, subsampling=8.)
     >>> interface.load_dataset(
     ...     start=interface.user_info['experiment_start'],
     ...     end=interface.user_info['experiment_end'])

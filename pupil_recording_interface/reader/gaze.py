@@ -1,16 +1,14 @@
-""""""
 import os
 
 import numpy as np
 import xarray as xr
 from msgpack import Unpacker
 
-from pupil_recording_interface.base import BaseInterface
-from pupil_recording_interface.errors import FileNotFoundError
+from pupil_recording_interface import BaseReader
 
 
-class GazeInterface(BaseInterface):
-    """ Interface for gaze data. """
+class GazeReader(BaseReader):
+    """ Reader for gaze data. """
 
     def __init__(self, folder, source='recording'):
         """ Constructor.
@@ -27,7 +25,7 @@ class GazeInterface(BaseInterface):
             which case the norm pos from the 2d mapper and the gaze point
             from the 3d mapper will be used.
         """
-        super(GazeInterface, self).__init__(folder, source=source)
+        super(GazeReader, self).__init__(folder, source=source)
         self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
 
     @property
@@ -38,7 +36,7 @@ class GazeInterface(BaseInterface):
     @staticmethod
     def _load_gaze(folder, topic='gaze'):
         """ Load gaze data from a .pldata file. """
-        df = BaseInterface._load_pldata_as_dataframe(folder, topic)
+        df = BaseReader._load_pldata_as_dataframe(folder, topic)
 
         if df.size == 0:
             raise ValueError(
@@ -87,15 +85,15 @@ class GazeInterface(BaseInterface):
     @staticmethod
     def _load_merged_gaze(folder, gaze_mapper):
         """ Load and merge gaze from different mappers (2d and 3d). """
-        offline_mappers = GazeInterface._get_offline_gaze_mappers(folder)
+        offline_mappers = GazeReader._get_offline_gaze_mappers(folder)
 
         mapper_folder = os.path.join(folder, 'offline_data', 'gaze-mappings')
-        gaze_2d = GazeInterface._load_gaze(
+        gaze_2d = GazeReader._load_gaze(
             mapper_folder, offline_mappers[gaze_mapper['2d']])
-        gaze_3d = GazeInterface._load_gaze(
+        gaze_3d = GazeReader._load_gaze(
             mapper_folder, offline_mappers[gaze_mapper['3d']])
 
-        return GazeInterface._merge_2d_3d_gaze(gaze_2d, gaze_3d)
+        return GazeReader._merge_2d_3d_gaze(gaze_2d, gaze_3d)
 
     def load_dataset(self):
         """ Load gaze data as an xarray Dataset.

@@ -2,10 +2,11 @@
 import os
 import sys
 
-from .base import BaseInterface
-from .odometry import OdometryInterface, OdometryRecorder
-from .gaze import GazeInterface
-from .video import VideoInterface, OpticalFlowInterface
+from .reader import BaseReader
+from .reader.odometry import OdometryReader
+from .reader.gaze import GazeReader
+from .reader.video import VideoReader, OpticalFlowReader
+from .recorder.odometry import OdometryRecorder
 from .cli import CLI
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -18,11 +19,10 @@ __all__ = [
     'load_user_info',
     'write_netcdf',
     'get_gaze_mappers',
-    'GazeInterface',
-    'OdometryInterface',
-    'VideoInterface',
-    'OpticalFlowInterface',
-    'OdometryRecorder'
+    'GazeReader',
+    'OdometryReader',
+    'VideoReader',
+    'OpticalFlowReader'
 ]
 
 
@@ -58,10 +58,10 @@ def load_dataset(folder, gaze=None, odometry=None):
     return_vals = tuple()
     if gaze is not None:
         return_vals += (
-            GazeInterface(folder, source=gaze).load_dataset(),)
+            GazeReader(folder, source=gaze).load_dataset(),)
     if odometry is not None:
         return_vals += (
-            OdometryInterface(folder, source=odometry).load_dataset(),)
+            OdometryReader(folder, source=odometry).load_dataset(),)
 
     if len(return_vals) == 1:
         return_vals = return_vals[0]
@@ -82,7 +82,7 @@ def get_gaze_mappers(folder):
     set
         The set of available mappers.
     """
-    mappers = set(GazeInterface._get_offline_gaze_mappers(folder).keys())
+    mappers = set(GazeReader._get_offline_gaze_mappers(folder).keys())
     if os.path.exists(os.path.join(folder, 'gaze.pldata')):
         mappers = mappers.union({'recording'})
 
@@ -116,14 +116,14 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
             filename = os.path.join(output_folder, 'gaze.nc')
         else:
             filename = None
-        GazeInterface(
+        GazeReader(
             folder, source=gaze).write_netcdf(filename=filename)
     if odometry is not None:
         if output_folder is not None:
             filename = os.path.join(output_folder, 'odometry.nc')
         else:
             filename = None
-        OdometryInterface(
+        OdometryReader(
             folder, source=odometry).write_netcdf(filename=filename)
 
 
@@ -140,7 +140,7 @@ def load_info(folder):
     dict:
         The recording info.
     """
-    return BaseInterface(folder).info
+    return BaseReader(folder).info
 
 
 def load_user_info(folder):
@@ -156,4 +156,4 @@ def load_user_info(folder):
     dict:
         The user info.
     """
-    return BaseInterface(folder).user_info
+    return BaseReader(folder).user_info
