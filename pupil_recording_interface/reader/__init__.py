@@ -1,3 +1,4 @@
+""""""
 import abc
 import csv
 import json
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from pupil_recording_interface.externals.file_methods import load_pldata_file
+from pupil_recording_interface.errors import FileNotFoundError
 
 
 class BaseReader(object):

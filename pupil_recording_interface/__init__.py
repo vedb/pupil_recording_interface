@@ -22,7 +22,8 @@ __all__ = [
     'GazeReader',
     'OdometryReader',
     'VideoReader',
-    'OpticalFlowReader'
+    'OpticalFlowReader',
+    'OdometryRecorder',
 ]
 
 

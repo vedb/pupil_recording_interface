@@ -1,3 +1,4 @@
+""""""
 import os
 
 import cv2
@@ -6,6 +7,7 @@ import pandas as pd
 import xarray as xr
 
 from pupil_recording_interface import BaseReader
+from pupil_recording_interface.errors import FileNotFoundError
 
 
 def _iter_wrapper(it, **kwargs):
