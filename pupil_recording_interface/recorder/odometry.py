@@ -44,19 +44,19 @@ class OdometryRecorder(BaseRecorder):
             from monotonic import monotonic
             self.monotonic = monotonic
 
+        super(OdometryRecorder, self).__init__(folder)
+
         # realsense pipeline
         self.pipeline = rs.pipeline()
         self.config = rs.config()
         self.config.enable_stream(rs.stream.pose)
 
         # pldata writer
-        self.filename = os.path.join(folder, topic + '.pldata')
+        self.filename = os.path.join(self.folder, topic + '.pldata')
         if os.path.exists(self.filename):
             raise IOError('{} exists, will not overwrite'.format(
                 self.filename))
-        self.writer = PLData_Writer(folder, topic)
-
-        super(OdometryRecorder, self).__init__(folder)
+        self.writer = PLData_Writer(self.folder, topic)
         self.verbose = verbose
 
     @staticmethod

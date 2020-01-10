@@ -1,13 +1,11 @@
 """"""
 import os
 
-from pupil_recording_interface.errors import FileNotFoundError
-
 
 class BaseRecorder(object):
     """ Base class for all recorders. """
 
-    def __init__(self, folder):
+    def __init__(self, folder, policy='new_folder'):
         """ Constructor.
 
         Parameters
@@ -15,10 +13,7 @@ class BaseRecorder(object):
         folder : str
             Path to the recording folder.
         """
-        if not os.path.exists(folder):
-            raise FileNotFoundError('No such folder: {}'.format(folder))
-
-        self.folder = folder
+        self.folder = self._init_folder(folder, policy)
 
     @classmethod
     def _init_folder(cls, folder, policy):
