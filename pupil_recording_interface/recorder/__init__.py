@@ -1,6 +1,8 @@
 """"""
 import os
 
+from pupil_recording_interface.errors import FileNotFoundError
+
 
 class BaseRecorder(object):
     """ Base class for all recorders. """
