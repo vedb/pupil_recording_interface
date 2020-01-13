@@ -180,21 +180,16 @@ class VideoCapture(VideoEncoder, VideoDevice):
         self.color_format = color_format
         self.show_video = show_video
 
-        self._ts_buffer = deque(maxlen=100)
-
-    @classmethod
-    def _get_average_fps(cls, buffer):
-        """"""
-        # average fps is inverse of mean difference between timestamps
-        if len(buffer) < 2:
-            return 0.
-        else:
-            return len(buffer) / np.sum(np.diff(buffer))
+        self._last_timestamp = 0.
+        self._fps_buffer = deque(maxlen=100)
 
     @property
     def current_fps(self):
         """"""
-        return self._get_average_fps(self._ts_buffer)
+        if len(self._fps_buffer) == 0 or np.all(np.isnan(self._fps_buffer)):
+            return 0.
+        else:
+            return np.nanmean(self._fps_buffer)
 
     def run(self, stop_event=None, ts_queue=None):
         """ Start recording. """
@@ -219,10 +214,20 @@ class VideoCapture(VideoEncoder, VideoDevice):
                 else:
                     self.write(uvc_frame.img)
 
-                # save timestamp
+                # save timestamp and fps
                 timestamps.append(uvc_frame.timestamp)
+
+                if uvc_frame.timestamp != self._last_timestamp:
+                    fps = 1. / (uvc_frame.timestamp - self._last_timestamp)
+                else:
+                    fps = np.nan
+
                 if ts_queue is not None:
-                    ts_queue.put(uvc_frame.timestamp)
+                    ts_queue.put(fps)
+                else:
+                    self._fps_buffer.append(fps)
+
+                self._last_timestamp = uvc_frame.timestamp
 
                 # show video if requested
                 if self.show_video:
@@ -243,6 +248,9 @@ class VideoRecorder(BaseRecorder):
         self.captures = self._init_captures(self.folder, configs, show_video)
         self.quiet = quiet
 
+        self._stdout_delay = 3.  # delay before showing fps on stdout
+        self._max_queue_size = 20  # max size of process fps queue
+
     @classmethod
     def _init_captures(cls, folder, configs, show_video):
         """ Init VideoCapture instances for all configs. """
@@ -254,10 +262,12 @@ class VideoRecorder(BaseRecorder):
         }
 
     @classmethod
-    def _init_processes(cls, captures):
+    def _init_processes(cls, captures, max_queue_size):
         """ Create one process for each VideoCapture instance. """
         stop_event = mp.Event()
-        queues = {c_name: mp.Queue() for c_name in captures.keys()}
+        queues = {
+            c_name: mp.Queue(maxsize=max_queue_size)
+            for c_name in captures.keys()}
         processes = {
             c_name:
                 mp.Process(target=c.run, args=(stop_event, queues[c_name]))
@@ -283,22 +293,30 @@ class VideoRecorder(BaseRecorder):
         if not self.quiet:
             print('Started recording to {}'.format(self.folder))
 
-        processes, queues, stop_event = self._init_processes(self.captures)
+        processes, queues, stop_event = self._init_processes(
+            self.captures, self._max_queue_size)
         self._start_processes(processes)
+
+        start_time = time.time()
 
         while True:
             try:
+                # get fps from queues
                 for capture_name, capture in self.captures.items():
                     while not queues[capture_name].empty():
-                        capture._ts_buffer.append(queues[capture_name].get())
-                if not self.quiet:
+                        capture._fps_buffer.append(queues[capture_name].get())
+
+                # display fps after self._stdout_delay seconds
+                if not self.quiet \
+                        and time.time() - start_time > self._stdout_delay:
                     f_strs = ', '.join(
                         '{}: {:.2f} Hz'.format(c_name, c.current_fps)
                         for c_name, c in self.captures.items())
                     print('\rSampling rates: ' + f_strs, end='')
+
             except KeyboardInterrupt:
                 self._stop_processes(processes, stop_event)
                 break
 
         if not self.quiet:
-            print('Stopped recording')
+            print('\nStopped recording')
