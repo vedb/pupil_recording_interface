@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     # set up camera configurations
     configs = [
-        VideoConfig(device_name='world', resolution=(1280, 720), fps=30),
+        VideoConfig(device_name='world', resolution=(1280, 720), fps=60),
         VideoConfig(device_name='eye0', resolution=(320, 240), fps=120),
         VideoConfig(device_name='eye1', resolution=(320, 240), fps=120),
     ]
