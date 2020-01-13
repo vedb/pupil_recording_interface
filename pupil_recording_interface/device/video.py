@@ -1,5 +1,7 @@
 """"""
 import abc
+import os
+import PySpin
 
 import cv2
 # TODO import uvc here
@@ -162,14 +164,115 @@ class VideoDeviceUVC(BaseVideoDevice):
 
 class VideoDeviceFLIR(BaseVideoDevice):
 
+    def __init__(self):
+        """ Constructor.
+
+        Parameters
+        ----------
+        TODO: Add the parameters for FLIR
+        """
+        # Replace name with alias, if applicable
+        device_name = (aliases or {}).get(device_name, device_name)
+
+        self.device_name = device_name
+        self.resolution = resolution
+        self.fps = fps
+
+        self.system = None
+        self.version = 0
+        self.cam_list = None
+        self.flir_camera = None
+        self.nodemap_tldevice = None
+        self.nodemap = None
+        self.node_acquisition_mode = None
+
+        if init_capture:
+            self.capture = self._get_capture(device_name, resolution, fps)
+        else:
+            self.capture = None
+
     @classmethod
     def _get_capture(cls, device_name, resolution, fps):
         """ Get a capture instance for a device by name. """
         # TODO return capture
+
+        # TODO: This is temporary solution based on Peter's suggestion
+        import PySpin
+        # Retrieve singleton reference to system object
+	    self.system = PySpin.System.GetInstance()
+
+	    # Get current library version
+	    self.version = system.GetLibraryVersion()
+	    #print('Library version: %d.%d.%d.%d' % (version.major, version.minor, version.type, version.build))
+
+	    # Retrieve list of cameras from the system
+	    self.cam_list =  system.GetCameras()
+
+	    #TODO: Cleen this up! There might be multiple Cameras?!!?
+	    self.flir_camera = cam_list[0]
+
+        # Retrieve TL device nodemap and print device information
+        self.nodemap_tldevice = flir_camera.GetTLDeviceNodeMap()
+
+        result &= print_device_info(nodemap_tldevice)
+
+        # Initialize camera
+        self.flir_camera.Init()
+
+        # Retrieve GenICam nodemap
+        self.nodemap = flir_camera.GetNodeMap()
+
+        # Set acquisition mode to continuous
+        self.node_acquisition_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('AcquisitionMode'))
+        if not PySpin.IsAvailable(self.node_acquisition_mode) or not PySpin.IsWritable(self.node_acquisition_mode):
+            print('Unable to set acquisition mode to continuous (enum retrieval). Aborting...')
+            return False
+
+        # Retrieve entry node from enumeration node
+        self.node_acquisition_mode_continuous = self.node_acquisition_mode.GetEntryByName('Continuous')
+        if not PySpin.IsAvailable(self.node_acquisition_mode_continuous) or not PySpin.IsReadable(self.node_acquisition_mode_continuous):
+            print('Unable to set acquisition mode to continuous (entry retrieval). Aborting...')
+            return False
+        
+        #  Begin acquiring images
+        self.flir_camera.BeginAcquisition()
+
+
         raise NotImplementedError('Not yet implemented.')
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
         # TODO return frame and timestamp from self.capture
         # TODO return grayscale frame if mode=='gray'
+
+        # TODO: This is temporary solution based on Peter's suggestion
+        import PySpin
+        try:
+
+            #  Retrieve next received image
+            image_result = self.flir_camera.GetNextImage()
+
+            #  Ensure image completion
+            if image_result.IsIncomplete():
+                print('Image incomplete with image status %d...' % image_result.GetImageStatus())
+
+            else:
+                #  Print image information; height and width recorded in pixels
+                width = image_result.GetWidth()
+                height = image_result.GetHeight()
+                print('Grabbed Image %d, width = %d, height = %d' % (i, width, height))
+
+                #  Convert image to mono 8 and append to list
+                images.append(image_result.Convert(PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR))
+
+                #  Release image
+                image_result.Release()
+                print('')
+
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
+            result = False
+
+
+
         raise NotImplementedError('Not yet implemented.')
