@@ -1,31 +1,61 @@
 """"""
+from __future__  import print_function
+
 import os
+import subprocess
 import multiprocessing as mp
 import time
+from abc import ABCMeta
 from collections import namedtuple, deque
 
 import numpy as np
 
-import uvc
-import cv2
-
+from pupil_recording_interface.device.video import \
+    BaseVideoDevice, VideoDeviceUVC
 from pupil_recording_interface.recorder import BaseRecorder
 
 
 VideoConfig = namedtuple(
-    'VideoConfig', ['device_name', 'resolution', 'fps', 'color_format'])
+    'VideoConfig', [
+        'device_type', 'device_name', 'resolution', 'fps', 'color_format'])
 # defaults apply from right to left, so we only set a default parameter for
 # color_format
 VideoConfig.__new__.__defaults__ = ('bgr24',)
 
 
 class VideoEncoder(object):
+    """ FFMPEG encoder interface. """
 
     def __init__(self, folder, device_name, resolution, fps,
                  color_format='bgr24', codec='libx264', overwrite=False):
-        """"""
-        import subprocess
+        """ Constructor.
 
+        Parameters
+        ----------
+        folder: str
+            The folder where recorded streams are written to.
+
+        device_name: str
+            The name of the video device. For UVC devices, this corresponds
+            to the ``'name'`` field of the items obtained through
+            ``uvc.get_device_list()``. Can also be a key of `aliases`. The
+            name of the video file will be `device_name`.mp4.
+
+        resolution: tuple, len 2
+            Desired horizontal and vertical camera resolution.
+
+        fps: int
+            Desired camera refresh rate.
+
+        color_format: str, default 'bgr24'
+            The target color format. Set to 'gray' for eye cameras.
+
+        codec: str, default 'libx264'
+            The desired video codec.
+
+        overwrite: bool, default False
+            If True, overwrite existing video files with the same name.
+        """
         # ffmpeg pipe
         self.video_file = os.path.join(folder, '{}.mp4'.format(device_name))
         if os.path.exists(self.video_file):
@@ -66,125 +96,63 @@ class VideoEncoder(object):
                 filename]
 
     def write(self, img):
-        """"""
+        """ Pipe a frame to the FFMPEG subprocess.
+
+        Parameters
+        ----------
+        img : array_like
+            The input frame.
+        """
         self.process.stdin.write(img.tostring())
 
 
-class VideoDevice(object):
+class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
+    """ Base class for all video captures. """
 
-    # TODO make these configurable
-    _aliases = {
-        'eye0': 'Pupil Cam1 ID0',
-        'eye1': 'Pupil Cam1 ID1',
-        'world': 'Pupil Cam1 ID2',
-    }
-
-    def __init__(self, device_name, resolution, fps, init_capture=True):
-        """"""
-        if device_name in self._aliases:
-            device_name = self._aliases[device_name]
-
-        self.device_name = device_name
-        self.resolution = resolution
-        self.fps = fps
-
-        if init_capture:
-            self.capture = self._get_capture(device_name, resolution, fps)
-        else:
-            self.capture = None
-
-    @classmethod
-    def _get_connected_device_uids(cls):
-        """ Get a mapping from devices names to UIDs. """
-        return {
-            device['name']: device['uid'] for device in uvc.device_list()}
-
-    @classmethod
-    def _get_device_uid(cls, device_name):
-        """ Get the UID for a device by name. """
-        try:
-            return cls._get_connected_device_uids()[device_name]
-        except KeyError:
-            raise ValueError(
-                'Device with name {} not connected.'.format(device_name))
-
-    @classmethod
-    def _get_available_modes(cls, device_uid):
-        """ Get the available modes for a device by UID. """
-        return uvc.Capture(device_uid).avaible_modes  # [sic]
-
-    @classmethod
-    def _get_controls(cls, device_uid):
-        """ Get the current controls for a device by UID. """
-        return {
-            c.display_name: c.value for c in uvc.Capture(device_uid).controls}
-
-    @classmethod
-    def _get_capture(cls, device_name, resolution, fps):
-        """ Get a capture instance for a device by name. """
-        device_uid = cls._get_device_uid(device_name)
-
-        # verify selected mode
-        if resolution + (fps,) not in cls._get_available_modes(device_uid):
-            raise ValueError('Unsupported frame mode: {}x{}@{}fps.'.format(
-                resolution[0], resolution[1], fps))
-
-        capture = uvc.Capture(device_uid)
-        capture.frame_mode = resolution + (fps,)
-
-        return capture
-
-    @classmethod
-    def _get_timestamp(cls):
-        """ Get the current monotonic time from the UVC backend. """
-        return uvc.get_time_monotonic()
-
-    @property
-    def device_uid(self):
-        """ The UID of this device. """
-        return self._get_device_uid(self.device_name)
-
-    @property
-    def available_modes(self):
-        """ Available frame modes for this device. """
-        if self.capture is None:
-            return self._get_available_modes(self.device_uid)
-        else:
-            return self.capture.avaible_modes  # [sic]
-
-    @property
-    def controls(self):
-        """ Current controls for this device. """
-        if self.capture is None:
-            return self._get_controls(self.device_uid)
-        else:
-            return {c.display_name: c.value for c in self.capture.controls}
-
-    def get_raw_frame(self, robust=False):
-        """"""
-        if robust:
-            frame = self.capture.get_frame_robust()
-        else:
-            frame = self.capture.get_frame()
-
-        return frame.img
-
-    def show_frame(self, frame):
-        """"""
-        cv2.imshow(self.device_name, frame)
-        return cv2.waitKey(1)
-
-
-class VideoCapture(VideoEncoder, VideoDevice):
+    __metaclass__ = ABCMeta
 
     def __init__(self, folder, device_name, resolution, fps,
-                 color_format='bgr24', codec='libx264', overwrite=False,
-                 show_video=False):
-        """"""
-        VideoDevice.__init__(self, device_name, resolution, fps,
-                             init_capture=False)
-        VideoEncoder.__init__(self, folder, device_name, resolution, fps,
-                              color_format, codec, overwrite)
+                 color_format='bgr24', codec='libx264', aliases=None,
+                 overwrite=False, show_video=False):
+        """ Constructor.
+
+        Parameters
+        ----------
+        folder: str
+            The folder where recorded streams are written to.
+
+        device_name: str
+            The name of the video device. For UVC devices, this corresponds
+            to the ``'name'`` field of the items obtained through
+            ``uvc.get_device_list()``. Can also be a key of `aliases`. The
+            name of the video file will be `device_name`.mp4.
+
+        resolution: tuple, len 2
+            Desired horizontal and vertical camera resolution.
+
+        fps: int
+            Desired camera refresh rate.
+
+        color_format: str, default 'bgr24'
+            The target color format. Set to 'gray' for eye cameras.
+
+        codec: str, default 'libx264'
+            The desired video codec.
+
+        aliases: dict, optional
+            A mapping from aliases to valid device names. See `device_name`.
+
+        overwrite: bool, default False
+            If True, overwrite existing video files with the same name.
+
+        show_video: bool, default False,
+            If True, show the video stream in a window.
+        """
+        BaseVideoDevice.__init__(
+            self, device_name, resolution, fps, aliases, init_capture=False)
+        VideoEncoder.__init__(
+            self, folder, device_name, resolution, fps, color_format, codec,
+            overwrite)
 
         self.color_format = color_format
         self.show_video = show_video
@@ -194,14 +162,23 @@ class VideoCapture(VideoEncoder, VideoDevice):
 
     @property
     def current_fps(self):
-        """"""
+        """ Current average fps. """
         if len(self._fps_buffer) == 0 or np.all(np.isnan(self._fps_buffer)):
             return 0.
         else:
             return np.nanmean(self._fps_buffer)
 
-    def run(self, stop_event=None, ts_queue=None):
-        """ Start recording. """
+    def run(self, stop_event=None, fps_queue=None):
+        """ Start the recording.
+
+        Parameters
+        ----------
+        stop_event: multiprocessing.Event, optional
+            An event that stops recording in a multi-threaded setting.
+
+        fps_queue: multiprocessing.Queue, optional
+            A queue for the current fps in a multi-threaded setting.
+        """
         # TODO uvc capture has to be initialized here for multi-threaded
         #  operation, check if we can circumvent this, e.g. with spawn()
         self.capture = self._get_capture(
@@ -215,33 +192,33 @@ class VideoCapture(VideoEncoder, VideoDevice):
                     break
 
                 # TODO handle uvc.StreamError and reinitialize capture
-                uvc_frame = self.capture.get_frame()
+                if self.color_format == 'gray':
+                    frame, timestamp = self._get_frame_and_timestamp('gray')
+                else:
+                    frame, timestamp = self._get_frame_and_timestamp()
 
                 # encode video frame
-                if self.color_format == 'gray':
-                    self.write(uvc_frame.gray)
-                else:
-                    self.write(uvc_frame.img)
+                self.write(frame)
 
                 # save timestamp and fps
-                timestamps.append(uvc_frame.timestamp)
+                timestamps.append(timestamp)
 
-                if uvc_frame.timestamp != self._last_timestamp:
-                    fps = 1. / (uvc_frame.timestamp - self._last_timestamp)
+                if timestamp != self._last_timestamp:
+                    fps = 1. / (timestamp - self._last_timestamp)
                 else:
                     fps = np.nan
 
-                if ts_queue is not None:
-                    ts_queue.put(fps)
+                if fps_queue is not None:
+                    fps_queue.put(fps)
                 else:
                     self._fps_buffer.append(fps)
 
-                self._last_timestamp = uvc_frame.timestamp
+                self._last_timestamp = timestamp
 
                 # show video if requested
                 if self.show_video:
                     # TODO set show_video to false when window is closed
-                    self.show_frame(uvc_frame.img)
+                    self.show_frame(frame)
 
             except KeyboardInterrupt:
                 break
@@ -249,26 +226,61 @@ class VideoCapture(VideoEncoder, VideoDevice):
         np.save(self.timestamp_file, np.array(timestamps))
 
 
-class VideoRecorder(BaseRecorder):
+class VideoCaptureUVC(BaseVideoCapture, VideoDeviceUVC):
+    """ Video capture for UVC devices. """
 
-    def __init__(self, folder, configs, quiet=False, show_video=False):
-        """"""
+
+class VideoRecorder(BaseRecorder):
+    """ Recorder for multiple video streams. """
+
+    def __init__(self, folder, configs, aliases=None, quiet=False,
+                 show_video=False):
+        """ Constructor.
+
+        Parameters
+        ----------
+        folder: str
+            The folder where recorded streams are written to.
+
+        configs: iterable of pupil_recording_interface.VideoConfig
+            An iterable of video device configurations.
+
+        aliases: dict, optional
+            A mapping from aliases to valid device names. See `device_name`.
+
+        quiet: bool, default False,
+            If True, do not print infos to stdout.
+
+        show_video: bool, default False,
+            If True, show the video stream in a window.
+        """
         super(VideoRecorder, self).__init__(folder)
-        self.captures = self._init_captures(self.folder, configs, show_video)
+        self.captures = self._init_captures(
+            self.folder, configs, aliases, show_video)
         self.quiet = quiet
 
         self._stdout_delay = 3.  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
 
     @classmethod
-    def _init_captures(cls, folder, configs, show_video):
+    def _init_captures(cls, folder, configs, aliases, show_video):
         """ Init VideoCapture instances for all configs. """
-        return {
-            c.device_name: VideoCapture(
-                folder, c.device_name, c.resolution, c.fps, c.color_format,
-                show_video=show_video)
-            for c in configs
-        }
+        captures = {}
+        for c in configs:
+            if c.device_type == 'uvc':
+                # TODO VideoCapture.from_config()?
+                captures[c.device_name] = VideoCaptureUVC(
+                    folder, c.device_name, c.resolution, c.fps, c.color_format,
+                    aliases=aliases, show_video=show_video)
+            elif c.device_type == 'flir':
+                # TODO implement VideoDeviceFLIR and VideoCaptureFLIR
+                raise NotImplementedError(
+                    'FLIR devices are not yet supported.')
+            else:
+                raise ValueError(
+                    'Unsupported device type: {}.'.format(c.device_type))
+
+        return captures
 
     @classmethod
     def _init_processes(cls, captures, max_queue_size):
@@ -298,7 +310,7 @@ class VideoRecorder(BaseRecorder):
             process.join()
 
     def run(self):
-        """ Start recording. """
+        """ Start the recording. """
         if not self.quiet:
             print('Started recording to {}'.format(self.folder))
 

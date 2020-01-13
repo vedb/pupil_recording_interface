@@ -6,7 +6,10 @@ from .reader import BaseReader
 from .reader.odometry import OdometryReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
+from .device.video import VideoDeviceUVC
 from .recorder.odometry import OdometryRecorder
+from .recorder.video import \
+    VideoConfig, VideoEncoder, VideoCaptureUVC, VideoRecorder
 from .cli import CLI
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -14,16 +17,25 @@ TEST_RECORDING = os.path.join(DATA_DIR, 'test_recording')
 
 
 __all__ = [
+    # Functions
     'load_dataset',
     'load_info',
     'load_user_info',
     'write_netcdf',
     'get_gaze_mappers',
+    # Readers
     'GazeReader',
     'OdometryReader',
     'VideoReader',
     'OpticalFlowReader',
+    # Devices
+    'VideoDeviceUVC',
+    # Recorders
     'OdometryRecorder',
+    'VideoConfig',
+    'VideoEncoder',
+    'VideoCaptureUVC',
+    'VideoRecorder',
 ]
 
 

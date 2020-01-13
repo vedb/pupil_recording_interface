@@ -35,14 +35,27 @@ Reader classes
     OpticalFlowReader
 
 
-Recorder classes
-................
+Device classes
+..............
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    VideoDeviceUVC
+
+
+Recorder, Encoder and Capture classes
+.....................................
 
 .. autosummary::
     :nosignatures:
     :toctree: _generated
 
     OdometryRecorder
+    VideoRecorder
+    VideoEncoder
+    VideoCaptureUVC
 
 
 
@@ -135,6 +148,26 @@ Optical flow calculation
     OpticalFlowReader.calculate_optical_flow
 
 
+VideoDeviceUVC
+..............
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    VideoDeviceUVC.get_uvc_frame
+    VideoDeviceUVC.show_frame
+
+
+VideoCaptureUVC
+...............
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    VideoCaptureUVC.run
+
 
 OdometryRecorder
 ................
@@ -144,3 +177,14 @@ OdometryRecorder
     :toctree: _generated
 
     OdometryRecorder.run
+
+
+VideoRecorder
+.............
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    VideoRecorder.run
+
