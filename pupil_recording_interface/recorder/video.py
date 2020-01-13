@@ -2,7 +2,7 @@
 import os
 import multiprocessing as mp
 import time
-from collections import namedtuple
+from collections import namedtuple, deque
 
 import numpy as np
 
@@ -13,13 +13,16 @@ from pupil_recording_interface.recorder import BaseRecorder
 
 
 VideoConfig = namedtuple(
-    'VideoConfig', ['device_name', 'resolution', 'fps'])
+    'VideoConfig', ['device_name', 'resolution', 'fps', 'color_format'])
+# defaults apply from right to left, so we only set a default parameter for
+# color_format
+VideoConfig.__new__.__defaults__ = ('bgr24',)
 
 
 class VideoEncoder(object):
 
-    def __init__(self, folder, device_name, resolution, fps, codec='libx264',
-                 overwrite=False):
+    def __init__(self, folder, device_name, resolution, fps,
+                 color_format='bgr24', codec='libx264', overwrite=False):
         """"""
         import subprocess
 
@@ -34,7 +37,7 @@ class VideoEncoder(object):
 
         # TODO set format='gray' for eye cameras
         cmd = self._get_ffmpeg_cmd(
-            self.video_file, resolution[::-1], fps, codec)
+            self.video_file, resolution[::-1], fps, codec, color_format)
         self.process = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
         # timestamp writer
@@ -46,11 +49,11 @@ class VideoEncoder(object):
 
     @classmethod
     def _get_ffmpeg_cmd(
-            cls, filename, frame_shape, fps, codec, format='bgr24'):
+            cls, filename, frame_shape, fps, codec, color_format):
         """ Get the FFMPEG command to start the sub-process. """
         size = '{}x{}'.format(frame_shape[1], frame_shape[0])
         return ['ffmpeg', '-hide_banner', '-loglevel', 'panic', '-r', str(fps),
-                '-an', '-f', 'rawvideo', '-s', size, '-pix_fmt', format,
+                '-an', '-f', 'rawvideo', '-s', size, '-pix_fmt', color_format,
                 '-i', 'pipe:', '-c:v', codec, filename]
 
     def write(self, img):
@@ -124,7 +127,7 @@ class VideoDevice(object):
 
     @classmethod
     def _get_timestamp(cls):
-        """"""
+        """ Get the current monotonic time from the UVC backend. """
         return uvc.get_time_monotonic()
 
     @property
@@ -155,7 +158,6 @@ class VideoDevice(object):
         else:
             frame = self.capture.get_frame()
 
-        # TODO return frame.gray for eye cameras
         return frame.img
 
     def show_frame(self, frame):
@@ -166,18 +168,36 @@ class VideoDevice(object):
 
 class VideoCapture(VideoEncoder, VideoDevice):
 
-    def __init__(self, folder, device_name, resolution, fps, codec='libx264',
-                 overwrite=False, show_video=False):
+    def __init__(self, folder, device_name, resolution, fps,
+                 color_format='bgr24', codec='libx264', overwrite=False,
+                 show_video=False):
         """"""
         VideoDevice.__init__(self, device_name, resolution, fps,
                              init_capture=False)
         VideoEncoder.__init__(self, folder, device_name, resolution, fps,
-                              codec, overwrite)
+                              color_format, codec, overwrite)
 
+        self.color_format = color_format
         self.show_video = show_video
 
-    def _loop(self, stop_event, ts_queue):
+        self._ts_buffer = deque(maxlen=100)
+
+    @classmethod
+    def _get_average_fps(cls, buffer):
         """"""
+        # average fps is inverse of mean difference between timestamps
+        if len(buffer) < 2:
+            return 0.
+        else:
+            return len(buffer) / np.sum(np.diff(buffer))
+
+    @property
+    def current_fps(self):
+        """"""
+        return self._get_average_fps(self._ts_buffer)
+
+    def run(self, stop_event=None, ts_queue=None):
+        """ Start recording. """
         # TODO uvc capture has to be initialized here for multi-threaded
         #  operation, check if we can circumvent this, e.g. with spawn()
         self.capture = self._get_capture(
@@ -187,15 +207,27 @@ class VideoCapture(VideoEncoder, VideoDevice):
 
         while True:
             try:
-                if stop_event.is_set():
+                if stop_event is not None and stop_event.is_set():
                     break
+
                 # TODO handle uvc.StreamError and reinitialize capture
-                frame = self.get_raw_frame()
-                timestamps.append(self._get_timestamp())
-                ts_queue.put(timestamps[-1])
-                self.write(frame)
+                uvc_frame = self.capture.get_frame()
+
+                # encode video frame
+                if self.color_format == 'gray':
+                    self.write(uvc_frame.gray)
+                else:
+                    self.write(uvc_frame.img)
+
+                # save timestamp
+                timestamps.append(uvc_frame.timestamp)
+                if ts_queue is not None:
+                    ts_queue.put(uvc_frame.timestamp)
+
+                # show video if requested
                 if self.show_video:
-                    self.show_frame(frame)
+                    # TODO set show_video to false when window is closed
+                    self.show_frame(uvc_frame.img)
 
             except KeyboardInterrupt:
                 break
@@ -215,8 +247,9 @@ class VideoRecorder(BaseRecorder):
     def _init_captures(cls, folder, configs, show_video):
         """ Init VideoCapture instances for all configs. """
         return {
-            c.device_name: VideoCapture(folder, c.device_name, c.resolution,
-                                        c.fps, show_video=show_video)
+            c.device_name: VideoCapture(
+                folder, c.device_name, c.resolution, c.fps, c.color_format,
+                show_video=show_video)
             for c in configs
         }
 
@@ -227,7 +260,7 @@ class VideoRecorder(BaseRecorder):
         queues = {c_name: mp.Queue() for c_name in captures.keys()}
         processes = {
             c_name:
-                mp.Process(target=c._loop, args=(stop_event, queues[c_name]))
+                mp.Process(target=c.run, args=(stop_event, queues[c_name]))
             for c_name, c in captures.items()}
 
         return processes, queues, stop_event
@@ -255,8 +288,14 @@ class VideoRecorder(BaseRecorder):
 
         while True:
             try:
-                # TODO collect fps from capture processes and display here
-                time.sleep(0.001)
+                for capture_name, capture in self.captures.items():
+                    while not queues[capture_name].empty():
+                        capture._ts_buffer.append(queues[capture_name].get())
+                if not self.quiet:
+                    f_strs = ', '.join(
+                        '{}: {:.2f} Hz'.format(c_name, c.current_fps)
+                        for c_name, c in self.captures.items())
+                    print('\rSampling rates: ' + f_strs, end='')
             except KeyboardInterrupt:
                 self._stop_processes(processes, stop_event)
                 break
