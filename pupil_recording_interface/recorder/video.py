@@ -52,9 +52,18 @@ class VideoEncoder(object):
             cls, filename, frame_shape, fps, codec, color_format):
         """ Get the FFMPEG command to start the sub-process. """
         size = '{}x{}'.format(frame_shape[1], frame_shape[0])
-        return ['ffmpeg', '-hide_banner', '-loglevel', 'panic', '-r', str(fps),
-                '-an', '-f', 'rawvideo', '-s', size, '-pix_fmt', color_format,
-                '-i', 'pipe:', '-c:v', codec, filename]
+        return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
+                # -- Input -- #
+                '-an',  # no audio
+                '-r', str(fps),  # fps
+                '-f', 'rawvideo',  # format
+                '-s', size,  # resolution
+                '-pix_fmt', color_format,  # color format
+                '-i', 'pipe:',  # piped to stdin
+                # -- Output -- #
+                '-c:v', codec,  # video codec
+                '-tune', 'film',  # codec tuning
+                filename]
 
     def write(self, img):
         """"""
