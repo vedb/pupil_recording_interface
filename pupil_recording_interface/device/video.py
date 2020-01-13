@@ -158,3 +158,18 @@ class VideoDeviceUVC(BaseVideoDevice):
             The captured frame.
         """
         return self.capture.get_frame()
+
+
+class VideoDeviceFLIR(BaseVideoDevice):
+
+    @classmethod
+    def _get_capture(cls, device_name, resolution, fps):
+        """ Get a capture instance for a device by name. """
+        # TODO return capture
+        raise NotImplementedError('Not yet implemented.')
+
+    def _get_frame_and_timestamp(self, mode='img'):
+        """ Get a frame and its associated timestamp. """
+        # TODO return frame and timestamp from self.capture
+        # TODO return grayscale frame if mode=='gray'
+        raise NotImplementedError('Not yet implemented.')

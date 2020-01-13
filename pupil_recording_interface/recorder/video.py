@@ -1,5 +1,5 @@
 """"""
-from __future__  import print_function
+from __future__ import print_function
 
 import os
 import subprocess
@@ -11,7 +11,7 @@ from collections import namedtuple, deque
 import numpy as np
 
 from pupil_recording_interface.device.video import \
-    BaseVideoDevice, VideoDeviceUVC
+    BaseVideoDevice, VideoDeviceUVC, VideoDeviceFLIR
 from pupil_recording_interface.recorder import BaseRecorder
 
 
@@ -230,6 +230,10 @@ class VideoCaptureUVC(BaseVideoCapture, VideoDeviceUVC):
     """ Video capture for UVC devices. """
 
 
+class VideoCaptureFLIR(BaseVideoCapture, VideoDeviceFLIR):
+    """ Video capture for UVC devices. """
+
+
 class VideoRecorder(BaseRecorder):
     """ Recorder for multiple video streams. """
 
@@ -273,9 +277,9 @@ class VideoRecorder(BaseRecorder):
                     folder, c.device_name, c.resolution, c.fps, c.color_format,
                     aliases=aliases, show_video=show_video)
             elif c.device_type == 'flir':
-                # TODO implement VideoDeviceFLIR and VideoCaptureFLIR
-                raise NotImplementedError(
-                    'FLIR devices are not yet supported.')
+                captures[c.device_name] = VideoCaptureFLIR(
+                    folder, c.device_name, c.resolution, c.fps, c.color_format,
+                    aliases=aliases, show_video=show_video)
             else:
                 raise ValueError(
                     'Unsupported device type: {}.'.format(c.device_type))
