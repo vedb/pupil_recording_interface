@@ -11,14 +11,13 @@ from pupil_recording_interface.device.video import BaseVideoDevice
 class VideoDeviceT265(BaseVideoDevice):
     """ RealSense T265 video device. """
 
-    def __init__(self, *args, side='left', **kwargs):
+    def __init__(self, *args, **kwargs):
         """ Constructor. """
         self.frame_queue = mp.Queue()
+        self.side = kwargs.pop('side', 'left')
 
         super(VideoDeviceT265, self).__init__(
             *args, callback=self._frame_callback, **kwargs)
-
-        self.side = side
 
     def _frame_callback(self, rs_frame):
         """ Callback for new RealSense frames. """
