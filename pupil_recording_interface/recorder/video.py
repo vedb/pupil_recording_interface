@@ -297,6 +297,22 @@ class VideoCaptureFLIR(BaseVideoCapture, VideoDeviceFLIR):
         # Retrieve list of cameras from the system
         cam_list =  system.GetCameras()
         print('List of Cameras: ', cam_list)
+        num_cameras = cam_list.GetSize()
+
+        print('Number of cameras detected: %d' % num_cameras)
+
+        # Finish if there are no cameras
+        if num_cameras == 0:
+
+            # Clear camera list before releasing system
+            cam_list.Clear()
+
+            # Release system instance
+            system.ReleaseInstance()
+
+            print('Not enough cameras!')
+            input('Done! Press Enter to exit...')
+            return False
 
         #TODO: Cleen this up! There might be multiple Cameras?!!?
         flir_camera = cam_list[0]
