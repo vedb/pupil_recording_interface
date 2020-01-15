@@ -67,6 +67,9 @@ class BaseVideoDevice(object):
         cv2.imshow(self.device_name, frame)
         return cv2.waitKey(1)
 
+    def stop(self):
+        """ Stop this device. """
+
 
 class VideoDeviceUVC(BaseVideoDevice):
     """ UVC video device. """

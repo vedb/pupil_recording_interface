@@ -10,6 +10,7 @@ from collections import namedtuple, deque
 
 import numpy as np
 
+from pupil_recording_interface.device.realsense import VideoDeviceT265
 from pupil_recording_interface.device.video import \
     BaseVideoDevice, VideoDeviceUVC, VideoDeviceFLIR
 from pupil_recording_interface.recorder import BaseRecorder
@@ -106,7 +107,7 @@ class VideoEncoder(object):
         self.process.stdin.write(img.tostring())
 
 
-class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
+class BaseVideoCapture(BaseVideoDevice):
     """ Base class for all video captures. """
     # TODO give this class a less confusing name
 
@@ -114,7 +115,8 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
 
     def __init__(self, folder, device_name, resolution, fps,
                  color_format='bgr24', codec='libx264', aliases=None,
-                 overwrite=False, show_video=False, **kwargs):
+                 overwrite=False, show_video=False, init_capture=False,
+                 **kwargs):
         """ Constructor.
 
         Parameters
@@ -148,12 +150,17 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
 
         show_video: bool, default False,
             If True, show the video stream in a window.
+
+        init_capture: bool, default True
+            If True, initialize the underlying capture upon construction.
+            Set to False for multi-threaded recording.
         """
-        BaseVideoDevice.__init__(
-            self, device_name, resolution, fps, aliases, init_capture=False,
+        super(BaseVideoCapture, self).__init__(
+            device_name, resolution, fps, aliases, init_capture=init_capture,
             **kwargs)
-        VideoEncoder.__init__(
-            self, folder, device_name, resolution, fps, color_format, codec,
+
+        self.encoder = VideoEncoder(
+            folder, device_name, resolution, fps, color_format, codec,
             overwrite)
 
         self.color_format = color_format
@@ -182,7 +189,7 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
         fps_queue: multiprocessing.Queue, optional
             A queue for the current fps in a multi-threaded setting.
         """
-        # TODO uvc capture has to be initialized here for multi-threaded
+        # TODO capture has to be initialized here for multi-threaded
         #  operation, check if we can circumvent this, e.g. with spawn()
         if self.capture is None:
             self.capture = self._get_capture(
@@ -203,7 +210,7 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
                     frame, timestamp = self._get_frame_and_timestamp()
 
                 # encode video frame
-                self.write(frame)
+                self.encoder.write(frame)
 
                 # save timestamp and fps
                 timestamps.append(timestamp)
@@ -226,17 +233,22 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
                     self.show_frame(frame)
 
             except KeyboardInterrupt:
+                self.stop()
                 break
 
-        np.save(self.timestamp_file, np.array(timestamps))
+        np.save(self.encoder.timestamp_file, np.array(timestamps))
 
 
-class VideoCaptureUVC(BaseVideoCapture, VideoDeviceUVC):
+class VideoCaptureUVC(VideoDeviceUVC, BaseVideoCapture):
     """ Video capture for UVC devices. """
 
 
-class VideoCaptureFLIR(BaseVideoCapture, VideoDeviceFLIR):
+class VideoCaptureFLIR(VideoDeviceFLIR, BaseVideoCapture,):
     """ Video capture for FLIR devices. """
+
+
+class VideoCaptureT265(VideoDeviceT265, BaseVideoCapture):
+    """ Video capture for RealSense T265 devices. """
 
 
 class VideoRecorder(BaseRecorder):
@@ -276,8 +288,8 @@ class VideoRecorder(BaseRecorder):
         """ Init VideoCapture instances for all configs. """
         captures = {}
         for c in configs:
+            # TODO VideoCapture.from_config()
             if c.device_type == 'uvc':
-                # TODO VideoCapture.from_config()?
                 captures[c.device_name] = VideoCaptureUVC(
                     folder, c.device_name, c.resolution, c.fps, c.color_format,
                     aliases=aliases, show_video=show_video)
@@ -285,6 +297,12 @@ class VideoRecorder(BaseRecorder):
                 captures[c.device_name] = VideoCaptureFLIR(
                     folder, c.device_name, c.resolution, c.fps, c.color_format,
                     aliases=aliases, show_video=show_video)
+            elif c.device_type == 't265':
+                # init_capture=True because the realsense pipeline ("capture")
+                # can be started in this same thread
+                captures[c.device_name] = VideoCaptureT265(
+                    folder, c.device_name, c.resolution, c.fps, c.color_format,
+                    aliases=aliases, show_video=show_video, init_capture=True)
             else:
                 raise ValueError(
                     'Unsupported device type: {}.'.format(c.device_type))
