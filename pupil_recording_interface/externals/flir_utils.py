@@ -265,7 +265,7 @@ def print_device_info(nodemap):
 
     return result
 
-def terminate(cam_list, system)
+def terminate(cam_list, system):
     # Clear camera list before releasing system
     cam_list.Clear()
 
@@ -369,7 +369,7 @@ def init_flir():
 
 
 
-if __name__ == '__main__':
-    cam_list, system = init_flir()
-    result = run_multiple_camera(cam_list, system)
+#if __name__ == '__main__':
+#    cam_list, system = init_flir()
+#    result = run_multiple_camera(cam_list, system)
 

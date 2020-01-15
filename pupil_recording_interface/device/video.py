@@ -67,6 +67,8 @@ class BaseVideoDevice(object):
         return cv2.waitKey(1)
 
 
+
+
 class VideoDeviceUVC(BaseVideoDevice):
     """ UVC video device. """
 
@@ -174,6 +176,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # Replace name with alias, if applicable
         device_name = (aliases or {}).get(device_name, device_name)
 
+        '''
         self.device_name = device_name
         self.resolution = resolution
         self.fps = fps
@@ -185,11 +188,17 @@ class VideoDeviceFLIR(BaseVideoDevice):
         self.nodemap_tldevice = None
         self.nodemap = None
         self.node_acquisition_mode = None
+        '''
+
+        #self.flir_camera = self._init_flir()
+        print('\n FLIR Camera Initialized! \n', self.flir_camera)
 
         if init_capture:
             self.capture = self._get_capture(device_name, resolution, fps)
         else:
             self.capture = None
+
+
 
     @classmethod
     def _get_capture(cls, device_name, resolution, fps):
@@ -197,82 +206,61 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # TODO return capture
 
         # TODO: This is temporary solution based on Peter's suggestion
-        import PySpin
         # Retrieve singleton reference to system object
-	    self.system = PySpin.System.GetInstance()
-
-	    # Get current library version
-	    self.version = system.GetLibraryVersion()
-	    #print('Library version: %d.%d.%d.%d' % (version.major, version.minor, version.type, version.build))
-
-	    # Retrieve list of cameras from the system
-	    self.cam_list =  system.GetCameras()
-
-	    #TODO: Cleen this up! There might be multiple Cameras?!!?
-	    self.flir_camera = cam_list[0]
-
-        # Retrieve TL device nodemap and print device information
-        self.nodemap_tldevice = flir_camera.GetTLDeviceNodeMap()
-
-        result &= print_device_info(nodemap_tldevice)
-
-        # Initialize camera
-        self.flir_camera.Init()
-
-        # Retrieve GenICam nodemap
-        self.nodemap = flir_camera.GetNodeMap()
-
-        # Set acquisition mode to continuous
-        self.node_acquisition_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('AcquisitionMode'))
-        if not PySpin.IsAvailable(self.node_acquisition_mode) or not PySpin.IsWritable(self.node_acquisition_mode):
-            print('Unable to set acquisition mode to continuous (enum retrieval). Aborting...')
-            return False
-
-        # Retrieve entry node from enumeration node
-        self.node_acquisition_mode_continuous = self.node_acquisition_mode.GetEntryByName('Continuous')
-        if not PySpin.IsAvailable(self.node_acquisition_mode_continuous) or not PySpin.IsReadable(self.node_acquisition_mode_continuous):
-            print('Unable to set acquisition mode to continuous (entry retrieval). Aborting...')
-            return False
         
-        #  Begin acquiring images
-        self.flir_camera.BeginAcquisition()
+
+        #filepath = os.path.join(folder, topic + '.mp4')
+        filepath = os.getcwd() + '.mp4'
+        print('\n FLIR Video Path:\n', filepath)
+        #if not os.path.exists(filepath):
+        #    raise FileNotFoundError(
+        #        'File {}.mp4 not found in folder {}'.format(topic, folder))
+
+        return cv2.VideoCapture(filepath)
 
 
-        raise NotImplementedError('Not yet implemented.')
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
         # TODO return frame and timestamp from self.capture
         # TODO return grayscale frame if mode=='gray'
+        
+        print('\nFLIR : _get_frame_and_timestamp \n')
+        #TODO: Fix this, I have to make this happen during the instance creation
+        if mode  in ('img', 'bgr', 'gray', 'jpeg_buffer'):
+            print('\nFLIR Camera Object None\n!')
+            return None
+        else:
+            camera = mode
 
-        # TODO: This is temporary solution based on Peter's suggestion
-        import PySpin
-        try:
+            images = []
+            # TODO: This is temporary solution based on Peter's suggestion
+            try:
 
-            #  Retrieve next received image
-            image_result = self.flir_camera.GetNextImage()
+                #  Retrieve next received image
+                print("\nReading FLIR Frame!\n")
+                image_result =  camera.GetNextImage()
 
-            #  Ensure image completion
-            if image_result.IsIncomplete():
-                print('Image incomplete with image status %d...' % image_result.GetImageStatus())
+                #  Ensure image completion
+                if image_result.IsIncomplete():
+                    print('Image incomplete with image status %d...' % image_result.GetImageStatus())
 
-            else:
-                #  Print image information; height and width recorded in pixels
-                width = image_result.GetWidth()
-                height = image_result.GetHeight()
-                print('Grabbed Image %d, width = %d, height = %d' % (i, width, height))
+                else:
+                    #  Print image information; height and width recorded in pixels
+                    width = image_result.GetWidth()
+                    height = image_result.GetHeight()
+                    print('Grabbed Image %d, width = %d, height = %d' % (i, width, height))
 
-                #  Convert image to mono 8 and append to list
-                images.append(image_result.Convert(PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR))
+                    #  Convert image to mono 8 and append to list
+                    newImage = image_result.Convert(PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR)
+                    images.append(newImage)
 
-                #  Release image
-                image_result.Release()
-                print('')
+                    #  Release image
+                    image_result.Release()
+                    print('')
 
-        except PySpin.SpinnakerException as ex:
-            print('Error: %s' % ex)
-            result = False
+            except PySpin.SpinnakerException as ex:
+                print('Error: %s' % ex)
+                result = False
 
-
-
-        raise NotImplementedError('Not yet implemented.')
+        return newImage
