@@ -14,8 +14,6 @@ from pupil_recording_interface.device.video import \
     BaseVideoDevice, VideoDeviceUVC, VideoDeviceFLIR
 from pupil_recording_interface.recorder import BaseRecorder
 
-import PySpin
-
 
 VideoConfig = namedtuple(
     'VideoConfig', [
