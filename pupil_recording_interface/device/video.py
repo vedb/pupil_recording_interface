@@ -9,7 +9,7 @@ class BaseVideoDevice(object):
     """ Base class for all video devices. """
 
     def __init__(self, device_name, resolution, fps, aliases=None,
-                 init_capture=True):
+                 init_capture=True, **kwargs):
         """ Constructor.
 
         Parameters
@@ -40,13 +40,16 @@ class BaseVideoDevice(object):
         self.fps = fps
 
         if init_capture:
-            self.capture = self._get_capture(device_name, resolution, fps)
+            self.capture = self._get_capture(
+                device_name, resolution, fps, **kwargs)
         else:
             self.capture = None
 
+        self.capture_kwargs = kwargs
+
     @classmethod
     @abc.abstractmethod
-    def _get_capture(cls, device_name, resolution, fps):
+    def _get_capture(cls, device_name, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
 
     @abc.abstractmethod
@@ -98,7 +101,7 @@ class VideoDeviceUVC(BaseVideoDevice):
             c.display_name: c.value for c in uvc.Capture(device_uid).controls}
 
     @classmethod
-    def _get_capture(cls, device_name, resolution, fps):
+    def _get_capture(cls, device_name, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
         device_uid = cls._get_device_uid(device_name)
 
@@ -161,6 +164,35 @@ class VideoDeviceUVC(BaseVideoDevice):
 
 
 class VideoDeviceFLIR(BaseVideoDevice):
+    """ FLIR video device. """
+
+    def __init__(self, device_name, resolution, fps, aliases=None,
+                 init_capture=True, **kwargs):
+        """ Constructor.
+
+        Parameters
+        ----------
+        device_name: str
+            The name of the video device. For UVC devices, this corresponds
+            to the ``'name'`` field of the items obtained through
+            ``uvc.get_device_list()``. Can also be a key of `aliases`.
+
+        resolution: tuple, len 2
+            Desired horizontal and vertical camera resolution.
+
+        fps: int
+            Desired camera refresh rate.
+
+        aliases: dict, optional
+            A mapping from aliases to valid device names. See `device_name`.
+
+        init_capture: bool, default True
+            If True, initialize the underlying capture upon construction.
+            Set to False for multi-threaded recording.
+        """
+        # TODO specify additional keyword arguments
+        super(VideoDeviceFLIR, self).__init__(
+            device_name, resolution, fps, aliases, init_capture, **kwargs)
 
     @classmethod
     def print_device_info(cls, nodemap):
@@ -194,8 +226,9 @@ class VideoDeviceFLIR(BaseVideoDevice):
             print('Error: %s' % ex)
 
     @classmethod
-    def _get_capture(cls, device_name, resolution, fps):
+    def _get_capture(cls, device_name, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
+        # TODO specify additional keyword arguments
         import PySpin
 
         system = PySpin.System.GetInstance()
