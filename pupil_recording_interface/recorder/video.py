@@ -196,8 +196,7 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
                 if self.color_format == 'gray':
                     frame, timestamp = self._get_frame_and_timestamp('gray')
                 else:
-                    # TODO: Hacky way to pass the FLIR Camera object
-                    frame, timestamp = self._get_frame_and_timestamp(self.flir_camera)
+                    frame, timestamp = self._get_frame_and_timestamp()
 
                 # encode video frame
                 self.write(frame)
