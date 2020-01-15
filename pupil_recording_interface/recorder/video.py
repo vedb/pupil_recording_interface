@@ -108,12 +108,13 @@ class VideoEncoder(object):
 
 class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
     """ Base class for all video captures. """
+    # TODO give this class a less confusing name
 
     __metaclass__ = ABCMeta
 
     def __init__(self, folder, device_name, resolution, fps,
                  color_format='bgr24', codec='libx264', aliases=None,
-                 overwrite=False, show_video=False):
+                 overwrite=False, show_video=False, **kwargs):
         """ Constructor.
 
         Parameters
@@ -149,7 +150,8 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
             If True, show the video stream in a window.
         """
         BaseVideoDevice.__init__(
-            self, device_name, resolution, fps, aliases, init_capture=False)
+            self, device_name, resolution, fps, aliases, init_capture=False,
+            **kwargs)
         VideoEncoder.__init__(
             self, folder, device_name, resolution, fps, color_format, codec,
             overwrite)
@@ -182,8 +184,10 @@ class BaseVideoCapture(BaseVideoDevice, VideoEncoder):
         """
         # TODO uvc capture has to be initialized here for multi-threaded
         #  operation, check if we can circumvent this, e.g. with spawn()
-        self.capture = self._get_capture(
-            self.device_name, self.resolution, self.fps)
+        if self.capture is None:
+            self.capture = self._get_capture(
+                self.device_name, self.resolution, self.fps,
+                **self.capture_kwargs)
 
         timestamps = []
 
