@@ -1,6 +1,5 @@
 """"""
 import abc
-import os
 
 import cv2
 # TODO import uvc here
@@ -219,18 +218,18 @@ class VideoDeviceFLIR(BaseVideoDevice):
             raise ValueError('Not enough cameras!')
 
         # TODO: Clean this up! There might be multiple Cameras?!!?
-        flir_camera = cam_list[0]
-        print('FLIR Camera : ', flir_camera)
+        capture = cam_list[0]
+        print('FLIR Camera : ', capture)
 
         # Retrieve TL device nodemap and print device information
-        nodemap_tldevice = flir_camera.GetTLDeviceNodeMap()
+        nodemap_tldevice = capture.GetTLDeviceNodeMap()
         cls.print_device_info(nodemap_tldevice)
 
         # Initialize camera
-        flir_camera.Init()
+        capture.Init()
 
         # Retrieve GenICam nodemap
-        nodemap = flir_camera.GetNodeMap()
+        nodemap = capture.GetNodeMap()
 
         # Set acquisition mode to continuous
         node_acquisition_mode = PySpin.CEnumerationPtr(
@@ -251,10 +250,10 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 'retrieval).')
 
         #  Begin acquiring images
-        flir_camera.BeginAcquisition()
+        capture.BeginAcquisition()
         print('Acquisition Started!')
 
-        return flir_camera
+        return capture
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
