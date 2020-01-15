@@ -154,8 +154,8 @@ class BaseVideoRecorder(BaseVideoDevice, BaseStreamRecorder):
             Set to False for multi-threaded recording.
         """
         super(BaseVideoRecorder, self).__init__(
-            device_name, resolution, fps, aliases, init_capture=init_capture,
-            **kwargs)
+            device_name, resolution, fps, aliases=aliases,
+            init_capture=init_capture, **kwargs)
 
         self.encoder = VideoEncoder(
             folder, device_name, resolution, fps, color_format, codec,
@@ -206,15 +206,15 @@ class BaseVideoRecorder(BaseVideoDevice, BaseStreamRecorder):
         self.encoder.write(frame)
 
 
-class VideoRecorderUVC(VideoDeviceUVC, BaseVideoRecorder):
+class VideoRecorderUVC(BaseVideoRecorder, VideoDeviceUVC):
     """ Video recorder for UVC devices. """
 
 
-class VideoRecorderFLIR(VideoDeviceFLIR, BaseVideoRecorder):
+class VideoRecorderFLIR(BaseVideoRecorder, VideoDeviceFLIR):
     """ Video recorder for FLIR devices. """
 
 
-class VideoRecorderT265(VideoDeviceT265, BaseVideoRecorder):
+class VideoRecorderT265(BaseVideoRecorder, VideoDeviceT265):
     """ Video recorder for RealSense T265 devices. """
 
 
