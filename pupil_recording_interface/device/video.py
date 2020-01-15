@@ -215,7 +215,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         #if not os.path.exists(filepath):
         #    raise FileNotFoundError(
         #        'File {}.mp4 not found in folder {}'.format(topic, folder))
-
+        print('\nFLIR get Capture\n')
         return cv2.VideoCapture(filepath)
 
 
