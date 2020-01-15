@@ -1,7 +1,6 @@
 """"""
 import abc
 import os
-import PySpin
 
 import cv2
 # TODO import uvc here
@@ -65,8 +64,6 @@ class BaseVideoDevice(object):
         """
         cv2.imshow(self.device_name, frame)
         return cv2.waitKey(1)
-
-
 
 
 class VideoDeviceUVC(BaseVideoDevice):
@@ -166,101 +163,126 @@ class VideoDeviceUVC(BaseVideoDevice):
 
 class VideoDeviceFLIR(BaseVideoDevice):
 
-    def __init__(self):
-        """ Constructor.
-
-        Parameters
-        ----------
-        TODO: Add the parameters for FLIR
+    @classmethod
+    def print_device_info(cls, nodemap):
         """
-        # Replace name with alias, if applicable
-        device_name = (aliases or {}).get(device_name, device_name)
+        This function prints the device information of the camera from the
+        transport layer; please see NodeMapInfo example for more in-depth
+        comments on printing device information from the nodemap.
+        """
+        import PySpin
 
-        '''
-        self.device_name = device_name
-        self.resolution = resolution
-        self.fps = fps
+        print('*** DEVICE INFORMATION ***\n')
 
-        self.system = None
-        self.version = 0
-        self.cam_list = None
-        self.flir_camera = None
-        self.nodemap_tldevice = None
-        self.nodemap = None
-        self.node_acquisition_mode = None
-        '''
+        try:
+            node_device_information = PySpin.CCategoryPtr(
+                nodemap.GetNode('DeviceInformation'))
 
-        #self.flir_camera = self._init_flir()
-        print('\n FLIR Camera Initialized! \n', self.flir_camera)
+            if PySpin.IsAvailable(node_device_information) \
+                    and PySpin.IsReadable(node_device_information):
+                features = node_device_information.GetFeatures()
+                for feature in features:
+                    node_feature = PySpin.CValuePtr(feature)
+                    print('%s: %s' % (
+                        node_feature.GetName(), node_feature.ToString()
+                        if PySpin.IsReadable(node_feature)
+                        else 'Node not readable'))
 
-        if init_capture:
-            self.capture = self._get_capture(device_name, resolution, fps)
-        else:
-            self.capture = None
+            else:
+                print('Device control information not available.')
 
-
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
 
     @classmethod
     def _get_capture(cls, device_name, resolution, fps):
         """ Get a capture instance for a device by name. """
-        # TODO return capture
+        import PySpin
 
-        # TODO: This is temporary solution based on Peter's suggestion
-        # Retrieve singleton reference to system object
-        
+        system = PySpin.System.GetInstance()
 
-        #filepath = os.path.join(folder, topic + '.mp4')
-        filepath = os.getcwd() + '.mp4'
-        print('\n FLIR Video Path:\n', filepath)
-        #if not os.path.exists(filepath):
-        #    raise FileNotFoundError(
-        #        'File {}.mp4 not found in folder {}'.format(topic, folder))
-        print('\nFLIR get Capture\n')
-        return cv2.VideoCapture(filepath)
+        # Retrieve list of cameras from the system
+        cam_list = system.GetCameras()
+        print('List of Cameras: ', cam_list)
+        num_cameras = cam_list.GetSize()
 
+        print('Number of cameras detected: %d' % num_cameras)
 
+        # Finish if there are no cameras
+        if num_cameras == 0:
+            # Clear camera list before releasing system
+            cam_list.Clear()
+
+            # Release system instance
+            system.ReleaseInstance()
+
+            raise ValueError('Not enough cameras!')
+
+        # TODO: Clean this up! There might be multiple Cameras?!!?
+        flir_camera = cam_list[0]
+        print('FLIR Camera : ', flir_camera)
+
+        # Retrieve TL device nodemap and print device information
+        nodemap_tldevice = flir_camera.GetTLDeviceNodeMap()
+        cls.print_device_info(nodemap_tldevice)
+
+        # Initialize camera
+        flir_camera.Init()
+
+        # Retrieve GenICam nodemap
+        nodemap = flir_camera.GetNodeMap()
+
+        # Set acquisition mode to continuous
+        node_acquisition_mode = PySpin.CEnumerationPtr(
+            nodemap.GetNode('AcquisitionMode'))
+        if not PySpin.IsAvailable(node_acquisition_mode) \
+                or not PySpin.IsWritable(node_acquisition_mode):
+            raise ValueError(
+                'Unable to set acquisition mode to continuous (enum '
+                'retrieval).')
+
+        # Retrieve entry node from enumeration node
+        node_acquisition_mode_continuous = \
+            node_acquisition_mode.GetEntryByName('Continuous')
+        if not PySpin.IsAvailable(node_acquisition_mode_continuous) \
+                or not PySpin.IsReadable(node_acquisition_mode_continuous):
+            raise ValueError(
+                'Unable to set acquisition mode to continuous (entry '
+                'retrieval).')
+
+        #  Begin acquiring images
+        flir_camera.BeginAcquisition()
+        print('Acquisition Started!')
+
+        return flir_camera
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
-        # TODO return frame and timestamp from self.capture
         # TODO return grayscale frame if mode=='gray'
-        
-        print('\nFLIR : _get_frame_and_timestamp \n')
-        #TODO: Fix this, I have to make this happen during the instance creation
-        if mode  in ('img', 'bgr', 'gray', 'jpeg_buffer'):
-            print('\nFLIR Camera Object None\n!')
-            return None
-        else:
-            camera = mode
+        import PySpin
 
-            images = []
-            # TODO: This is temporary solution based on Peter's suggestion
-            try:
+        try:
+            #  Retrieve next received image
+            image_result = self.capture.GetNextImage()
 
-                #  Retrieve next received image
-                print("\nReading FLIR Frame!\n")
-                image_result =  camera.GetNextImage()
+            #  Ensure image completion
+            if image_result.IsIncomplete():
+                # TODO check if this is a valid way of handling an
+                #  incomplete image
+                return self._get_frame_and_timestamp(mode)
 
-                #  Ensure image completion
-                if image_result.IsIncomplete():
-                    print('Image incomplete with image status %d...' % image_result.GetImageStatus())
+            else:
+                # TODO convert to correct color format
+                frame = image_result.Convert(
+                    PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR)
 
-                else:
-                    #  Print image information; height and width recorded in pixels
-                    width = image_result.GetWidth()
-                    height = image_result.GetHeight()
-                    print('Grabbed Image %d, width = %d, height = %d' % (i, width, height))
+                #  Release image
+                image_result.Release()
 
-                    #  Convert image to mono 8 and append to list
-                    newImage = image_result.Convert(PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR)
-                    images.append(newImage)
+            timestamp = float(image_result.GetTimestamp()) / 1e9
 
-                    #  Release image
-                    image_result.Release()
-                    print('')
+        except PySpin.SpinnakerException as ex:
+            # TODO check correct error handling
+            raise ValueError(ex)
 
-            except PySpin.SpinnakerException as ex:
-                print('Error: %s' % ex)
-                result = False
-
-        return newImage
+        return frame, timestamp
