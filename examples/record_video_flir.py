@@ -1,3 +1,6 @@
+import sys, os
+sys.path.append('/home/veddy/Code/pupil_recording_interface/')
+
 from pupil_recording_interface.recorder.video import \
     VideoConfig, VideoRecorder
 
@@ -16,12 +19,12 @@ if __name__ == '__main__':
     # camera configurations
     configs = [
         VideoConfig(
-            'flir', device_name='world', resolution=(1280, 720), fps=60),
+            'flir', device_name='world', resolution=(2048, 1536), fps=60),
         VideoConfig(
-            'uvc', device_name='eye0', resolution=(320, 240), fps=120,
+            'uvc', device_name='eye0', resolution=(400, 400), fps=120,
             color_format='gray'),
         VideoConfig(
-            'uvc', device_name='eye1', resolution=(320, 240), fps=120,
+            'uvc', device_name='eye1', resolution=(400, 400), fps=120,
             color_format='gray'),
     ]
 
