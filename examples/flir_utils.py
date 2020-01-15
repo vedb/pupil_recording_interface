@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 
 import os
+from collections import namedtuple
 import PySpin
 
 NUM_IMAGES = 200  # number of images to grab
@@ -316,22 +317,22 @@ def run_single_camera(cam):
 
     return result
 
-def run_multiple_camera(cam_list, system):
-    # Run example on each camera
-    for i, cam in enumerate(cam_list):
-
-        print('Running example for camera %d...' % i)
-
-        result &= run_single_camera(cam)
-        print('Camera %d example complete... \n' % i)
-
-    # Release reference to camera
-    # NOTE: Unlike the C++ examples, we cannot rely on pointer objects being automatically
-    # cleaned up when going out of scope.
-    # The usage of del is preferred to assigning the variable to None.
-    del cam
-
-    return result
+# def run_multiple_camera(cam_list, system):
+#     # Run example on each camera
+#     for i, cam in enumerate(cam_list):
+#
+#         print('Running example for camera %d...' % i)
+#
+#         result &= run_single_camera(cam)
+#         print('Camera %d example complete... \n' % i)
+#
+#     # Release reference to camera
+#     # NOTE: Unlike the C++ examples, we cannot rely on pointer objects being automatically
+#     # cleaned up when going out of scope.
+#     # The usage of del is preferred to assigning the variable to None.
+#     del cam
+#
+#     return result
 
 
 def init_flir():
