@@ -107,9 +107,8 @@ class VideoEncoder(object):
         self.process.stdin.write(img.tostring())
 
 
-class BaseVideoCapture(BaseVideoDevice):
-    """ Base class for all video captures. """
-    # TODO give this class a less confusing name
+class BaseVideoRecorder(BaseVideoDevice):
+    """ Base class for all video recorders. """
 
     __metaclass__ = ABCMeta
 
@@ -155,7 +154,7 @@ class BaseVideoCapture(BaseVideoDevice):
             If True, initialize the underlying capture upon construction.
             Set to False for multi-threaded recording.
         """
-        super(BaseVideoCapture, self).__init__(
+        super(BaseVideoRecorder, self).__init__(
             device_name, resolution, fps, aliases, init_capture=init_capture,
             **kwargs)
 
@@ -239,20 +238,21 @@ class BaseVideoCapture(BaseVideoDevice):
         np.save(self.encoder.timestamp_file, np.array(timestamps))
 
 
-class VideoCaptureUVC(VideoDeviceUVC, BaseVideoCapture):
-    """ Video capture for UVC devices. """
+class VideoRecorderUVC(VideoDeviceUVC, BaseVideoRecorder):
+    """ Video recorder for UVC devices. """
 
 
-class VideoCaptureFLIR(VideoDeviceFLIR, BaseVideoCapture,):
-    """ Video capture for FLIR devices. """
+class VideoRecorderFLIR(VideoDeviceFLIR, BaseVideoRecorder):
+    """ Video recorder for FLIR devices. """
 
 
-class VideoCaptureT265(VideoDeviceT265, BaseVideoCapture):
-    """ Video capture for RealSense T265 devices. """
+class VideoRecorderT265(VideoDeviceT265, BaseVideoRecorder):
+    """ Video recorder for RealSense T265 devices. """
 
 
 class VideoRecorder(BaseRecorder):
     """ Recorder for multiple video streams. """
+    # TODO rename to MultiVideoRecorder?
 
     def __init__(self, folder, configs, aliases=None, quiet=False,
                  show_video=False):
@@ -276,7 +276,7 @@ class VideoRecorder(BaseRecorder):
             If True, show the video stream in a window.
         """
         super(VideoRecorder, self).__init__(folder)
-        self.captures = self._init_captures(
+        self.recorders = self._init_recorders(
             self.folder, configs, aliases, show_video)
         self.quiet = quiet
 
@@ -284,54 +284,54 @@ class VideoRecorder(BaseRecorder):
         self._max_queue_size = 20  # max size of process fps queue
 
     @classmethod
-    def _init_captures(cls, folder, configs, aliases, show_video):
+    def _init_recorders(cls, folder, configs, aliases, show_video):
         """ Init VideoCapture instances for all configs. """
-        captures = {}
+        recorders = {}
         for c in configs:
             # TODO VideoCapture.from_config()
             if c.device_type == 'uvc':
-                captures[c.device_name] = VideoCaptureUVC(
+                recorders[c.device_name] = VideoRecorderUVC(
                     folder, c.device_name, c.resolution, c.fps, c.color_format,
                     aliases=aliases, show_video=show_video)
             elif c.device_type == 'flir':
-                captures[c.device_name] = VideoCaptureFLIR(
+                recorders[c.device_name] = VideoRecorderFLIR(
                     folder, c.device_name, c.resolution, c.fps, c.color_format,
                     aliases=aliases, show_video=show_video)
             elif c.device_type == 't265':
                 # init_capture=True because the realsense pipeline ("capture")
                 # can be started in this same thread
-                captures[c.device_name] = VideoCaptureT265(
+                recorders[c.device_name] = VideoRecorderT265(
                     folder, c.device_name, c.resolution, c.fps, c.color_format,
                     aliases=aliases, show_video=show_video, init_capture=True)
             else:
                 raise ValueError(
                     'Unsupported device type: {}.'.format(c.device_type))
 
-        return captures
+        return recorders
 
     @classmethod
-    def _init_processes(cls, captures, max_queue_size):
+    def _init_processes(cls, recorders, max_queue_size):
         """ Create one process for each VideoCapture instance. """
         stop_event = mp.Event()
         queues = {
             c_name: mp.Queue(maxsize=max_queue_size)
-            for c_name in captures.keys()}
+            for c_name in recorders.keys()}
         processes = {
             c_name:
                 mp.Process(target=c.run, args=(stop_event, queues[c_name]))
-            for c_name, c in captures.items()}
+            for c_name, c in recorders.items()}
 
         return processes, queues, stop_event
 
     @classmethod
     def _start_processes(cls, processes):
-        """ Start all capture processes. """
+        """ Start all recorder processes. """
         for process in processes.values():
             process.start()
 
     @classmethod
     def _stop_processes(cls, processes, stop_event):
-        """ Stop all capture processes. """
+        """ Stop all recorder processes. """
         stop_event.set()
         for process in processes.values():
             process.join()
@@ -342,7 +342,7 @@ class VideoRecorder(BaseRecorder):
             print('Started recording to {}'.format(self.folder))
 
         processes, queues, stop_event = self._init_processes(
-            self.captures, self._max_queue_size)
+            self.recorders, self._max_queue_size)
         self._start_processes(processes)
 
         start_time = time.time()
@@ -350,16 +350,17 @@ class VideoRecorder(BaseRecorder):
         while True:
             try:
                 # get fps from queues
-                for capture_name, capture in self.captures.items():
-                    while not queues[capture_name].empty():
-                        capture._fps_buffer.append(queues[capture_name].get())
+                for recorder_name, recorder in self.recorders.items():
+                    while not queues[recorder_name].empty():
+                        recorder._fps_buffer.append(
+                            queues[recorder_name].get())
 
                 # display fps after self._stdout_delay seconds
                 if not self.quiet \
                         and time.time() - start_time > self._stdout_delay:
                     f_strs = ', '.join(
                         '{}: {:.2f} Hz'.format(c_name, c.current_fps)
-                        for c_name, c in self.captures.items())
+                        for c_name, c in self.recorders.items())
                     print('\rSampling rates: ' + f_strs, end='')
 
             except KeyboardInterrupt:

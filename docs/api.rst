@@ -43,9 +43,11 @@ Device classes
     :toctree: _generated
 
     VideoDeviceUVC
+    VideoDeviceFLIR
+    VideoDeviceT265
 
 
-Recorder, Encoder and Capture classes
+Recorder and Encoder classes
 .....................................
 
 .. autosummary::
@@ -55,8 +57,6 @@ Recorder, Encoder and Capture classes
     OdometryRecorder
     VideoRecorder
     VideoEncoder
-    VideoCaptureUVC
-
 
 
 Class member details
@@ -148,27 +148,6 @@ Optical flow calculation
     OpticalFlowReader.calculate_optical_flow
 
 
-VideoDeviceUVC
-..............
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    VideoDeviceUVC.get_uvc_frame
-    VideoDeviceUVC.show_frame
-
-
-VideoCaptureUVC
-...............
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    VideoCaptureUVC.run
-
-
 OdometryRecorder
 ................
 
@@ -187,4 +166,3 @@ VideoRecorder
     :toctree: _generated
 
     VideoRecorder.run
-
