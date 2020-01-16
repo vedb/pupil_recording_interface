@@ -65,3 +65,4 @@ class VideoConfig(StreamConfig):
 
 class OdometryConfig(StreamConfig):
     """ Configuration for odometry streams. """
+    # TODO rename to MotionConfig

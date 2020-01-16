@@ -1,10 +1,12 @@
 """"""
+from inspect import getfullargspec
 import multiprocessing as mp
 
 import numpy as np
 
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import BaseVideoDevice
+from pupil_recording_interface.config import VideoConfig, OdometryConfig
 
 
 class RealSenseDeviceT265(BaseDevice):
@@ -53,6 +55,27 @@ class RealSenseDeviceT265(BaseDevice):
                 self._frame_callback, self.video, self.odometry)
         else:
             self.pipeline = None
+
+    @classmethod
+    def from_config_list(cls, config_list, **extra_kwargs):
+        """ Create a device from a list of configs. """
+        # TODO make sure all configs have the
+        uid = config_list[0].device_uid
+
+        argspect = getfullargspec(cls.__init__)
+        kwargs = {k: v for k, v in
+                  zip(reversed(argspect.args), reversed(argspect.defaults))}
+        for config in config_list:
+            if isinstance(config, VideoConfig):
+                kwargs['video'] = 'both'  # TODO make configurable
+                kwargs.update(
+                    {k: getattr(config, k) for k in ('resolution', 'fps')})
+            elif isinstance(config, OdometryConfig):
+                kwargs['odometry'] = True
+
+        kwargs.update(extra_kwargs)
+
+        return cls(uid, **kwargs)
 
     @property
     def is_started(self):

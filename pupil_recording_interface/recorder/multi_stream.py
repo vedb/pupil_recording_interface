@@ -47,24 +47,27 @@ class MultiStreamRecorder(BaseRecorder):
     @classmethod
     def _init_recorders(cls, folder, configs, show_video):
         """ Init recorder instances for all configs. """
-        recorders = {}
-        # TODO multiple recorders may use the same device
         uids = {c.device_uid for c in configs}
         configs_by_uid = {
             uid: [c for c in configs if c.device_uid == uid] for uid in uids}
 
-        devices_by_uid = {}
+        devices_by_uid, recorders = {}, {}
         for uid, config_list in configs_by_uid.items():
-            devices_by_uid[uid] = None
+
+            # init t265 device separately
+            if config_list[0].device_type == 't265':
+                from pupil_recording_interface.device.realsense import \
+                    RealSenseDeviceT265
+                devices_by_uid[uid] = RealSenseDeviceT265.from_config_list(
+                    config_list)
+            else:
+                devices_by_uid[uid] = None
+
             for config in config_list:
                 # if the device for the UID has already been created, use that
-                if devices_by_uid[uid] is None:
-                    recorder = BaseStreamRecorder.from_config(config, folder)
-                    devices_by_uid[uid] = recorder.device
-                else:
-                    recorder = BaseStreamRecorder.from_config(
-                        config, folder, devices_by_uid[uid])
-
+                recorder = BaseStreamRecorder.from_config(
+                    config, folder, devices_by_uid[uid])
+                devices_by_uid[uid] = devices_by_uid[uid] or recorder.device
                 recorder.show_video = show_video
                 recorders[config.name] = recorder
 
