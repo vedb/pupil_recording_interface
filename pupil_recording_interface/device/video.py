@@ -4,20 +4,20 @@ import abc
 import cv2
 # TODO import uvc here
 
+from pupil_recording_interface.device import BaseDevice
 
-class BaseVideoDevice(object):
+
+class BaseVideoDevice(BaseDevice):
     """ Base class for all video devices. """
 
-    def __init__(self, device_name, resolution, fps, aliases=None,
-                 init_capture=True, **kwargs):
+    def __init__(self, uid, resolution, fps, start=True, **kwargs):
         """ Constructor.
 
         Parameters
         ----------
-        device_name: str
-            The name of the video device. For UVC devices, this corresponds
-            to the ``'name'`` field of the items obtained through
-            ``uvc.get_device_list()``. Can also be a key of `aliases`.
+        uid: str
+            The unique identity of this device. Depending on the device this
+            will be a serial number or similar.
 
         resolution: tuple, len 2
             Desired horizontal and vertical camera resolution.
@@ -25,27 +25,25 @@ class BaseVideoDevice(object):
         fps: int
             Desired camera refresh rate.
 
-        aliases: dict, optional
-            A mapping from aliases to valid device names. See `device_name`.
-
-        init_capture: bool, default True
+        start: bool, default True
             If True, initialize the underlying capture upon construction.
             Set to False for multi-threaded recording.
         """
-        # Replace name with alias, if applicable
-        device_name = (aliases or {}).get(device_name, device_name)
+        super(BaseVideoDevice, self).__init__(uid)
 
-        self.device_name = device_name
         self.resolution = resolution
         self.fps = fps
 
-        if init_capture:
-            self.capture = self._get_capture(
-                device_name, resolution, fps, **kwargs)
+        if start:
+            self.capture = self._get_capture(uid, resolution, fps, **kwargs)
         else:
             self.capture = None
 
         self.capture_kwargs = kwargs
+
+    @property
+    def is_started(self):
+        return self.capture is not None
 
     @classmethod
     @abc.abstractmethod
@@ -57,18 +55,27 @@ class BaseVideoDevice(object):
         """ Get a frame and its associated timestamp. """
 
     def show_frame(self, frame):
-        """ Show a frame via OpenCV.
+        """ Show a frame through OpenCV's imshow.
 
         Parameters
         ----------
         frame : array_like
             The frame to display.
         """
-        cv2.imshow(self.device_name, frame)
+        cv2.imshow(self.uid, frame)
         return cv2.waitKey(1)
+
+    def start(self):
+        """ Start this device. """
+        # TODO for some devices, capture has to be initialized here for
+        #  multi-threaded operation, check if we can circumvent this
+        if not self.is_started:
+            self.capture = self._get_capture(
+                self.uid, self.resolution, self.fps, **self.capture_kwargs)
 
     def stop(self):
         """ Stop this device. """
+        self.capture = None
 
 
 class VideoDeviceUVC(BaseVideoDevice):
@@ -82,8 +89,8 @@ class VideoDeviceUVC(BaseVideoDevice):
             device['name']: device['uid'] for device in uvc.device_list()}
 
     @classmethod
-    def _get_device_uid(cls, device_name):
-        """ Get the UID for a device by name. """
+    def _get_uvc_device_uid(cls, device_name):
+        """ Get the UID for a UVC device by name. """
         try:
             return cls._get_connected_device_uids()[device_name]
         except KeyError:
@@ -104,9 +111,9 @@ class VideoDeviceUVC(BaseVideoDevice):
             c.display_name: c.value for c in uvc.Capture(device_uid).controls}
 
     @classmethod
-    def _get_capture(cls, device_name, resolution, fps, **kwargs):
+    def _get_capture(cls, uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
-        device_uid = cls._get_device_uid(device_name)
+        device_uid = cls._get_uvc_device_uid(uid)
 
         # verify selected mode
         if resolution + (fps,) not in cls._get_available_modes(device_uid):
@@ -135,15 +142,15 @@ class VideoDeviceUVC(BaseVideoDevice):
         return getattr(uvc_frame, mode), uvc_frame.timestamp
 
     @property
-    def device_uid(self):
-        """ The UID of this device. """
-        return self._get_device_uid(self.device_name)
+    def uvc_device_uid(self):
+        """ The UID of the UVC device. """
+        return self._get_uvc_device_uid(self.uid)
 
     @property
     def available_modes(self):
         """ Available frame modes for this device. """
         if self.capture is None:
-            return self._get_available_modes(self.device_uid)
+            return self._get_available_modes(self.uvc_device_uid)
         else:
             return self.capture.avaible_modes  # [sic]
 
@@ -151,7 +158,7 @@ class VideoDeviceUVC(BaseVideoDevice):
     def controls(self):
         """ Current controls for this device. """
         if self.capture is None:
-            return self._get_controls(self.device_uid)
+            return self._get_controls(self.uvc_device_uid)
         else:
             return {c.display_name: c.value for c in self.capture.controls}
 
@@ -169,16 +176,14 @@ class VideoDeviceUVC(BaseVideoDevice):
 class VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
 
-    def __init__(self, device_name, resolution, fps, aliases=None,
-                 init_capture=True, **kwargs):
+    def __init__(self, uid, resolution, fps, start=True, **kwargs):
         """ Constructor.
 
         Parameters
         ----------
-        device_name: str
-            The name of the video device. For UVC devices, this corresponds
-            to the ``'name'`` field of the items obtained through
-            ``uvc.get_device_list()``. Can also be a key of `aliases`.
+        uid: str
+            The unique identity of this device. Depending on the device this
+            will be a serial number or similar.
 
         resolution: tuple, len 2
             Desired horizontal and vertical camera resolution.
@@ -186,16 +191,13 @@ class VideoDeviceFLIR(BaseVideoDevice):
         fps: int
             Desired camera refresh rate.
 
-        aliases: dict, optional
-            A mapping from aliases to valid device names. See `device_name`.
-
-        init_capture: bool, default True
+        start: bool, default True
             If True, initialize the underlying capture upon construction.
             Set to False for multi-threaded recording.
         """
         # TODO specify additional keyword arguments
         super(VideoDeviceFLIR, self).__init__(
-            device_name, resolution, fps, aliases, init_capture, **kwargs)
+            uid, resolution, fps, start, **kwargs)
 
     @classmethod
     def print_device_info(cls, nodemap):
@@ -229,7 +231,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
             print('Error: %s' % ex)
 
     @classmethod
-    def _get_capture(cls, device_name, resolution, fps, **kwargs):
+    def _get_capture(cls, uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
         # TODO specify additional keyword arguments
         import PySpin

@@ -1,6 +1,7 @@
 """"""
 import abc
 import os
+from collections import deque
 
 import numpy as np
 
@@ -30,27 +31,45 @@ class BaseRecorder(object):
                 counter += 1
             folder = os.path.join(folder, '{:03d}'.format(counter))
 
+        elif policy == 'here':
+            pass
+
         elif policy != 'overwrite':
             raise ValueError(
                 'Unsupported file creation policy: {}'.format(policy))
 
+        # TODO do this at the start of the recording?
         os.makedirs(folder, exist_ok=True)
 
         return folder
 
 
-class BaseStreamRecorder(object):
+class BaseStreamRecorder(BaseRecorder):
     """ Base class for all stream recorders. """
 
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self, folder, device, name=None, policy='new_folder',
+                 **kwargs):
+        """"""
+        super(BaseStreamRecorder, self).__init__(folder, policy)
+        self.name = name or device.uid
+
+        self.device = device
+        self.overwrite = policy == 'overwrite'
+
+        self._timestamps = []
+        self._last_timestamp = 0.
+        self._fps_buffer = deque(maxlen=100)
+
+    @classmethod
     @abc.abstractmethod
-    def init_capture(self):
-        """ Initialize the underlying capture. """
+    def from_config(cls, config, folder):
+        """ Create a device from a StreamConfig. """
 
     @abc.abstractmethod
-    def run_pre_recording_hooks(self):
-        """ Hooks to run before the main recording loop. """
+    def start(self):
+        """ Start the recorder. """
 
     @abc.abstractmethod
     def get_data_and_timestamp(self):
@@ -64,14 +83,8 @@ class BaseStreamRecorder(object):
     def stop(self):
         """ Stop the recorder. """
 
-    @abc.abstractmethod
-    def run_post_recording_hooks(self):
-        """ Hooks to run after the main recording loop. """
-
     def _process_timestamp(self, timestamp, fps_queue=None):
         """ Process a new timestamp. """
-        self._timestamps.append(timestamp)
-
         if timestamp != self._last_timestamp:
             fps = 1. / (timestamp - self._last_timestamp)
         else:
@@ -95,12 +108,9 @@ class BaseStreamRecorder(object):
         fps_queue: multiprocessing.Queue, optional
             A queue for the current fps in a multi-threaded setting.
         """
-        # TODO for some devices, capture has to be initialized here for
-        #  multi-threaded operation, check if we can circumvent this
-        if self.capture is None:
-            self.capture = self.init_capture()
+        self.start()
 
-        self.run_pre_recording_hooks()
+        timestamps = []
 
         while True:
             try:
@@ -113,10 +123,14 @@ class BaseStreamRecorder(object):
                 self.write(data)
 
                 # save timestamp and fps
+                # TODO ideally append directly to self._timestamps, but that
+                #  blocks the thread for too long for sample rates >= 120 Hz,
+                #  maybe check out how pupil does it
                 self._process_timestamp(timestamp, fps_queue)
+                timestamps.append(timestamp)
 
             except KeyboardInterrupt:
-                self.stop()
                 break
 
-        self.run_post_recording_hooks()
+        self._timestamps = timestamps
+        self.stop()

@@ -48,7 +48,7 @@ Device classes
 
 
 Recorder and Encoder classes
-.....................................
+............................
 
 .. autosummary::
     :nosignatures:
@@ -57,6 +57,17 @@ Recorder and Encoder classes
     OdometryRecorder
     VideoRecorder
     VideoEncoder
+
+
+Config classes
+..............
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    StreamConfig
+    VideoConfig
 
 
 Class member details

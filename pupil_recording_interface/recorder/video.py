@@ -6,7 +6,6 @@ import abc
 import subprocess
 import multiprocessing as mp
 import time
-from collections import namedtuple, deque
 
 import numpy as np
 
@@ -14,14 +13,6 @@ from pupil_recording_interface.device.realsense import VideoDeviceT265
 from pupil_recording_interface.device.video import \
     BaseVideoDevice, VideoDeviceUVC, VideoDeviceFLIR
 from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
-
-# TODO StreamConfig class
-VideoConfig = namedtuple(
-    'VideoConfig', [
-        'device_type', 'device_name', 'resolution', 'fps', 'color_format'])
-# defaults apply from right to left, so we only set a default parameter for
-# color_format
-VideoConfig.__new__.__defaults__ = ('bgr24',)
 
 
 class VideoEncoder(object):
@@ -40,7 +31,7 @@ class VideoEncoder(object):
             The name of the video device. For UVC devices, this corresponds
             to the ``'name'`` field of the items obtained through
             ``uvc.get_device_list()``. Can also be a key of `aliases`. The
-            name of the video file will be `device_name`.mp4.
+            name of the video file will be `name`.mp4.
 
         resolution: tuple, len 2
             Desired horizontal and vertical camera resolution.
@@ -106,14 +97,13 @@ class VideoEncoder(object):
         self.process.stdin.write(img.tostring())
 
 
-class BaseVideoRecorder(BaseVideoDevice, BaseStreamRecorder):
+class BaseVideoRecorder(BaseStreamRecorder):
     """ Base class for all video recorders. """
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, folder, device_name, resolution, fps,
-                 color_format='bgr24', codec='libx264', aliases=None,
-                 overwrite=False, show_video=False, init_capture=False,
+    def __init__(self, folder, device, name=None, policy='new_folder',
+                 color_format='bgr24', codec='libx264', show_video=False,
                  **kwargs):
         """ Constructor.
 
@@ -122,51 +112,45 @@ class BaseVideoRecorder(BaseVideoDevice, BaseStreamRecorder):
         folder: str
             The folder where recorded streams are written to.
 
-        device_name: str
-            The name of the video device. For UVC devices, this corresponds
-            to the ``'name'`` field of the items obtained through
-            ``uvc.get_device_list()``. Can also be a key of `aliases`. The
-            name of the video file will be `device_name`.mp4.
-
-        resolution: tuple, len 2
-            Desired horizontal and vertical camera resolution.
-
-        fps: int
-            Desired camera refresh rate.
-
-        color_format: str, default 'bgr24'
-            The target color format. Set to 'gray' for eye cameras.
+        device: BaseVideoDevice
 
         codec: str, default 'libx264'
             The desired video codec.
 
-        aliases: dict, optional
-            A mapping from aliases to valid device names. See `device_name`.
-
-        overwrite: bool, default False
-            If True, overwrite existing video files with the same name.
-
         show_video: bool, default False,
             If True, show the video stream in a window.
-
-        init_capture: bool, default True
-            If True, initialize the underlying capture upon construction.
-            Set to False for multi-threaded recording.
         """
         super(BaseVideoRecorder, self).__init__(
-            device_name, resolution, fps, aliases=aliases,
-            init_capture=init_capture, **kwargs)
+            folder, device, name=name, policy=policy, **kwargs)
 
         self.encoder = VideoEncoder(
-            folder, device_name, resolution, fps, color_format, codec,
-            overwrite)
+            self.folder, self.name, self.device.resolution,
+            self.device.fps, color_format, codec, self.overwrite)
 
         self.color_format = color_format
         self.show_video = show_video
 
-        self._timestamps = []
-        self._last_timestamp = 0.
-        self._fps_buffer = deque(maxlen=100)
+    @classmethod
+    def from_config(cls, config, folder):
+        """ Create a device from a StreamConfig. """
+        # TODO codec and other parameters
+        if config.device_type == 'uvc':
+            device = VideoDeviceUVC(
+                config.device_uid, config.resolution, config.fps, start=False)
+        elif config.device_type == 'flir':
+            device = VideoDeviceFLIR(
+                config.device_uid, config.resolution, config.fps, start=False)
+        elif config.device_type == 't265':
+            # start=True because the realsense pipeline ("capture")
+            # can be started in this same thread
+            device = VideoDeviceT265(
+                config.device_uid, config.resolution, config.fps, start=True)
+        else:
+            raise ValueError(
+                'Unsupported device type: {}.'.format(config.device_type))
+
+        return BaseVideoRecorder(
+            folder, device, name=config.name, policy='here')
 
     @property
     def current_fps(self):
@@ -176,28 +160,23 @@ class BaseVideoRecorder(BaseVideoDevice, BaseStreamRecorder):
         else:
             return np.nanmean(self._fps_buffer)
 
-    def init_capture(self):
-        """ Initialize the underlying capture. """
-        self.capture = self._get_capture(
-            self.device_name, self.resolution, self.fps, **self.capture_kwargs)
-
-    def run_post_recording_hooks(self):
-        """ Hooks to run after the main recording loop. """
-        # TODO additionally save timestamps continuously if paranoid=True
-        np.save(self.encoder.timestamp_file, np.array(self._timestamps))
+    def start(self):
+        """ Start the recorder. """
+        self.device.start()
 
     def get_data_and_timestamp(self):
         """ Get the last data packet and timestamp from the stream. """
         # TODO handle uvc.StreamError and reinitialize capture
+        # TODO get only jpeg buffer when not showing video
         if self.color_format == 'gray':
-            frame, timestamp = self._get_frame_and_timestamp('gray')
+            frame, timestamp = self.device._get_frame_and_timestamp('gray')
         else:
-            frame, timestamp = self._get_frame_and_timestamp()
+            frame, timestamp = self.device._get_frame_and_timestamp()
 
         # show video if requested
         if self.show_video:
             # TODO set show_video to false when window is closed
-            self.show_frame(frame)
+            self.device.show_frame(frame)
 
         return frame, timestamp
 
@@ -205,25 +184,17 @@ class BaseVideoRecorder(BaseVideoDevice, BaseStreamRecorder):
         """ Write data to disk. """
         self.encoder.write(frame)
 
-
-class VideoRecorderUVC(BaseVideoRecorder, VideoDeviceUVC):
-    """ Video recorder for UVC devices. """
-
-
-class VideoRecorderFLIR(BaseVideoRecorder, VideoDeviceFLIR):
-    """ Video recorder for FLIR devices. """
-
-
-class VideoRecorderT265(BaseVideoRecorder, VideoDeviceT265):
-    """ Video recorder for RealSense T265 devices. """
+    def stop(self):
+        """ Stop the recorder. """
+        # TODO additionally save timestamps continuously if paranoid=True
+        np.save(self.encoder.timestamp_file, np.array(self._timestamps))
 
 
 class VideoRecorder(BaseRecorder):
     """ Recorder for multiple video streams. """
     # TODO refactor into MultiStreamRecorder
 
-    def __init__(self, folder, configs, aliases=None, quiet=False,
-                 show_video=False):
+    def __init__(self, folder, configs, quiet=False, show_video=False):
         """ Constructor.
 
         Parameters
@@ -231,11 +202,8 @@ class VideoRecorder(BaseRecorder):
         folder: str
             The folder where recorded streams are written to.
 
-        configs: iterable of pupil_recording_interface.VideoConfig
+        configs: iterable of pupil_recording_interface.VideoStreamConfig
             An iterable of video device configurations.
-
-        aliases: dict, optional
-            A mapping from aliases to valid device names. See `device_name`.
 
         quiet: bool, default False,
             If True, do not print infos to stdout.
@@ -244,36 +212,20 @@ class VideoRecorder(BaseRecorder):
             If True, show the video stream in a window.
         """
         super(VideoRecorder, self).__init__(folder)
-        self.recorders = self._init_recorders(
-            self.folder, configs, aliases, show_video)
+        self.recorders = self._init_recorders(self.folder, configs, show_video)
         self.quiet = quiet
 
         self._stdout_delay = 3.  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
 
     @classmethod
-    def _init_recorders(cls, folder, configs, aliases, show_video):
+    def _init_recorders(cls, folder, configs, show_video):
         """ Init VideoCapture instances for all configs. """
         recorders = {}
-        for c in configs:
-            # TODO VideoRecorder.from_config()
-            if c.device_type == 'uvc':
-                recorders[c.device_name] = VideoRecorderUVC(
-                    folder, c.device_name, c.resolution, c.fps, c.color_format,
-                    aliases=aliases, show_video=show_video)
-            elif c.device_type == 'flir':
-                recorders[c.device_name] = VideoRecorderFLIR(
-                    folder, c.device_name, c.resolution, c.fps, c.color_format,
-                    aliases=aliases, show_video=show_video)
-            elif c.device_type == 't265':
-                # init_capture=True because the realsense pipeline ("capture")
-                # can be started in this same thread
-                recorders[c.device_name] = VideoRecorderT265(
-                    folder, c.device_name, c.resolution, c.fps, c.color_format,
-                    aliases=aliases, show_video=show_video, init_capture=True)
-            else:
-                raise ValueError(
-                    'Unsupported device type: {}.'.format(c.device_type))
+        for config in configs:
+            recorder = BaseVideoRecorder.from_config(config, folder)
+            recorder.show_video = show_video
+            recorders[config.name] = recorder
 
         return recorders
 

@@ -1,4 +1,5 @@
-from pupil_recording_interface.recorder.video import VideoRecorder, VideoConfig
+from pupil_recording_interface.config import VideoConfig
+from pupil_recording_interface.recorder.video import VideoRecorder
 
 if __name__ == '__main__':
 
@@ -8,10 +9,9 @@ if __name__ == '__main__':
     # camera configurations
     configs = [
         VideoConfig(
-            't265', device_name='t265', resolution=(800, 848), fps=30,
-            color_format='gray'),
+            't265', 't265', resolution=(800, 848), fps=30, color_format='gray')
     ]
 
     # start recorder
-    recorder = VideoRecorder(folder, configs, None, show_video=True)
+    recorder = VideoRecorder(folder, configs, show_video=True)
     recorder.run()
