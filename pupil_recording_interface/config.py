@@ -61,3 +61,7 @@ class VideoConfig(StreamConfig):
         self.fps = fps
         self.resolution = resolution
         self.color_format = color_format
+
+
+class OdometryConfig(StreamConfig):
+    """ Configuration for odometry streams. """

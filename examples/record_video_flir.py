@@ -2,7 +2,7 @@ import sys
 sys.path.append('/home/veddy/Code/pupil_recording_interface/')
 
 from pupil_recording_interface.config import VideoConfig
-from pupil_recording_interface.recorder.video import VideoRecorder
+from pupil_recording_interface import MultiStreamRecorder
 
 if __name__ == '__main__':
 
@@ -23,5 +23,5 @@ if __name__ == '__main__':
     ]
 
     # start recorder
-    recorder = VideoRecorder(folder, configs, show_video=True)
+    recorder = MultiStreamRecorder(folder, configs, show_video=True)
     recorder.run()

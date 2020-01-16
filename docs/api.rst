@@ -56,6 +56,7 @@ Recorder and Encoder classes
 
     OdometryRecorder
     VideoRecorder
+    MultiStreamRecorder
     VideoEncoder
 
 

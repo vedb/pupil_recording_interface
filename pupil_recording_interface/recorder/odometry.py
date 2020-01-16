@@ -1,120 +1,45 @@
 """"""
-from __future__ import print_function
-
 import os
-import warnings
-from collections import deque
 
 from pupil_recording_interface.externals.file_methods import PLData_Writer
-from pupil_recording_interface.recorder import BaseRecorder
+from pupil_recording_interface.recorder import BaseStreamRecorder
+from pupil_recording_interface.device.realsense import OdometryDeviceT265
 
 
-class OdometryRecorder(BaseRecorder):
-    """ Recorder for odometry data from the T265 tracking camera. """
+class OdometryRecorder(BaseStreamRecorder):
+    """ Recorder for an odometry stream. """
 
-    def __init__(self, folder, topic='odometry', verbose=True):
-        """ Constructor.
+    def __init__(self, *args, **kwargs):
+        super(OdometryRecorder, self).__init__(*args, **kwargs)
 
-        Parameters
-        ----------
-        folder : str
-            Path to the recording folder.
-
-        topic : str, default 'odometry'
-            Name of the topic of the recorded data. Is also used as the file
-            name.
-
-        verbose : bool, default True
-            If True, display the current sampling rate during recording.
-        """
-        try:
-            import pyrealsense2 as rs
-        except ImportError:
-            raise ImportError(
-                'You need to install the pyrealsense2 library in order to '
-                'use the odometry recorder.')
-
-        try:
-            import uvc
-            self.monotonic = uvc.get_time_monotonic
-        except ImportError:
-            warnings.warn(
-                'pyuvc library not found. Timestamps might not be perfectly '
-                'synchronized with gaze and video.')
-            from monotonic import monotonic
-            self.monotonic = monotonic
-
-        super(OdometryRecorder, self).__init__(folder)
-
-        # realsense pipeline
-        self.pipeline = rs.pipeline()
-        self.config = rs.config()
-        self.config.enable_stream(rs.stream.pose)
-
-        # pldata writer
+        topic = 'odometry'
         self.filename = os.path.join(self.folder, topic + '.pldata')
-        if os.path.exists(self.filename):
+        if not self.overwrite and os.path.exists(self.filename):
             raise IOError('{} exists, will not overwrite'.format(
                 self.filename))
         self.writer = PLData_Writer(self.folder, topic)
-        self.verbose = verbose
 
-    @staticmethod
-    def _get_odometry(rs_frame, t_last, monotonic):
-        """ Get odometry data from realsense pose frame. """
-        t = monotonic()
-        f = 1. / (t - t_last)
+    @classmethod
+    def _from_config(cls, config, folder):
+        """ Per-class implementation of from_config. """
+        device = OdometryDeviceT265(config.device_uid, start=True)
+        return OdometryRecorder(
+            folder, device, name=config.name, policy='here')
 
-        pose = rs_frame.get_pose_frame()
+    def start(self):
+        """ Start the recorder. """
+        if not self.device.is_started:
+            self.device.start()
 
-        c = pose.pose_data.tracker_confidence
-        p = pose.pose_data.translation
-        q = pose.pose_data.rotation
-        v = pose.pose_data.velocity
-        w = pose.pose_data.angular_velocity
+    def get_data_and_timestamp(self):
+        """ Get the last data packet and timestamp from the stream. """
+        return self.device._get_odometry_and_timestamp()
 
-        return t, f, c, \
-            (p.x, p.y, p.z), (q.w, q.x, q.y, q.z), \
-            (v.x, v.y, v.z), (w.x, w.y, w.z)
+    def write(self, data):
+        """ Write data to disk. """
+        self.writer.append(data)
 
-    @staticmethod
-    def _odometry_to_dict(odometry_data):
-        """ Convert odometry data to dict. """
-        t, f, c, p, q, v, w = odometry_data
-        return {
-            'topic': 'odometry', 'timestamp': t, 'confidence': c,
-            'position': p, 'orientation': q,
-            'linear_velocity': v, 'angular_velocity': w}
-
-    @staticmethod
-    def _moving_average(value, buffer):
-        """ Buffer values and compute moving average. """
-        buffer.append(value)
-        return sum(buffer) / len(buffer)
-
-    def run(self):
-        """ Start the recording. """
-        self.pipeline.start(self.config)
-        buffer = deque(maxlen=200)
-
-        if self.verbose:
-            print('Started recording to {}'.format(self.filename))
-
-        t = 0.
-        while True:
-            try:
-                rs_frame = self.pipeline.wait_for_frames()
-                odometry_data = self._get_odometry(rs_frame, t, self.monotonic)
-                t = odometry_data[0]
-                if self.verbose:
-                    f = self._moving_average(odometry_data[1], buffer)
-                    print('\rSampling rate: {:.2f}'.format(f), end='')
-                self.writer.append(self._odometry_to_dict(odometry_data))
-            except (KeyboardInterrupt, RuntimeError):
-                break
-
-        if self.verbose:
-            print('\nStopped recording')
-
+    def stop(self):
+        """ Stop the recorder. """
         self.writer.close()
-        self.pipeline.stop()
+        self.device.stop()

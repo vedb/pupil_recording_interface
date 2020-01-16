@@ -5,6 +5,8 @@ from collections import deque
 
 import numpy as np
 
+from pupil_recording_interface.config import VideoConfig, OdometryConfig
+
 
 class BaseRecorder(object):
     """ Base class for all recorders. """
@@ -14,8 +16,16 @@ class BaseRecorder(object):
 
         Parameters
         ----------
-        folder : str
+        folder: str
             Path to the recording folder.
+
+        policy: str, default 'new_folder'
+            Policy for recording folder creation. If 'new_folder',
+            new sub-folders will be created with incremental numbering. If
+            'here', the data will be recorded to the specified folder but
+            will throw an error when existing files would be overwritten. If
+            'overwrite', the data will be recorded to the specified folder
+            and existing files will possibly overwritten.
         """
         self.folder = self._init_folder(folder, policy)
 
@@ -51,7 +61,28 @@ class BaseStreamRecorder(BaseRecorder):
 
     def __init__(self, folder, device, name=None, policy='new_folder',
                  **kwargs):
-        """"""
+        """ Constructor.
+
+        Parameters
+        ----------
+        folder: str
+            Path to the recording folder.
+
+        device: BaseDevice
+            The device from which to record the stream.
+
+        name: str, optional
+            The name of the recorder. If not specified, `device.uid` will be
+            used.
+
+        policy: str, default 'new_folder'
+            Policy for recording folder creation. If 'new_folder',
+            new sub-folders will be created with incremental numbering. If
+            'here', the data will be recorded to the specified folder but
+            will throw an error when existing files would be overwritten. If
+            'overwrite', the data will be recorded to the specified folder
+            and existing files will possibly overwritten.
+        """
         super(BaseStreamRecorder, self).__init__(folder, policy)
         self.name = name or device.uid
 
@@ -64,8 +95,28 @@ class BaseStreamRecorder(BaseRecorder):
 
     @classmethod
     @abc.abstractmethod
+    def _from_config(cls, config, folder):
+        """ Per-class implementation of from_config. """
+
+    @classmethod
     def from_config(cls, config, folder):
         """ Create a device from a StreamConfig. """
+        if isinstance(config, VideoConfig):
+            from .video import VideoRecorder
+            return VideoRecorder._from_config(config, folder)
+        elif isinstance(config, OdometryConfig):
+            from .odometry import OdometryRecorder
+            return OdometryRecorder._from_config(config, folder)
+        else:
+            raise TypeError('Unsupported config type: {}'.format(type(config)))
+
+    @property
+    def current_fps(self):
+        """ Current average fps. """
+        if len(self._fps_buffer) == 0 or np.all(np.isnan(self._fps_buffer)):
+            return 0.
+        else:
+            return np.nanmean(self._fps_buffer)
 
     @abc.abstractmethod
     def start(self):

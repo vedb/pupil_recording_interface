@@ -4,15 +4,13 @@ from __future__ import print_function
 import os
 import abc
 import subprocess
-import multiprocessing as mp
-import time
 
 import numpy as np
 
 from pupil_recording_interface.device.realsense import VideoDeviceT265
 from pupil_recording_interface.device.video import \
     BaseVideoDevice, VideoDeviceUVC, VideoDeviceFLIR
-from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
+from pupil_recording_interface.recorder import BaseStreamRecorder
 
 
 class VideoEncoder(object):
@@ -97,8 +95,8 @@ class VideoEncoder(object):
         self.process.stdin.write(img.tostring())
 
 
-class BaseVideoRecorder(BaseStreamRecorder):
-    """ Base class for all video recorders. """
+class VideoRecorder(BaseStreamRecorder):
+    """ Recorder for a video stream. """
 
     __metaclass__ = abc.ABCMeta
 
@@ -110,9 +108,25 @@ class BaseVideoRecorder(BaseStreamRecorder):
         Parameters
         ----------
         folder: str
-            The folder where recorded streams are written to.
+            Path to the recording folder.
 
         device: BaseVideoDevice
+            The device from which to record the video.
+
+        name: str, optional
+            The name of the recorder. If not specified, `device.uid` will be
+            used.
+
+        policy: str, default 'new_folder'
+            Policy for recording folder creation. If 'new_folder',
+            new sub-folders will be created with incremental numbering. If
+            'here', the data will be recorded to the specified folder but
+            will throw an error when existing files would be overwritten. If
+            'overwrite', the data will be recorded to the specified folder
+            and existing files will possibly overwritten.
+
+        color_format: str, default 'bgr24'
+            The target color format. Set to 'gray' for eye cameras.
 
         codec: str, default 'libx264'
             The desired video codec.
@@ -120,7 +134,7 @@ class BaseVideoRecorder(BaseStreamRecorder):
         show_video: bool, default False,
             If True, show the video stream in a window.
         """
-        super(BaseVideoRecorder, self).__init__(
+        super(VideoRecorder, self).__init__(
             folder, device, name=name, policy=policy, **kwargs)
 
         self.encoder = VideoEncoder(
@@ -131,7 +145,7 @@ class BaseVideoRecorder(BaseStreamRecorder):
         self.show_video = show_video
 
     @classmethod
-    def from_config(cls, config, folder):
+    def _from_config(cls, config, folder):
         """ Create a device from a StreamConfig. """
         # TODO codec and other parameters
         if config.device_type == 'uvc':
@@ -149,16 +163,8 @@ class BaseVideoRecorder(BaseStreamRecorder):
             raise ValueError(
                 'Unsupported device type: {}.'.format(config.device_type))
 
-        return BaseVideoRecorder(
+        return VideoRecorder(
             folder, device, name=config.name, policy='here')
-
-    @property
-    def current_fps(self):
-        """ Current average fps. """
-        if len(self._fps_buffer) == 0 or np.all(np.isnan(self._fps_buffer)):
-            return 0.
-        else:
-            return np.nanmean(self._fps_buffer)
 
     def start(self):
         """ Start the recorder. """
@@ -188,105 +194,3 @@ class BaseVideoRecorder(BaseStreamRecorder):
         """ Stop the recorder. """
         # TODO additionally save timestamps continuously if paranoid=True
         np.save(self.encoder.timestamp_file, np.array(self._timestamps))
-
-
-class VideoRecorder(BaseRecorder):
-    """ Recorder for multiple video streams. """
-    # TODO refactor into MultiStreamRecorder
-
-    def __init__(self, folder, configs, quiet=False, show_video=False):
-        """ Constructor.
-
-        Parameters
-        ----------
-        folder: str
-            The folder where recorded streams are written to.
-
-        configs: iterable of pupil_recording_interface.VideoStreamConfig
-            An iterable of video device configurations.
-
-        quiet: bool, default False,
-            If True, do not print infos to stdout.
-
-        show_video: bool, default False,
-            If True, show the video stream in a window.
-        """
-        super(VideoRecorder, self).__init__(folder)
-        self.recorders = self._init_recorders(self.folder, configs, show_video)
-        self.quiet = quiet
-
-        self._stdout_delay = 3.  # delay before showing fps on stdout
-        self._max_queue_size = 20  # max size of process fps queue
-
-    @classmethod
-    def _init_recorders(cls, folder, configs, show_video):
-        """ Init VideoCapture instances for all configs. """
-        recorders = {}
-        for config in configs:
-            recorder = BaseVideoRecorder.from_config(config, folder)
-            recorder.show_video = show_video
-            recorders[config.name] = recorder
-
-        return recorders
-
-    @classmethod
-    def _init_processes(cls, recorders, max_queue_size):
-        """ Create one process for each VideoCapture instance. """
-        # TODO one recorder may need multiple processes & queues
-        stop_event = mp.Event()
-        queues = {
-            c_name: mp.Queue(maxsize=max_queue_size)
-            for c_name in recorders.keys()}
-        processes = {
-            c_name:
-                mp.Process(target=c.run, args=(stop_event, queues[c_name]))
-            for c_name, c in recorders.items()}
-
-        return processes, queues, stop_event
-
-    @classmethod
-    def _start_processes(cls, processes):
-        """ Start all recorder processes. """
-        for process in processes.values():
-            process.start()
-
-    @classmethod
-    def _stop_processes(cls, processes, stop_event):
-        """ Stop all recorder processes. """
-        stop_event.set()
-        for process in processes.values():
-            process.join()
-
-    def run(self):
-        """ Start the recording. """
-        if not self.quiet:
-            print('Started recording to {}'.format(self.folder))
-
-        processes, queues, stop_event = self._init_processes(
-            self.recorders, self._max_queue_size)
-        self._start_processes(processes)
-
-        start_time = time.time()
-
-        while True:
-            try:
-                # get fps from queues
-                for recorder_name, recorder in self.recorders.items():
-                    while not queues[recorder_name].empty():
-                        recorder._fps_buffer.append(
-                            queues[recorder_name].get())
-
-                # display fps after self._stdout_delay seconds
-                if not self.quiet \
-                        and time.time() - start_time > self._stdout_delay:
-                    f_strs = ', '.join(
-                        '{}: {:.2f} Hz'.format(c_name, c.current_fps)
-                        for c_name, c in self.recorders.items())
-                    print('\rSampling rates: ' + f_strs, end='')
-
-            except KeyboardInterrupt:
-                self._stop_processes(processes, stop_event)
-                break
-
-        if not self.quiet:
-            print('\nStopped recording')

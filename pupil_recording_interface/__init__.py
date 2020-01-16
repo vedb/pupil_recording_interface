@@ -11,7 +11,8 @@ from .device.video import VideoDeviceUVC, VideoDeviceFLIR
 from .device.realsense import VideoDeviceT265
 
 from .recorder.odometry import OdometryRecorder
-from .recorder.video import VideoEncoder, VideoRecorder
+from .recorder.video import VideoRecorder, VideoEncoder
+from .recorder.multi_stream import MultiStreamRecorder
 
 from .config import StreamConfig, VideoConfig
 
@@ -39,8 +40,9 @@ __all__ = [
     'VideoDeviceT265',
     # Recorders
     'OdometryRecorder',
-    'VideoEncoder',
     'VideoRecorder',
+    'MultiStreamRecorder',
+    'VideoEncoder',
     # Configs
     'StreamConfig',
     'VideoConfig',
