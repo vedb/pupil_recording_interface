@@ -95,18 +95,18 @@ class BaseStreamRecorder(BaseRecorder):
 
     @classmethod
     @abc.abstractmethod
-    def _from_config(cls, config, folder):
+    def _from_config(cls, config, folder, device=None):
         """ Per-class implementation of from_config. """
 
     @classmethod
-    def from_config(cls, config, folder):
-        """ Create a device from a StreamConfig. """
+    def from_config(cls, config, folder, device=None):
+        """ Create a recorder from a StreamConfig. """
         if isinstance(config, VideoConfig):
             from .video import VideoRecorder
-            return VideoRecorder._from_config(config, folder)
+            return VideoRecorder._from_config(config, folder, device)
         elif isinstance(config, OdometryConfig):
             from .odometry import OdometryRecorder
-            return OdometryRecorder._from_config(config, folder)
+            return OdometryRecorder._from_config(config, folder, device)
         else:
             raise TypeError('Unsupported config type: {}'.format(type(config)))
 

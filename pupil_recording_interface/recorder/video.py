@@ -7,7 +7,7 @@ import subprocess
 
 import numpy as np
 
-from pupil_recording_interface.device.realsense import VideoDeviceT265
+from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.device.video import \
     BaseVideoDevice, VideoDeviceUVC, VideoDeviceFLIR
 from pupil_recording_interface.recorder import BaseStreamRecorder
@@ -145,23 +145,28 @@ class VideoRecorder(BaseStreamRecorder):
         self.show_video = show_video
 
     @classmethod
-    def _from_config(cls, config, folder):
+    def _from_config(cls, config, folder, device=None):
         """ Create a device from a StreamConfig. """
         # TODO codec and other parameters
-        if config.device_type == 'uvc':
-            device = VideoDeviceUVC(
-                config.device_uid, config.resolution, config.fps, start=False)
-        elif config.device_type == 'flir':
-            device = VideoDeviceFLIR(
-                config.device_uid, config.resolution, config.fps, start=False)
-        elif config.device_type == 't265':
-            # start=True because the realsense pipeline ("capture")
-            # can be started in this same thread
-            device = VideoDeviceT265(
-                config.device_uid, config.resolution, config.fps, start=True)
-        else:
-            raise ValueError(
-                'Unsupported device type: {}.'.format(config.device_type))
+        if device is None:
+            if config.device_type == 'uvc':
+                device = VideoDeviceUVC(
+                    config.device_uid, config.resolution, config.fps,
+                    start=False)
+            elif config.device_type == 'flir':
+                device = VideoDeviceFLIR(
+                    config.device_uid, config.resolution, config.fps,
+                    start=False)
+            elif config.device_type == 't265':
+                # start=True because the realsense pipeline ("capture")
+                # can be started in this same thread
+                # TODO fix having to start all streams
+                device = RealSenseDeviceT265(
+                    config.device_uid, config.resolution, config.fps,
+                    video='both', odometry=True, start=True)
+            else:
+                raise ValueError(
+                    'Unsupported device type: {}.'.format(config.device_type))
 
         return VideoRecorder(
             folder, device, name=config.name, policy='here')

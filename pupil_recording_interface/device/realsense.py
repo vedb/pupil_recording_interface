@@ -142,13 +142,27 @@ class RealSenseDeviceT265(BaseDevice):
 
         return pipeline
 
+    def _get_frame_and_timestamp(self, mode='img'):
+        """ Get a frame and its associated timestamp. """
+        # TODO timestamp = uvc.get_time_monotonic()?
+        return self.video_queue.get()
+
+    def _get_odometry_and_timestamp(self):
+        """ Get a frame and its associated timestamp. """
+        odometry = self.odometry_queue.get()
+        # TODO timestamp = uvc.get_time_monotonic()?
+        return odometry, odometry['timestamp']
+
+    show_frame = BaseVideoDevice.show_frame
+
     def stop(self):
         """ Stop this device. """
-        # self.capture is rs.pipeline
-        # TODO self.capture.stop(), looks like this doesn't work if the
+        # TODO self.pipeline.stop(), looks like this doesn't work if the
         #  pipeline wasn't started in the same thread as the one where this
         #  method is called.
-        self.pipeline = None
+        if self.pipeline is not None:
+            self.pipeline.stop()
+            self.pipeline = None
 
 
 class VideoDeviceT265(RealSenseDeviceT265, BaseVideoDevice):

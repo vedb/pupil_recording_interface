@@ -3,7 +3,7 @@ import os
 
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 from pupil_recording_interface.recorder import BaseStreamRecorder
-from pupil_recording_interface.device.realsense import OdometryDeviceT265
+from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 
 
 class OdometryRecorder(BaseStreamRecorder):
@@ -20,9 +20,13 @@ class OdometryRecorder(BaseStreamRecorder):
         self.writer = PLData_Writer(self.folder, topic)
 
     @classmethod
-    def _from_config(cls, config, folder):
+    def _from_config(cls, config, folder, device=None):
         """ Per-class implementation of from_config. """
-        device = OdometryDeviceT265(config.device_uid, start=True)
+        if device is None:
+            # TODO fix having to start all streams
+            device = RealSenseDeviceT265(
+                config.device_uid, odometry=True, video='both', start=True)
+
         return OdometryRecorder(
             folder, device, name=config.name, policy='here')
 

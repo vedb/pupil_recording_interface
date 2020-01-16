@@ -1,4 +1,6 @@
 """"""
+from __future__ import print_function
+
 import multiprocessing as mp
 import time
 
@@ -47,10 +49,24 @@ class MultiStreamRecorder(BaseRecorder):
         """ Init recorder instances for all configs. """
         recorders = {}
         # TODO multiple recorders may use the same device
-        for config in configs:
-            recorder = BaseStreamRecorder.from_config(config, folder)
-            recorder.show_video = show_video
-            recorders[config.name] = recorder
+        uids = {c.device_uid for c in configs}
+        configs_by_uid = {
+            uid: [c for c in configs if c.device_uid == uid] for uid in uids}
+
+        devices_by_uid = {}
+        for uid, config_list in configs_by_uid.items():
+            devices_by_uid[uid] = None
+            for config in config_list:
+                # if the device for the UID has already been created, use that
+                if devices_by_uid[uid] is None:
+                    recorder = BaseStreamRecorder.from_config(config, folder)
+                    devices_by_uid[uid] = recorder.device
+                else:
+                    recorder = BaseStreamRecorder.from_config(
+                        config, folder, devices_by_uid[uid])
+
+                recorder.show_video = show_video
+                recorders[config.name] = recorder
 
         return recorders
 
