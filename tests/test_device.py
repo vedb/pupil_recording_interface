@@ -1,6 +1,13 @@
 import pytest
 
+from pupil_recording_interface.device.video import BaseVideoDevice
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
+
+
+class TestBaseVideoDevice(object):
+
+    def test_start(self):
+        """"""
 
 
 class TestRealSenseDeviceT265(object):
