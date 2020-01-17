@@ -101,6 +101,7 @@ class BaseStreamRecorder(BaseRecorder):
     @classmethod
     def from_config(cls, config, folder, device=None, overwrite=False):
         """ Create a recorder from a StreamConfig. """
+        # TODO pass actual policy instead of overwrite
         if isinstance(config, VideoConfig):
             from .video import VideoRecorder
             return VideoRecorder._from_config(

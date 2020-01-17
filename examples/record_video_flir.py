@@ -1,18 +1,18 @@
-import sys
-sys.path.append('/home/veddy/Code/pupil_recording_interface/')
-
-from pupil_recording_interface.config import VideoConfig
-from pupil_recording_interface import MultiStreamRecorder
+from pupil_recording_interface import \
+    VideoConfig, VideoRecorder, MultiStreamRecorder
 
 if __name__ == '__main__':
 
     # recording folder
-    folder = '~/recordings/test'
+    folder = '~/recordings/flir_test'
+
+    # string that uniquely identifies the FLIR camera
+    flir_uid = 'CHANGEME'
 
     # camera configurations
     configs = [
         VideoConfig(
-            'flir', '<FLIR_S/N>', name='world',
+            'flir', flir_uid, name='world',
             resolution=(2048, 1536), fps=60),
         VideoConfig(
             'uvc', 'Pupil Cam2 ID0', name='eye0',
@@ -22,6 +22,14 @@ if __name__ == '__main__':
             resolution=(400, 400), fps=120, color_format='gray'),
     ]
 
-    # start recorder
-    recorder = MultiStreamRecorder(folder, configs, show_video=True)
+    # change this to False for multi-threaded recording
+    single_threaded = True
+
+    if single_threaded:
+        recorder = VideoRecorder.from_config(
+            configs[0], folder, overwrite=True)
+        recorder.show_video = True
+    else:
+        recorder = MultiStreamRecorder(folder, configs, show_video=True)
+
     recorder.run()
