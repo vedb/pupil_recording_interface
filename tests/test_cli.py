@@ -1,38 +1,38 @@
 import os
 
-from .test_base import ReaderTester
+import pytest
 
 from pupil_recording_interface.cli import CLI
 
 
-class TestCLI(ReaderTester):
+class TestCLI(object):
 
     def test_record(self):
         """"""
         # TODO test record odometry
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             CLI.record(['pri', 'record', 'not_a_topic', '.'])
 
-    def test_export(self):
+    def test_export(self, folder):
         """"""
         # gaze
-        CLI.export(['pri', 'export', 'gaze', self.folder])
+        CLI.export(['pri', 'export', 'gaze', folder])
         assert os.path.exists(
-            os.path.join(self.folder, 'exports', 'gaze.nc'))
+            os.path.join(folder, 'exports', 'gaze.nc'))
 
         # odometry
-        CLI.export(['pri', 'export', 'odometry', self.folder])
+        CLI.export(['pri', 'export', 'odometry', folder])
         assert os.path.exists(
-            os.path.join(self.folder, 'exports', 'odometry.nc'))
+            os.path.join(folder, 'exports', 'odometry.nc'))
 
         # TODO test export video
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             CLI.export(['pri', 'export', 'not_a_topic', '.'])
 
-    def test_run(self):
+    def test_run(self, folder):
         """"""
-        CLI().run(['pri', 'export', 'gaze', self.folder])
+        CLI().run(['pri', 'export', 'gaze', folder])
         assert os.path.exists(
-            os.path.join(self.folder, 'exports', 'gaze.nc'))
+            os.path.join(folder, 'exports', 'gaze.nc'))

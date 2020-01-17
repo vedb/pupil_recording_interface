@@ -1,4 +1,4 @@
-from pupil_recording_interface.config import VideoConfig
+from pupil_recording_interface.config import VideoConfig, OdometryConfig
 from pupil_recording_interface import MultiStreamRecorder
 
 if __name__ == '__main__':
@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # recording folder
     folder = '~/recordings/test'
 
-    # camera configurations
+    # stream configurations
     configs = [
         VideoConfig(
             'uvc', 'Pupil Cam1 ID2', name='world',
@@ -17,8 +17,14 @@ if __name__ == '__main__':
         VideoConfig(
             'uvc', 'Pupil Cam1 ID1', name='eye1',
             resolution=(320, 240), fps=120, color_format='gray'),
+        VideoConfig(
+            't265', 't265',
+            resolution=(1696, 800), fps=30, color_format='gray'),
+        OdometryConfig(
+            't265', 't265', name='odometry'),
     ]
 
-    # start recorder
-    recorder = MultiStreamRecorder(folder, configs, show_video=True)
+    recorder = MultiStreamRecorder(
+        folder, configs, policy='overwrite', show_video=True)
+
     recorder.run()

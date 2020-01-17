@@ -6,10 +6,16 @@ from .reader import BaseReader
 from .reader.odometry import OdometryReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
-from .device.video import VideoDeviceUVC
+
+from .device.video import VideoDeviceUVC, VideoDeviceFLIR
+from .device.realsense import RealSenseDeviceT265
+
 from .recorder.odometry import OdometryRecorder
-from .recorder.video import \
-    VideoConfig, VideoEncoder, VideoCaptureUVC, VideoRecorder
+from .recorder.video import VideoRecorder, VideoEncoderFFMPEG
+from .recorder.multi_stream import MultiStreamRecorder
+
+from .config import StreamConfig, VideoConfig
+
 from .cli import CLI
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -30,12 +36,16 @@ __all__ = [
     'OpticalFlowReader',
     # Devices
     'VideoDeviceUVC',
+    'VideoDeviceFLIR',
+    'RealSenseDeviceT265',
     # Recorders
     'OdometryRecorder',
-    'VideoConfig',
-    'VideoEncoder',
-    'VideoCaptureUVC',
     'VideoRecorder',
+    'MultiStreamRecorder',
+    'VideoEncoderFFMPEG',
+    # Configs
+    'StreamConfig',
+    'VideoConfig',
 ]
 
 

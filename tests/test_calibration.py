@@ -1,4 +1,0 @@
-
-
-class TestCalibration(object):
-    """"""
