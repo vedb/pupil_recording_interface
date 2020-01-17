@@ -10,7 +10,7 @@ from pupil_recording_interface.device import BaseDevice
 class BaseVideoDevice(BaseDevice):
     """ Base class for all video devices. """
 
-    def __init__(self, uid, resolution, fps, start=True, **kwargs):
+    def __init__(self, uid, resolution, fps, **kwargs):
         """ Constructor.
 
         Parameters
@@ -34,11 +34,7 @@ class BaseVideoDevice(BaseDevice):
         self.resolution = resolution
         self.fps = fps
 
-        if start:
-            self.capture = self._get_capture(uid, resolution, fps, **kwargs)
-        else:
-            self.capture = None
-
+        self.capture = None
         self.capture_kwargs = kwargs
 
     @property
@@ -176,7 +172,7 @@ class VideoDeviceUVC(BaseVideoDevice):
 class VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
 
-    def __init__(self, uid, resolution, fps, start=True, **kwargs):
+    def __init__(self, uid, resolution, fps, **kwargs):
         """ Constructor.
 
         Parameters
@@ -196,8 +192,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
             Set to False for multi-threaded recording.
         """
         # TODO specify additional keyword arguments
-        super(VideoDeviceFLIR, self).__init__(
-            uid, resolution, fps, start, **kwargs)
+        super(VideoDeviceFLIR, self).__init__(uid, resolution, fps, **kwargs)
 
     @classmethod
     def print_device_info(cls, nodemap):

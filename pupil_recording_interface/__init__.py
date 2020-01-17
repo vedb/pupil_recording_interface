@@ -8,10 +8,10 @@ from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
 
 from .device.video import VideoDeviceUVC, VideoDeviceFLIR
-from .device.realsense import VideoDeviceT265
+from .device.realsense import RealSenseDeviceT265
 
 from .recorder.odometry import OdometryRecorder
-from .recorder.video import VideoRecorder, VideoEncoder
+from .recorder.video import VideoRecorder, VideoEncoderFFMPEG
 from .recorder.multi_stream import MultiStreamRecorder
 
 from .config import StreamConfig, VideoConfig
@@ -37,12 +37,12 @@ __all__ = [
     # Devices
     'VideoDeviceUVC',
     'VideoDeviceFLIR',
-    'VideoDeviceT265',
+    'RealSenseDeviceT265',
     # Recorders
     'OdometryRecorder',
     'VideoRecorder',
     'MultiStreamRecorder',
-    'VideoEncoder',
+    'VideoEncoderFFMPEG',
     # Configs
     'StreamConfig',
     'VideoConfig',

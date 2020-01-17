@@ -20,20 +20,15 @@ class OdometryRecorder(BaseStreamRecorder):
         self.writer = PLData_Writer(self.folder, topic)
 
     @classmethod
-    def _from_config(cls, config, folder, device=None):
+    def _from_config(cls, config, folder, device=None, overwrite=False):
         """ Per-class implementation of from_config. """
         if device is None:
-            # TODO fix having to start all streams
-            device = RealSenseDeviceT265(
-                config.device_uid, odometry=True, video='both', start=True)
+            device = RealSenseDeviceT265(config.device_uid, odometry=True)
+
+        policy = 'overwrite' if overwrite else 'here'
 
         return OdometryRecorder(
-            folder, device, name=config.name, policy='here')
-
-    def start(self):
-        """ Start the recorder. """
-        if not self.device.is_started:
-            self.device.start()
+            folder, device, name=config.name, policy=policy)
 
     def get_data_and_timestamp(self):
         """ Get the last data packet and timestamp from the stream. """
@@ -45,5 +40,5 @@ class OdometryRecorder(BaseStreamRecorder):
 
     def stop(self):
         """ Stop the recorder. """
+        super(OdometryRecorder, self).stop()
         self.writer.close()
-        self.device.stop()

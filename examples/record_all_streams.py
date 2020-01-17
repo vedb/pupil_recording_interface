@@ -24,6 +24,7 @@ if __name__ == '__main__':
             't265', 't265', name='odometry'),
     ]
 
-    # start recorder
-    recorder = MultiStreamRecorder(folder, configs, show_video=True)
+    recorder = MultiStreamRecorder(
+        folder, configs, policy='overwrite', show_video=True)
+
     recorder.run()

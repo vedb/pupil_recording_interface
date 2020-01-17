@@ -18,4 +18,10 @@ class TestRealSenseDeviceT265(object):
                 't265', 't265', name='odometry')
         ]
 
-        RealSenseDeviceT265.from_config_list(config_list, start=False)
+        device = RealSenseDeviceT265.from_config_list(config_list)
+
+        assert isinstance(device, RealSenseDeviceT265)
+        assert device.resolution == (1696, 800)
+        assert device.fps == 30
+        assert device.video == 'both'
+        assert device.odometry

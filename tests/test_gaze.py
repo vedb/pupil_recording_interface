@@ -13,6 +13,7 @@ class TestGazeReader(ReaderTester):
 
     def setUp(self):
         """"""
+        # TODO convert to fixture
         super(TestGazeReader, self).setUp()
         self.n_gaze = 5160
         self.n_gaze_offline = 5134

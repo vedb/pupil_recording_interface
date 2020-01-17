@@ -1,5 +1,4 @@
 """"""
-from inspect import getfullargspec
 import multiprocessing as mp
 
 import numpy as np
@@ -12,8 +11,8 @@ from pupil_recording_interface.config import VideoConfig, OdometryConfig
 class RealSenseDeviceT265(BaseDevice):
     """ RealSense T265 device. """
 
-    def __init__(self, uid, resolution=None, fps=None,
-                 video=False, odometry=False, start=True):
+    def __init__(self, uid,
+                 resolution=None, fps=None, video=False, odometry=False):
         """ Constructor.
 
         Parameters
@@ -34,10 +33,6 @@ class RealSenseDeviceT265(BaseDevice):
 
         odometry: bool, default False
             If True, activate the odometry stream.
-
-        start: bool, default True
-            If True, initialize the underlying capture upon construction.
-            Set to False for multi-threaded recording.
         """
         BaseDevice.__init__(self, uid)
 
@@ -47,27 +42,28 @@ class RealSenseDeviceT265(BaseDevice):
         self.resolution = resolution
         self.fps = fps
 
+        self.pipeline = None
         self.video_queue = mp.Queue() if self.video else None
         self.odometry_queue = mp.Queue() if self.odometry else None
-
-        if start:
-            self.pipeline = self._init_pipeline(
-                self._frame_callback, self.video, self.odometry)
-        else:
-            self.pipeline = None
 
     @classmethod
     def from_config_list(cls, config_list, **extra_kwargs):
         """ Create a device from a list of configs. """
-        # TODO make sure all configs have the
+        # TODO make sure all configs have the same UID
         uid = config_list[0].device_uid
+
+        try:
+            from inspect import getfullargspec
+        except ImportError:
+            from inspect import getargspec as getfullargspec
 
         argspect = getfullargspec(cls.__init__)
         kwargs = {k: v for k, v in
                   zip(reversed(argspect.args), reversed(argspect.defaults))}
+
         for config in config_list:
             if isinstance(config, VideoConfig):
-                kwargs['video'] = 'both'  # TODO make configurable
+                kwargs['video'] = getattr(config, 'side')
                 kwargs.update(
                     {k: getattr(config, k) for k in ('resolution', 'fps')})
             elif isinstance(config, OdometryConfig):
@@ -176,52 +172,23 @@ class RealSenseDeviceT265(BaseDevice):
         # TODO timestamp = uvc.get_time_monotonic()?
         return odometry, odometry['timestamp']
 
+    # TODO
     show_frame = BaseVideoDevice.show_frame
+
+    def start(self):
+        """ Start this device. """
 
     def stop(self):
         """ Stop this device. """
-        # TODO self.pipeline.stop(), looks like this doesn't work if the
-        #  pipeline wasn't started in the same thread as the one where this
-        #  method is called.
+
+    def run_pre_thread_hooks(self):
+        """ Run hook(s) before dispatching the recording thread. """
+        if self.pipeline is None:
+            self.pipeline = self._init_pipeline(
+                self._frame_callback, self.video, self.odometry)
+
+    def run_post_thread_hooks(self):
+        """ Run hook(s) after the recording thread finishes. """
         if self.pipeline is not None:
             self.pipeline.stop()
             self.pipeline = None
-
-
-class VideoDeviceT265(RealSenseDeviceT265, BaseVideoDevice):
-    """ RealSense T265 video device. """
-
-    def __init__(self, *args, **kwargs):
-        kwargs['video'] = kwargs.get('video', 'both')
-        # TODO check if this can lead to unexpected behavior
-        kwargs['odometry'] = False
-        super(VideoDeviceT265, self).__init__(*args, **kwargs)
-        self.capture_kwargs = {'callback': self._frame_callback}
-
-    @classmethod
-    def _get_capture(cls, uid, resolution, fps, callback=None):
-        """ Get a capture instance for a device by name. """
-        # TODO this should not need to be called because the pipeline has to
-        #  be started in the main thread
-        return cls._init_pipeline(callback, video=True, odometry=False)
-
-    def _get_frame_and_timestamp(self, mode='img'):
-        """ Get a frame and its associated timestamp. """
-        # TODO timestamp = uvc.get_time_monotonic()?
-        return self.video_queue.get()
-
-
-class OdometryDeviceT265(RealSenseDeviceT265):
-    """ RealSense T265 odometry device. """
-
-    def __init__(self, *args, **kwargs):
-        kwargs['odometry'] = True
-        # TODO check if this can lead to unexpected behavior
-        kwargs['video'] = False
-        super(OdometryDeviceT265, self).__init__(*args, **kwargs)
-
-    def _get_odometry_and_timestamp(self):
-        """ Get a frame and its associated timestamp. """
-        odometry = self.odometry_queue.get()
-        # TODO timestamp = uvc.get_time_monotonic()?
-        return odometry, odometry['timestamp']

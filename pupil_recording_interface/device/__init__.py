@@ -21,3 +21,9 @@ class BaseDevice(object):
     @abc.abstractmethod
     def stop(self):
         """ Stop this device. """
+
+    def run_pre_thread_hooks(self):
+        """ Run hook(s) before dispatching the recording thread. """
+
+    def run_post_thread_hooks(self):
+        """ Run hook(s) after the recording thread finishes. """

@@ -25,7 +25,7 @@ class BaseRecorder(object):
             'here', the data will be recorded to the specified folder but
             will throw an error when existing files would be overwritten. If
             'overwrite', the data will be recorded to the specified folder
-            and existing files will possibly overwritten.
+            and existing files will possibly be overwritten.
         """
         self.folder = self._init_folder(folder, policy)
 
@@ -81,7 +81,7 @@ class BaseStreamRecorder(BaseRecorder):
             'here', the data will be recorded to the specified folder but
             will throw an error when existing files would be overwritten. If
             'overwrite', the data will be recorded to the specified folder
-            and existing files will possibly overwritten.
+            and existing files will possibly be overwritten.
         """
         super(BaseStreamRecorder, self).__init__(folder, policy)
         self.name = name or device.uid
@@ -95,18 +95,20 @@ class BaseStreamRecorder(BaseRecorder):
 
     @classmethod
     @abc.abstractmethod
-    def _from_config(cls, config, folder, device=None):
+    def _from_config(cls, config, folder, device=None, overwrite=False):
         """ Per-class implementation of from_config. """
 
     @classmethod
-    def from_config(cls, config, folder, device=None):
+    def from_config(cls, config, folder, device=None, overwrite=False):
         """ Create a recorder from a StreamConfig. """
         if isinstance(config, VideoConfig):
             from .video import VideoRecorder
-            return VideoRecorder._from_config(config, folder, device)
+            return VideoRecorder._from_config(
+                config, folder, device, overwrite)
         elif isinstance(config, OdometryConfig):
             from .odometry import OdometryRecorder
-            return OdometryRecorder._from_config(config, folder, device)
+            return OdometryRecorder._from_config(
+                config, folder, device, overwrite)
         else:
             raise TypeError('Unsupported config type: {}'.format(type(config)))
 
@@ -117,22 +119,6 @@ class BaseStreamRecorder(BaseRecorder):
             return 0.
         else:
             return np.nanmean(self._fps_buffer)
-
-    @abc.abstractmethod
-    def start(self):
-        """ Start the recorder. """
-
-    @abc.abstractmethod
-    def get_data_and_timestamp(self):
-        """ Get the last data packet and timestamp from the stream. """
-
-    @abc.abstractmethod
-    def write(self, data):
-        """ Write data to disk. """
-
-    @abc.abstractmethod
-    def stop(self):
-        """ Stop the recorder. """
 
     def _process_timestamp(self, timestamp, fps_queue=None):
         """ Process a new timestamp. """
@@ -148,8 +134,34 @@ class BaseStreamRecorder(BaseRecorder):
 
         self._last_timestamp = timestamp
 
-    def run(self, stop_event=None, fps_queue=None):
-        """ Main recording loop.
+    def run_pre_thread_hooks(self):
+        """ Run hook(s) before dispatching the recording thread. """
+        self.device.run_pre_thread_hooks()
+
+    def start(self):
+        """ Start the recorder. """
+        if not self.device.is_started:
+            self.device.start()
+
+    @abc.abstractmethod
+    def get_data_and_timestamp(self):
+        """ Get the last data packet and timestamp from the stream. """
+
+    @abc.abstractmethod
+    def write(self, data):
+        """ Write data to disk. """
+
+    def stop(self):
+        """ Stop the recorder. """
+        if self.device.is_started:
+            self.device.stop()
+
+    def run_post_thread_hooks(self):
+        """ Run hook(s) after the recording thread finishes. """
+        self.device.run_post_thread_hooks()
+
+    def run_in_thread(self, stop_event=None, fps_queue=None):
+        """ Main recording loop for running in a dedicated thread.
 
         Parameters
         ----------
@@ -160,7 +172,6 @@ class BaseStreamRecorder(BaseRecorder):
             A queue for the current fps in a multi-threaded setting.
         """
         self.start()
-
         timestamps = []
 
         while True:
@@ -185,3 +196,9 @@ class BaseStreamRecorder(BaseRecorder):
 
         self._timestamps = timestamps
         self.stop()
+
+    def run(self):
+        """ Main recording loop. """
+        self.run_pre_thread_hooks()
+        self.run_in_thread()
+        self.run_post_thread_hooks()

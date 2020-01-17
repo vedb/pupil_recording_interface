@@ -6,6 +6,7 @@ import abc
 import subprocess
 
 import numpy as np
+import cv2
 
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.device.video import \
@@ -13,8 +14,8 @@ from pupil_recording_interface.device.video import \
 from pupil_recording_interface.recorder import BaseStreamRecorder
 
 
-class VideoEncoder(object):
-    """ FFMPEG encoder interface. """
+class BaseVideoEncoder(object):
+    """ Base class for encoder interfaces. """
 
     def __init__(self, folder, device_name, resolution, fps,
                  color_format='bgr24', codec='libx264', overwrite=False):
@@ -26,10 +27,8 @@ class VideoEncoder(object):
             The folder where recorded streams are written to.
 
         device_name: str
-            The name of the video device. For UVC devices, this corresponds
-            to the ``'name'`` field of the items obtained through
-            ``uvc.get_device_list()``. Can also be a key of `aliases`. The
-            name of the video file will be `name`.mp4.
+            The name of the video device. The video file will be called
+            `name`.mp4.
 
         resolution: tuple, len 2
             Desired horizontal and vertical camera resolution.
@@ -46,7 +45,6 @@ class VideoEncoder(object):
         overwrite: bool, default False
             If True, overwrite existing video files with the same name.
         """
-        # ffmpeg pipe
         self.video_file = os.path.join(folder, '{}.mp4'.format(device_name))
         if os.path.exists(self.video_file):
             if overwrite:
@@ -55,16 +53,60 @@ class VideoEncoder(object):
                 raise IOError(
                     '{} exists, will not overwrite'.format(self.video_file))
 
-        cmd = self._get_ffmpeg_cmd(
-            self.video_file, resolution[::-1], fps, codec, color_format)
-        self.process = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        self.video_writer = self._init_video_writer(
+            self.video_file, codec, color_format, fps, resolution)
 
-        # timestamp writer
+        # TODO move timestamp writer to BaseStreamRecorder
         self.timestamp_file = os.path.join(
             folder, '{}_timestamps.npy'.format(device_name))
         if os.path.exists(self.timestamp_file) and not overwrite:
             raise IOError(
                 '{} exists, will not overwrite'.format(self.timestamp_file))
+
+    @classmethod
+    @abc.abstractmethod
+    def _init_video_writer(
+            cls, video_file, codec, color_format, fps, resolution):
+        """ Init the video writer. """
+
+    @abc.abstractmethod
+    def write(self, img):
+        """ Write a frame to disk. """
+
+
+class VideoEncoderOpenCV(BaseVideoEncoder):
+
+    @classmethod
+    def _init_video_writer(
+            cls, video_file, codec, color_format, fps, resolution):
+        """ Init the video writer. """
+        codec = cv2.VideoWriter_fourcc(*'MP4V')  # TODO
+
+        return cv2.VideoWriter(
+            video_file, codec, fps, resolution, color_format != 'gray')
+
+    def write(self, img):
+        """ Write a frame to disk.
+
+        Parameters
+        ----------
+        img : array_like
+            The input frame.
+        """
+        self.video_writer.write(img)
+
+
+class VideoEncoderFFMPEG(BaseVideoEncoder):
+    """ FFMPEG encoder interface. """
+
+    @classmethod
+    def _init_video_writer(
+            cls, video_file, codec, color_format, fps, resolution):
+        """ Init the video writer. """
+        cmd = cls._get_ffmpeg_cmd(
+            video_file, resolution[::-1], fps, codec, color_format)
+
+        return subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
     @classmethod
     def _get_ffmpeg_cmd(
@@ -81,18 +123,18 @@ class VideoEncoder(object):
                 '-i', 'pipe:',  # piped to stdin
                 # -- Output -- #
                 '-c:v', codec,  # video codec
-                '-tune', 'film',  # codec tuning
+                # '-tune', 'film',  # codec tuning
                 filename]
 
     def write(self, img):
-        """ Pipe a frame to the FFMPEG subprocess.
+        """ Write a frame to disk.
 
         Parameters
         ----------
         img : array_like
             The input frame.
         """
-        self.process.stdin.write(img.tostring())
+        self.video_writer.stdin.write(img.tostring())
 
 
 class VideoRecorder(BaseStreamRecorder):
@@ -137,7 +179,7 @@ class VideoRecorder(BaseStreamRecorder):
         super(VideoRecorder, self).__init__(
             folder, device, name=name, policy=policy, **kwargs)
 
-        self.encoder = VideoEncoder(
+        self.encoder = VideoEncoderFFMPEG(
             self.folder, self.name, self.device.resolution,
             self.device.fps, color_format, codec, self.overwrite)
 
@@ -145,31 +187,28 @@ class VideoRecorder(BaseStreamRecorder):
         self.show_video = show_video
 
     @classmethod
-    def _from_config(cls, config, folder, device=None):
+    def _from_config(cls, config, folder, device=None, overwrite=False):
         """ Create a device from a StreamConfig. """
         # TODO codec and other parameters
         if device is None:
             if config.device_type == 'uvc':
                 device = VideoDeviceUVC(
-                    config.device_uid, config.resolution, config.fps,
-                    start=False)
+                    config.device_uid, config.resolution, config.fps)
             elif config.device_type == 'flir':
                 device = VideoDeviceFLIR(
-                    config.device_uid, config.resolution, config.fps,
-                    start=False)
+                    config.device_uid, config.resolution, config.fps)
             elif config.device_type == 't265':
-                # start=True because the realsense pipeline ("capture")
-                # can be started in this same thread
-                # TODO fix having to start all streams
                 device = RealSenseDeviceT265(
                     config.device_uid, config.resolution, config.fps,
-                    video='both', odometry=True, start=True)
+                    video=config.side)
             else:
                 raise ValueError(
                     'Unsupported device type: {}.'.format(config.device_type))
 
+        policy = 'overwrite' if overwrite else 'here'
+
         return VideoRecorder(
-            folder, device, name=config.name, policy='here')
+            folder, device, name=config.name, policy=policy)
 
     def start(self):
         """ Start the recorder. """

@@ -31,7 +31,7 @@ class VideoConfig(StreamConfig):
     """ Configuration for video streams. """
 
     def __init__(self, device_type, device_uid, resolution, fps,
-                 name=None, color_format='bgr24', **kwargs):
+                 name=None, color_format='bgr24', side='both', **kwargs):
         """ Constructor.
 
         Parameters
@@ -54,6 +54,10 @@ class VideoConfig(StreamConfig):
 
         color_format: str, default 'bgr24'
             The target color format. Set to 'gray' for eye cameras.
+
+        side: str, default 'both'
+            For stereo cameras, which side to record. Can be 'left', 'right'
+            or 'both'.
         """
         super(VideoConfig, self).__init__(
             device_type, device_uid, name, **kwargs)
@@ -61,6 +65,7 @@ class VideoConfig(StreamConfig):
         self.fps = fps
         self.resolution = resolution
         self.color_format = color_format
+        self.side = side
 
 
 class OdometryConfig(StreamConfig):
