@@ -58,6 +58,7 @@ class BaseVideoDevice(BaseDevice):
         frame : array_like
             The frame to display.
         """
+        #print('FLIR Frame: ', frame)
         cv2.imshow(self.uid, frame)
         return cv2.waitKey(1)
 
@@ -193,6 +194,9 @@ class VideoDeviceFLIR(BaseVideoDevice):
         """
         # TODO specify additional keyword arguments
         super(VideoDeviceFLIR, self).__init__(uid, resolution, fps, **kwargs)
+        self.flir_camera = None
+        self.flir_nodemap = None
+        self.flire_system = None
 
     @classmethod
     def print_device_info(cls, nodemap):
@@ -225,13 +229,15 @@ class VideoDeviceFLIR(BaseVideoDevice):
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
 
-    @classmethod
-    def _get_capture(cls, uid, resolution, fps, **kwargs):
+    #@classmethod    
+    def _get_capture(self, uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
         # TODO specify additional keyword arguments
         import PySpin
+        from datetime import datetime
 
         system = PySpin.System.GetInstance()
+        self.flire_system = system
 
         # Retrieve list of cameras from the system
         cam_list = system.GetCameras()
@@ -252,17 +258,19 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # TODO: Clean this up! There might be multiple Cameras?!!?
         capture = cam_list[0]
+        self.flir_camera = capture
         print('FLIR Camera : ', capture)
 
         # Retrieve TL device nodemap and print device information
         nodemap_tldevice = capture.GetTLDeviceNodeMap()
-        cls.print_device_info(nodemap_tldevice)
+        #cls.print_device_info(nodemap_tldevice)
 
         # Initialize camera
         capture.Init()
 
         # Retrieve GenICam nodemap
         nodemap = capture.GetNodeMap()
+        self.nodemap = nodemap
 
         # Set acquisition mode to continuous
         node_acquisition_mode = PySpin.CEnumerationPtr(
@@ -281,17 +289,21 @@ class VideoDeviceFLIR(BaseVideoDevice):
             raise ValueError(
                 'Unable to set acquisition mode to continuous (entry '
                 'retrieval).')
+        acquisition_mode_continuous = node_acquisition_mode_continuous.GetValue()
+
+        node_acquisition_mode.SetIntValue(acquisition_mode_continuous)
 
         #  Begin acquiring images
         capture.BeginAcquisition()
         print('Acquisition Started!')
-
+        
         return capture
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
         # TODO return grayscale frame if mode=='gray'
         import PySpin
+        from datetime import datetime
 
         try:
             #  Retrieve next received image
@@ -311,10 +323,14 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 #  Release image
                 image_result.Release()
 
-            timestamp = float(image_result.GetTimestamp()) / 1e9
+            # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
+            #timestamp = float(image_result.GetTimestamp()) / 1e9
+            # TODO: Temporary solution to fix the FLIR timestamp issue
+            now = datetime.now()
+            timestamp = float(datetime.timestamp(now)) / 1e9
 
         except PySpin.SpinnakerException as ex:
             # TODO check correct error handling
             raise ValueError(ex)
 
-        return frame, timestamp
+        return frame.GetNDArray(), timestamp
