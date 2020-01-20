@@ -88,6 +88,7 @@ class RealSenseDeviceT265(BaseDevice):
     def _get_odometry(cls, rs_frame):
         """ Get odometry data from realsense pose frame. """
         pose = rs_frame.as_pose_frame()
+        # TODO also get pupil timestamp
         t = rs_frame.get_timestamp() / 1e3
 
         c = pose.pose_data.tracker_confidence
@@ -110,6 +111,7 @@ class RealSenseDeviceT265(BaseDevice):
     def _get_video_frame(cls, rs_frame, side='both'):
         """ Extract video frame and timestamp from a RealSense frame. """
         frameset = rs_frame.as_frameset()
+        # TODO also get pupil timestamp
         t = frameset.get_timestamp() / 1e3
 
         if side == 'left':

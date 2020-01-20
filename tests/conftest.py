@@ -3,13 +3,22 @@ import shutil
 
 import pytest
 
-from pupil_recording_interface import DATA_DIR
+from pupil_recording_interface import TEST_RECORDING
+from pupil_recording_interface import VideoConfig, OdometryConfig
 
 
 @pytest.fixture()
 def folder():
     """"""
-    return os.path.join(DATA_DIR, 'test_recording')
+    return TEST_RECORDING
+
+
+@pytest.fixture()
+def output_folder():
+    """"""
+    output_folder = os.path.join(os.path.dirname(__file__), 'out')
+    yield output_folder
+    shutil.rmtree(output_folder, ignore_errors=True)
 
 
 @pytest.fixture()
@@ -35,3 +44,31 @@ def info():
         "start_time_system_s": 1570725800.220913,
         "system_info": "User: test_user, Platform: Linux"
     }
+
+
+@pytest.fixture()
+def uvc_config():
+    """"""
+    return [
+        VideoConfig(
+            'uvc', 'Pupil Cam1 ID2', name='world',
+            resolution=(1280, 720), fps=60),
+        VideoConfig(
+            'uvc', 'Pupil Cam1 ID0', name='eye0',
+            resolution=(320, 240), fps=120, color_format='gray'),
+        VideoConfig(
+            'uvc', 'Pupil Cam1 ID1', name='eye1',
+            resolution=(320, 240), fps=120, color_format='gray'),
+    ]
+
+
+@pytest.fixture()
+def t265_config():
+    """"""
+    return [
+        VideoConfig(
+            't265', 't265',
+            resolution=(1696, 800), fps=30, color_format='gray'),
+        OdometryConfig(
+            't265', 't265', name='odometry')
+    ]

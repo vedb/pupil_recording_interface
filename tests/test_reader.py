@@ -100,18 +100,19 @@ class TestBaseReader(object):
             '_FillValue': np.iinfo('int32').min
         }
 
-    def test_create_export_folder(self, export_folder):
+    def test_create_export_folder(self, output_folder):
         """"""
         BaseReader._create_export_folder(
-            os.path.join(export_folder, 'test.nc'))
+            os.path.join(output_folder, 'test.nc'))
 
-        assert os.path.exists(export_folder)
+        assert os.path.exists(output_folder)
 
-    def test_write_netcdf(self, folder, export_folder):
+    def test_write_netcdf(self, folder, output_folder):
         """"""
-        GazeReader(folder).write_netcdf()
+        filename = os.path.join(output_folder, 'gaze.nc')
+        GazeReader(folder).write_netcdf(filename)
 
-        ds = xr.open_dataset(os.path.join(export_folder, 'gaze.nc'))
+        ds = xr.open_dataset(filename)
 
         assert set(ds.data_vars) == {
             'gaze_confidence_3d', 'gaze_point', 'gaze_norm_pos'}
@@ -119,7 +120,7 @@ class TestBaseReader(object):
         ds.close()
 
 
-class TestFunctionalReader(object):
+class TestFunctionalInterface(object):
 
     def test_load_dataset(self, folder):
         """"""
@@ -132,7 +133,7 @@ class TestFunctionalReader(object):
             'tracker_confidence', 'linear_velocity', 'angular_velocity',
             'linear_position', 'angular_position'}
 
-    def test_write_netcdf(self, folder):
+    def test_write_netcdf(self, folder, export_folder):
         """"""
         write_netcdf(
             folder, gaze='recording', odometry='recording')
@@ -232,11 +233,12 @@ class TestGazeReader(object):
             GazeReader(
                 folder, source='not_gaze_mapper').load_dataset()
 
-    def test_write_netcdf(self, folder, export_folder):
+    def test_write_netcdf(self, folder, output_folder):
         """"""
-        GazeReader(folder).write_netcdf()
+        filename = os.path.join(output_folder, 'gaze.nc')
+        GazeReader(folder).write_netcdf(filename)
 
-        ds = xr.open_dataset(os.path.join(export_folder, 'gaze.nc'))
+        ds = xr.open_dataset(filename)
 
         assert set(ds.data_vars) == {
             'gaze_confidence_3d', 'gaze_point', 'gaze_norm_pos'}

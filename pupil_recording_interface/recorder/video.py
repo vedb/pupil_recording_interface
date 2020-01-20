@@ -18,7 +18,8 @@ class BaseVideoEncoder(object):
     """ Base class for encoder interfaces. """
 
     def __init__(self, folder, device_name, resolution, fps,
-                 color_format='bgr24', codec='libx264', overwrite=False):
+                 color_format='bgr24', codec='libx264', extension='mp4',
+                 overwrite=False):
         """ Constructor.
 
         Parameters
@@ -45,7 +46,8 @@ class BaseVideoEncoder(object):
         overwrite: bool, default False
             If True, overwrite existing video files with the same name.
         """
-        self.video_file = os.path.join(folder, '{}.mp4'.format(device_name))
+        self.video_file = os.path.join(
+            folder, '{}.{}'.format(device_name, extension))
         if os.path.exists(self.video_file):
             if overwrite:
                 os.remove(self.video_file)
@@ -137,6 +139,38 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         self.video_writer.stdin.write(img.tostring())
 
 
+class ImageEncoder(BaseVideoEncoder):
+    """ Encoder for single images. """
+
+    def __init__(self, *args, **kwargs):
+        """ Constructor. """
+        super(ImageEncoder, self).__init__(*args, extension='png', **kwargs)
+        self._counter = 0
+
+    def _init_video_writer(
+            cls, video_file, codec, color_format, fps, resolution):
+        """ Init the video writer. """
+
+    def write(self, img):
+        """ Write a frame to disk.
+
+        Parameters
+        ----------
+        img : array_like
+            The input frame.
+        """
+        # get image filename
+        folder = os.path.dirname(self.video_file)
+        image_file = os.path.split(self.video_file)[-1]
+        while os.path.exists(os.path.join(
+                folder, '{:03d}_{}'.format(self._counter, image_file))):
+            self._counter += 1
+        image_file = os.path.join(
+            folder, '{:03d}_{}'.format(self._counter, image_file))
+
+        cv2.imwrite(image_file, img)
+
+
 class VideoRecorder(BaseStreamRecorder):
     """ Recorder for a video stream. """
 
@@ -144,7 +178,7 @@ class VideoRecorder(BaseStreamRecorder):
 
     def __init__(self, folder, device, name=None, policy='new_folder',
                  color_format='bgr24', codec='libx264', show_video=False,
-                 **kwargs):
+                 encoder=None, **kwargs):
         """ Constructor.
 
         Parameters
@@ -175,19 +209,26 @@ class VideoRecorder(BaseStreamRecorder):
 
         show_video: bool, default False,
             If True, show the video stream in a window.
+
+        encoder: BaseVideoEncoder type, optional
+            The encoder class to use for encoding video frames. Can be
+            VideoEncoderFFMPEG, VideoEncoderOpenCV or ImageEncoder. Will use
+            VideoEncoderFFMPEG by default.
         """
         super(VideoRecorder, self).__init__(
             folder, device, name=name, policy=policy, **kwargs)
 
-        self.encoder = VideoEncoderFFMPEG(
+        encoder = encoder or VideoEncoderFFMPEG
+        self.encoder = encoder(
             self.folder, self.name, self.device.resolution,
-            self.device.fps, color_format, codec, self.overwrite)
+            self.device.fps, color_format, codec, overwrite=self.overwrite)
 
         self.color_format = color_format
         self.show_video = show_video
 
     @classmethod
-    def _from_config(cls, config, folder, device=None, overwrite=False):
+    def _from_config(
+            cls, config, folder, device=None, encoder=None, overwrite=False):
         """ Create a device from a StreamConfig. """
         # TODO codec and other parameters
         if device is None:
@@ -208,7 +249,7 @@ class VideoRecorder(BaseStreamRecorder):
         policy = 'overwrite' if overwrite else 'here'
 
         return VideoRecorder(
-            folder, device, name=config.name, policy=policy)
+            folder, device, name=config.name, policy=policy, encoder=encoder)
 
     def start(self):
         """ Start the recorder. """
@@ -223,16 +264,23 @@ class VideoRecorder(BaseStreamRecorder):
         else:
             frame, timestamp = self.device._get_frame_and_timestamp()
 
-        # show video if requested
+        # show video if requested and capture key strokes
+        # TODO move this to a dedicated method
         if self.show_video:
             # TODO set show_video to false when window is closed
-            self.device.show_frame(frame)
+            key = self.device.show_frame(frame)
+            if self.event_queue is not None and key > 0:
+                self.event_queue.put(key)
 
         return frame, timestamp
 
     def write(self, frame):
         """ Write data to disk. """
-        self.encoder.write(frame)
+        if self.recording_event is None or self.recording_event.is_set():
+            self.encoder.write(frame)
+            # TODO introduce constructor argument whether to clear the event?
+            if self.recording_event is not None:
+                self.recording_event.clear()
 
     def stop(self):
         """ Stop the recorder. """

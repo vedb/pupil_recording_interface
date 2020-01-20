@@ -60,7 +60,7 @@ class BaseStreamRecorder(BaseRecorder):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, folder, device, name=None, policy='new_folder',
-                 **kwargs):
+                 recording_event=None, event_queue=None, **kwargs):
         """ Constructor.
 
         Parameters
@@ -83,11 +83,16 @@ class BaseStreamRecorder(BaseRecorder):
             'overwrite', the data will be recorded to the specified folder
             and existing files will possibly be overwritten.
         """
+        # TODO save_timestamps=True
         super(BaseStreamRecorder, self).__init__(folder, policy)
         self.name = name or device.uid
 
         self.device = device
         self.overwrite = policy == 'overwrite'
+
+        # multi-threading stuff
+        self.recording_event = recording_event
+        self.event_queue = event_queue
 
         self._timestamps = []
         self._last_timestamp = 0.
@@ -95,20 +100,23 @@ class BaseStreamRecorder(BaseRecorder):
 
     @classmethod
     @abc.abstractmethod
-    def _from_config(cls, config, folder, device=None, overwrite=False):
+    def _from_config(
+            cls, config, folder, device=None, overwrite=False, **kwargs):
         """ Per-class implementation of from_config. """
 
     @classmethod
-    def from_config(cls, config, folder, device=None, overwrite=False):
+    def from_config(
+            cls, config, folder, device=None, encoder=None, overwrite=False):
         """ Create a recorder from a StreamConfig. """
         if isinstance(config, VideoConfig):
             from .video import VideoRecorder
             return VideoRecorder._from_config(
-                config, folder, device, overwrite)
+                config, folder, device=device, overwrite=overwrite,
+                encoder=encoder)
         elif isinstance(config, OdometryConfig):
             from .odometry import OdometryRecorder
             return OdometryRecorder._from_config(
-                config, folder, device, overwrite)
+                config, folder, device=device, overwrite=overwrite)
         else:
             raise TypeError('Unsupported config type: {}'.format(type(config)))
 
@@ -120,7 +128,7 @@ class BaseStreamRecorder(BaseRecorder):
         else:
             return np.nanmean(self._fps_buffer)
 
-    def _process_timestamp(self, timestamp, fps_queue=None):
+    def process_timestamp(self, timestamp, fps_queue=None):
         """ Process a new timestamp. """
         if timestamp != self._last_timestamp:
             fps = 1. / (timestamp - self._last_timestamp)
@@ -188,7 +196,7 @@ class BaseStreamRecorder(BaseRecorder):
                 # TODO ideally append directly to self._timestamps, but that
                 #  blocks the thread for too long for sample rates >= 120 Hz,
                 #  maybe check out how pupil does it
-                self._process_timestamp(timestamp, fps_queue)
+                self.process_timestamp(timestamp, fps_queue)
                 timestamps.append(timestamp)
 
             except KeyboardInterrupt:

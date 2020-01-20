@@ -5,13 +5,14 @@ import multiprocessing as mp
 import time
 
 from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
+from pupil_recording_interface.recorder.video import VideoEncoderFFMPEG
 
 
 class MultiStreamRecorder(BaseRecorder):
     """ Recorder for multiple streams. """
 
-    def __init__(self, folder, configs, policy='new_folder', quiet=False,
-                 show_video=False):
+    def __init__(self, folder, configs, policy='new_folder',
+                 encoder=VideoEncoderFFMPEG, quiet=False, show_video=False):
         """ Constructor.
 
         Parameters
@@ -30,6 +31,10 @@ class MultiStreamRecorder(BaseRecorder):
             'overwrite', the data will be recorded to the specified folder
             and existing files will possibly be overwritten.
 
+        encoder: BaseVideoEncoder type, default VideoEncoderFFMPEG
+            The encoder class to use for encoding video frames. Can be
+            VideoEncoderFFMPEG, VideoEncoderOpenCV or ImageEncoder.
+
         quiet: bool, default False
             If True, do not print infos to stdout.
 
@@ -39,14 +44,14 @@ class MultiStreamRecorder(BaseRecorder):
         super(MultiStreamRecorder, self).__init__(folder, policy=policy)
 
         self.recorders = self._init_recorders(
-            self.folder, configs, show_video, policy == 'overwrite')
+            self.folder, configs, encoder, show_video, policy == 'overwrite')
         self.quiet = quiet
 
         self._stdout_delay = 3.  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
 
     @classmethod
-    def _init_recorders(cls, folder, configs, show_video, overwrite):
+    def _init_recorders(cls, folder, configs, encoder, show_video, overwrite):
         """ Init recorder instances for all configs. """
         uids = {c.device_uid for c in configs}
         configs_by_uid = {
@@ -67,7 +72,8 @@ class MultiStreamRecorder(BaseRecorder):
             for config in config_list:
                 # if the device for the UID has already been created, use that
                 recorder = BaseStreamRecorder.from_config(
-                    config, folder, devices_by_uid[uid], overwrite)
+                    config, folder, device=devices_by_uid[uid],
+                    overwrite=overwrite, encoder=encoder)
                 devices_by_uid[uid] = devices_by_uid[uid] or recorder.device
                 recorder.show_video = show_video
                 recorders[config.name] = recorder
@@ -75,18 +81,37 @@ class MultiStreamRecorder(BaseRecorder):
         return recorders
 
     @classmethod
-    def _init_processes(cls, recorders, max_queue_size):
+    def _init_processes(
+            cls, recorders, max_queue_size, set_recording_event=False):
         """ Create one process for each recorder instance. """
+        # event for stopping processes
         stop_event = mp.Event()
-        queues = {
-            c_name: mp.Queue(maxsize=max_queue_size)
-            for c_name in recorders.keys()}
-        processes = {
-            c_name:
-                mp.Process(target=c.run_in_thread, args=(stop_event, queues[c_name]))
-            for c_name, c in recorders.items()}
 
-        return processes, queues, stop_event
+        # queue for receiving events from processes
+        event_queue = mp.Queue()
+        for r in recorders.values():
+            r.event_queue = event_queue
+
+        # queues for process fps
+        fps_queues = {r_name: mp.Queue(maxsize=max_queue_size)
+                      for r_name in recorders.keys()}
+
+        # processes
+        processes = {
+            r_name:
+                mp.Process(target=r.run_in_thread,
+                           args=(stop_event, fps_queues[r_name]))
+            for r_name, r in recorders.items()}
+
+        if set_recording_event:
+            recording_events = {}
+            for r_name, r in recorders.items():
+                r.recording_event = mp.Event()
+                recording_events[r_name] = r.recording_event
+            return processes, event_queue, fps_queues, stop_event, \
+                recording_events
+        else:
+            return processes, event_queue, fps_queues, stop_event
 
     @classmethod
     def _start_processes(cls, processes):
@@ -111,7 +136,7 @@ class MultiStreamRecorder(BaseRecorder):
             recorder.run_pre_thread_hooks()
 
         # dispatch recording threads
-        processes, queues, stop_event = self._init_processes(
+        processes, event_queue, fps_queues, stop_event = self._init_processes(
             self.recorders, self._max_queue_size)
         self._start_processes(processes)
 
@@ -122,9 +147,9 @@ class MultiStreamRecorder(BaseRecorder):
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
                 for recorder_name, recorder in self.recorders.items():
-                    while not queues[recorder_name].empty():
+                    while not fps_queues[recorder_name].empty():
                         recorder._fps_buffer.append(
-                            queues[recorder_name].get())
+                            fps_queues[recorder_name].get())
 
                 # display fps after self._stdout_delay seconds
                 if not self.quiet \

@@ -58,6 +58,7 @@ class BaseVideoDevice(BaseDevice):
         frame : array_like
             The frame to display.
         """
+        # TODO move this to BaseVideoRecorder?
         cv2.imshow(self.uid, frame)
         return cv2.waitKey(1)
 

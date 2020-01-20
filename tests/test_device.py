@@ -1,6 +1,3 @@
-import pytest
-
-from pupil_recording_interface.device.video import BaseVideoDevice
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 
 
@@ -12,20 +9,9 @@ class TestBaseVideoDevice(object):
 
 class TestRealSenseDeviceT265(object):
 
-    def test_from_config_list(self):
+    def test_from_config_list(self, t265_config):
         """"""
-        from pupil_recording_interface.config import \
-            VideoConfig, OdometryConfig
-
-        config_list = [
-            VideoConfig(
-                't265', 't265',
-                resolution=(1696, 800), fps=30, color_format='gray'),
-            OdometryConfig(
-                't265', 't265', name='odometry')
-        ]
-
-        device = RealSenseDeviceT265.from_config_list(config_list)
+        device = RealSenseDeviceT265.from_config_list(t265_config)
 
         assert isinstance(device, RealSenseDeviceT265)
         assert device.resolution == (1696, 800)
