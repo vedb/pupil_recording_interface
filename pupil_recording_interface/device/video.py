@@ -237,8 +237,8 @@ class VideoDeviceFLIR(BaseVideoDevice):
         return statistics.median(timestamp_offsets)
 
 
-    @classmethod
-    def print_device_info(cls, nodemap):
+    #@classmethod
+    def print_device_info(self, nodemap):
         """
         This function prints the device information of the camera from the
         transport layer; please see NodeMapInfo example for more in-depth
