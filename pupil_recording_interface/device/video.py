@@ -5,7 +5,10 @@ import cv2
 # TODO import uvc here
 
 from pupil_recording_interface.device import BaseDevice
-
+import PySpin
+from datetime import datetime
+import time
+import statistics
 
 class BaseVideoDevice(BaseDevice):
     """ Base class for all video devices. """
@@ -36,6 +39,9 @@ class BaseVideoDevice(BaseDevice):
 
         self.capture = None
         self.capture_kwargs = kwargs
+
+        self.previous_timestamp = 0
+        self.current_timestamp = 0
 
     @property
     def is_started(self):
@@ -131,10 +137,20 @@ class VideoDeviceUVC(BaseVideoDevice):
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
+        self.previous_timestamp = self.current_timestamp
+        self.current_timestamp = time.time()
+
+        start = time.time()
         if mode not in ('img', 'bgr', 'gray', 'jpeg_buffer'):
             raise ValueError('Unsupported mode: {}'.format(mode))
-
+       
         uvc_frame = self.capture.get_frame()
+
+        end = time.time()
+        #print('T = ', end - start)
+        print( ' (UVC)=> call_back: {:.3f} capture_time: {:.3f}'.format(\
+            1/(self.current_timestamp - self.previous_timestamp),\
+            1/(end - self.current_timestamp)))
 
         return getattr(uvc_frame, mode), uvc_frame.timestamp
 
@@ -172,7 +188,6 @@ class VideoDeviceUVC(BaseVideoDevice):
 
 class VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
-
     def __init__(self, uid, resolution, fps, **kwargs):
         """ Constructor.
 
@@ -197,6 +212,30 @@ class VideoDeviceFLIR(BaseVideoDevice):
         self.flir_camera = None
         self.flir_nodemap = None
         self.flire_system = None
+        self.timestamp_offsets = 0
+
+    def _compute_timestamp_offset(self, cam, number_of_iterations):
+        """ Gets timestamp offset in seconds from input camera """
+
+        # This method is required because the timestamp stored in the camera is relative to when it was powered on, so an
+        # offset needs to be applied to get it into epoch time; from tests I've done, this appears to be accurate to ~1e-3
+        # seconds.
+        print("Measuring TimeStamp Offset ...")
+        timestamp_offsets = []
+        for i in range(number_of_iterations):
+            # Latch timestamp. This basically "freezes" the current camera timer into a variable that can be read with
+            # TimestampLatchValue()
+            cam.TimestampLatch.Execute()
+
+            # Compute timestamp offset in seconds; note that timestamp latch value is in nanoseconds
+            timestamp_offset = datetime.now().timestamp() - cam.TimestampLatchValue.GetValue()/1e9
+
+            # Append
+            timestamp_offsets.append(timestamp_offset)
+
+        # Return the median value
+        return statistics.median(timestamp_offsets)
+
 
     @classmethod
     def print_device_info(cls, nodemap):
@@ -263,7 +302,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # Retrieve TL device nodemap and print device information
         nodemap_tldevice = capture.GetTLDeviceNodeMap()
-        #cls.print_device_info(nodemap_tldevice)
+        self.print_device_info(nodemap_tldevice)
 
         # Initialize camera
         capture.Init()
@@ -283,7 +322,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # Retrieve entry node from enumeration node
         node_acquisition_mode_continuous = \
-            node_acquisition_mode.GetEntryByName('Continuous')
+            node_acquisition_mode.GetEntryByName('Continuous')#'SingleFrame'
         if not PySpin.IsAvailable(node_acquisition_mode_continuous) \
                 or not PySpin.IsReadable(node_acquisition_mode_continuous):
             raise ValueError(
@@ -293,32 +332,68 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         node_acquisition_mode.SetIntValue(acquisition_mode_continuous)
 
+
+        '''
+        # Set acquisition buffer handling mode to newest first
+        node_buffer_acquisition_mode = PySpin.CEnumerationPtr(
+            nodemap_tldevice('StreamBufferHandlingMode'))#TLStream.StreamBufferHandlingMode
+        if not PySpin.IsAvailable(node_buffer_acquisition_mode) \
+                or not PySpin.IsWritable(node_buffer_acquisition_mode):
+            raise ValueError(
+                'Unable to set acquisition buffer handling mode to newest first (enum '
+                'retrieval).')
+
+        # Retrieve entry node from enumeration node
+        node_buffer_acquisition_mode_newest = \
+            node_buffer_acquisition_mode.GetEntryByName('NewestFirst')#'SingleFrame'
+        if not PySpin.IsAvailable(node_acquisition_mode_continuous) \
+                or not PySpin.IsReadable(node_buffer_acquisition_mode_newest):
+            raise ValueError(
+                'Unable to set acquisition buffer handling mode to newest first (entry '
+                'retrieval).')
+        node_buffer_acquisition_mode_newest = node_buffer_acquisition_mode_newest.GetValue()
+
+        node_buffer_acquisition_mode.SetIntValue(node_buffer_acquisition_mode_newest)
+
+        #multi_pyspin.node_cmd(serial, 'TLStream.StreamBufferHandlingMode', 'SetValue', 'RW', 'PySpin.StreamBufferHandlingMode_OldestFirst')
+        '''
+
+        self.timestamp_offset = self._compute_timestamp_offset(capture, 20)
+        print("\nTimeStamp Offset = ", self.timestamp_offset/1e9)
+
         #  Begin acquiring images
         capture.BeginAcquisition()
-        print('Acquisition Started!')
-        
+        #print('Acquisition Started!')
+
         return capture
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
         # TODO return grayscale frame if mode=='gray'
-        import PySpin
-        from datetime import datetime
+        #import PySpin
+        #from datetime import datetime
+        self.previous_timestamp = self.current_timestamp
+        self.current_timestamp = time.time()
+        #  Begin acquiring images
+        #self.capture.BeginAcquisition()
 
+        
         try:
             #  Retrieve next received image
             image_result = self.capture.GetNextImage()
+            self.capture.TimestampLatch.Execute()
 
             #  Ensure image completion
             if image_result.IsIncomplete():
                 # TODO check if this is a valid way of handling an
                 #  incomplete image
+                print('Image Incomplete!')
                 return self._get_frame_and_timestamp(mode)
 
             else:
                 # TODO convert to correct color format
                 frame = image_result.Convert(
-                    PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR)
+                    PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
 
                 #  Release image
                 image_result.Release()
@@ -326,11 +401,18 @@ class VideoDeviceFLIR(BaseVideoDevice):
             # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
             #timestamp = float(image_result.GetTimestamp()) / 1e9
             # TODO: Temporary solution to fix the FLIR timestamp issue
-            now = datetime.now()
-            timestamp = float(datetime.timestamp(now)) / 1e9
+            
+            timestamp = self.timestamp_offset + self.capture.TimestampLatchValue.GetValue()/1e9
+            #now = datetime.now()
+            #timestamp = float(datetime.timestamp(now)) / 1e9
 
         except PySpin.SpinnakerException as ex:
             # TODO check correct error handling
             raise ValueError(ex)
-
+        #self.capture.EndAcquisition()
+        end = time.time()
+        #print('T = ', end - start)
+        print(' (FLIR)=> call_back: {:.3f} capture_time: {:.3f}'.format(\
+            1/(self.current_timestamp - self.previous_timestamp),\
+            1/(end - self.current_timestamp)))
         return frame.GetNDArray(), timestamp

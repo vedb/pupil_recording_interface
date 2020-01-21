@@ -7,20 +7,20 @@ if __name__ == '__main__':
     folder = '~/recordings/flir_test'
 
     # string that uniquely identifies the FLIR camera
-    flir_uid = 'FLIR ID_None'
+    flir_uid = 'FLIR_19238305'
     #flir_uid = 'CHANGEME'
 
     # camera configurations
     configs = [
         VideoConfig(
             'flir', flir_uid, name='world',
-            resolution=(2048, 1536), fps=30),
+            resolution=(2048, 1536), fps=60),
         VideoConfig(
             'uvc', 'Pupil Cam2 ID0', name='eye0',
-            resolution=(400, 400), fps=30, color_format='gray'),
+            resolution=(400, 400), fps=120, color_format='gray'),
         VideoConfig(
             'uvc', 'Pupil Cam2 ID1', name='eye1',
-            resolution=(400, 400), fps=30, color_format='gray'),
+            resolution=(400, 400), fps=120, color_format='gray'),
     ]
 
     # change this to False for multi-threaded recording
