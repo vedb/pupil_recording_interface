@@ -28,6 +28,8 @@ class BaseRecorder(object):
             and existing files will possibly be overwritten.
         """
         self.folder = self._init_folder(folder, policy)
+        self.all_devices_initialized = False
+
 
     @classmethod
     def _init_folder(cls, folder, policy):

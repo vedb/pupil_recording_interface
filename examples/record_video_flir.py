@@ -14,11 +14,11 @@ if __name__ == '__main__':
     configs = [
         VideoConfig(
             'flir', flir_uid, name='world',
-            resolution=(2048, 1536), fps=60),
+            resolution=(2048, 1536), fps=50),
         VideoConfig(
             'uvc', 'Pupil Cam2 ID0', name='eye0',
             resolution=(400, 400), fps=120, color_format='gray'),
-        VideoConfig(
+         VideoConfig(
             'uvc', 'Pupil Cam2 ID1', name='eye1',
             resolution=(400, 400), fps=120, color_format='gray'),
     ]
@@ -32,5 +32,7 @@ if __name__ == '__main__':
         recorder.show_video = True
     else:
         recorder = MultiStreamRecorder(folder, configs, show_video=True)
+    while recorder.all_devices_initialized is False:
+        pass
 
     recorder.run()

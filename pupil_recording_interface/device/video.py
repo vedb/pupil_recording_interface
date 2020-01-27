@@ -300,18 +300,38 @@ class VideoDeviceFLIR(BaseVideoDevice):
         self.flir_camera = capture
         print('FLIR Camera : ', capture)
 
-        # Retrieve TL device nodemap and print device information
-        nodemap_tldevice = capture.GetTLDeviceNodeMap()
-        self.print_device_info(nodemap_tldevice)
-
         # Initialize camera
         capture.Init()
+
+        # Retrieve TL device nodemap and print device information
+        nodemap_tldevice = capture.GetTLDeviceNodeMap()
+        nodemap_tlstream = capture.GetTLStreamNodeMap()
+        self.print_device_info(nodemap_tldevice)
+
+        capture.TriggerMode.SetValue(PySpin.TriggerMode_Off)
+        capture.AcquisitionFrameRateEnable.SetValue(True)
+        capture.AcquisitionFrameRate.SetValue(self.fps)
+        print('Set FLIR fps to:', self.fps)
+
+
 
         # Retrieve GenICam nodemap
         nodemap = capture.GetNodeMap()
         self.nodemap = nodemap
 
+        StreamBufferHandlingMode = PySpin.CEnumerationPtr(
+            nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
+        StreamBufferHandlingMode_Entry = StreamBufferHandlingMode.GetEntryByName(
+            'NewestOnly')
+        StreamBufferHandlingMode.SetIntValue(StreamBufferHandlingMode_Entry.GetValue())
+        print('Set FLIR buffer handling to: NewestOnly: ', StreamBufferHandlingMode_Entry.GetValue())
+
+        print('Actual Frame Rate = ', capture.AcquisitionResultingFrameRate.GetValue())
+
+        #multi_pyspin.node_cmd(serial, 'TLStream.StreamBufferHandlingMode', 'SetValue', 'RW', 'PySpin.StreamBufferHandlingMode_OldestFirst')
+        
         # Set acquisition mode to continuous
+        '''
         node_acquisition_mode = PySpin.CEnumerationPtr(
             nodemap.GetNode('AcquisitionMode'))
         if not PySpin.IsAvailable(node_acquisition_mode) \
@@ -331,31 +351,6 @@ class VideoDeviceFLIR(BaseVideoDevice):
         acquisition_mode_continuous = node_acquisition_mode_continuous.GetValue()
 
         node_acquisition_mode.SetIntValue(acquisition_mode_continuous)
-
-
-        '''
-        # Set acquisition buffer handling mode to newest first
-        node_buffer_acquisition_mode = PySpin.CEnumerationPtr(
-            nodemap_tldevice('StreamBufferHandlingMode'))#TLStream.StreamBufferHandlingMode
-        if not PySpin.IsAvailable(node_buffer_acquisition_mode) \
-                or not PySpin.IsWritable(node_buffer_acquisition_mode):
-            raise ValueError(
-                'Unable to set acquisition buffer handling mode to newest first (enum '
-                'retrieval).')
-
-        # Retrieve entry node from enumeration node
-        node_buffer_acquisition_mode_newest = \
-            node_buffer_acquisition_mode.GetEntryByName('NewestFirst')#'SingleFrame'
-        if not PySpin.IsAvailable(node_acquisition_mode_continuous) \
-                or not PySpin.IsReadable(node_buffer_acquisition_mode_newest):
-            raise ValueError(
-                'Unable to set acquisition buffer handling mode to newest first (entry '
-                'retrieval).')
-        node_buffer_acquisition_mode_newest = node_buffer_acquisition_mode_newest.GetValue()
-
-        node_buffer_acquisition_mode.SetIntValue(node_buffer_acquisition_mode_newest)
-
-        #multi_pyspin.node_cmd(serial, 'TLStream.StreamBufferHandlingMode', 'SetValue', 'RW', 'PySpin.StreamBufferHandlingMode_OldestFirst')
         '''
 
         self.timestamp_offset = self._compute_timestamp_offset(capture, 20)
@@ -412,7 +407,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         #self.capture.EndAcquisition()
         end = time.time()
         #print('T = ', end - start)
-        print(' (FLIR)=> call_back: {:.3f} capture_time: {:.3f}'.format(\
+        print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
             1/(self.current_timestamp - self.previous_timestamp),\
-            1/(end - self.current_timestamp)))
+            1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
         return frame.GetNDArray(), timestamp

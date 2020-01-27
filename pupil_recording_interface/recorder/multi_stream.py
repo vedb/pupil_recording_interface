@@ -44,6 +44,8 @@ class MultiStreamRecorder(BaseRecorder):
 
         self._stdout_delay = 3.  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
+        self.all_devices_initialized = True
+
 
     @classmethod
     def _init_recorders(cls, folder, configs, show_video, overwrite):
@@ -117,7 +119,8 @@ class MultiStreamRecorder(BaseRecorder):
 
         start_time = time.time()
 
-        while True:
+        i = 0
+        while (i<20000):
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
@@ -133,9 +136,12 @@ class MultiStreamRecorder(BaseRecorder):
                         '{}: {:.2f} Hz'.format(c_name, c.current_fps)
                         for c_name, c in self.recorders.items())
                     print('\rSampling rates: ' + f_strs, end='')
+                    i = i + 1
 
             except KeyboardInterrupt:
+                print('KeyboardInterrupt!!')
                 break
+        print('Done Recording!', i)
 
         # stop recording threads
         self._stop_processes(processes, stop_event)
