@@ -119,8 +119,8 @@ class MultiStreamRecorder(BaseRecorder):
 
         start_time = time.time()
 
-        i = 0
-        while (i<20000):
+        now = time.time()
+        while (time.time() - now < 30):
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
@@ -136,12 +136,11 @@ class MultiStreamRecorder(BaseRecorder):
                         '{}: {:.2f} Hz'.format(c_name, c.current_fps)
                         for c_name, c in self.recorders.items())
                     print('\rSampling rates: ' + f_strs, end='')
-                    i = i + 1
 
             except KeyboardInterrupt:
                 print('KeyboardInterrupt!!')
                 break
-        print('Done Recording!', i)
+        print('\nDone Recording!', time.time() - now)
 
         # stop recording threads
         self._stop_processes(processes, stop_event)

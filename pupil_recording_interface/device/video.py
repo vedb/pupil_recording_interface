@@ -148,9 +148,9 @@ class VideoDeviceUVC(BaseVideoDevice):
 
         end = time.time()
         #print('T = ', end - start)
-        print( ' (UVC)=> call_back: {:.3f} capture_time: {:.3f}'.format(\
-            1/(self.current_timestamp - self.previous_timestamp),\
-            1/(end - self.current_timestamp)))
+        # print( ' (UVC)=> call_back: {:.3f} capture_time: {:.3f}'.format(\
+        #    1/(self.current_timestamp - self.previous_timestamp),\
+        #    1/(end - self.current_timestamp)))
 
         return getattr(uvc_frame, mode), uvc_frame.timestamp
 
@@ -186,7 +186,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         return self.capture.get_frame()
 
 
-class VideoDeviceFLIR(BaseVideoDevice):
+class  VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
     def __init__(self, uid, resolution, fps, **kwargs):
         """ Constructor.
@@ -407,7 +407,8 @@ class VideoDeviceFLIR(BaseVideoDevice):
         #self.capture.EndAcquisition()
         end = time.time()
         #print('T = ', end - start)
-        print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
-            1/(self.current_timestamp - self.previous_timestamp),\
-            1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
+
+        # print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
+        #     1/(self.current_timestamp - self.previous_timestamp),\
+        #     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
         return frame.GetNDArray(), timestamp

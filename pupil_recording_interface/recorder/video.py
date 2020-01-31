@@ -18,7 +18,7 @@ class BaseVideoEncoder(object):
     """ Base class for encoder interfaces. """
 
     def __init__(self, folder, device_name, resolution, fps,
-                 color_format='bgr24', codec='libx264', overwrite=False):
+                 color_format='bgr24', codec='libx264', overwrite=False, preset = 'ultrafast', crf = '0'):
         """ Constructor.
 
         Parameters
@@ -45,6 +45,7 @@ class BaseVideoEncoder(object):
         overwrite: bool, default False
             If True, overwrite existing video files with the same name.
         """
+        #print('Base Codec: ', codec)
         self.video_file = os.path.join(folder, '{}.mp4'.format(device_name))
         if os.path.exists(self.video_file):
             if overwrite:
@@ -135,16 +136,17 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
 
     @classmethod
     def _init_video_writer(
-            cls, video_file, codec, color_format, fps, resolution):
+            cls, video_file, codec, color_format, fps, resolution, preset = 'ultrafast', crf = '0'):
         """ Init the video writer. """
         cmd = cls._get_ffmpeg_cmd(
-            video_file, resolution[::-1], fps, codec, color_format)
+            video_file, resolution[::-1], fps, codec, color_format, preset, crf)
+        #print('FFMPEG_cmd:', cmd)
 
         return subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
     @classmethod
     def _get_ffmpeg_cmd(
-            cls, filename, frame_shape, fps, codec, color_format):
+            cls, filename, frame_shape, fps, codec, color_format, preset, crf):
         """ Get the FFMPEG command to start the sub-process. """
         size = '{}x{}'.format(frame_shape[1], frame_shape[0])
         return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
@@ -155,6 +157,8 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                 '-s', size,  # resolution
                 '-pix_fmt', color_format,  # color format
                 '-i', 'pipe:',  # piped to stdin
+                '-preset', preset,
+                '-crf', crf,
                 # -- Output -- #
                 '-c:v', codec,  # video codec
                 # '-tune', 'film',  # codec tuning
@@ -192,7 +196,7 @@ class VideoRecorder(BaseStreamRecorder):
         name: str, optional
             The name of the recorder. If not specified, `device.uid` will be
             used.
-
+ 
         policy: str, default 'new_folder'
             Policy for recording folder creation. If 'new_folder',
             new sub-folders will be created with incremental numbering. If
@@ -212,6 +216,8 @@ class VideoRecorder(BaseStreamRecorder):
         """
         super(VideoRecorder, self).__init__(
             folder, device, name=name, policy=policy, **kwargs)
+
+        #print('Codec: ', codec)
 
         self.encoder = VideoEncoderFFMPEG(
             self.folder, self.name, self.device.resolution,

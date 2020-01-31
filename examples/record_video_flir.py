@@ -1,6 +1,6 @@
 from pupil_recording_interface import \
     VideoConfig, VideoRecorder, MultiStreamRecorder
-
+from pupil_recording_interface.config import OdometryConfig
 if __name__ == '__main__':
 
     # recording folder
@@ -10,17 +10,23 @@ if __name__ == '__main__':
     flir_uid = 'FLIR_19238305'
     #flir_uid = 'CHANGEME'
 
+    codec = 'libx265'
     # camera configurations
     configs = [
         VideoConfig(
-            'flir', flir_uid, name='world',
-            resolution=(2048, 1536), fps=50),
+            'flir', flir_uid, name='world', codec = codec,
+            resolution=(2048, 1536), fps=50), #(1024, 768)
         VideoConfig(
-            'uvc', 'Pupil Cam2 ID0', name='eye0',
+            'uvc', 'Pupil Cam2 ID0', name='eye0', codec = codec,
             resolution=(400, 400), fps=120, color_format='gray'),
          VideoConfig(
-            'uvc', 'Pupil Cam2 ID1', name='eye1',
+            'uvc', 'Pupil Cam2 ID1', name='eye1', codec = codec,
             resolution=(400, 400), fps=120, color_format='gray'),
+        VideoConfig(
+            't265', 't265',
+            resolution=(1696, 800), fps=30, color_format='gray'),
+        OdometryConfig(
+            't265', 't265', name='odometry'),
     ]
 
     # change this to False for multi-threaded recording
@@ -31,8 +37,8 @@ if __name__ == '__main__':
             configs[0], folder, overwrite=True)
         recorder.show_video = True
     else:
-        recorder = MultiStreamRecorder(folder, configs, show_video=True)
-    while recorder.all_devices_initialized is False:
-        pass
+        recorder = MultiStreamRecorder(folder, configs, show_video=False)
+    #while recorder.all_devices_initialized is False:
+    #    pass
 
     recorder.run()
