@@ -214,7 +214,7 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         self.flire_system = None
         self.timestamp_offsets = 0
 
-    def _compute_timestamp_offset(self, cam, number_of_iterations):
+    def _compute_timestamp_offset(self, cam, number_of_iterations, camera_type):
         """ Gets timestamp offset in seconds from input camera """
 
         # This method is required because the timestamp stored in the camera is relative to when it was powered on, so an
@@ -228,7 +228,14 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             cam.TimestampLatch.Execute()
 
             # Compute timestamp offset in seconds; note that timestamp latch value is in nanoseconds
-            timestamp_offset = datetime.now().timestamp() - cam.TimestampLatchValue.GetValue()/1e9
+            
+            if(camera_type == 'BlackFly'):
+                timestamp_offset = datetime.now().timestamp() - cam.TimestampLatchValue.GetValue()/1e9
+            elif(camera_type == 'Chameleon'):
+                timestamp_offset = datetime.now().timestamp() - cam.Timestamp.GetValue()/1e9
+            else:
+                print('\n\nInvalid Camera Type!!\n\n')
+                return 0
 
             # Append
             timestamp_offsets.append(timestamp_offset)
@@ -309,15 +316,48 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         self.print_device_info(nodemap_tldevice)
 
         capture.TriggerMode.SetValue(PySpin.TriggerMode_Off)
-        capture.AcquisitionFrameRateEnable.SetValue(True)
-        capture.AcquisitionFrameRate.SetValue(self.fps)
-        print('Set FLIR fps to:', self.fps)
-
-
-
+        
+        
         # Retrieve GenICam nodemap
         nodemap = capture.GetNodeMap()
         self.nodemap = nodemap
+
+        device_model = PySpin.CStringPtr(nodemap.GetNode("DeviceModelName")).GetValue()
+        
+        if ('Chameleon' in device_model):
+            self.camera_type = 'Chameleon'
+        elif('Blackfly' in device_model):
+            self.camera_type = 'BlackFly'
+        else:
+            self.camera_type = device_model
+            print('\n\nInvalid Camera Type during initit_1!!\n\n')
+
+        print('FLIR Camera Type = ', self.camera_type)
+        #Todo: Read device type from camera
+        #self.camera_type = 'Chameleon'
+        if(self.camera_type == 'Chameleon'):
+            print("Initializing Chameleon ...")
+            node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(nodemap.GetNode("AcquisitionFrameRateAuto"))
+            node_AcquisitionFrameRateAuto_off = node_AcquisitionFrameRateAuto.GetEntryByName("Off")
+            node_AcquisitionFrameRateAuto.SetIntValue(node_AcquisitionFrameRateAuto_off.GetValue())
+
+
+            node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnabled"))
+            node_AcquisitionFrameRateEnable_bool.SetValue(True) 
+
+            node_AcquisitionFrameRate = PySpin.CFloatPtr(nodemap.GetNode("AcquisitionFrameRate"))
+            node_AcquisitionFrameRate.SetValue(self.fps)
+        elif(self.camera_type == 'BlackFly'):
+            print("Initializing BlackFly ...")
+            #node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnable"))
+            #node_AcquisitionFrameRateEnable_bool.SetValue(True) 
+            capture.AcquisitionFrameRateEnable.SetValue(True)
+            capture.AcquisitionFrameRate.SetValue(self.fps)
+        else:
+            print('\n\nInvalid Camera Type during initit_2!!\n\n')
+
+        print('Set FLIR fps to:', self.fps)
+
 
         StreamBufferHandlingMode = PySpin.CEnumerationPtr(
             nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
@@ -326,7 +366,10 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         StreamBufferHandlingMode.SetIntValue(StreamBufferHandlingMode_Entry.GetValue())
         print('Set FLIR buffer handling to: NewestOnly: ', StreamBufferHandlingMode_Entry.GetValue())
 
-        print('Actual Frame Rate = ', capture.AcquisitionResultingFrameRate.GetValue())
+        # TODO: Find an equivalent way of reading the actual frame rate for Chameleon
+        # Chameleon doesn't have this register or anything similar to this
+        if (self.camera_type == 'BlackFly'):
+            print('Actual Frame Rate = ', capture.AcquisitionResultingFrameRate.GetValue())
 
         #multi_pyspin.node_cmd(serial, 'TLStream.StreamBufferHandlingMode', 'SetValue', 'RW', 'PySpin.StreamBufferHandlingMode_OldestFirst')
         
@@ -353,12 +396,12 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         node_acquisition_mode.SetIntValue(acquisition_mode_continuous)
         '''
 
-        self.timestamp_offset = self._compute_timestamp_offset(capture, 20)
+        self.timestamp_offset = self._compute_timestamp_offset(capture, 20, self.camera_type)
         print("\nTimeStamp Offset = ", self.timestamp_offset/1e9)
 
         #  Begin acquiring images
         capture.BeginAcquisition()
-        #print('Acquisition Started!')
+        print('Acquisition Started!')
 
         return capture
 
@@ -382,7 +425,7 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             if image_result.IsIncomplete():
                 # TODO check if this is a valid way of handling an
                 #  incomplete image
-                print('Image Incomplete!')
+                print('\n\nImage Incomplete!')
                 return self._get_frame_and_timestamp(mode)
 
             else:
@@ -396,8 +439,12 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
             #timestamp = float(image_result.GetTimestamp()) / 1e9
             # TODO: Temporary solution to fix the FLIR timestamp issue
-            
-            timestamp = self.timestamp_offset + self.capture.TimestampLatchValue.GetValue()/1e9
+            if(self.camera_type == 'BlackFly'):
+                timestamp = self.timestamp_offset + self.capture.TimestampLatchValue.GetValue()/1e9
+            elif(self.camera_type == 'Chameleon'):
+                timestamp = self.timestamp_offset + self.capture.Timestamp.GetValue()/1e9
+            else:
+                print('\n\nInvalid Camera Type during get_frame!!\n\n')
             #now = datetime.now()
             #timestamp = float(datetime.timestamp(now)) / 1e9
 
@@ -411,4 +458,5 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         # print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
         #     1/(self.current_timestamp - self.previous_timestamp),\
         #     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
-        return frame.GetNDArray(), timestamp
+        a = frame.GetNDArray()
+        return a, timestamp
