@@ -24,18 +24,18 @@ onlyfiles = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
 # sort the images since the temporal correlation of the images affects the compression
 onlyfiles.sort(key=lambda x: os.path.getmtime(image_dir + x))
 
-# print('--- Reading images')
-# vid = []
-# for filename in onlyfiles[0:n_frames]:
-# 	#print('filename:', filename)
-# 	im = cv2.imread(image_dir+filename)
-# 	#print('image frame size: ', im.shape)
-# 	vid.append(im)#[0:1280, 0:720,:]
-# 	#vid = np.append([vid], [np.array(im)], axis = 2)
-# vid = np.array(vid)
-# print('video shape (before)', vid.shape)
-# vid = vid.transpose(1,2,3,0)
-# print('video shape', vid.shape)
+print('--- Reading images')
+vid = []
+for filename in onlyfiles[0:n_frames]:
+	#print('filename:', filename)
+	im = cv2.imread(image_dir+filename)
+	#print('image frame size: ', im.shape)
+	vid.append(im)#[0:1280, 0:720,:]
+	#vid = np.append([vid], [np.array(im)], axis = 2)
+vid = np.array(vid)
+print('video shape (before)', vid.shape)
+vid = vid.transpose(1,2,3,0)
+print('video shape', vid.shape)
 
 
 # on writing hdf files:
@@ -117,7 +117,7 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 	else:
 
 		for preset in ['ultrafast', 'veryfast', 'slow', 'veryslow']:
-			for crf in ['28', '38']:
+			for crf in ['0', '18', '28', '38']:
 				fname = os.path.join(test_dir, codec + '_' + preset + '_' + crf + '.hdf')
 				print(f"\n\n--- Testing codec: {codec} preset: {preset} crf: {crf} ---")
 				ff = pri.VideoEncoderFFMPEG(test_dir, 'ffmpeg_%s_%s_%s_%d'%(codec, preset, crf, fps), resolution, fps=fps, 
@@ -125,18 +125,18 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 
 				t0 = time.time()
 				time_chk = np.zeros(n_frames)
-				#for frame in range(n_frames):
-				frame = 0
-				for filename in onlyfiles[0:n_frames]:
+				for frame in range(n_frames):
+				#frame = 0
+				#for filename in onlyfiles[0:n_frames]:
 					#print('filename:', filename)
-					im = cv2.imread(image_dir+filename)
+					#im = cv2.imread(image_dir+filename)
 
 					t1 = time.time()
-					#ff.write(vid[..., frame])
-					ff.write(im)
+					ff.write(vid[..., frame])
+					#ff.write(im)
 					t2 = time.time()
 					time_chk[frame] = t2 - t1
-					frame = frame + 1
+					#frame = frame + 1
 
 				ff.video_writer.stdin.close()	
 				#ff.video_writer.release()
