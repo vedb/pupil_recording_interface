@@ -6,3 +6,5 @@ opencv
 msgpack-python
 netcdf4
 tqdm
+simpleaudio
+pynput

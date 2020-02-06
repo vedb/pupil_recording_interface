@@ -8,3 +8,5 @@ netcdf4
 pyrealsense2
 monotonic
 tqdm
+simpleaudio
+pynput
