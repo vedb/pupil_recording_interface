@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # Change me if you only wanna plot the video file sizes
 # Else the code will plot the frame rates
-plot_the_file_size = True
+plot_the_file_size = False
 
 if plot_the_file_size == True:
 	y_label = '# Bytes'
@@ -15,8 +15,8 @@ if plot_the_file_size == True:
 
 else:
 	y_label = 'FPS'
-	super_title = "FPS Vs. Different Codec Options"
-result_dir = os.path.expanduser('~/Desktop/flir_codec_tests/second_good_result_image/')
+	super_title = "FPS Vs. Different Codec Options (Capture + Encoding)"
+result_dir = os.path.expanduser('~/Desktop/flir_codec_tests/third_good_results/all/')
 print('result directory:\n', result_dir)
 npzfiles = [f for f in listdir(result_dir) if isfile(join(result_dir, f)) and join(result_dir, f).endswith(".npz")]
 
@@ -53,7 +53,7 @@ number_of_crfs = len(np.unique(crfs))
 print('number of presets and crfs:',number_of_codecs, number_of_presets, number_of_crfs)
 #print('data = ', data)
 
-presets_sorted = ['ultrafast', 'veryfast', 'slow', 'veryslow']
+presets_sorted = ['ultrafast', 'veryfast']#, 'slow', 'veryslow']
 
 fig, axes = plt.subplots(nrows = 1, ncols = number_of_crfs, sharey = True, figsize = (12,8))
 

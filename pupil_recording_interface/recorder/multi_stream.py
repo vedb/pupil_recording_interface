@@ -120,7 +120,7 @@ class MultiStreamRecorder(BaseRecorder):
         start_time = time.time()
 
         now = time.time()
-        while (time.time() - now < 30):
+        while (time.time() - now < 60):
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?

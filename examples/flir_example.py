@@ -96,7 +96,7 @@ def acquire_images(cam, nodemap):
 
                     #  Release image
                     image_result.Release()
-                    print('')
+                    #print('')
 
             except PySpin.SpinnakerException as ex:
                 print('Error: %s' % ex)

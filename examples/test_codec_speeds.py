@@ -43,7 +43,6 @@ print('video shape', vid.shape)
 
 fps = 60 # Unclear if this borkles things
 resolution = (1536, 2048)#(720, 1280)
-#resolution = (2048, 1536)
 res_y, res_x = resolution
 test_dir = os.path.expanduser('~/Desktop/flir_codec_tests/')
 if not os.path.exists(test_dir):

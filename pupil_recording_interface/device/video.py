@@ -346,16 +346,19 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             node_AcquisitionFrameRateEnable_bool.SetValue(True) 
 
             node_AcquisitionFrameRate = PySpin.CFloatPtr(nodemap.GetNode("AcquisitionFrameRate"))
-            node_AcquisitionFrameRate.SetValue(self.fps)
+            #node_AcquisitionFrameRate.SetValue(self.fps)
+            node_AcquisitionFrameRate.SetValue(60)
         elif(self.camera_type == 'BlackFly'):
             print("Initializing BlackFly ...")
             #node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnable"))
             #node_AcquisitionFrameRateEnable_bool.SetValue(True) 
             capture.AcquisitionFrameRateEnable.SetValue(True)
-            capture.AcquisitionFrameRate.SetValue(self.fps)
+            #capture.AcquisitionFrameRate.SetValue(self.fps)
+            capture.AcquisitionFrameRate.SetValue(60)
         else:
             print('\n\nInvalid Camera Type during initit_2!!\n\n')
 
+        print('\n \n ====> Hacked FLIR to 50 fps\n\n')
         print('Set FLIR fps to:', self.fps)
 
 
@@ -458,5 +461,6 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         # print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
         #     1/(self.current_timestamp - self.previous_timestamp),\
         #     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
+        
         a = frame.GetNDArray()
         return a, timestamp
