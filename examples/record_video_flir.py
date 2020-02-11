@@ -37,7 +37,7 @@ if __name__ == '__main__':
             configs[0], folder, overwrite=True)
         recorder.show_video = True
     else:
-        recorder = MultiStreamRecorder(folder, configs, show_video=False)
+        recorder = MultiStreamRecorder(folder, configs, show_video=False, duration = 600)
     #while recorder.all_devices_initialized is False:
     #    pass
 
