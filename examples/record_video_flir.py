@@ -15,7 +15,7 @@ if __name__ == '__main__':
     configs = [
         VideoConfig(
             'flir', flir_uid, name='world', codec = codec,
-            resolution=(2048, 1536), fps=45), #(1024, 768)
+            resolution=(1536, 2048), fps=30), #(1024, 768)
         VideoConfig(
             'uvc', 'Pupil Cam2 ID0', name='eye0', codec = codec,
             resolution=(400, 400), fps=120, color_format='gray'),
@@ -24,7 +24,7 @@ if __name__ == '__main__':
             resolution=(400, 400), fps=120, color_format='gray'),
         VideoConfig(
             't265', 't265',
-            resolution=(1696, 800), fps=30, color_format='gray'),
+            resolution=(800, 1696), fps=30, color_format='gray'),
         OdometryConfig(
             't265', 't265', name='odometry'),
     ]
@@ -37,7 +37,7 @@ if __name__ == '__main__':
             configs[0], folder, overwrite=True)
         recorder.show_video = True
     else:
-        recorder = MultiStreamRecorder(folder, configs, show_video=False)
+        recorder = MultiStreamRecorder(folder, configs, show_video=False, duration = 600)
     #while recorder.all_devices_initialized is False:
     #    pass
 

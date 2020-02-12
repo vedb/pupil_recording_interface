@@ -349,15 +349,12 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             node_AcquisitionFrameRate.SetValue(self.fps)
         elif(self.camera_type == 'BlackFly'):
             print("Initializing BlackFly ...")
-            #node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnable"))
-            #node_AcquisitionFrameRateEnable_bool.SetValue(True) 
             capture.AcquisitionFrameRateEnable.SetValue(True)
             capture.AcquisitionFrameRate.SetValue(self.fps)
         else:
             print('\n\nInvalid Camera Type during initit_2!!\n\n')
 
         print('Set FLIR fps to:', self.fps)
-
 
         StreamBufferHandlingMode = PySpin.CEnumerationPtr(
             nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
@@ -371,30 +368,6 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         if (self.camera_type == 'BlackFly'):
             print('Actual Frame Rate = ', capture.AcquisitionResultingFrameRate.GetValue())
 
-        #multi_pyspin.node_cmd(serial, 'TLStream.StreamBufferHandlingMode', 'SetValue', 'RW', 'PySpin.StreamBufferHandlingMode_OldestFirst')
-        
-        # Set acquisition mode to continuous
-        '''
-        node_acquisition_mode = PySpin.CEnumerationPtr(
-            nodemap.GetNode('AcquisitionMode'))
-        if not PySpin.IsAvailable(node_acquisition_mode) \
-                or not PySpin.IsWritable(node_acquisition_mode):
-            raise ValueError(
-                'Unable to set acquisition mode to continuous (enum '
-                'retrieval).')
-
-        # Retrieve entry node from enumeration node
-        node_acquisition_mode_continuous = \
-            node_acquisition_mode.GetEntryByName('Continuous')#'SingleFrame'
-        if not PySpin.IsAvailable(node_acquisition_mode_continuous) \
-                or not PySpin.IsReadable(node_acquisition_mode_continuous):
-            raise ValueError(
-                'Unable to set acquisition mode to continuous (entry '
-                'retrieval).')
-        acquisition_mode_continuous = node_acquisition_mode_continuous.GetValue()
-
-        node_acquisition_mode.SetIntValue(acquisition_mode_continuous)
-        '''
 
         self.timestamp_offset = self._compute_timestamp_offset(capture, 20, self.camera_type)
         print("\nTimeStamp Offset = ", self.timestamp_offset/1e9)
@@ -458,5 +431,5 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         # print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
         #     1/(self.current_timestamp - self.previous_timestamp),\
         #     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
-        a = frame.GetNDArray()
-        return a, timestamp
+        
+        return frame.GetNDArray(), timestamp

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # Change me if you only wanna plot the video file sizes
 # Else the code will plot the frame rates
-plot_the_file_size = True
+plot_the_file_size = False
 
 if plot_the_file_size == True:
 	y_label = '# Bytes'
@@ -16,6 +16,7 @@ if plot_the_file_size == True:
 else:
 	y_label = 'FPS'
 	super_title = "FPS Vs. Different Codec Options (Desktop:FLIR Capture)"
+
 result_dir = os.path.expanduser('/hdd01/kamran_sync/vedb/ved_data_testing/flir_codec_tests/tests_on_desktop/FLIR_image_feed/')
 print('result directory:\n', result_dir)
 npzfiles = [f for f in listdir(result_dir) if isfile(join(result_dir, f)) and join(result_dir, f).endswith(".npz")]

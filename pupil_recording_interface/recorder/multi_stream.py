@@ -11,7 +11,7 @@ class MultiStreamRecorder(BaseRecorder):
     """ Recorder for multiple streams. """
 
     def __init__(self, folder, configs, policy='new_folder', quiet=False,
-                 show_video=False):
+                 show_video=False, duration = 30):
         """ Constructor.
 
         Parameters
@@ -45,6 +45,8 @@ class MultiStreamRecorder(BaseRecorder):
         self._stdout_delay = 3.  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
         self.all_devices_initialized = True
+        self.duration = duration
+        print("Recording for %d seconds ..."%(self.duration))
 
 
     @classmethod
@@ -120,7 +122,7 @@ class MultiStreamRecorder(BaseRecorder):
         start_time = time.time()
 
         now = time.time()
-        while (time.time() - now < 30):
+        while (time.time() - now < self.duration):
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
