@@ -11,12 +11,12 @@ plot_the_file_size = True
 
 if plot_the_file_size == True:
 	y_label = '# Bytes'
-	super_title = "# of Bytes Vs. Different Codec Options"
+	super_title = "# of Bytes Vs. Different Codec Options (Desktop:FLIR Capture)"
 
 else:
 	y_label = 'FPS'
-	super_title = "FPS Vs. Different Codec Options"
-result_dir = os.path.expanduser('~/Desktop/flir_codec_tests/second_good_result_image/')
+	super_title = "FPS Vs. Different Codec Options (Desktop:FLIR Capture)"
+result_dir = os.path.expanduser('/hdd01/kamran_sync/vedb/ved_data_testing/flir_codec_tests/tests_on_desktop/FLIR_image_feed/')
 print('result directory:\n', result_dir)
 npzfiles = [f for f in listdir(result_dir) if isfile(join(result_dir, f)) and join(result_dir, f).endswith(".npz")]
 
@@ -53,7 +53,7 @@ number_of_crfs = len(np.unique(crfs))
 print('number of presets and crfs:',number_of_codecs, number_of_presets, number_of_crfs)
 #print('data = ', data)
 
-presets_sorted = ['ultrafast', 'veryfast', 'slow', 'veryslow']
+presets_sorted = ['ultrafast', 'veryfast']#, 'slow', 'veryslow']
 
 fig, axes = plt.subplots(nrows = 1, ncols = number_of_crfs, sharey = True, figsize = (12,8))
 
@@ -68,6 +68,8 @@ bplot1 = axes[0].boxplot(all_data,
 						labels=labels,  # will be used to label x-ticks
 						showfliers = False)
 axes[0].set_title('CRF: '+np.unique(crfs)[0], fontsize = 14)
+if(plot_the_file_size):
+	axes[0].semilogy()
 
 all_data = [data[np.unique(codecs)[0], p, np.unique(crfs)[1]] for p in presets_sorted]
 labels = [p for p in presets_sorted]
@@ -80,6 +82,8 @@ bplot2 = axes[1].boxplot(all_data,
 						labels=labels,  # will be used to label x-ticks
 						showfliers = False)
 axes[1].set_title('CRF: '+np.unique(crfs)[1], fontsize = 14)
+if(plot_the_file_size):
+	axes[1].semilogy()
 
 
 all_data = [data[np.unique(codecs)[0], p, np.unique(crfs)[2]] for p in presets_sorted]
@@ -93,6 +97,8 @@ bplot3 = axes[2].boxplot(all_data,
 						labels=labels,  # will be used to label x-ticks
 						showfliers = False)
 axes[2].set_title('CRF: '+np.unique(crfs)[2], fontsize = 14)
+if(plot_the_file_size):
+	axes[2].semilogy()
 
 
 all_data = [data[np.unique(codecs)[0], p, np.unique(crfs)[3]] for p in presets_sorted]
@@ -106,6 +112,8 @@ bplot4 = axes[3].boxplot(all_data,
 						labels=labels,  # will be used to label x-ticks
 						showfliers = False)
 axes[3].set_title('CRF: '+np.unique(crfs)[3], fontsize = 14)
+if(plot_the_file_size):
+	axes[3].semilogy()
 
 # fill with colors
 colors = ['pink', 'lightblue', 'lightgreen', 'green']
