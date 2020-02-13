@@ -1,5 +1,5 @@
 """"""
-import time
+import os
 import cv2
 
 from pupil_recording_interface.recorder.multi_stream import MultiStreamRecorder
@@ -45,8 +45,11 @@ class MultiCameraCalibration(MultiStreamRecorder):
             self, event_queue, recording_events, n_acquired):
         """ Process new events in the event queue. """
         while not event_queue.empty():
+
             event = event_queue.get()
+
             if event == ord('c'):
+                # get calibration images from all cameras
                 for r in recording_events.values():
                     r.set()
                 n_acquired += 1
@@ -61,7 +64,15 @@ class MultiCameraCalibration(MultiStreamRecorder):
         if not self.quiet:
             print('Calibrating... ', end='')
 
-        # TODO calibration code
+        extension = 'png'  # TODO specify in constructor?
+
+        recorder_images = {r: [] for r in self.recorders}
+        for filename in os.listdir(self.folder):
+            if filename.endswith(extension):
+                index, recorder = filename[:-len(extension)-1].split('_')
+                recorder_images[recorder].append(
+                    (int(index), cv2.imread(
+                        os.path.join(self.folder, filename))))
 
         if not self.quiet:
             print('done!')

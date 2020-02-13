@@ -17,5 +17,5 @@ if __name__ == '__main__':
     ]
 
     # calibrate
-    calibration = MultiCameraCalibration(folder, configs, policy='overwrite')
+    calibration = MultiCameraCalibration(folder, configs)
     calibration.run()

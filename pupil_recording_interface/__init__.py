@@ -20,10 +20,12 @@ from .cli import CLI
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 TEST_RECORDING = os.path.join(DATA_DIR, 'test_recording')
+TEST_CALIBRATION = os.path.join(DATA_DIR, 'test_calibration')
 
 
 __all__ = [
     'TEST_RECORDING',
+    'TEST_CALIBRATION',
     # Functions
     'load_dataset',
     'load_info',
