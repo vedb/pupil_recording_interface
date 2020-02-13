@@ -18,34 +18,34 @@ from .config import StreamConfig, VideoConfig
 
 from .cli import CLI
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-TEST_RECORDING = os.path.join(DATA_DIR, 'test_recording')
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+TEST_RECORDING = os.path.join(DATA_DIR, "test_recording")
 
 
 __all__ = [
     # Functions
-    'load_dataset',
-    'load_info',
-    'load_user_info',
-    'write_netcdf',
-    'get_gaze_mappers',
+    "load_dataset",
+    "load_info",
+    "load_user_info",
+    "write_netcdf",
+    "get_gaze_mappers",
     # Readers
-    'GazeReader',
-    'OdometryReader',
-    'VideoReader',
-    'OpticalFlowReader',
+    "GazeReader",
+    "OdometryReader",
+    "VideoReader",
+    "OpticalFlowReader",
     # Devices
-    'VideoDeviceUVC',
-    'VideoDeviceFLIR',
-    'RealSenseDeviceT265',
+    "VideoDeviceUVC",
+    "VideoDeviceFLIR",
+    "RealSenseDeviceT265",
     # Recorders
-    'OdometryRecorder',
-    'VideoRecorder',
-    'MultiStreamRecorder',
-    'VideoEncoderFFMPEG',
+    "OdometryRecorder",
+    "VideoRecorder",
+    "MultiStreamRecorder",
+    "VideoEncoderFFMPEG",
     # Configs
-    'StreamConfig',
-    'VideoConfig',
+    "StreamConfig",
+    "VideoConfig",
 ]
 
 
@@ -80,11 +80,11 @@ def load_dataset(folder, gaze=None, odometry=None):
     """
     return_vals = tuple()
     if gaze is not None:
-        return_vals += (
-            GazeReader(folder, source=gaze).load_dataset(),)
+        return_vals += (GazeReader(folder, source=gaze).load_dataset(),)
     if odometry is not None:
         return_vals += (
-            OdometryReader(folder, source=odometry).load_dataset(),)
+            OdometryReader(folder, source=odometry).load_dataset(),
+        )
 
     if len(return_vals) == 1:
         return_vals = return_vals[0]
@@ -106,8 +106,8 @@ def get_gaze_mappers(folder):
         The set of available mappers.
     """
     mappers = set(GazeReader._get_offline_gaze_mappers(folder).keys())
-    if os.path.exists(os.path.join(folder, 'gaze.pldata')):
-        mappers = mappers.union({'recording'})
+    if os.path.exists(os.path.join(folder, "gaze.pldata")):
+        mappers = mappers.union({"recording"})
 
     return mappers
 
@@ -136,18 +136,16 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
     """
     if gaze is not None:
         if output_folder is not None:
-            filename = os.path.join(output_folder, 'gaze.nc')
+            filename = os.path.join(output_folder, "gaze.nc")
         else:
             filename = None
-        GazeReader(
-            folder, source=gaze).write_netcdf(filename=filename)
+        GazeReader(folder, source=gaze).write_netcdf(filename=filename)
     if odometry is not None:
         if output_folder is not None:
-            filename = os.path.join(output_folder, 'odometry.nc')
+            filename = os.path.join(output_folder, "odometry.nc")
         else:
             filename = None
-        OdometryReader(
-            folder, source=odometry).write_netcdf(filename=filename)
+        OdometryReader(folder, source=odometry).write_netcdf(filename=filename)
 
 
 def load_info(folder):

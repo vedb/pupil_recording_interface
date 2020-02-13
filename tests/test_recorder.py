@@ -1,19 +1,19 @@
 import pytest
 
 from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
-from pupil_recording_interface.recorder.video import \
-    VideoEncoderFFMPEG, VideoRecorder
+from pupil_recording_interface.recorder.video import (
+    VideoEncoderFFMPEG,
+    VideoRecorder,
+)
 from pupil_recording_interface.recorder.odometry import OdometryRecorder
 
 
 class TestBaseRecorder(object):
-
     def test_init_folder(self, folder):
         """"""
 
 
 class TestBaseStreamRecorder(object):
-
     def test_from_config(self, folder):
         """"""
 
@@ -28,13 +28,11 @@ class TestBaseStreamRecorder(object):
 
 
 class TestVideoEncoder(object):
-
     def test_get_ffmpeg_cmd(self):
         """"""
 
 
 class TestVideoRecorder(object):
-
     def test_from_config(self, folder):
         """"""
 
@@ -46,6 +44,5 @@ class TestVideoRecorder(object):
 
 
 class TestOdometryRecorder(object):
-
     def test_from_config(self, folder):
         """"""

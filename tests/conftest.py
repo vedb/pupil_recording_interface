@@ -9,13 +9,13 @@ from pupil_recording_interface import DATA_DIR
 @pytest.fixture()
 def folder():
     """"""
-    return os.path.join(DATA_DIR, 'test_recording')
+    return os.path.join(DATA_DIR, "test_recording")
 
 
 @pytest.fixture()
 def export_folder(folder):
     """"""
-    export_folder = os.path.join(folder, 'exports')
+    export_folder = os.path.join(folder, "exports")
     yield export_folder
     shutil.rmtree(export_folder, ignore_errors=True)
 
@@ -33,5 +33,5 @@ def info():
         "recording_uuid": "e5059604-26f1-42ed-8e35-354198b56021",
         "start_time_synced_s": 2294.807856069,
         "start_time_system_s": 1570725800.220913,
-        "system_info": "User: test_user, Platform: Linux"
+        "system_info": "User: test_user, Platform: Linux",
     }

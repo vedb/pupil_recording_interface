@@ -2,6 +2,7 @@
 import abc
 
 import cv2
+
 # TODO import uvc here
 
 from pupil_recording_interface.device import BaseDevice
@@ -47,7 +48,7 @@ class BaseVideoDevice(BaseDevice):
         """ Get a capture instance for a device by name. """
 
     @abc.abstractmethod
-    def _get_frame_and_timestamp(self, mode='img'):
+    def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
 
     def show_frame(self, frame):
@@ -67,7 +68,8 @@ class BaseVideoDevice(BaseDevice):
         #  multi-threaded operation, check if we can circumvent this
         if not self.is_started:
             self.capture = self._get_capture(
-                self.uid, self.resolution, self.fps, **self.capture_kwargs)
+                self.uid, self.resolution, self.fps, **self.capture_kwargs
+            )
 
     def stop(self):
         """ Stop this device. """
@@ -81,8 +83,8 @@ class VideoDeviceUVC(BaseVideoDevice):
     def _get_connected_device_uids(cls):
         """ Get a mapping from devices names to UIDs. """
         import uvc
-        return {
-            device['name']: device['uid'] for device in uvc.device_list()}
+
+        return {device["name"]: device["uid"] for device in uvc.device_list()}
 
     @classmethod
     def _get_uvc_device_uid(cls, device_name):
@@ -91,32 +93,40 @@ class VideoDeviceUVC(BaseVideoDevice):
             return cls._get_connected_device_uids()[device_name]
         except KeyError:
             raise ValueError(
-                'Device with name {} not connected.'.format(device_name))
+                "Device with name {} not connected.".format(device_name)
+            )
 
     @classmethod
     def _get_available_modes(cls, device_uid):
         """ Get the available modes for a device by UID. """
         import uvc
+
         return uvc.Capture(device_uid).avaible_modes  # [sic]
 
     @classmethod
     def _get_controls(cls, device_uid):
         """ Get the current controls for a device by UID. """
         import uvc
+
         return {
-            c.display_name: c.value for c in uvc.Capture(device_uid).controls}
+            c.display_name: c.value for c in uvc.Capture(device_uid).controls
+        }
 
     @classmethod
     def _get_capture(cls, uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
+        import uvc
+
         device_uid = cls._get_uvc_device_uid(uid)
 
         # verify selected mode
         if resolution + (fps,) not in cls._get_available_modes(device_uid):
-            raise ValueError('Unsupported frame mode: {}x{}@{}fps.'.format(
-                resolution[0], resolution[1], fps))
+            raise ValueError(
+                "Unsupported frame mode: {}x{}@{}fps.".format(
+                    resolution[0], resolution[1], fps
+                )
+            )
 
-        import uvc
         capture = uvc.Capture(device_uid)
         capture.frame_mode = resolution + (fps,)
 
@@ -126,12 +136,13 @@ class VideoDeviceUVC(BaseVideoDevice):
     def _get_timestamp(cls):
         """ Get the current monotonic time from the UVC backend. """
         import uvc
+
         return uvc.get_time_monotonic()
 
-    def _get_frame_and_timestamp(self, mode='img'):
+    def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
-        if mode not in ('img', 'bgr', 'gray', 'jpeg_buffer'):
-            raise ValueError('Unsupported mode: {}'.format(mode))
+        if mode not in ("img", "bgr", "gray", "jpeg_buffer"):
+            raise ValueError("Unsupported mode: {}".format(mode))
 
         uvc_frame = self.capture.get_frame()
 
@@ -203,27 +214,34 @@ class VideoDeviceFLIR(BaseVideoDevice):
         """
         import PySpin
 
-        print('*** DEVICE INFORMATION ***\n')
+        print("*** DEVICE INFORMATION ***\n")
 
         try:
             node_device_information = PySpin.CCategoryPtr(
-                nodemap.GetNode('DeviceInformation'))
+                nodemap.GetNode("DeviceInformation")
+            )
 
-            if PySpin.IsAvailable(node_device_information) \
-                    and PySpin.IsReadable(node_device_information):
+            if PySpin.IsAvailable(
+                node_device_information
+            ) and PySpin.IsReadable(node_device_information):
                 features = node_device_information.GetFeatures()
                 for feature in features:
                     node_feature = PySpin.CValuePtr(feature)
-                    print('%s: %s' % (
-                        node_feature.GetName(), node_feature.ToString()
-                        if PySpin.IsReadable(node_feature)
-                        else 'Node not readable'))
+                    print(
+                        "%s: %s"
+                        % (
+                            node_feature.GetName(),
+                            node_feature.ToString()
+                            if PySpin.IsReadable(node_feature)
+                            else "Node not readable",
+                        )
+                    )
 
             else:
-                print('Device control information not available.')
+                print("Device control information not available.")
 
         except PySpin.SpinnakerException as ex:
-            print('Error: %s' % ex)
+            print("Error: %s" % ex)
 
     @classmethod
     def _get_capture(cls, uid, resolution, fps, **kwargs):
@@ -235,10 +253,10 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # Retrieve list of cameras from the system
         cam_list = system.GetCameras()
-        print('List of Cameras: ', cam_list)
+        print("List of Cameras: ", cam_list)
         num_cameras = cam_list.GetSize()
 
-        print('Number of cameras detected: %d' % num_cameras)
+        print("Number of cameras detected: %d" % num_cameras)
 
         # Finish if there are no cameras
         if num_cameras == 0:
@@ -248,11 +266,11 @@ class VideoDeviceFLIR(BaseVideoDevice):
             # Release system instance
             system.ReleaseInstance()
 
-            raise ValueError('Not enough cameras!')
+            raise ValueError("Not enough cameras!")
 
         # TODO: Clean this up! There might be multiple Cameras?!!?
         capture = cam_list[0]
-        print('FLIR Camera : ', capture)
+        print("FLIR Camera : ", capture)
 
         # Retrieve TL device nodemap and print device information
         nodemap_tldevice = capture.GetTLDeviceNodeMap()
@@ -266,29 +284,35 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # Set acquisition mode to continuous
         node_acquisition_mode = PySpin.CEnumerationPtr(
-            nodemap.GetNode('AcquisitionMode'))
-        if not PySpin.IsAvailable(node_acquisition_mode) \
-                or not PySpin.IsWritable(node_acquisition_mode):
+            nodemap.GetNode("AcquisitionMode")
+        )
+        if not PySpin.IsAvailable(
+            node_acquisition_mode
+        ) or not PySpin.IsWritable(node_acquisition_mode):
             raise ValueError(
-                'Unable to set acquisition mode to continuous (enum '
-                'retrieval).')
+                "Unable to set acquisition mode to continuous (enum "
+                "retrieval)."
+            )
 
         # Retrieve entry node from enumeration node
-        node_acquisition_mode_continuous = \
-            node_acquisition_mode.GetEntryByName('Continuous')
-        if not PySpin.IsAvailable(node_acquisition_mode_continuous) \
-                or not PySpin.IsReadable(node_acquisition_mode_continuous):
+        node_acquisition_mode_cont = node_acquisition_mode.GetEntryByName(
+            "Continuous"
+        )
+        if not PySpin.IsAvailable(
+            node_acquisition_mode_cont
+        ) or not PySpin.IsReadable(node_acquisition_mode_cont):
             raise ValueError(
-                'Unable to set acquisition mode to continuous (entry '
-                'retrieval).')
+                "Unable to set acquisition mode to continuous (entry "
+                "retrieval)."
+            )
 
         #  Begin acquiring images
         capture.BeginAcquisition()
-        print('Acquisition Started!')
+        print("Acquisition Started!")
 
         return capture
 
-    def _get_frame_and_timestamp(self, mode='img'):
+    def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         # TODO return grayscale frame if mode=='gray'
         import PySpin
@@ -306,7 +330,8 @@ class VideoDeviceFLIR(BaseVideoDevice):
             else:
                 # TODO convert to correct color format
                 frame = image_result.Convert(
-                    PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR)
+                    PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR
+                )
 
                 #  Release image
                 image_result.Release()

@@ -30,8 +30,17 @@ class StreamConfig(object):
 class VideoConfig(StreamConfig):
     """ Configuration for video streams. """
 
-    def __init__(self, device_type, device_uid, resolution, fps,
-                 name=None, color_format='bgr24', side='both', **kwargs):
+    def __init__(
+        self,
+        device_type,
+        device_uid,
+        resolution,
+        fps,
+        name=None,
+        color_format="bgr24",
+        side="both",
+        **kwargs
+    ):
         """ Constructor.
 
         Parameters
@@ -60,7 +69,8 @@ class VideoConfig(StreamConfig):
             or 'both'.
         """
         super(VideoConfig, self).__init__(
-            device_type, device_uid, name, **kwargs)
+            device_type, device_uid, name, **kwargs
+        )
 
         self.fps = fps
         self.resolution = resolution
@@ -70,4 +80,5 @@ class VideoConfig(StreamConfig):
 
 class OdometryConfig(StreamConfig):
     """ Configuration for odometry streams. """
+
     # TODO rename to MotionConfig

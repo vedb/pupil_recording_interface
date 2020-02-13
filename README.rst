@@ -1,9 +1,12 @@
 .. -*- mode: rst -*-
 
-|Build|_
+|Build|_ |black|_
 
 .. |Build| image:: https://github.com/vedb/pupil_recording_interface/workflows/build/badge.svg
 .. _Build: https://github.com/vedb/pupil_recording_interface/actions
+
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+.. _black: https://github.com/psf/black
 
 
 pupil_recording_interface

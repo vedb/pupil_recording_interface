@@ -33,6 +33,21 @@ jobs:
         pip install pytest
         pytest
 
+  black:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Check black code style
+      run: |
+        pip install black
+        black -l 79 --check .
+
   docs:
 
     runs-on: ubuntu-18.04
