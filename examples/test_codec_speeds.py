@@ -18,8 +18,8 @@ n_frames = 500
 # vid = vmt.file_io.load_mp4(vid_file, frames=(0, n_frames))
 
 
-image_dir = '/home/veddy/Videos/FLIR_images/capture_2/png_60fps/'
-image_dir = os.path.expanduser('/home/veddy/Videos/FLIR_images/capture_2/png_60fps/')
+#image_dir = '/home/veddy/Videos/FLIR_images/capture_2/png_60fps/'
+image_dir = os.path.expanduser('/hdd01/kamran_sync/vedb/ved_data_testing/flir_codec_tests/raw_images/png_60fps/')
 onlyfiles = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
 # sort the images since the temporal correlation of the images affects the compression
 onlyfiles.sort(key=lambda x: os.path.getmtime(image_dir + x))
@@ -44,7 +44,7 @@ print('video shape', vid.shape)
 fps = 60 # Unclear if this borkles things
 resolution = (1536, 2048)#(720, 1280)
 res_y, res_x = resolution
-test_dir = os.path.expanduser('~/Desktop/flir_codec_tests/')
+test_dir = os.path.expanduser('/hdd01/FLIR_tests/')#('~/Desktop/flir_codec_tests/')
 if not os.path.exists(test_dir):
 	os.makedirs(test_dir)
 
