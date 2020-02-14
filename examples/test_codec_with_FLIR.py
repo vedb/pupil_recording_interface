@@ -11,9 +11,9 @@ from os.path import isfile, join
 import cv2
 from datetime import datetime
 import statistics
+import matplotlib.pyplot as plt
 
-
-n_frames = 500
+n_frames = 2000
 
 # Load images
 # vid_dir = os.path.expanduser('/hdd01/kamran_sync/vedb/recordings_pilot/2019_11_12/000/')
@@ -117,6 +117,25 @@ def init_FLIR(fps):
 
 		node_AcquisitionFrameRate = PySpin.CFloatPtr(nodemap.GetNode("AcquisitionFrameRate"))
 		node_AcquisitionFrameRate.SetValue(fps)
+
+
+		if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
+			print("Unable to disable automatic exposure. Aborting...")
+			return False
+
+		capture.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
+		print("Automatic exposure disabled...")
+		if capture.ExposureTime.GetAccessMode() != PySpin.RW:
+			print("Unable to set exposure time. Aborting...")
+			return False
+
+		# Ensure desired exposure time does not exceed the maximum
+		exposure_time_to_set = 15000.0
+		exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
+		capture.ExposureTime.SetValue(exposure_time_to_set)
+		print('exposure set to: ', exposure_time_to_set)
+
+
 	elif(camera_type == 'BlackFly'):
 		print("Initializing BlackFly ...")
 		#node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnable"))
@@ -209,10 +228,10 @@ def _get_frame_and_timestamp(capture):
 # on writing hdf files:
 #https://stackoverflow.com/questions/43533913/optimising-hdf5-dataset-for-read-write-speed
 
-fps = 50 # Unclear if this borkles things
+fps = 30 
 resolution = (1536, 2048)#(720, 1280)
 res_y, res_x = resolution
-test_dir = os.path.expanduser('~/Desktop/flir_codec_tests/')
+test_dir = os.path.expanduser('~/Desktop/flir_codec_tests/FLIR_timing_tests/')
 if not os.path.exists(test_dir):
 	os.makedirs(test_dir)
 
@@ -284,8 +303,8 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 		np.savez(fname.replace('.hdf','_time.npy'), time_chk)		
 	else:
 
-		for preset in ['ultrafast', 'veryfast']:#, 'slow', 'veryslow']:
-			for crf in ['0', '18', '28', '38']:
+		for preset in ['ultrafast']:#, 'veryfast']:#, 'slow', 'veryslow']:
+			for crf in ['24']:#, '18', '28', '38']:
 				fname = os.path.join(test_dir, codec + '_' + preset + '_' + crf + '.hdf')
 				print(f"\n\n--- Testing codec: {codec} preset: {preset} crf: {crf} ---")
 				ff = pri.VideoEncoderFFMPEG(test_dir, 'ffmpeg_%s_%s_%s_%d'%(codec, preset, crf, fps), resolution, fps=fps, 
@@ -302,8 +321,9 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 					t1 = time.time()
 					im, my_time_stamp = _get_frame_and_timestamp(mycapture)
 					#print(type(im))
-					ff.write(im)
 					t2 = time.time()
+					ff.write(im)
+					
 					time_chk[frame] = t2 - t1
 					#frame = frame + 1
 
@@ -318,4 +338,27 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 mycapture.EndAcquisition()
 print("\n\nDone!")
 				
+
+f = np.load(fname.replace('.hdf','_time.npy')+'.npz')['arr_0']
+
+fig, axes = plt.subplots(nrows = 2, ncols = 1, figsize = (12,8))
+
+axes[0].plot(range(len(f)),1/f, 'ob', markersize = 4)
+axes[0].set_title('FPS Vs. Time', fontsize = 14)
+axes[0].yaxis.grid(True)
+axes[0].xaxis.grid(True)
+axes[0].set_xlabel('# of frames', fontsize = 12)
+axes[0].set_ylabel('FPS', fontsize = 14)
+
+
+axes[1].hist(1/f, 70,facecolor = 'g', color = 'k')
+axes[1].set_title('FPS histogram', fontsize = 14)
+axes[1].yaxis.grid(True)
+axes[1].xaxis.grid(True)
+axes[1].set_xlabel('FPS', fontsize = 12)
+axes[1].set_ylabel('count', fontsize = 14)
+
+fig.suptitle('world camera fps:20, CRF:24', fontsize = 18)
+plt.savefig(fname.replace('.hdf','_fps_results_'+str(fps)+'.png'), dpi=150)
+plt.show()
 
