@@ -12,8 +12,9 @@ import cv2
 from datetime import datetime
 import statistics
 import matplotlib.pyplot as plt
-
-n_frames = 2000
+import threading
+import time
+n_frames = 4000
 
 # Load images
 # vid_dir = os.path.expanduser('/hdd01/kamran_sync/vedb/recordings_pilot/2019_11_12/000/')
@@ -21,6 +22,16 @@ n_frames = 2000
 # vid = vmt.file_io.load_mp4(vid_file, frames=(0, n_frames))
 
 #global flir_system, flir_camera, nodemap, timestamp_offset, mycapture
+
+read_image_flag = False
+# def timer_interrupt():
+# 	global read_image_flag, fps
+# 	next_call = time.time()
+# 	while True:
+# 		print('IRQ',datetime.now())
+# 		next_call = next_call+1/fps;
+# 		read_image_flag = True
+# 		time.sleep(next_call - time.time())
 
 
 def _compute_timestamp_offset(cam, number_of_iterations, camera_type):
@@ -130,7 +141,7 @@ def init_FLIR(fps):
 			return False
 
 		# Ensure desired exposure time does not exceed the maximum
-		exposure_time_to_set = 15000.0
+		exposure_time_to_set = 5000.0
 		exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
 		capture.ExposureTime.SetValue(exposure_time_to_set)
 		print('exposure set to: ', exposure_time_to_set)
@@ -182,7 +193,7 @@ def _get_frame_and_timestamp(capture):
 	try:
 		#  Retrieve next received image
 		image_result = capture.GetNextImage()
-		capture.TimestampLatch.Execute()
+
 
 		#Ensure image completion
 		if image_result.IsIncomplete():
@@ -196,16 +207,19 @@ def _get_frame_and_timestamp(capture):
 			frame = image_result.Convert(
 			    PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
 
+
 			#  Release image
 			image_result.Release()
+		capture.TimestampLatch.Execute()
 
 		# TODO: Image Pointer doesn't have any GetTimeStamp() attribute
 		#timestamp = float(image_result.GetTimestamp()) / 1e9
-		# TODO: Temporary solution to fix the FLIR timestamp issue
+		# TODO: Temporary solution to fix the FLIR timestamp issue 	
 		if(camera_type == 'BlackFly'):
 			timestamp = timestamp_offset + capture.TimestampLatchValue.GetValue()/1e9
 		elif(camera_type == 'Chameleon'):
 			timestamp = timestamp_offset + capture.Timestamp.GetValue()/1e9
+			#timestamp = capture.Timestamp.GetValue()/1e9
 		else:
 			print('\n\nInvalid Camera Type during get_frame!!\n\n')
 		#now = datetime.now()
@@ -215,13 +229,10 @@ def _get_frame_and_timestamp(capture):
 		# TODO check correct error handling
 		raise ValueError(ex)
 	#self.capture.EndAcquisition()
-	end = time.time()
+	#end = time.time()
 	#print('T = ', end - start)
-
-	# print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
-	#     1/(self.current_timestamp - self.previous_timestamp),\
-	#     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
-
+	# Hacking the FLIR time stamp (Kamran)
+	#timestamp = time.time()
 	return frame.GetNDArray(), timestamp
 
 
@@ -236,6 +247,14 @@ if not os.path.exists(test_dir):
 	os.makedirs(test_dir)
 
 mycapture = init_FLIR(fps)
+previous_time = time.time()
+previous_timestamp = time.time()
+my_time_stamp = time.time()
+t1 = time.time()
+t2 = time.time()
+# timerThread = threading.Thread(target=timer_interrupt)
+# timerThread.start()
+
 # Note on codecs: https://lists.ffmpeg.org/pipermail/ffmpeg-user/2015-January/024838.html
 # THIS ONE IS REALLY GOOD:
 # https://superuser.com/questions/486325/lossless-universal-video-format
@@ -304,30 +323,41 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 	else:
 
 		for preset in ['ultrafast']:#, 'veryfast']:#, 'slow', 'veryslow']:
-			for crf in ['24']:#, '18', '28', '38']:
+			for crf in ['18']:#, '18', '28', '38']:
 				fname = os.path.join(test_dir, codec + '_' + preset + '_' + crf + '.hdf')
 				print(f"\n\n--- Testing codec: {codec} preset: {preset} crf: {crf} ---")
 				ff = pri.VideoEncoderFFMPEG(test_dir, 'ffmpeg_%s_%s_%s_%d'%(codec, preset, crf, fps), resolution, fps=fps, 
 					color_format='bgr24', codec=codec, overwrite=True, preset = preset, crf = crf)
 
 				t0 = time.time()
-				time_chk = np.zeros(n_frames)
-				for frame in range(n_frames):
-				#frame = 0
+				#time_chk = np.zeros(n_frames)
+				time_chk = np.array([], dtype = np.float32)
+				#for frame in range(n_frames):
+				frame = 0
+				while(frame < n_frames):
 				#for filename in onlyfiles[0:n_frames]:
 					#print('filename:', filename)
 					#im = cv2.imread(image_dir+filename)
-
-					t1 = time.time()
-					im, my_time_stamp = _get_frame_and_timestamp(mycapture)
-					#print(type(im))
-					t2 = time.time()
-					ff.write(im)
-					
-					time_chk[frame] = t2 - t1
+					current_time = time.time()
+					if (current_time - t1 + my_time_stamp > (1/fps)): # - (1/(.1*fps)
+						#print(current_time - previous_time, 1/fps)
+						t1 = time.time()
+						im, my_time_stamp = _get_frame_and_timestamp(mycapture)
+						#print(type(im))
+						ff.write(im)
+						t2 = time.time()
+						
+						#time_chk[frame] = t2 - t1
+						#time_chk = np.append(time_chk, t2 - t1)
+						time_chk = np.append(time_chk, my_time_stamp)# - previous_timestamp
+						frame = frame + 1
+						previous_timestamp = my_time_stamp
+						previous_time = time.time()
+					#else:
+						#print('oops!',frame)
 					#frame = frame + 1
-
-				ff.video_writer.stdin.close()	
+				print('total number of frames:', frame)
+				ff.video_writer.stdin.close()
 				#ff.video_writer.release()
 				# Save timing data
 				print(f"Average frame rate for {codec}:")
@@ -337,11 +367,10 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 				np.savez(fname.replace('.hdf','_time.npy'), time_chk)
 mycapture.EndAcquisition()
 print("\n\nDone!")
-				
 
 f = np.load(fname.replace('.hdf','_time.npy')+'.npz')['arr_0']
-
-fig, axes = plt.subplots(nrows = 2, ncols = 1, figsize = (12,8))
+f = np.diff(f)
+fig, axes = plt.subplots(nrows = 2, ncols = 1, figsize = (12,12))
 
 axes[0].plot(range(len(f)),1/f, 'ob', markersize = 4)
 axes[0].set_title('FPS Vs. Time', fontsize = 14)
@@ -351,14 +380,14 @@ axes[0].set_xlabel('# of frames', fontsize = 12)
 axes[0].set_ylabel('FPS', fontsize = 14)
 
 
-axes[1].hist(1/f, 70,facecolor = 'g', color = 'k')
+axes[1].hist(1/f, 70, facecolor = 'g', color = 'k')
 axes[1].set_title('FPS histogram', fontsize = 14)
 axes[1].yaxis.grid(True)
 axes[1].xaxis.grid(True)
 axes[1].set_xlabel('FPS', fontsize = 12)
 axes[1].set_ylabel('count', fontsize = 14)
 
-fig.suptitle('world camera fps:20, CRF:24', fontsize = 18)
-plt.savefig(fname.replace('.hdf','_fps_results_'+str(fps)+'.png'), dpi=150)
+fig.suptitle('world camera fps: '+str(fps)+', CRF: '+str(crf), fontsize = 18)
+plt.savefig(fname.replace('.hdf','_fps_'+str(fps)+'.png'), dpi=150)
 plt.show()
 
