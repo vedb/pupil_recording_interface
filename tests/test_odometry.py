@@ -12,7 +12,7 @@ class TestOdometryInterface(InterfaceTester):
 
     def test_load_odometry(self):
         """"""
-        t, c, p, q, v, w = OdometryInterface._load_odometry(self.folder)
+        t, c, p, q, v, w, wall = OdometryInterface._load_odometry(self.folder)
 
         assert t.shape == (self.n_odometry,)
         assert c.shape == (self.n_odometry,)
@@ -21,6 +21,7 @@ class TestOdometryInterface(InterfaceTester):
         assert q.shape == (self.n_odometry, 4)
         assert v.shape == (self.n_odometry, 3)
         assert w.shape == (self.n_odometry, 3)
+        assert not wall
 
     def test_load_dataset(self):
         """"""

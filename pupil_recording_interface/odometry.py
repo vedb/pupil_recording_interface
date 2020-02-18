@@ -6,6 +6,7 @@ import warnings
 from collections import deque
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 from pupil_recording_interface.base import BaseInterface, BaseRecorder
@@ -25,14 +26,24 @@ class OdometryInterface(BaseInterface):
         """ Load odometry data from a .pldata file. """
         df = BaseInterface._load_pldata_as_dataframe(folder, topic)
 
-        t = df.timestamp
-        c = df.confidence
+        if hasattr(df, 'rs_timestamp'):
+            t = df.rs_timestamp
+            wall_ts = True
+        else:
+            t = df.timestamp
+            wall_ts = False
+
+        if hasattr(df, 'confidence'):
+            c = df.confidence
+        else:
+            c = df.tracker_confidence
+
         p = np.array(df.position.to_list())
         q = np.array(df.orientation.to_list())
         v = np.array(df.linear_velocity.to_list())
         w = np.array(df.angular_velocity.to_list())
 
-        return t, c, p, q, v, w
+        return t, c, p, q, v, w, wall_ts
 
     def load_dataset(self):
         """ Load odometry data as an xarray Dataset.
@@ -43,11 +54,14 @@ class OdometryInterface(BaseInterface):
             The odometry data as a dataset.
         """
         if self.source == 'recording':
-            t, c, p, q, v, w = self._load_odometry(self.folder)
+            t, c, p, q, v, w, wall_ts = self._load_odometry(self.folder)
         else:
             raise ValueError('Invalid odometry source: {}'.format(self.source))
 
-        t = self._timestamps_to_datetimeindex(t, self.info)
+        if wall_ts:
+            t = pd.to_datetime(t, unit='s')
+        else:
+            t = self._timestamps_to_datetimeindex(t, self.info)
 
         coords = {
             'time': t.values,
