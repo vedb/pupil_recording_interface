@@ -22,7 +22,7 @@ git config --global user.email "<your_email>"
 mkdir ~/Code && cd ~/Code
 git clone https://github.com/vedb/pupil_recording_interface.git
 git checkout flir_recording
-cd install_scripts
+cd pupil_recording_interface/install_scripts/
 ```
 ### Master install from pomlab repo
 
@@ -79,8 +79,6 @@ sudo sh install_spinnaker.sh
 #### (Y/n) N
 #### Would you like to make a difference by participating in the Spinnaker feedback #program?
 #### (Y/n) N
-#### Join the feedback program anytime at "https://www.flir.com/spinnaker/survey"!
-#### Thank you for installing Spinnaker SDK.
 
 
 ## USB Related configurations for linux (Important)
@@ -100,3 +98,14 @@ sudo sh install_spinnaker.sh
 `$ sudo update-grub`
 
 ### 3. Reboot and test a USB 3.1 camera.
+
+
+### Install PySpin for running the FLIR Camera
+
+### download the PySpin file from [here](https://flir.app.boxcn.net/v/SpinnakerSDK/file/546281058590)
+
+```javascript
+cd ~/Downloads
+tar xvzf spinnaker_python-1.27.0.48-Ubuntu18.04-cp36-cp36m-linux_x86_64.tar.gz
+python3 -m pip install spinnaker_python-1.27.0.48-cp36-cp36m-linux_x86_64.whl
+```
