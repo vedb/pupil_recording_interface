@@ -14,7 +14,6 @@ import statistics
 import matplotlib.pyplot as plt
 import threading
 import time
-n_frames = 4000
 
 # Load images
 # vid_dir = os.path.expanduser('/hdd01/kamran_sync/vedb/recordings_pilot/2019_11_12/000/')
@@ -23,7 +22,6 @@ n_frames = 4000
 
 #global flir_system, flir_camera, nodemap, timestamp_offset, mycapture
 
-read_image_flag = False
 # def timer_interrupt():
 # 	global read_image_flag, fps
 # 	next_call = time.time()
@@ -64,7 +62,7 @@ def _compute_timestamp_offset(cam, number_of_iterations, camera_type):
 	return statistics.median(timestamp_offsets)
 
 
-def init_FLIR(fps):
+def init_FLIR(fps, exposure_value, gain):
 	global flir_system, flir_camera, nodemap, timestamp_offset, mycapture, camera_type
 	system = PySpin.System.GetInstance()
 	flir_system = system
@@ -118,17 +116,6 @@ def init_FLIR(fps):
 	print('FLIR Camera Type = ', camera_type)
 	if(camera_type == 'Chameleon'):
 		print("Initializing Chameleon ...")
-		node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(nodemap.GetNode("AcquisitionFrameRateAuto"))
-		node_AcquisitionFrameRateAuto_off = node_AcquisitionFrameRateAuto.GetEntryByName("Off")
-		node_AcquisitionFrameRateAuto.SetIntValue(node_AcquisitionFrameRateAuto_off.GetValue())
-
-
-		node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnabled"))
-		node_AcquisitionFrameRateEnable_bool.SetValue(True) 
-
-		node_AcquisitionFrameRate = PySpin.CFloatPtr(nodemap.GetNode("AcquisitionFrameRate"))
-		node_AcquisitionFrameRate.SetValue(fps)
-
 
 		if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
 			print("Unable to disable automatic exposure. Aborting...")
@@ -140,11 +127,31 @@ def init_FLIR(fps):
 			print("Unable to set exposure time. Aborting...")
 			return False
 
+		node_GainAuto = PySpin.CEnumerationPtr(nodemap.GetNode("GainAuto"))
+		node_GainAuto_off = node_GainAuto.GetEntryByName("Off")
+		node_GainAuto.SetIntValue(node_GainAuto_off.GetValue())
+
+		node_Gain = PySpin.CFloatPtr(nodemap.GetNode("Gain"))
+		node_Gain.SetValue(gain)
+		print('gain set to: ', node_Gain.GetValue())
+
+		node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(nodemap.GetNode("AcquisitionFrameRateAuto"))
+		node_AcquisitionFrameRateAuto_off = node_AcquisitionFrameRateAuto.GetEntryByName("Off")
+		node_AcquisitionFrameRateAuto.SetIntValue(node_AcquisitionFrameRateAuto_off.GetValue())
+
+
+		node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnabled"))
+		node_AcquisitionFrameRateEnable_bool.SetValue(True) 
+
+		node_AcquisitionFrameRate = PySpin.CFloatPtr(nodemap.GetNode("AcquisitionFrameRate"))
+		node_AcquisitionFrameRate.SetValue(fps)
+		print('fps set to: ', node_AcquisitionFrameRate.GetValue())
+
 		# Ensure desired exposure time does not exceed the maximum
-		exposure_time_to_set = 5000.0
-		exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
+		exposure_time_to_set = exposure_value
+		#exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
 		capture.ExposureTime.SetValue(exposure_time_to_set)
-		print('exposure set to: ', exposure_time_to_set)
+		print('exposure set to: ', capture.ExposureTime.GetValue())
 
 
 	elif(camera_type == 'BlackFly'):
@@ -195,6 +202,19 @@ def _get_frame_and_timestamp(capture):
 		image_result = capture.GetNextImage()
 
 
+		capture.TimestampLatch.Execute()
+
+		# TODO: Image Pointer doesn't have any GetTimeStamp() attribute
+		#timestamp = float(image_result.GetTimestamp()) / 1e9
+		# TODO: Temporary solution to fix the FLIR timestamp issue 	
+		if(camera_type == 'BlackFly'):
+			timestamp = timestamp_offset + capture.TimestampLatchValue.GetValue()/1e9
+		elif(camera_type == 'Chameleon'):
+			timestamp = timestamp_offset + capture.Timestamp.GetValue()/1e9
+			#timestamp = capture.Timestamp.GetValue()/1e9
+		else:
+			print('\n\nInvalid Camera Type during get_frame!!\n\n')
+
 		#Ensure image completion
 		if image_result.IsIncomplete():
 			# TODO check if this is a valid way of handling an
@@ -210,18 +230,6 @@ def _get_frame_and_timestamp(capture):
 
 			#  Release image
 			image_result.Release()
-		capture.TimestampLatch.Execute()
-
-		# TODO: Image Pointer doesn't have any GetTimeStamp() attribute
-		#timestamp = float(image_result.GetTimestamp()) / 1e9
-		# TODO: Temporary solution to fix the FLIR timestamp issue 	
-		if(camera_type == 'BlackFly'):
-			timestamp = timestamp_offset + capture.TimestampLatchValue.GetValue()/1e9
-		elif(camera_type == 'Chameleon'):
-			timestamp = timestamp_offset + capture.Timestamp.GetValue()/1e9
-			#timestamp = capture.Timestamp.GetValue()/1e9
-		else:
-			print('\n\nInvalid Camera Type during get_frame!!\n\n')
 		#now = datetime.now()
 		#timestamp = float(datetime.timestamp(now)) / 1e9
 
@@ -239,14 +247,20 @@ def _get_frame_and_timestamp(capture):
 # on writing hdf files:
 #https://stackoverflow.com/questions/43533913/optimising-hdf5-dataset-for-read-write-speed
 
-fps = 30 
-resolution = (1536, 2048)#(720, 1280)
+n_frames = 4000
+read_image_flag = False
+fps = 80 
+#resolution = (1536, 2048)#(720, 1280)
+resolution = (1024, 1280)#(720, 1280)
 res_y, res_x = resolution
+exposure_value = 12000.0# for 100 fps : 9900.0 #for 50 fps : 19000 #for 30 fpd : 31000.0
+gain = 18
+
 test_dir = os.path.expanduser('~/Desktop/flir_codec_tests/FLIR_timing_tests/')
 if not os.path.exists(test_dir):
 	os.makedirs(test_dir)
 
-mycapture = init_FLIR(fps)
+mycapture = init_FLIR(fps, exposure_value, gain)
 previous_time = time.time()
 previous_timestamp = time.time()
 my_time_stamp = time.time()
@@ -264,7 +278,7 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 	fname = os.path.join(test_dir, codec + '.hdf')
 	if 'hdf' in codec:
 		print(f"\n\n--- Testing codec: {codec} ---")
-		hf = h5py.File(fname, mode='w')
+		hf = h5py.File(fname, mode='w') 
 		hfargs = dict(shape=(res_x, res_y, 3, n_frames), dtype=np.uint8)
 		if codec != 'hdf':
 			# Want compressed hdf
@@ -339,7 +353,7 @@ for codec in ['libx264']:#'rawvideo', 'libx265', 'rawvideo']:#, 'hdf']:#, 'hdf_c
 					#print('filename:', filename)
 					#im = cv2.imread(image_dir+filename)
 					current_time = time.time()
-					if (current_time - t1 + my_time_stamp > (1/fps)): # - (1/(.1*fps)
+					if (current_time - t1 > (1/fps)): # - (1/(.1*fps)
 						#print(current_time - previous_time, 1/fps)
 						t1 = time.time()
 						im, my_time_stamp = _get_frame_and_timestamp(mycapture)
@@ -372,7 +386,7 @@ f = np.load(fname.replace('.hdf','_time.npy')+'.npz')['arr_0']
 f = np.diff(f)
 fig, axes = plt.subplots(nrows = 2, ncols = 1, figsize = (12,12))
 
-axes[0].plot(range(len(f)),1/f, 'ob', markersize = 4)
+axes[0].plot(range(len(f)),1/f, 'ob', markersize = 4, alpha = 0.4)
 axes[0].set_title('FPS Vs. Time', fontsize = 14)
 axes[0].yaxis.grid(True)
 axes[0].xaxis.grid(True)
@@ -380,7 +394,7 @@ axes[0].set_xlabel('# of frames', fontsize = 12)
 axes[0].set_ylabel('FPS', fontsize = 14)
 
 
-axes[1].hist(1/f, 70, facecolor = 'g', color = 'k')
+axes[1].hist(1/f, 100, facecolor = 'g', edgecolor = 'k', linewidth = 1)
 axes[1].set_title('FPS histogram', fontsize = 14)
 axes[1].yaxis.grid(True)
 axes[1].xaxis.grid(True)
