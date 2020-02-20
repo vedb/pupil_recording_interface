@@ -34,3 +34,7 @@ sudo apt-get update
 sudo apt-get install -y \
  librealsense2-dkms librealsense2-utils librealsense2-dev \
  librealsense2-udev-rules
+
+# TODO: Double check if this is where these two hasve to be installed
+ pip3 install netcdf4
+ pip3 install pyrealsense2 monotonic

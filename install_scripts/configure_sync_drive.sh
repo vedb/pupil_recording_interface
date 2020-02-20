@@ -4,15 +4,21 @@
 
 if [ $# -eq 0 ]
 then
-	export SYNC_DRIVE=~/hdd01
+	export SYNC_DRIVE=/hdd01
 else
     export SYNC_DRIVE=$1
 fi
 
 export USER_SYNC=$SYNC_DRIVE/$USER"_sync"
-
 echo $USER_SYNC
-mkdir -p $USER_SYNC
+
+if [ ! -d $USER_SYNC ]
+then
+	echo "Creating the directory "$USER_SYNC
+	sudo mkdir -p $USER_SYNC
+else
+	echo "Directory already exists: "$USER_SYNC
+fi
 
 ln -s $USER_SYNC/lab ~/lab
 ln -s $USER_SYNC/space ~/space
