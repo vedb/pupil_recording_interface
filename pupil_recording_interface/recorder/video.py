@@ -172,6 +172,24 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                     '-c:v', codec,  # video codec
                     # '-tune', 'film',  # codec tuning
                     filename]
+        elif (size == '1280x1024'):#2048x1536
+            return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
+                    # -- Input -- #
+                    '-an',  # no audio
+                    '-r', str(fps),  # fps
+                    '-f', 'rawvideo',  # format
+                    '-s', size,  # resolution
+                    '-pix_fmt', color_format,  # color format
+                    '-i', 'pipe:',  # piped to stdin
+                    '-preset', preset,
+                    #'-profile:v', 'high444',
+                    #'-refs', '5',
+                    '-vf', 'scale=1280:720',
+                    '-crf', crf,
+                    # -- Output -- #
+                    '-c:v', codec,  # video codec
+                    # '-tune', 'film',  # codec tuning
+                    filename]
         else:
             return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
                     # -- Input -- #

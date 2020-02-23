@@ -188,7 +188,7 @@ class VideoDeviceUVC(BaseVideoDevice):
 
 class  VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
-    def __init__(self, uid, resolution, fps, **kwargs):
+    def __init__(self, uid, resolution, fps, exposure_value = 31000.0, gain = 18, **kwargs):
         """ Constructor.
 
         Parameters
@@ -213,6 +213,8 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         self.flir_nodemap = None
         self.flire_system = None
         self.timestamp_offsets = 0
+        self.gain = gain
+        self.exposure_value = exposure_value
 
     def _compute_timestamp_offset(self, cam, number_of_iterations, camera_type):
         """ Gets timestamp offset in seconds from input camera """
@@ -337,6 +339,25 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         #self.camera_type = 'Chameleon'
         if(self.camera_type == 'Chameleon'):
             print("Initializing Chameleon ...")
+
+            # if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
+            #     print("Unable to disable automatic exposure. Aborting...")
+            #     return False
+
+            # capture.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
+            # print("Automatic exposure disabled...")
+            # if capture.ExposureTime.GetAccessMode() != PySpin.RW:
+            #     print("Unable to set exposure time. Aborting...")
+            #     return False
+
+            # node_GainAuto = PySpin.CEnumerationPtr(nodemap.GetNode("GainAuto"))
+            # node_GainAuto_off = node_GainAuto.GetEntryByName("Off")
+            # node_GainAuto.SetIntValue(node_GainAuto_off.GetValue())
+
+            # node_Gain = PySpin.CFloatPtr(nodemap.GetNode("Gain"))
+            # node_Gain.SetValue(self.gain)
+            # print('gain set to: ', node_Gain.GetValue())
+
             node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(nodemap.GetNode("AcquisitionFrameRateAuto"))
             node_AcquisitionFrameRateAuto_off = node_AcquisitionFrameRateAuto.GetEntryByName("Off")
             node_AcquisitionFrameRateAuto.SetIntValue(node_AcquisitionFrameRateAuto_off.GetValue())
@@ -347,6 +368,15 @@ class  VideoDeviceFLIR(BaseVideoDevice):
 
             node_AcquisitionFrameRate = PySpin.CFloatPtr(nodemap.GetNode("AcquisitionFrameRate"))
             node_AcquisitionFrameRate.SetValue(self.fps)
+            print('fps set to: ', node_AcquisitionFrameRate.GetValue())
+
+            # # Ensure desired exposure time does not exceed the maximum
+            # exposure_time_to_set = self.exposure_value
+            # exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
+            # capture.ExposureTime.SetValue(exposure_time_to_set)
+            # print('exposure set to: ', capture.ExposureTime.GetValue())
+
+
         elif(self.camera_type == 'BlackFly'):
             print("Initializing BlackFly ...")
             capture.AcquisitionFrameRateEnable.SetValue(True)
@@ -383,8 +413,15 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         # TODO return grayscale frame if mode=='gray'
         #import PySpin
         #from datetime import datetime
-        self.previous_timestamp = self.current_timestamp
-        self.current_timestamp = time.time()
+        #self.previous_timestamp = self.current_timestamp
+        #self.current_timestamp = time.time()
+
+        #count = 0
+        #while(time.time() - self.previous_timestamp < 0.005):
+        #   count = count + 1
+        #print('t = ', time.time() - self.previous_timestamp)
+        #self.previous_timestamp = time.time()
+
         #  Begin acquiring images
         #self.capture.BeginAcquisition()
 
@@ -394,6 +431,16 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             image_result = self.capture.GetNextImage()
             self.capture.TimestampLatch.Execute()
 
+            # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
+            #timestamp = float(image_result.GetTimestamp()) / 1e9
+            # TODO: Temporary solution to fix the FLIR timestamp issue  
+            if(self.camera_type == 'BlackFly'):
+                timestamp = self.timestamp_offset + self.capture.TimestampLatchValue.GetValue()/1e9
+            elif(self.camera_type == 'Chameleon'):
+                timestamp = self.timestamp_offset + self.capture.Timestamp.GetValue()/1e9
+            else:
+                print('\n\nInvalid Camera Type during get_frame!!\n\n')
+
             #  Ensure image completion
             if image_result.IsIncomplete():
                 # TODO check if this is a valid way of handling an
@@ -402,34 +449,23 @@ class  VideoDeviceFLIR(BaseVideoDevice):
                 return self._get_frame_and_timestamp(mode)
 
             else:
-                # TODO convert to correct color format
                 frame = image_result.Convert(
                     PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
 
                 #  Release image
                 image_result.Release()
 
-            # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
-            #timestamp = float(image_result.GetTimestamp()) / 1e9
-            # TODO: Temporary solution to fix the FLIR timestamp issue
-            if(self.camera_type == 'BlackFly'):
-                timestamp = self.timestamp_offset + self.capture.TimestampLatchValue.GetValue()/1e9
-            elif(self.camera_type == 'Chameleon'):
-                timestamp = self.timestamp_offset + self.capture.Timestamp.GetValue()/1e9
-            else:
-                print('\n\nInvalid Camera Type during get_frame!!\n\n')
-            #now = datetime.now()
-            #timestamp = float(datetime.timestamp(now)) / 1e9
 
         except PySpin.SpinnakerException as ex:
             # TODO check correct error handling
             raise ValueError(ex)
         #self.capture.EndAcquisition()
-        end = time.time()
+        #end = time.time()
         #print('T = ', end - start)
 
         # print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
         #     1/(self.current_timestamp - self.previous_timestamp),\
         #     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
-        
+        #a = frame.GetNDArray()
+        #b = a[::2,::2,:]
         return frame.GetNDArray(), timestamp

@@ -117,24 +117,6 @@ def init_FLIR(fps, exposure_value, gain):
 	if(camera_type == 'Chameleon'):
 		print("Initializing Chameleon ...")
 
-		if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
-			print("Unable to disable automatic exposure. Aborting...")
-			return False
-
-		capture.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
-		print("Automatic exposure disabled...")
-		if capture.ExposureTime.GetAccessMode() != PySpin.RW:
-			print("Unable to set exposure time. Aborting...")
-			return False
-
-		node_GainAuto = PySpin.CEnumerationPtr(nodemap.GetNode("GainAuto"))
-		node_GainAuto_off = node_GainAuto.GetEntryByName("Off")
-		node_GainAuto.SetIntValue(node_GainAuto_off.GetValue())
-
-		node_Gain = PySpin.CFloatPtr(nodemap.GetNode("Gain"))
-		node_Gain.SetValue(gain)
-		print('gain set to: ', node_Gain.GetValue())
-
 		node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(nodemap.GetNode("AcquisitionFrameRateAuto"))
 		node_AcquisitionFrameRateAuto_off = node_AcquisitionFrameRateAuto.GetEntryByName("Off")
 		node_AcquisitionFrameRateAuto.SetIntValue(node_AcquisitionFrameRateAuto_off.GetValue())
@@ -147,11 +129,30 @@ def init_FLIR(fps, exposure_value, gain):
 		node_AcquisitionFrameRate.SetValue(fps)
 		print('fps set to: ', node_AcquisitionFrameRate.GetValue())
 
-		# Ensure desired exposure time does not exceed the maximum
-		exposure_time_to_set = exposure_value
-		#exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
-		capture.ExposureTime.SetValue(exposure_time_to_set)
-		print('exposure set to: ', capture.ExposureTime.GetValue())
+		# if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
+		# 	print("Unable to disable automatic exposure. Aborting...")
+		# 	return False
+
+		# capture.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
+		# print("Automatic exposure disabled...")
+		# if capture.ExposureTime.GetAccessMode() != PySpin.RW:
+		# 	print("Unable to set exposure time. Aborting...")
+		# 	return False
+
+		# node_GainAuto = PySpin.CEnumerationPtr(nodemap.GetNode("GainAuto"))
+		# node_GainAuto_off = node_GainAuto.GetEntryByName("Off")
+		# node_GainAuto.SetIntValue(node_GainAuto_off.GetValue())
+
+		# node_Gain = PySpin.CFloatPtr(nodemap.GetNode("Gain"))
+		# node_Gain.SetValue(gain)
+		# print('gain set to: ', node_Gain.GetValue())
+
+
+		# # Ensure desired exposure time does not exceed the maximum
+		# exposure_time_to_set = exposure_value
+		# #exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
+		# capture.ExposureTime.SetValue(exposure_time_to_set)
+		# print('exposure set to: ', capture.ExposureTime.GetValue())
 
 
 	elif(camera_type == 'BlackFly'):
@@ -247,13 +248,13 @@ def _get_frame_and_timestamp(capture):
 # on writing hdf files:
 #https://stackoverflow.com/questions/43533913/optimising-hdf5-dataset-for-read-write-speed
 
-n_frames = 4000
+n_frames = 400
 read_image_flag = False
-fps = 80 
-#resolution = (1536, 2048)#(720, 1280)
-resolution = (1024, 1280)#(720, 1280)
+fps = 30 
+resolution = (1536, 2048)#(720, 1280)
+#resolution = (1024, 1280)#(720, 1280)
 res_y, res_x = resolution
-exposure_value = 12000.0# for 100 fps : 9900.0 #for 50 fps : 19000 #for 30 fpd : 31000.0
+exposure_value = 31000.0# for 100 fps : 9900.0 #for 50 fps : 19000 #for 30 fpd : 31000.0
 gain = 18
 
 test_dir = os.path.expanduser('~/Desktop/flir_codec_tests/FLIR_timing_tests/')

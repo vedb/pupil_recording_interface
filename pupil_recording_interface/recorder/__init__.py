@@ -7,7 +7,6 @@ import numpy as np
 
 from pupil_recording_interface.config import VideoConfig, OdometryConfig
 
-
 class BaseRecorder(object):
     """ Base class for all recorders. """
 
@@ -29,6 +28,7 @@ class BaseRecorder(object):
         """
         self.folder = self._init_folder(folder, policy)
         self.all_devices_initialized = False
+        self.previous_timestamp = 0
 
 
     @classmethod
