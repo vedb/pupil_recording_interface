@@ -137,20 +137,11 @@ class VideoDeviceUVC(BaseVideoDevice):
 
     def _get_frame_and_timestamp(self, mode='img'):
         """ Get a frame and its associated timestamp. """
-        self.previous_timestamp = self.current_timestamp
-        self.current_timestamp = time.time()
 
-        start = time.time()
         if mode not in ('img', 'bgr', 'gray', 'jpeg_buffer'):
             raise ValueError('Unsupported mode: {}'.format(mode))
        
         uvc_frame = self.capture.get_frame()
-
-        end = time.time()
-        #print('T = ', end - start)
-        # print( ' (UVC)=> call_back: {:.3f} capture_time: {:.3f}'.format(\
-        #    1/(self.current_timestamp - self.previous_timestamp),\
-        #    1/(end - self.current_timestamp)))
 
         return getattr(uvc_frame, mode), uvc_frame.timestamp
 
@@ -424,12 +415,14 @@ class  VideoDeviceFLIR(BaseVideoDevice):
 
         #  Begin acquiring images
         #self.capture.BeginAcquisition()
-
+        import uvc
+        
         
         try:
             #  Retrieve next received image
             image_result = self.capture.GetNextImage()
             self.capture.TimestampLatch.Execute()
+            dummy_timestamp = uvc.get_time_monotonic()
 
             # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
             #timestamp = float(image_result.GetTimestamp()) / 1e9
@@ -468,4 +461,4 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         #     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
         #a = frame.GetNDArray()
         #b = a[::2,::2,:]
-        return frame.GetNDArray(), timestamp
+        return frame.GetNDArray(), dummy_timestamp

@@ -5,7 +5,11 @@ import multiprocessing as mp
 import time
 
 from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
-
+# Added this to solve the difference between T265 repo and pri
+# This is only called to print out the time sync values so that pupil
+# player can load and sync the eye and world videos
+# TODO: Solve this issue correctly
+from uvc import get_time_monotonic
 
 class MultiStreamRecorder(BaseRecorder):
     """ Recorder for multiple streams. """
@@ -95,7 +99,15 @@ class MultiStreamRecorder(BaseRecorder):
     @classmethod
     def _start_processes(cls, processes):
         """ Start all recorder processes. """
+        now = time.time()
+        now_m = get_time_monotonic()
+        print("_start_process start time = ", now)
+        print("_start_process start time monotonic = ", now_m)
         for process in processes.values():
+            now = time.time()
+            now_m = get_time_monotonic()
+            print("process start time = ", now)        
+            print("process start time monotonic = ", now_m)        
             process.start()
 
     @classmethod
@@ -106,6 +118,11 @@ class MultiStreamRecorder(BaseRecorder):
             process.join()
 
     def run(self):
+        now = time.time()
+        now_m = get_time_monotonic()
+        print("run start time = ", now)
+        print("run start time monotonic= ", now_m)
+
         """ Main recording loop. """
         if not self.quiet:
             print('Started recording to {}'.format(self.folder))
@@ -121,7 +138,6 @@ class MultiStreamRecorder(BaseRecorder):
 
         start_time = time.time()
 
-        now = time.time()
         while (time.time() - now < self.duration):
             try:
                 # get fps from queues

@@ -172,7 +172,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                     '-c:v', codec,  # video codec
                     # '-tune', 'film',  # codec tuning
                     filename]
-        elif (size == '1280x1024'):#2048x1536
+        elif (size == 'crazy_large'):#TODO: CLean up this, only for test
             return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
                     # -- Input -- #
                     '-an',  # no audio

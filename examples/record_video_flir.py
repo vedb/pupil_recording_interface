@@ -13,8 +13,8 @@ if __name__ == '__main__':
 
     codec = 'libx265'
     # camera configurations
-    recording_duration = 720
-    flir_fps = 30 
+    recording_duration = 900
+    flir_fps = 30
     #flir_resolution = (1536, 2048)#(1024, 1280)#
     #flir_resolution = (768, 1024)
     flir_resolution = (1024, 1280)
@@ -25,17 +25,17 @@ if __name__ == '__main__':
             'flir', flir_uid, name='world', codec = codec,
             resolution= flir_resolution, fps=flir_fps, 
             exposure_value = exposure_value, gain = gain), #(1536, 2048)
-       #  VideoConfig(
-       #      'uvc', 'Pupil Cam2 ID0', name='eye0', codec = codec,
-       #      resolution=(400, 400), fps=120, color_format='gray'),
-       #   VideoConfig(
-       #      'uvc', 'Pupil Cam2 ID1', name='eye1', codec = codec,
-       #      resolution=(400, 400), fps=120, color_format='gray'),
-       # VideoConfig(
-       #     't265', 't265',
-       #     resolution=(800, 1696), fps=30, color_format='gray'),
-       # OdometryConfig(
-       #     't265', 't265', name='odometry'),
+        VideoConfig(
+            'uvc', 'Pupil Cam2 ID0', name='eye0', codec = codec,
+            resolution=(400, 400), fps=120, color_format='gray'),
+         VideoConfig(
+            'uvc', 'Pupil Cam2 ID1', name='eye1', codec = codec,
+            resolution=(400, 400), fps=120, color_format='gray'),
+       VideoConfig(
+           't265', 't265',
+           resolution=(800, 1696), fps=30, color_format='gray'),
+       OdometryConfig(
+           't265', 't265', name='odometry'),
     ]
 
     # change this to False for multi-threaded recording
