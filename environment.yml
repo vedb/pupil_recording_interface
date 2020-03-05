@@ -14,9 +14,18 @@ dependencies:
   - x264=1!152.20180806
   - opencv=4.1.0
   - netcdf4
-  - msgpack-python
+  - msgpack-python=0.6.2
   - tqdm
+  # dev requirements
+  - pytest
+  - coverage
+  - flake8
+  - black
+  - sphinx==1.8.5
+  - sphinx_rtd_theme
+  - numpydoc
+  - matplotlib
   - pip:
-    - opencv-python=4.1.0.25 # reinstall through pip because cli breaks otherwise
+    - opencv-python==4.1.0.25 # reinstall through pip because cli breaks otherwise
     - pyrealsense2
     - git+https://github.com/pupil-labs/pyuvc.git

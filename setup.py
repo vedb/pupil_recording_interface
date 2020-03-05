@@ -5,7 +5,7 @@ requirements = [
     "pandas",
     "xarray",
     "scipy",
-    "msgpack",
+    "msgpack<1.0",
     "opencv-python",
 ]
 
