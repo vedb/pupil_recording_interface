@@ -8,8 +8,6 @@ from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
 # Added this to solve the difference between T265 repo and pri
 # This is only called to print out the time sync values so that pupil
 # player can load and sync the eye and world videos
-# TODO: Solve this issue correctly
-from uvc import get_time_monotonic
 
 
 class MultiStreamRecorder(BaseRecorder):
@@ -133,6 +131,9 @@ class MultiStreamRecorder(BaseRecorder):
             json.dump(my_json_file, f, ensure_ascii=False, indent=4)
 
     def run(self):
+        # TODO: Solve this issue correctly
+        from uvc import get_time_monotonic
+
         now = time.time()
         now_m = get_time_monotonic()
         self.start_time = now
