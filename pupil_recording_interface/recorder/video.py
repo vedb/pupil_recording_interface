@@ -10,7 +10,7 @@ import cv2
 
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.device.video import \
-    BaseVideoDevice, VideoDeviceUVC, VideoDeviceFLIR
+     VideoDeviceUVC, VideoDeviceFLIR
 from pupil_recording_interface.recorder import BaseStreamRecorder
 
 
@@ -18,7 +18,8 @@ class BaseVideoEncoder(object):
     """ Base class for encoder interfaces. """
 
     def __init__(self, folder, device_name, resolution, fps,
-                 color_format='bgr24', codec='libx264', overwrite=False, preset = 'ultrafast', crf = '18'):
+                 color_format='bgr24', codec='libx264', overwrite=False,
+                 preset='ultrafast', crf='18'):
         """ Constructor.
 
         Parameters
@@ -45,7 +46,7 @@ class BaseVideoEncoder(object):
         overwrite: bool, default False
             If True, overwrite existing video files with the same name.
         """
-        #print('Base Codec: ', codec)
+        # print('Base Codec: ', codec)
         self.ffmpeg_counter = 0
         self.video_file = os.path.join(folder, '{}.mp4'.format(device_name))
         if os.path.exists(self.video_file):
@@ -68,7 +69,8 @@ class BaseVideoEncoder(object):
     @classmethod
     @abc.abstractmethod
     def _init_video_writer(
-            cls, video_file, codec, color_format, fps, resolution, preset = 'ultrafast', crf = '18'):
+            cls, video_file, codec, color_format, fps, resolution,
+            preset='ultrafast', crf='18'):
         """ Init the video writer. """
 
     @abc.abstractmethod
@@ -97,6 +99,7 @@ class VideoEncoderOpenCV(BaseVideoEncoder):
         """
         self.video_writer.write(img)
 
+
 # Stub, for maybe.
 # class HDFEncoder(BaseVideoEncoder):
 #     """Not actually an encoder, just writing to hdf file"""
@@ -113,7 +116,7 @@ class VideoEncoderOpenCV(BaseVideoEncoder):
 #         # Get resolution
 #         resx, resy = resolution
 #         # bastardizing inputs in uninterpretable fashion
-#         mins = color_format 
+#         mins = color_format
 #         n = fps * 60 * mins
 #         if codec is not None:
 #             copts = dict(compression_opts=codec)
@@ -123,7 +126,8 @@ class VideoEncoderOpenCV(BaseVideoEncoder):
 #         writer = h5py.File(video_file, mode='rb')
 #         # Pre-allocate dataset(s?)
 #         # Dataset for video
-#         writer.create_dataset('video', shape=(resx, resy, 3, n), dtype=np.uint8, compression=compression, **copts)
+#         writer.create_dataset('video', shape=(resx, resy, 3, n),
+#                           dtype=np.uint8, compression=compression, **copts)
 #         # Dataset for time?
 #         #writer.create_dataset('time', shape=(n,), dtype=np.float32)
 #         return writer
@@ -137,26 +141,25 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
 
     @classmethod
     def _init_video_writer(
-            cls, video_file, codec, color_format, fps, resolution, preset = 'ultrafast', crf = '18'):
+            cls, video_file, codec, color_format, fps, resolution,
+            preset='ultrafast', crf='18'):
         """ Init the video writer. """
-        print('init:', resolution[::-1])
         cmd = cls._get_ffmpeg_cmd(
-            video_file, resolution[::-1], fps, codec, color_format, preset, crf)#[::-1]
+            video_file, resolution[::-1], fps, codec, color_format, preset,
+            crf)  # [::-1]
         print('FFMPEG_cmd:', cmd)
 
         return subprocess.Popen(cmd, stdin=subprocess.PIPE)
-        #fourcc = 'XVID'
-        #print('encoder:', resolution[::-1], fps)
-        #return cv2.VideoWriter('/home/veddy/Videos/FLIR_images/capture_3/'+str(resolution[0])+'.avi', cv2.VideoWriter_fourcc(*fourcc),fps,(resolution[0],resolution[1]))
 
     @classmethod
     def _get_ffmpeg_cmd(
-            cls, filename, frame_shape, fps, codec, color_format, preset = 'ultrafast', crf = '18'):
+            cls, filename, frame_shape, fps, codec, color_format,
+            preset='ultrafast', crf='18'):
         """ Get the FFMPEG command to start the sub-process. """
         size = '{}x{}'.format(frame_shape[0], frame_shape[1])
         print('codec:size ', size)
-        if(preset is 'None'):
-            return ['ffmpeg',# '-hide_banner', '-loglevel', 'error',
+        if (preset == 'None'):
+            return ['ffmpeg',  # '-hide_banner', '-loglevel', 'error',
                     # -- Input -- #
                     '-an',  # no audio
                     '-r', str(fps),  # fps
@@ -164,15 +167,15 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                     '-s', size,  # resolution
                     '-pix_fmt', color_format,  # color format
                     '-i', 'pipe:',  # piped to stdin
-                    #'-preset', preset,
-                    #'-profile:v', 'high444',
-                    #'-refs', '5',
-                    #'-crf', crf,
+                    # '-preset', preset,
+                    # '-profile:v', 'high444',
+                    # '-refs', '5',
+                    # '-crf', crf,
                     # -- Output -- #
                     '-c:v', codec,  # video codec
                     # '-tune', 'film',  # codec tuning
                     filename]
-        elif (size == 'crazy_large'):#TODO: CLean up this, only for test
+        elif (size == 'crazy_large'):  # TODO: CLean up this, only for test
             return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
                     # -- Input -- #
                     '-an',  # no audio
@@ -182,8 +185,8 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                     '-pix_fmt', color_format,  # color format
                     '-i', 'pipe:',  # piped to stdin
                     '-preset', preset,
-                    #'-profile:v', 'high444',
-                    #'-refs', '5',
+                    # '-profile:v', 'high444',
+                    # '-refs', '5',
                     '-vf', 'scale=1280:720',
                     '-crf', crf,
                     # -- Output -- #
@@ -200,14 +203,13 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                     '-pix_fmt', color_format,  # color format
                     '-i', 'pipe:',  # piped to stdin
                     '-preset', preset,
-                    #'-profile:v', 'high444',
-                    #'-refs', '5',
+                    # '-profile:v', 'high444',
+                    # '-refs', '5',
                     '-crf', crf,
                     # -- Output -- #
                     '-c:v', codec,  # video codec
                     # '-tune', 'film',  # codec tuning
                     filename]
-
 
     def write(self, img):
         """ Write a frame to disk.
@@ -217,12 +219,11 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         img : array_like
             The input frame.
         """
-        #print('write image', img.shape)
+        # print('write image', img.shape)
         self.video_writer.stdin.write(img.tostring())
-        #np.savez('/home/veddy/Videos/FLIR_images/capture_3/frame_'+str(self.ffmpeg_counter),img)
-        #self.ffmpeg_counter = self .ffmpeg_counter + 1
-        #self.video_writer.write(img)
-
+        # np.savez('/home/veddy/Videos/FLIR_images/capture_3/frame_'+str(self.ffmpeg_counter),img)
+        # self.ffmpeg_counter = self .ffmpeg_counter + 1
+        # self.video_writer.write(img)
 
 
 class VideoRecorder(BaseStreamRecorder):
@@ -246,7 +247,7 @@ class VideoRecorder(BaseStreamRecorder):
         name: str, optional
             The name of the recorder. If not specified, `device.uid` will be
             used.
- 
+
         policy: str, default 'new_folder'
             Policy for recording folder creation. If 'new_folder',
             new sub-folders will be created with incremental numbering. If
@@ -267,7 +268,7 @@ class VideoRecorder(BaseStreamRecorder):
         super(VideoRecorder, self).__init__(
             folder, device, name=name, policy=policy, **kwargs)
 
-        #print('Codec: ', codec)
+        # print('Codec: ', codec)
 
         self.encoder = VideoEncoderFFMPEG(
             self.folder, self.name, self.device.resolution,

@@ -28,7 +28,6 @@ version = ''
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'
 
-
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -79,7 +78,6 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -114,7 +112,6 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'pupil_recording_interfacedoc'
 
-
 # -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
@@ -139,20 +136,20 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'pupil_recording_interface.tex', 'pupil\\_recording\\_interface Documentation',
+    (master_doc, 'pupil_recording_interface.tex',
+     'pupil\\_recording\\_interface Documentation',
      'Peter Hausamann', 'manual'),
 ]
-
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pupil_recording_interface', 'pupil_recording_interface Documentation',
+    (master_doc, 'pupil_recording_interface',
+     'pupil_recording_interface Documentation',
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -160,11 +157,11 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'pupil_recording_interface', 'pupil_recording_interface Documentation',
+    (master_doc, 'pupil_recording_interface',
+     'pupil_recording_interface Documentation',
      author, 'pupil_recording_interface', 'One line description of project.',
      'Miscellaneous'),
 ]
-
 
 # -- Options for Epub output -------------------------------------------------
 

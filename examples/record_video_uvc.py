@@ -13,10 +13,10 @@ if __name__ == '__main__':
             resolution=(1280, 720), fps=60),
         VideoConfig(
             'uvc', 'Pupil Cam1 ID0', name='eye0',
-            resolution=(320, 240), fps=120, color_format='gray'),
+            resolution=(400, 400), fps=120, color_format='gray'),
         VideoConfig(
             'uvc', 'Pupil Cam1 ID1', name='eye1',
-            resolution=(320, 240), fps=120, color_format='gray'),
+            resolution=(400, 400), fps=120, color_format='gray'),
     ]
 
     # start recorder

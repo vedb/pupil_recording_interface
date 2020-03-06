@@ -21,9 +21,9 @@ from glob import iglob
 import msgpack
 import numpy as np
 
-assert (
-    msgpack.version[1] >= 5#(msgpack.version[0] + msgpack.version[1] * 0.1 + msgpack.version[2] * 0.01) > 0.56
-), "msgpack out of date, please upgrade to version (0, 5, 6 ) or later."
+# assert (
+#    msgpack.version[1] >= 5
+# ), "msgpack out of date, please upgrade to version (0, 5, 6 ) or later."
 
 
 logger = logging.getLogger(__name__)

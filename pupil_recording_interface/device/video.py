@@ -5,10 +5,9 @@ import cv2
 # TODO import uvc here
 
 from pupil_recording_interface.device import BaseDevice
-import PySpin
 from datetime import datetime
-import time
 import statistics
+
 
 class BaseVideoDevice(BaseDevice):
     """ Base class for all video devices. """
@@ -64,7 +63,7 @@ class BaseVideoDevice(BaseDevice):
         frame : array_like
             The frame to display.
         """
-        #print('FLIR Frame: ', frame)
+        # print('FLIR Frame: ', frame)
         cv2.imshow(self.uid, frame)
         return cv2.waitKey(1)
 
@@ -140,7 +139,7 @@ class VideoDeviceUVC(BaseVideoDevice):
 
         if mode not in ('img', 'bgr', 'gray', 'jpeg_buffer'):
             raise ValueError('Unsupported mode: {}'.format(mode))
-       
+
         uvc_frame = self.capture.get_frame()
 
         return getattr(uvc_frame, mode), uvc_frame.timestamp
@@ -177,9 +176,11 @@ class VideoDeviceUVC(BaseVideoDevice):
         return self.capture.get_frame()
 
 
-class  VideoDeviceFLIR(BaseVideoDevice):
+class VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
-    def __init__(self, uid, resolution, fps, exposure_value = 31000.0, gain = 18, **kwargs):
+
+    def __init__(self, uid, resolution, fps, exposure_value=31000.0, gain=18,
+                 **kwargs):
         """ Constructor.
 
         Parameters
@@ -207,25 +208,30 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         self.gain = gain
         self.exposure_value = exposure_value
 
-    def _compute_timestamp_offset(self, cam, number_of_iterations, camera_type):
+    def _compute_timestamp_offset(self, cam, number_of_iterations,
+                                  camera_type):
         """ Gets timestamp offset in seconds from input camera """
 
-        # This method is required because the timestamp stored in the camera is relative to when it was powered on, so an
-        # offset needs to be applied to get it into epoch time; from tests I've done, this appears to be accurate to ~1e-3
-        # seconds.
+        # This method is required because the timestamp stored in the camera is
+        # relative to when it was powered on, so an offset needs to be applied
+        # to get it into epoch time; from tests I've done, this appears to be
+        # accurate to ~1e-3 seconds.
         print("Measuring TimeStamp Offset ...")
         timestamp_offsets = []
         for i in range(number_of_iterations):
-            # Latch timestamp. This basically "freezes" the current camera timer into a variable that can be read with
-            # TimestampLatchValue()
+            # Latch timestamp. This basically "freezes" the current camera
+            # timer into a variable that can be read with TimestampLatchValue()
             cam.TimestampLatch.Execute()
 
-            # Compute timestamp offset in seconds; note that timestamp latch value is in nanoseconds
-            
-            if(camera_type == 'BlackFly'):
-                timestamp_offset = datetime.now().timestamp() - cam.TimestampLatchValue.GetValue()/1e9
-            elif(camera_type == 'Chameleon'):
-                timestamp_offset = datetime.now().timestamp() - cam.Timestamp.GetValue()/1e9
+            # Compute timestamp offset in seconds; note that timestamp latch
+            # value is in nanoseconds
+
+            if (camera_type == 'BlackFly'):
+                timestamp_offset = datetime.now().timestamp() - \
+                                   cam.TimestampLatchValue.GetValue() / 1e9
+            elif (camera_type == 'Chameleon'):
+                timestamp_offset = datetime.now().timestamp() - \
+                                   cam.Timestamp.GetValue() / 1e9
             else:
                 print('\n\nInvalid Camera Type!!\n\n')
                 return 0
@@ -236,8 +242,6 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         # Return the median value
         return statistics.median(timestamp_offsets)
 
-
-    #@classmethod
     def print_device_info(self, nodemap):
         """
         This function prints the device information of the camera from the
@@ -268,15 +272,13 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
 
-    #@classmethod    
     def _get_capture(self, uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
         # TODO specify additional keyword arguments
         import PySpin
-        from datetime import datetime
 
         system = PySpin.System.GetInstance()
-        self.flire_system = system
+        self.flir_system = system
 
         # Retrieve list of cameras from the system
         cam_list = system.GetCameras()
@@ -309,28 +311,27 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         self.print_device_info(nodemap_tldevice)
 
         capture.TriggerMode.SetValue(PySpin.TriggerMode_Off)
-        
-        
+
         # Retrieve GenICam nodemap
         nodemap = capture.GetNodeMap()
         self.nodemap = nodemap
 
-        device_model = PySpin.CStringPtr(nodemap.GetNode("DeviceModelName")).GetValue()
-        
+        device_model = PySpin.CStringPtr(
+            nodemap.GetNode("DeviceModelName")).GetValue()
+
         if ('Chameleon' in device_model):
             self.camera_type = 'Chameleon'
-        elif('Blackfly' in device_model):
+        elif ('Blackfly' in device_model):
             self.camera_type = 'BlackFly'
         else:
             self.camera_type = device_model
             print('\n\nInvalid Camera Type during initit_1!!\n\n')
 
         print('FLIR Camera Type = ', self.camera_type)
-        #Todo: Read device type from camera
-        #self.camera_type = 'Chameleon'
-        if(self.camera_type == 'Chameleon'):
+        if (self.camera_type == 'Chameleon'):
             print("Initializing Chameleon ...")
 
+            # TODO: Read these settings from yaml file
             # if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
             #     print("Unable to disable automatic exposure. Aborting...")
             #     return False
@@ -341,7 +342,8 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             #     print("Unable to set exposure time. Aborting...")
             #     return False
 
-            # node_GainAuto = PySpin.CEnumerationPtr(nodemap.GetNode("GainAuto"))
+            # node_GainAuto = PySpin.CEnumerationPtr(
+            #                   nodemap.GetNode("GainAuto"))
             # node_GainAuto_off = node_GainAuto.GetEntryByName("Off")
             # node_GainAuto.SetIntValue(node_GainAuto_off.GetValue())
 
@@ -349,26 +351,29 @@ class  VideoDeviceFLIR(BaseVideoDevice):
             # node_Gain.SetValue(self.gain)
             # print('gain set to: ', node_Gain.GetValue())
 
-            node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(nodemap.GetNode("AcquisitionFrameRateAuto"))
-            node_AcquisitionFrameRateAuto_off = node_AcquisitionFrameRateAuto.GetEntryByName("Off")
-            node_AcquisitionFrameRateAuto.SetIntValue(node_AcquisitionFrameRateAuto_off.GetValue())
+            node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(
+                nodemap.GetNode("AcquisitionFrameRateAuto"))
+            node_AcquisitionFrameRateAuto_off = \
+                node_AcquisitionFrameRateAuto.GetEntryByName("Off")
+            node_AcquisitionFrameRateAuto.SetIntValue(
+                node_AcquisitionFrameRateAuto_off.GetValue())
 
+            node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(
+                nodemap.GetNode("AcquisitionFrameRateEnabled"))
+            node_AcquisitionFrameRateEnable_bool.SetValue(True)
 
-            node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(nodemap.GetNode("AcquisitionFrameRateEnabled"))
-            node_AcquisitionFrameRateEnable_bool.SetValue(True) 
-
-            node_AcquisitionFrameRate = PySpin.CFloatPtr(nodemap.GetNode("AcquisitionFrameRate"))
+            node_AcquisitionFrameRate = PySpin.CFloatPtr(
+                nodemap.GetNode("AcquisitionFrameRate"))
             node_AcquisitionFrameRate.SetValue(self.fps)
             print('fps set to: ', node_AcquisitionFrameRate.GetValue())
 
             # # Ensure desired exposure time does not exceed the maximum
             # exposure_time_to_set = self.exposure_value
-            # exposure_time_to_set = min(capture.ExposureTime.GetMax(), exposure_time_to_set)
+            # exposure_time_to_set = min(capture.ExposureTime.GetMax(),
+            #                            exposure_time_to_set)
             # capture.ExposureTime.SetValue(exposure_time_to_set)
             # print('exposure set to: ', capture.ExposureTime.GetValue())
-
-
-        elif(self.camera_type == 'BlackFly'):
+        elif (self.camera_type == 'BlackFly'):
             print("Initializing BlackFly ...")
             capture.AcquisitionFrameRateEnable.SetValue(True)
             capture.AcquisitionFrameRate.SetValue(self.fps)
@@ -379,19 +384,22 @@ class  VideoDeviceFLIR(BaseVideoDevice):
 
         StreamBufferHandlingMode = PySpin.CEnumerationPtr(
             nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
-        StreamBufferHandlingMode_Entry = StreamBufferHandlingMode.GetEntryByName(
-            'NewestOnly')
-        StreamBufferHandlingMode.SetIntValue(StreamBufferHandlingMode_Entry.GetValue())
-        print('Set FLIR buffer handling to: NewestOnly: ', StreamBufferHandlingMode_Entry.GetValue())
+        StreamBufferHandlingMode_Entry = \
+            StreamBufferHandlingMode.GetEntryByName('NewestOnly')
+        StreamBufferHandlingMode.SetIntValue(
+            StreamBufferHandlingMode_Entry.GetValue())
+        print('Set FLIR buffer handling to: NewestOnly: ',
+              StreamBufferHandlingMode_Entry.GetValue())
 
-        # TODO: Find an equivalent way of reading the actual frame rate for Chameleon
+        # TODO: Find a way of reading the actual frame rate for Chameleon
         # Chameleon doesn't have this register or anything similar to this
         if (self.camera_type == 'BlackFly'):
-            print('Actual Frame Rate = ', capture.AcquisitionResultingFrameRate.GetValue())
+            print('Actual Frame Rate = ',
+                  capture.AcquisitionResultingFrameRate.GetValue())
 
-
-        self.timestamp_offset = self._compute_timestamp_offset(capture, 20, self.camera_type)
-        print("\nTimeStamp Offset = ", self.timestamp_offset/1e9)
+        self.timestamp_offset = self._compute_timestamp_offset(
+            capture, 20, self.camera_type)
+        print("\nTimeStamp Offset = ", self.timestamp_offset / 1e9)
 
         #  Begin acquiring images
         capture.BeginAcquisition()
@@ -400,37 +408,41 @@ class  VideoDeviceFLIR(BaseVideoDevice):
         return capture
 
     def _get_frame_and_timestamp(self, mode='img'):
+        import PySpin
+
         """ Get a frame and its associated timestamp. """
         # TODO return grayscale frame if mode=='gray'
-        #import PySpin
-        #from datetime import datetime
-        #self.previous_timestamp = self.current_timestamp
-        #self.current_timestamp = time.time()
+        # import PySpin
+        # from datetime import datetime
+        # self.previous_timestamp = self.current_timestamp
+        # self.current_timestamp = time.time()
 
-        #count = 0
-        #while(time.time() - self.previous_timestamp < 0.005):
+        # count = 0
+        # while(time.time() - self.previous_timestamp < 0.005):
         #   count = count + 1
-        #print('t = ', time.time() - self.previous_timestamp)
-        #self.previous_timestamp = time.time()
+        # print('t = ', time.time() - self.previous_timestamp)
+        # self.previous_timestamp = time.time()
 
         #  Begin acquiring images
-        #self.capture.BeginAcquisition()
+        # self.capture.BeginAcquisition()
         import uvc
-        
-        
+
         try:
             #  Retrieve next received image
             image_result = self.capture.GetNextImage()
             self.capture.TimestampLatch.Execute()
-            dummy_timestamp = uvc.get_time_monotonic()
+            # TODO: Make sure there is no harm reading uvc time stamp
+            uvc_timestamp = uvc.get_time_monotonic()
 
             # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
-            #timestamp = float(image_result.GetTimestamp()) / 1e9
-            # TODO: Temporary solution to fix the FLIR timestamp issue  
-            if(self.camera_type == 'BlackFly'):
-                timestamp = self.timestamp_offset + self.capture.TimestampLatchValue.GetValue()/1e9
-            elif(self.camera_type == 'Chameleon'):
-                timestamp = self.timestamp_offset + self.capture.Timestamp.GetValue()/1e9
+            # timestamp = float(image_result.GetTimestamp()) / 1e9
+            # TODO: Temporary solution to fix the FLIR timestamp issue
+            if (self.camera_type == 'BlackFly'):
+                timestamp = self.timestamp_offset + \
+                            self.capture.TimestampLatchValue.GetValue() / 1e9
+            elif (self.camera_type == 'Chameleon'):
+                timestamp = self.timestamp_offset + \
+                            self.capture.Timestamp.GetValue() / 1e9
             else:
                 print('\n\nInvalid Camera Type during get_frame!!\n\n')
 
@@ -448,17 +460,10 @@ class  VideoDeviceFLIR(BaseVideoDevice):
                 #  Release image
                 image_result.Release()
 
-
         except PySpin.SpinnakerException as ex:
             # TODO check correct error handling
             raise ValueError(ex)
-        #self.capture.EndAcquisition()
-        #end = time.time()
-        #print('T = ', end - start)
 
-        # print(' (FLIR)=> call_back: {:2.3f} capture_time: {:2.3f} read_fps: {:2.3f}'.format(\
-        #     1/(self.current_timestamp - self.previous_timestamp),\
-        #     1/(end - self.current_timestamp), self.capture.AcquisitionResultingFrameRate.GetValue()))
-        #a = frame.GetNDArray()
-        #b = a[::2,::2,:]
-        return frame.GetNDArray(), dummy_timestamp
+        # TODO: Make a note to remember we're using uvc timestamp
+        timestamp = uvc_timestamp
+        return frame.GetNDArray(), timestamp

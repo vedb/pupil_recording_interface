@@ -11,11 +11,12 @@ from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
 # TODO: Solve this issue correctly
 from uvc import get_time_monotonic
 
+
 class MultiStreamRecorder(BaseRecorder):
     """ Recorder for multiple streams. """
 
     def __init__(self, folder, configs, policy='new_folder', quiet=False,
-                 show_video=False, duration = 30):
+                 show_video=False, duration=30):
         """ Constructor.
 
         Parameters
@@ -50,8 +51,10 @@ class MultiStreamRecorder(BaseRecorder):
         self._max_queue_size = 20  # max size of process fps queue
         self.all_devices_initialized = True
         self.duration = duration
-        print("Recording for %d seconds ..."%(self.duration))
-
+        self.start_time_monotonic = 0
+        self.start_time = 0
+        self.run_duration = 0
+        print("Recording for %d seconds ..." % (self.duration))
 
     @classmethod
     def _init_recorders(cls, folder, configs, show_video, overwrite):
@@ -91,7 +94,8 @@ class MultiStreamRecorder(BaseRecorder):
             for c_name in recorders.keys()}
         processes = {
             c_name:
-                mp.Process(target=c.run_in_thread, args=(stop_event, queues[c_name]))
+                mp.Process(target=c.run_in_thread,
+                           args=(stop_event, queues[c_name]))
             for c_name, c in recorders.items()}
 
         return processes, queues, stop_event
@@ -99,15 +103,7 @@ class MultiStreamRecorder(BaseRecorder):
     @classmethod
     def _start_processes(cls, processes):
         """ Start all recorder processes. """
-        now = time.time()
-        now_m = get_time_monotonic()
-        print("_start_process start time = ", now)
-        print("_start_process start time monotonic = ", now_m)
         for process in processes.values():
-            now = time.time()
-            now_m = get_time_monotonic()
-            print("process start time = ", now)        
-            print("process start time monotonic = ", now_m)        
             process.start()
 
     @classmethod
@@ -117,9 +113,30 @@ class MultiStreamRecorder(BaseRecorder):
         for process in processes.values():
             process.join()
 
+    # TODO: Read actual software versions and system info
+    def save_metadata(self):
+        import json
+        my_json_file = {
+            "duration_s": self.run_duration,
+            "meta_version": "2.1",
+            "min_player_version": "1.16",
+            "recording_name": self.folder,
+            "recording_software_name": "Pupil Capture",
+            "recording_software_version": "1.21.5",
+            "recording_uuid": "63d404ee-5f05-45f0-854b-a403efbbfbe3",
+            "start_time_synced_s": self.start_time_monotonic,  # 1879.586018413
+            "start_time_system_s": self.start_time,  # 1582679643.3734152
+            "system_info": "User: veddy, Platform: Linux, Machine: veddy02"
+        }
+        with open(self.folder + '/info.player.json', 'w',
+                  encoding='utf-8') as f:
+            json.dump(my_json_file, f, ensure_ascii=False, indent=4)
+
     def run(self):
         now = time.time()
         now_m = get_time_monotonic()
+        self.start_time = now
+        self.start_time_monotonic = now_m
         print("run start time = ", now)
         print("run start time monotonic= ", now_m)
 
@@ -158,7 +175,8 @@ class MultiStreamRecorder(BaseRecorder):
             except KeyboardInterrupt:
                 print('KeyboardInterrupt!!')
                 break
-        print('\nDone Recording!', time.time() - now)
+        self.run_duration = time.time() - now
+        print('\nDone Recording!', self.run_duration)
 
         # stop recording threads
         self._stop_processes(processes, stop_event)
@@ -168,4 +186,5 @@ class MultiStreamRecorder(BaseRecorder):
             recorder.run_post_thread_hooks()
 
         if not self.quiet:
+            self.save_metadata()
             print('\nStopped recording')
