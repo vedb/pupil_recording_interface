@@ -9,12 +9,13 @@ from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
 # This is only called to print out the time sync values so that pupil
 # player can load and sync the eye and world videos
 
+from pupil_recording_interface.gaze_assessment import GazeAssessment
 
 class MultiStreamRecorder(BaseRecorder):
     """ Recorder for multiple streams. """
 
     def __init__(self, folder, configs, policy='new_folder', quiet=False,
-                 show_video=False, duration=30):
+                 show_video=False, data_collection_config = None):
         """ Constructor.
 
         Parameters
@@ -48,11 +49,17 @@ class MultiStreamRecorder(BaseRecorder):
         self._stdout_delay = 3.  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
         self.all_devices_initialized = True
-        self.duration = duration
+        self.data_collection_config = data_collection_config
+        self.recording_duration = self.data_collection_config['Experiment']['recording_duration']
+        self.pupil_source_directory = self.data_collection_config['Experiment']['pupil_directory']
+        self.run_assessment = self.data_collection_config['Experiment']['run_assessment']
+        self.run_pupil_capture = self.data_collection_config['Experiment']['run_pupil_capture']
         self.start_time_monotonic = 0
         self.start_time = 0
         self.run_duration = 0
-        print("Recording for %d seconds ..." % (self.duration))
+        self.gaze_assessment = GazeAssessment(self.folder)
+
+        print("Recording for %d seconds ..." % (self.recording_duration))
 
     @classmethod
     def _init_recorders(cls, folder, configs, show_video, overwrite):
@@ -111,6 +118,27 @@ class MultiStreamRecorder(BaseRecorder):
         for process in processes.values():
             process.join()
 
+    def call_gaze_assessment(self):
+        result = False
+        if(self.run_assessment):
+            result = self.gaze_assessment.calibration_assessment(self.folder)
+
+        if(result != True):
+            print("Skipped Gaze Assessment: \n", result)    
+        return result
+
+    def call_pupil_player(self):
+        import os
+        terminal_command = "python3 " + self.pupil_source_directory + "/main.py player " + self.folder
+        # TODO: Return the pupil player calibration and gaze mapping result
+        result = False
+        if(self.run_pupil_capture):
+            result = os.system(terminal_command)
+        if(result != True):
+            print("\nSkipped Pupil Player with : ", result)    
+        return result
+
+
     # TODO: Read actual software versions and system info
     def save_metadata(self):
         import json
@@ -138,12 +166,12 @@ class MultiStreamRecorder(BaseRecorder):
         now_m = get_time_monotonic()
         self.start_time = now
         self.start_time_monotonic = now_m
-        print("run start time = ", now)
-        print("run start time monotonic= ", now_m)
+        # print("run start time = ", now)
+        # print("run start time monotonic= ", now_m)
 
         """ Main recording loop. """
         if not self.quiet:
-            print('Started recording to {}'.format(self.folder))
+            print('Started recording to {}\n'.format(self.folder))
 
         # run hooks that need to be run in the main thread
         for recorder in self.recorders.values():
@@ -156,7 +184,7 @@ class MultiStreamRecorder(BaseRecorder):
 
         start_time = time.time()
 
-        while (time.time() - now < self.duration):
+        while (time.time() - now < self.recording_duration):
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
@@ -171,7 +199,7 @@ class MultiStreamRecorder(BaseRecorder):
                     f_strs = ', '.join(
                         '{}: {:.2f} Hz'.format(c_name, c.current_fps)
                         for c_name, c in self.recorders.items())
-                    print('\rSampling rates: ' + f_strs, end='')
+                    print('\rSampling rates: ' + f_strs + " remaining time: {a:3d}".format(a = self.recording_duration - int(time.time() - now)), end='')
 
             except KeyboardInterrupt:
                 print('KeyboardInterrupt!!')
@@ -185,7 +213,16 @@ class MultiStreamRecorder(BaseRecorder):
         # run hooks that need to be run in the main thread
         for recorder in self.recorders.values():
             recorder.run_post_thread_hooks()
-
+        
+        self.save_metadata()
         if not self.quiet:
-            self.save_metadata()
             print('\nStopped recording')
+
+        result = self.call_pupil_player()
+        print("\n\npupil detection and gaze mapping returned: ", result)
+
+        result = self.call_gaze_assessment()
+        print("\n\ncalibration and gaze mapping returned: ", result)
+        print("You may quit!! [If not already :/ ]")
+
+

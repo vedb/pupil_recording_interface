@@ -145,9 +145,9 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             preset='ultrafast', crf='18'):
         """ Init the video writer. """
         cmd = cls._get_ffmpeg_cmd(
-            video_file, resolution[::-1], fps, codec, color_format, preset,
-            crf)  # [::-1]
-        print('FFMPEG_cmd:', cmd)
+            video_file, resolution, fps, codec, color_format, preset,
+            crf)
+        # print('FFMPEG_cmd:', cmd)
 
         return subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
@@ -157,9 +157,10 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             preset='ultrafast', crf='18'):
         """ Get the FFMPEG command to start the sub-process. """
         size = '{}x{}'.format(frame_shape[0], frame_shape[1])
-        print('codec:size ', size)
-        if (preset == 'None'):
-            return ['ffmpeg',  # '-hide_banner', '-loglevel', 'error',
+        # print('codec:size ', size)
+        # TODO: Fix this. The setting for T-265 should be different
+        if (size == '1696x800'):
+            return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
                     # -- Input -- #
                     '-an',  # no audio
                     '-r', str(fps),  # fps
@@ -175,7 +176,8 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                     '-c:v', codec,  # video codec
                     # '-tune', 'film',  # codec tuning
                     filename]
-        elif (size == 'crazy_large'):  # TODO: CLean up this, only for test
+        # TODO: CLean up this, only for test
+        elif (size == 'Extra Large'): #'2048x1536' 
             return ['ffmpeg', '-hide_banner', '-loglevel', 'error',
                     # -- Input -- #
                     '-an',  # no audio
@@ -187,7 +189,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
                     '-preset', preset,
                     # '-profile:v', 'high444',
                     # '-refs', '5',
-                    '-vf', 'scale=1280:720',
+                    '-vf', 'scale=1280:1024', #1280:720
                     '-crf', crf,
                     # -- Output -- #
                     '-c:v', codec,  # video codec

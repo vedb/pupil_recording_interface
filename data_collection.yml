@@ -1,0 +1,83 @@
+
+Experiment: 
+
+    location: UNR
+    experimenter: Kamran B.
+    experiment: Pilot
+    scene: Outdoor
+    task: Walking
+    recording_directory: '~/recordings/flir_test'
+    pupil_directory: '~/Code/pupil/pupil_src'
+    subject_id: KB
+    subject_age: 0
+    subject_gender: male
+    subject_ethnicity: white
+    recording_duration: 30
+    run_pupil_capture: False
+    run_assessment: False
+
+System:
+
+    # For FLIR World Camera uncomment the following lines
+    world_camera_0:
+        resolution: (2048, 1536) # (1280, 1024) #(2048, 1536)
+        fps: 45
+        name: 'world'
+        codec: 'libx265'
+        device_type: flir
+        device_uid: FLIR_19238305
+        color_format: bgr24
+        # 100 fps : 9900.0 #50 fps : 19000 # 30 fps : 31000.0
+        # exposure_value = 31000.0
+        # gain = 18
+    
+    # For Pupil World Camera uncomment the following lines
+    world_camera_1:
+        resolution: (1280, 720)
+        fps: 30
+        name: 'world'
+        codec: 'libx265'
+        device_type: uvc
+        device_uid: Pupil Cam1 ID2
+        color_format: bgr24
+    
+    # For Pupil Eye0 Camera uncomment the following lines
+    eye_camera_0:
+        resolution: (400, 400)
+        fps: 120
+        name: 'eye0'
+        codec: 'libx265'
+        device_type: uvc
+        device_uid: Pupil Cam2 ID0
+        color_format: gray
+    
+    # For Pupil Eye1 Camera uncomment the following lines
+    eye_camera_1:
+        resolution: (400, 400)
+        fps: 120
+        name: 'eye1'
+        codec: 'libx265'
+        device_type: uvc
+        device_uid: Pupil Cam2 ID1
+        color_format: gray
+
+    t265_camera:
+        # For T265 Camera uncomment the following lines
+        resolution: (1696, 800)
+        fps: 30
+        name: 't265'
+        codec: 'libx265'
+        device_type: t265
+        device_uid: t265
+        color_format: gray
+
+    t265_odometry:
+        resolution: None
+        fps: 200
+        name: 'odometry'
+        device_type: t265
+        device_uid: t265
+        codec: 'libx265'
+        device_type: t265
+        device_uid: t265
+        color_format: gray

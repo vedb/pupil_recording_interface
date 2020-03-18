@@ -30,8 +30,8 @@ class StreamConfig(object):
 class VideoConfig(StreamConfig):
     """ Configuration for video streams. """
 
-    def __init__(self, device_type, device_uid, resolution, fps,
-                 name=None, color_format='bgr24', side='both', **kwargs):
+    def __init__(self, device_type, device_uid, name=None,
+                 resolution = None, fps = 30, color_format='bgr24', side='both', **kwargs):
         """ Constructor.
 
         Parameters

@@ -282,7 +282,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # Retrieve list of cameras from the system
         cam_list = system.GetCameras()
-        print('List of Cameras: ', cam_list)
+        # print('List of Cameras: ', cam_list)
         num_cameras = cam_list.GetSize()
 
         print('Number of cameras detected: %d' % num_cameras)
@@ -300,7 +300,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # TODO: Clean this up! There might be multiple Cameras?!!?
         capture = cam_list[0]
         self.flir_camera = capture
-        print('FLIR Camera : ', capture)
+        # print('FLIR Camera : ', capture)
 
         # Initialize camera
         capture.Init()
@@ -308,7 +308,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # Retrieve TL device nodemap and print device information
         nodemap_tldevice = capture.GetTLDeviceNodeMap()
         nodemap_tlstream = capture.GetTLStreamNodeMap()
-        self.print_device_info(nodemap_tldevice)
+        # self.print_device_info(nodemap_tldevice)
 
         capture.TriggerMode.SetValue(PySpin.TriggerMode_Off)
 
@@ -328,6 +328,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
             print('\n\nInvalid Camera Type during initit_1!!\n\n')
 
         print('FLIR Camera Type = ', self.camera_type)
+        print('Setting FLIR fps to:', self.fps)
         if (self.camera_type == 'Chameleon'):
             print("Initializing Chameleon ...")
 
@@ -365,7 +366,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
             node_AcquisitionFrameRate = PySpin.CFloatPtr(
                 nodemap.GetNode("AcquisitionFrameRate"))
             node_AcquisitionFrameRate.SetValue(self.fps)
-            print('fps set to: ', node_AcquisitionFrameRate.GetValue())
+            print('Reading fps value: ', node_AcquisitionFrameRate.GetValue())
 
             # # Ensure desired exposure time does not exceed the maximum
             # exposure_time_to_set = self.exposure_value
@@ -380,8 +381,6 @@ class VideoDeviceFLIR(BaseVideoDevice):
         else:
             print('\n\nInvalid Camera Type during initit_2!!\n\n')
 
-        print('Set FLIR fps to:', self.fps)
-
         StreamBufferHandlingMode = PySpin.CEnumerationPtr(
             nodemap_tlstream.GetNode('StreamBufferHandlingMode'))
         StreamBufferHandlingMode_Entry = \
@@ -394,7 +393,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # TODO: Find a way of reading the actual frame rate for Chameleon
         # Chameleon doesn't have this register or anything similar to this
         if (self.camera_type == 'BlackFly'):
-            print('Actual Frame Rate = ',
+            print('Reading fps value: ',
                   capture.AcquisitionResultingFrameRate.GetValue())
 
         self.timestamp_offset = self._compute_timestamp_offset(
@@ -403,7 +402,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         #  Begin acquiring images
         capture.BeginAcquisition()
-        print('Acquisition Started!')
+        print('Acquisition Started!\n\n')
 
         return capture
 
