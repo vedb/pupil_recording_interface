@@ -1,11 +1,3 @@
-import pytest
-
-from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
-from pupil_recording_interface.recorder.video import \
-    VideoEncoderFFMPEG, VideoRecorder
-from pupil_recording_interface.recorder.odometry import OdometryRecorder
-
-
 class TestBaseRecorder(object):
 
     def test_init_folder(self, folder):

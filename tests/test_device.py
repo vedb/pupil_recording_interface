@@ -1,6 +1,3 @@
-import pytest
-
-from pupil_recording_interface.device.video import BaseVideoDevice
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 
 

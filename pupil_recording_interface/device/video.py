@@ -64,7 +64,6 @@ class BaseVideoDevice(BaseDevice):
         frame : array_like
             The frame to display.
         """
-        # print('FLIR Frame: ', frame)
         cv2.imshow(self.uid, frame)
         return cv2.waitKey(1)
 
@@ -231,6 +230,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # accurate to ~1e-3 seconds.
         print("Measuring TimeStamp Offset ...")
         timestamp_offsets = []
+
         for i in range(number_of_iterations):
             # Latch timestamp. This basically "freezes" the current camera
             # timer into a variable that can be read with TimestampLatchValue()
@@ -352,56 +352,52 @@ class VideoDeviceFLIR(BaseVideoDevice):
             print("\n\nInvalid Camera Type during initit_1!!\n\n")
 
         print("FLIR Camera Type = ", self.camera_type)
+
         if self.camera_type == "Chameleon":
             print("Initializing Chameleon ...")
 
             # TODO: Read these settings from yaml file
-            # if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
-            #     print("Unable to disable automatic exposure. Aborting...")
-            #     return False
+            #  if capture.ExposureAuto.GetAccessMode() != PySpin.RW:
+            #      print("Unable to disable automatic exposure. Aborting...")
+            #      return False
+            #  capture.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
+            #  print("Automatic exposure disabled...")
+            #  if capture.ExposureTime.GetAccessMode() != PySpin.RW:
+            #      print("Unable to set exposure time. Aborting...")
+            #      return False
+            #  node_GainAuto = PySpin.CEnumerationPtr(
+            #                    nodemap.GetNode("GainAuto"))
+            #  node_GainAuto_off = node_GainAuto.GetEntryByName("Off")
+            #  node_GainAuto.SetIntValue(node_GainAuto_off.GetValue())
+            #  node_Gain = PySpin.CFloatPtr(nodemap.GetNode("Gain"))
+            #  node_Gain.SetValue(self.gain)
+            #  print('gain set to: ', node_Gain.GetValue())
 
-            # capture.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
-            # print("Automatic exposure disabled...")
-            # if capture.ExposureTime.GetAccessMode() != PySpin.RW:
-            #     print("Unable to set exposure time. Aborting...")
-            #     return False
-
-            # node_GainAuto = PySpin.CEnumerationPtr(
-            #                   nodemap.GetNode("GainAuto"))
-            # node_GainAuto_off = node_GainAuto.GetEntryByName("Off")
-            # node_GainAuto.SetIntValue(node_GainAuto_off.GetValue())
-
-            # node_Gain = PySpin.CFloatPtr(nodemap.GetNode("Gain"))
-            # node_Gain.SetValue(self.gain)
-            # print('gain set to: ', node_Gain.GetValue())
-
-            node_AcquisitionFrameRateAuto = PySpin.CEnumerationPtr(
+            # disable auto frame rate
+            auto_frame_rate_node = PySpin.CEnumerationPtr(
                 nodemap.GetNode("AcquisitionFrameRateAuto")
             )
-            node_AcquisitionFrameRateAuto_off = node_AcquisitionFrameRateAuto.GetEntryByName(
-                "Off"
-            )
-            node_AcquisitionFrameRateAuto.SetIntValue(
-                node_AcquisitionFrameRateAuto_off.GetValue()
+            auto_frame_rate_node.SetIntValue(
+                auto_frame_rate_node.GetEntryByName("Off").GetValue()
             )
 
-            node_AcquisitionFrameRateEnable_bool = PySpin.CBooleanPtr(
+            # set frame rate
+            PySpin.CBooleanPtr(
                 nodemap.GetNode("AcquisitionFrameRateEnabled")
-            )
-            node_AcquisitionFrameRateEnable_bool.SetValue(True)
-
-            node_AcquisitionFrameRate = PySpin.CFloatPtr(
+            ).SetValue(True)
+            frame_rate_node = PySpin.CFloatPtr(
                 nodemap.GetNode("AcquisitionFrameRate")
             )
-            node_AcquisitionFrameRate.SetValue(self.fps)
-            print("fps set to: ", node_AcquisitionFrameRate.GetValue())
+            frame_rate_node.SetValue(self.fps)
+            print("fps set to: ", frame_rate_node.GetValue())
 
-            # # Ensure desired exposure time does not exceed the maximum
-            # exposure_time_to_set = self.exposure_value
-            # exposure_time_to_set = min(capture.ExposureTime.GetMax(),
-            #                            exposure_time_to_set)
-            # capture.ExposureTime.SetValue(exposure_time_to_set)
-            # print('exposure set to: ', capture.ExposureTime.GetValue())
+            # TODO Ensure desired exposure time does not exceed the maximum
+            #  exposure_time_to_set = self.exposure_value
+            #  exposure_time_to_set = min(capture.ExposureTime.GetMax(),
+            #                             exposure_time_to_set)
+            #  capture.ExposureTime.SetValue(exposure_time_to_set)
+            #  print('exposure set to: ', capture.ExposureTime.GetValue())
+
         elif self.camera_type == "BlackFly":
             print("Initializing BlackFly ...")
             capture.AcquisitionFrameRateEnable.SetValue(True)
@@ -411,18 +407,18 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         print("Set FLIR fps to:", self.fps)
 
-        StreamBufferHandlingMode = PySpin.CEnumerationPtr(
-            nodemap_tlstream.GetNode("StreamBufferHandlingMode")
+        buffer_handling_node = PySpin.CEnumerationPtr(
+            nodemap_tlstream.GetNode("buffer_handling_node")
         )
-        StreamBufferHandlingMode_Entry = StreamBufferHandlingMode.GetEntryByName(
+        buffer_handling_node_entry = buffer_handling_node.GetEntryByName(
             "NewestOnly"
         )
-        StreamBufferHandlingMode.SetIntValue(
-            StreamBufferHandlingMode_Entry.GetValue()
+        buffer_handling_node.SetIntValue(
+            buffer_handling_node_entry.GetValue()
         )
         print(
             "Set FLIR buffer handling to: NewestOnly: ",
-            StreamBufferHandlingMode_Entry.GetValue(),
+            buffer_handling_node_entry.GetValue(),
         )
 
         # TODO: Find a way of reading the actual frame rate for Chameleon
@@ -445,34 +441,22 @@ class VideoDeviceFLIR(BaseVideoDevice):
         return capture
 
     def _get_frame_and_timestamp(self, mode="img"):
-        import PySpin
-
         """ Get a frame and its associated timestamp. """
         # TODO return grayscale frame if mode=='gray'
-        # import PySpin
-        # from datetime import datetime
-        # self.previous_timestamp = self.current_timestamp
-        # self.current_timestamp = time.time()
-
-        # count = 0
-        # while(time.time() - self.previous_timestamp < 0.005):
-        #   count = count + 1
-        # print('t = ', time.time() - self.previous_timestamp)
-        # self.previous_timestamp = time.time()
-
-        #  Begin acquiring images
-        # self.capture.BeginAcquisition()
+        import PySpin
         import uvc
 
         try:
             #  Retrieve next received image
             image_result = self.capture.GetNextImage()
             self.capture.TimestampLatch.Execute()
+
             # TODO: Make sure there is no harm reading uvc time stamp
             uvc_timestamp = uvc.get_time_monotonic()
 
             # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
-            # timestamp = float(image_result.GetTimestamp()) / 1e9
+            #  timestamp = float(image_result.GetTimestamp()) / 1e9
+
             # TODO: Temporary solution to fix the FLIR timestamp issue
             if self.camera_type == "BlackFly":
                 timestamp = (
@@ -508,4 +492,5 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # TODO: Make a note to remember we're using uvc timestamp
         timestamp = uvc_timestamp
+
         return frame.GetNDArray(), timestamp

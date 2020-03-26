@@ -123,43 +123,6 @@ class VideoEncoderOpenCV(BaseVideoEncoder):
         self.video_writer.write(img)
 
 
-# Stub, for maybe.
-# class HDFEncoder(BaseVideoEncoder):
-#     """Not actually an encoder, just writing to hdf file"""
-#     def __init__(self, *args):
-#         # Lazy import of h5py at class initialization
-#         import h5py
-#         self.idx = 0
-#         super(self.__init__)
-
-#     @classmethod
-#     def _init_video_writer(
-#         cls, video_file, codec, color_format, fps, resolution):
-#         """Init the h5py object"""
-#         # Get resolution
-#         resx, resy = resolution
-#         # bastardizing inputs in uninterpretable fashion
-#         mins = color_format
-#         n = fps * 60 * mins
-#         if codec is not None:
-#             copts = dict(compression_opts=codec)
-#         else:
-#             copts = {}
-#         # Create HDF file
-#         writer = h5py.File(video_file, mode='rb')
-#         # Pre-allocate dataset(s?)
-#         # Dataset for video
-#         writer.create_dataset('video', shape=(resx, resy, 3, n),
-#                           dtype=np.uint8, compression=compression, **copts)
-#         # Dataset for time?
-#         #writer.create_dataset('time', shape=(n,), dtype=np.float32)
-#         return writer
-#     def write(self, img):
-#         self.video_writer['video'][:, :, :, self.idx] = img
-#         #self['time'][self.idx] = time.time() # or, however this is done
-#         self.idx += 1
-
-
 class VideoEncoderFFMPEG(BaseVideoEncoder):
     """ FFMPEG encoder interface. """
 
@@ -198,7 +161,10 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         print("codec:size ", size)
         if preset == "None":
             return [
-                "ffmpeg",  # '-hide_banner', '-loglevel', 'error',
+                "ffmpeg",
+                "-hide_banner",
+                "-loglevel",
+                "error",
                 # -- Input -- #
                 "-an",  # no audio
                 "-r",
@@ -292,11 +258,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         img : array_like
             The input frame.
         """
-        # print('write image', img.shape)
         self.video_writer.stdin.write(img.tostring())
-        # np.savez('/home/veddy/Videos/FLIR_images/capture_3/frame_'+str(self.ffmpeg_counter),img)
-        # self.ffmpeg_counter = self .ffmpeg_counter + 1
-        # self.video_writer.write(img)
 
 
 class VideoRecorder(BaseStreamRecorder):

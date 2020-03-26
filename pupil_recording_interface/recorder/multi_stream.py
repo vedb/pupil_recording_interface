@@ -1,14 +1,11 @@
 """"""
 from __future__ import print_function
+import json
 
 import multiprocessing as mp
 import time
 
 from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
-
-# Added this to solve the difference between T265 repo and pri
-# This is only called to print out the time sync values so that pupil
-# player can load and sync the eye and world videos
 
 
 class MultiStreamRecorder(BaseRecorder):
@@ -21,7 +18,7 @@ class MultiStreamRecorder(BaseRecorder):
         policy="new_folder",
         quiet=False,
         show_video=False,
-        duration=30,
+        duration=None,
     ):
         """ Constructor.
 
@@ -52,16 +49,16 @@ class MultiStreamRecorder(BaseRecorder):
         self.recorders = self._init_recorders(
             self.folder, configs, show_video, policy == "overwrite"
         )
+        self.duration = duration
         self.quiet = quiet
 
         self._stdout_delay = 3.0  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
         self.all_devices_initialized = True
-        self.duration = duration
         self.start_time_monotonic = 0
         self.start_time = 0
         self.run_duration = 0
-        print("Recording for %d seconds ..." % (self.duration))
+        print("Recording for %d seconds ..." % self.duration)
 
     @classmethod
     def _init_recorders(cls, folder, configs, show_video, overwrite):
@@ -128,20 +125,19 @@ class MultiStreamRecorder(BaseRecorder):
             process.join()
 
     # TODO: Read actual software versions and system info
-    def save_metadata(self):
-        import json
-
+    def save_info(self):
+        """"""
         my_json_file = {
             "duration_s": self.run_duration,
             "meta_version": "2.1",
             "min_player_version": "1.16",
             "recording_name": self.folder,
-            "recording_software_name": "Pupil Capture",
-            "recording_software_version": "1.21.5",
-            "recording_uuid": "63d404ee-5f05-45f0-854b-a403efbbfbe3",
-            "start_time_synced_s": self.start_time_monotonic,  # 1879.586018413
-            "start_time_system_s": self.start_time,  # 1582679643.3734152
-            "system_info": "User: veddy, Platform: Linux, Machine: veddy02",
+            "recording_software_name": "pupil_recording_interface",
+            "recording_software_version": "TODO",
+            "recording_uuid": "TODO",
+            "start_time_synced_s": self.start_time_monotonic,
+            "start_time_system_s": self.start_time,
+            "system_info": "TODO",
         }
         with open(
             self.folder + "/info.player.json", "w", encoding="utf-8"
@@ -149,17 +145,9 @@ class MultiStreamRecorder(BaseRecorder):
             json.dump(my_json_file, f, ensure_ascii=False, indent=4)
 
     def run(self):
-        # TODO: Solve this issue correctly
+        """ Main recording loop. """
         from uvc import get_time_monotonic
 
-        now = time.time()
-        now_m = get_time_monotonic()
-        self.start_time = now
-        self.start_time_monotonic = now_m
-        print("run start time = ", now)
-        print("run start time monotonic= ", now_m)
-
-        """ Main recording loop. """
         if not self.quiet:
             print("Started recording to {}".format(self.folder))
 
@@ -173,9 +161,12 @@ class MultiStreamRecorder(BaseRecorder):
         )
         self._start_processes(processes)
 
-        start_time = time.time()
+        self.start_time = time.time()
+        self.start_time_monotonic = get_time_monotonic()
+        print("run start time = ", self.start_time)
+        print("run start time monotonic= ", self.start_time_monotonic)
 
-        while time.time() - now < self.duration:
+        while time.time() - self.start_time_monotonic < self.duration:
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
@@ -188,7 +179,7 @@ class MultiStreamRecorder(BaseRecorder):
                 # display fps after self._stdout_delay seconds
                 if (
                     not self.quiet
-                    and time.time() - start_time > self._stdout_delay
+                    and time.time() - self.start_time > self._stdout_delay
                 ):
                     f_strs = ", ".join(
                         "{}: {:.2f} Hz".format(c_name, c.current_fps)
@@ -197,9 +188,9 @@ class MultiStreamRecorder(BaseRecorder):
                     print("\rSampling rates: " + f_strs, end="")
 
             except KeyboardInterrupt:
-                print("KeyboardInterrupt!!")
                 break
-        self.run_duration = time.time() - now
+
+        self.run_duration = time.time() - self.start_time
         print("\nDone Recording!", self.run_duration)
 
         # stop recording threads
@@ -210,5 +201,5 @@ class MultiStreamRecorder(BaseRecorder):
             recorder.run_post_thread_hooks()
 
         if not self.quiet:
-            self.save_metadata()
+            self.save_info()
             print("\nStopped recording")
