@@ -69,7 +69,7 @@ class BaseVideoEncoder(object):
                 )
 
         self.video_writer = self._init_video_writer(
-            self.video_file, codec, color_format, fps, resolution, **kwargs,
+            self.video_file, codec, color_format, fps, resolution, **kwargs
         )
 
         # TODO move timestamp writer to BaseStreamRecorder
