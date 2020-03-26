@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from distutils.util import convert_path
+import re
 
 requirements = [
     "numpy",
@@ -10,14 +10,18 @@ requirements = [
     "opencv-python",
 ]
 
-main_ns = {}
-ver_path = convert_path("pupil_recording_interface/_version.py")
-with open(ver_path) as ver_file:
-    exec(ver_file.read(), main_ns)
+# parse version number
+with open("pupil_recording_interface/_version.py", "rt") as f:
+    mo = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M)
+
+if mo:
+    version = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string.")
 
 setup(
     name="pupil_recording_interface",
-    version=main_ns["__version__"],
+    version=version,
     packages=find_packages(),
     long_description=open("README.rst").read(),
     entry_points={

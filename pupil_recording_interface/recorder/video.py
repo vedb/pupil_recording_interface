@@ -301,7 +301,7 @@ class VideoRecorder(BaseStreamRecorder):
             color_format,
             codec,
             self.overwrite,
-            **encoder_kwargs
+            **encoder_kwargs,
         )
 
         self.color_format = color_format
