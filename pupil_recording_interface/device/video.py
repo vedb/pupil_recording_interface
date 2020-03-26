@@ -3,8 +3,6 @@ import abc
 
 import cv2
 
-# TODO import uvc here
-
 from pupil_recording_interface.device import BaseDevice
 from datetime import datetime
 import statistics
@@ -413,9 +411,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         buffer_handling_node_entry = buffer_handling_node.GetEntryByName(
             "NewestOnly"
         )
-        buffer_handling_node.SetIntValue(
-            buffer_handling_node_entry.GetValue()
-        )
+        buffer_handling_node.SetIntValue(buffer_handling_node_entry.GetValue())
         print(
             "Set FLIR buffer handling to: NewestOnly: ",
             buffer_handling_node_entry.GetValue(),

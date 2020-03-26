@@ -1,11 +1,9 @@
 class TestBaseRecorder(object):
-
     def test_init_folder(self, folder):
         """"""
 
 
 class TestBaseStreamRecorder(object):
-
     def test_from_config(self, folder):
         """"""
 
@@ -20,13 +18,11 @@ class TestBaseStreamRecorder(object):
 
 
 class TestVideoEncoder(object):
-
     def test_get_ffmpeg_cmd(self):
         """"""
 
 
 class TestVideoRecorder(object):
-
     def test_from_config(self, folder):
         """"""
 
@@ -38,6 +34,5 @@ class TestVideoRecorder(object):
 
 
 class TestOdometryRecorder(object):
-
     def test_from_config(self, folder):
         """"""
