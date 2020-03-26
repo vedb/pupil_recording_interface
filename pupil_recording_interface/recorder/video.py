@@ -30,7 +30,7 @@ class BaseVideoEncoder(object):
         color_format="bgr24",
         codec="libx264",
         overwrite=False,
-        **kwargs,
+        **kwargs
     ):
         """ Constructor.
 

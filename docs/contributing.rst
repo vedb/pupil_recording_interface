@@ -39,7 +39,7 @@ Reformat with black:
 
 .. code-block:: console
 
-    $ black -l 79
+    $ black --target-version=py35 -l 79
 
 
 Testing
