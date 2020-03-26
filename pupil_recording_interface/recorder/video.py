@@ -167,7 +167,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         # Example for flags: "-profile:v high444 -refs 5"
         cmd = cls._get_ffmpeg_cmd(
             video_file,
-            resolution[::-1],
+            resolution,
             fps,
             codec,
             color_format,
