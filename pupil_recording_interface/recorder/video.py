@@ -84,7 +84,7 @@ class BaseVideoEncoder(object):
     @classmethod
     @abc.abstractmethod
     def _init_video_writer(
-        cls, video_file, codec, color_format, fps, resolution, **kwargs,
+        cls, video_file, codec, color_format, fps, resolution, **kwargs
     ):
         """ Init the video writer. """
 
@@ -253,7 +253,7 @@ class VideoRecorder(BaseStreamRecorder):
         color_format="bgr24",
         codec="libx264",
         show_video=False,
-        **encoder_kwargs,
+        **encoder_kwargs
     ):
         """ Constructor.
 
