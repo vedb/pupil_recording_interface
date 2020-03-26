@@ -1,5 +1,5 @@
-Usage
-=====
+Reading data
+============
 
 .. currentmodule:: pupil_recording_interface
 

@@ -44,7 +44,7 @@ Device classes
 
     VideoDeviceUVC
     VideoDeviceFLIR
-    VideoDeviceT265
+    RealSenseDeviceT265
 
 
 Recorder and Encoder classes
@@ -69,6 +69,7 @@ Config classes
 
     StreamConfig
     VideoConfig
+    OdometryConfig
 
 
 Class member details
@@ -88,7 +89,7 @@ I/O functions
     GazeReader.write_netcdf
 
 OdometryReader
-.................
+..............
 
 I/O functions
 ~~~~~~~~~~~~~
@@ -102,7 +103,7 @@ I/O functions
 
 
 VideoReader
-..............
+............
 
 I/O functions
 ~~~~~~~~~~~~~
@@ -134,7 +135,7 @@ Frame processing
 
 
 OpticalFlowReader
-....................
+.................
 
 See the parent `VideoReader`_ class for additional methods.
 
@@ -178,3 +179,13 @@ VideoRecorder
     :toctree: _generated
 
     VideoRecorder.run
+
+
+MultiStreamRecorder
+...................
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    MultiStreamRecorder.run

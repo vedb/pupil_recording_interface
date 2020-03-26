@@ -1,22 +1,36 @@
 from pupil_recording_interface.config import VideoConfig
 from pupil_recording_interface import MultiStreamRecorder
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # recording folder
-    folder = '~/recordings/test'
+    folder = "~/recordings/test"
 
     # camera configurations
     configs = [
         VideoConfig(
-            'uvc', 'Pupil Cam1 ID2', name='world',
-            resolution=(1280, 720), fps=60),
+            "uvc",
+            "Pupil Cam1 ID2",
+            name="world",
+            resolution=(1280, 720),
+            fps=60,
+        ),
         VideoConfig(
-            'uvc', 'Pupil Cam1 ID0', name='eye0',
-            resolution=(400, 400), fps=120, color_format='gray'),
+            "uvc",
+            "Pupil Cam1 ID0",
+            name="eye0",
+            resolution=(320, 240),
+            fps=120,
+            color_format="gray",
+        ),
         VideoConfig(
-            'uvc', 'Pupil Cam1 ID1', name='eye1',
-            resolution=(400, 400), fps=120, color_format='gray'),
+            "uvc",
+            "Pupil Cam1 ID1",
+            name="eye1",
+            resolution=(320, 240),
+            fps=120,
+            color_format="gray",
+        ),
     ]
 
     # start recorder

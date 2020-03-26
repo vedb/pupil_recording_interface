@@ -8,13 +8,13 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    pip install git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
 
 If you are using the conda package manager, install these dependencies first:
 
 .. code-block:: console
 
-    conda install xarray scipy msgpack-python opencv
+    $ conda install xarray scipy msgpack-python opencv
 
 Afterwards, install the package via ``pip`` as detailed above.
 
@@ -34,7 +34,7 @@ by installing the `RealSense SDK`_ and ``pyrealsense``:
 
 .. code-block:: console
 
-    pip install pyrealsense2
+    $ pip install pyrealsense2
 
 .. note::
 
@@ -54,4 +54,4 @@ Install the ``netcdf4`` library in order to export data to the netCDF format:
 
 .. code-block:: console
 
-    pip install netcdf4
+    $ pip install netcdf4

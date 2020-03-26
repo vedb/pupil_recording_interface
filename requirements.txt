@@ -2,8 +2,8 @@ numpy
 pandas
 xarray
 scipy
-opencv-python
-msgpack
+opencv-python==4.1.0.25
+msgpack==0.6.2
 netcdf4
 pyrealsense2
 monotonic
