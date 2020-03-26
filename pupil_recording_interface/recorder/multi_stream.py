@@ -1,12 +1,15 @@
 """"""
+import os
 import math
 import json
 import logging
-
 import multiprocessing as mp
 import time
+import uuid
 
+from pupil_recording_interface._version import __version__
 from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
+from pupil_recording_interface.externals.methods import get_system_info
 
 
 logger = logging.getLogger(__name__)
@@ -131,25 +134,27 @@ class MultiStreamRecorder(BaseRecorder):
         else:
             return None
 
-    # TODO: Read actual software versions and system info
     def save_info(self):
-        """"""
-        my_json_file = {
+        """ Save info.player.json file. """
+        json_file = {
             "duration_s": self._run_duration,
             "meta_version": "2.1",
             "min_player_version": "1.16",
             "recording_name": self.folder,
             "recording_software_name": "pupil_recording_interface",
-            "recording_software_version": "TODO",
-            "recording_uuid": "TODO",
+            "recording_software_version": __version__,
+            "recording_uuid": str(uuid.uuid4()),
             "start_time_synced_s": self._start_time_monotonic,
             "start_time_system_s": self._start_time,
-            "system_info": "TODO",
+            "system_info": get_system_info(),
         }
+
         with open(
-            self.folder + "/info.player.json", "w", encoding="utf-8"
+            os.path.join(self.folder, "info.player.json"),
+            "w",
+            encoding="utf-8",
         ) as f:
-            json.dump(my_json_file, f, ensure_ascii=False, indent=4)
+            json.dump(json_file, f, ensure_ascii=False, indent=4)
 
     def run(self):
         """ Main recording loop.
