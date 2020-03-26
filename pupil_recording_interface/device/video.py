@@ -5,7 +5,6 @@ import cv2
 
 from pupil_recording_interface.device import BaseDevice
 from datetime import datetime
-import statistics
 
 
 class BaseVideoDevice(BaseDevice):
@@ -230,6 +229,8 @@ class VideoDeviceFLIR(BaseVideoDevice):
     @classmethod
     def _compute_timestamp_offset(cls, cam, number_of_iterations, camera_type):
         """ Gets timestamp offset in seconds from input camera """
+
+        import statistics
 
         # This method is required because the timestamp stored in the camera is
         # relative to when it was powered on, so an offset needs to be applied
