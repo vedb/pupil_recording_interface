@@ -3,8 +3,10 @@ from __future__ import print_function
 import sys
 import logging
 
-from pupil_recording_interface.config import VideoConfig
-from pupil_recording_interface import MultiStreamRecorder
+from pupil_recording_interface import (
+    VideoConfig,
+    MultiStreamRecorder,
+)
 
 
 if __name__ == "__main__":

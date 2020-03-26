@@ -14,7 +14,7 @@ from .recorder.odometry import OdometryRecorder
 from .recorder.video import VideoRecorder, VideoEncoderFFMPEG
 from .recorder.multi_stream import MultiStreamRecorder
 
-from .config import StreamConfig, VideoConfig
+from .config import StreamConfig, VideoConfig, OdometryConfig
 
 from .cli import CLI
 
@@ -46,6 +46,7 @@ __all__ = [
     # Configs
     "StreamConfig",
     "VideoConfig",
+    "OdometryConfig",
 ]
 
 

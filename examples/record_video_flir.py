@@ -5,10 +5,10 @@ import logging
 
 from pupil_recording_interface import (
     VideoConfig,
+    OdometryConfig,
     VideoRecorder,
     MultiStreamRecorder,
 )
-from pupil_recording_interface.config import OdometryConfig
 
 
 if __name__ == "__main__":
