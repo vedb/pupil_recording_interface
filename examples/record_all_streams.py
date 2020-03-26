@@ -1,5 +1,14 @@
-from pupil_recording_interface.config import VideoConfig, OdometryConfig
-from pupil_recording_interface import MultiStreamRecorder
+from __future__ import print_function
+
+import sys
+import logging
+
+from pupil_recording_interface import (
+    VideoConfig,
+    OdometryConfig,
+    MultiStreamRecorder,
+)
+
 
 if __name__ == "__main__":
 
@@ -37,8 +46,14 @@ if __name__ == "__main__":
         OdometryConfig("t265", "t265", name="odometry"),
     ]
 
-    recorder = MultiStreamRecorder(
-        folder, configs, policy="overwrite", show_video=True
+    # set up logger
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
 
-    recorder.run()
+    # start recorder
+    recorder = MultiStreamRecorder(folder, configs, show_video=True)
+    for fps_dict in recorder.run():
+        fps_str = recorder.format_fps(fps_dict)
+        if fps_str is not None:
+            print("\rSampling rates: " + fps_str, end="")

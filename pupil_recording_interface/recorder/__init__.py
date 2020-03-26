@@ -104,6 +104,7 @@ class BaseStreamRecorder(BaseRecorder):
     @classmethod
     def from_config(cls, config, folder, device=None, overwrite=False):
         """ Create a recorder from a StreamConfig. """
+        # TODO pass actual policy instead of overwrite
         if isinstance(config, VideoConfig):
             from .video import VideoRecorder
 
@@ -123,7 +124,7 @@ class BaseStreamRecorder(BaseRecorder):
     def current_fps(self):
         """ Current average fps. """
         if len(self._fps_buffer) == 0 or np.all(np.isnan(self._fps_buffer)):
-            return 0.0
+            return float("nan")
         else:
             return np.nanmean(self._fps_buffer)
 

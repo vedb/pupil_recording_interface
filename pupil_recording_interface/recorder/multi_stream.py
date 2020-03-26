@@ -1,10 +1,18 @@
 """"""
-from __future__ import print_function
-
+import os
+import math
+import json
+import logging
 import multiprocessing as mp
 import time
+import uuid
 
+from pupil_recording_interface._version import __version__
 from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
+from pupil_recording_interface.externals.methods import get_system_info
+
+
+logger = logging.getLogger(__name__)
 
 
 class MultiStreamRecorder(BaseRecorder):
@@ -15,8 +23,8 @@ class MultiStreamRecorder(BaseRecorder):
         folder,
         configs,
         policy="new_folder",
-        quiet=False,
         show_video=False,
+        duration=None,
     ):
         """ Constructor.
 
@@ -36,9 +44,6 @@ class MultiStreamRecorder(BaseRecorder):
             'overwrite', the data will be recorded to the specified folder
             and existing files will possibly be overwritten.
 
-        quiet: bool, default False
-            If True, do not print infos to stdout.
-
         show_video: bool, default False,
             If True, show the video streams in a window.
         """
@@ -47,10 +52,12 @@ class MultiStreamRecorder(BaseRecorder):
         self.recorders = self._init_recorders(
             self.folder, configs, show_video, policy == "overwrite"
         )
-        self.quiet = quiet
+        self.duration = duration or float("inf")
 
-        self._stdout_delay = 3.0  # delay before showing fps on stdout
         self._max_queue_size = 20  # max size of process fps queue
+        self._start_time_monotonic = 0
+        self._start_time = 0
+        self._run_duration = 0
 
     @classmethod
     def _init_recorders(cls, folder, configs, show_video, overwrite):
@@ -116,10 +123,50 @@ class MultiStreamRecorder(BaseRecorder):
         for process in processes.values():
             process.join()
 
+    @classmethod
+    def format_fps(cls, fps_dict):
+        """ Format fps dictionary to string. """
+        if not any(math.isnan(fps) for fps in fps_dict.values()):
+            return ", ".join(
+                "{}: {:.2f} Hz".format(name, fps)
+                for name, fps in fps_dict.items()
+            )
+        else:
+            return None
+
+    def save_info(self):
+        """ Save info.player.json file. """
+        json_file = {
+            "duration_s": self._run_duration,
+            "meta_version": "2.1",
+            "min_player_version": "1.16",
+            "recording_name": self.folder,
+            "recording_software_name": "pupil_recording_interface",
+            "recording_software_version": __version__,
+            "recording_uuid": str(uuid.uuid4()),
+            "start_time_synced_s": self._start_time_monotonic,
+            "start_time_system_s": self._start_time,
+            "system_info": get_system_info(),
+        }
+
+        with open(
+            os.path.join(self.folder, "info.player.json"),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(json_file, f, ensure_ascii=False, indent=4)
+
     def run(self):
-        """ Main recording loop. """
-        if not self.quiet:
-            print("Started recording to {}".format(self.folder))
+        """ Main recording loop.
+
+        Yields
+        ------
+        fps_dict: dict
+            Mapping from recorder name to current fps.
+        """
+        from uvc import get_time_monotonic
+
+        logger.info("Started recording to {}".format(self.folder))
 
         # run hooks that need to be run in the main thread
         for recorder in self.recorders.values():
@@ -131,9 +178,16 @@ class MultiStreamRecorder(BaseRecorder):
         )
         self._start_processes(processes)
 
-        start_time = time.time()
+        # Record times
+        self._start_time = time.time()
+        self._start_time_monotonic = get_time_monotonic()
+        logger.debug("Recording for {} seconds".format(self.duration))
+        logger.debug("Run start time: {}".format(self._start_time))
+        logger.debug(
+            "Run start time monotonic: {}".format(self._start_time_monotonic)
+        )
 
-        while True:
+        while time.time() - self._start_time_monotonic < self.duration:
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
@@ -143,19 +197,17 @@ class MultiStreamRecorder(BaseRecorder):
                             queues[recorder_name].get()
                         )
 
-                # display fps after self._stdout_delay seconds
-                if (
-                    not self.quiet
-                    and time.time() - start_time > self._stdout_delay
-                ):
-                    f_strs = ", ".join(
-                        "{}: {:.2f} Hz".format(c_name, c.current_fps)
-                        for c_name, c in self.recorders.items()
-                    )
-                    print("\rSampling rates: " + f_strs, end="")
+                # yield current fps for each recorder
+                yield {
+                    c_name: c.current_fps
+                    for c_name, c in self.recorders.items()
+                }
 
             except KeyboardInterrupt:
                 break
+
+        self._run_duration = time.time() - self._start_time
+        logger.debug("Recording duration: {}".format(self._run_duration))
 
         # stop recording threads
         self._stop_processes(processes, stop_event)
@@ -164,5 +216,9 @@ class MultiStreamRecorder(BaseRecorder):
         for recorder in self.recorders.values():
             recorder.run_post_thread_hooks()
 
-        if not self.quiet:
-            print("\nStopped recording")
+        # save info.player.json
+        self.save_info()
+
+        # TODO new line is for compatibility with print-based sampling rate
+        #  display
+        logger.info("\nStopped recording")

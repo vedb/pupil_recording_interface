@@ -1,20 +1,21 @@
 """"""
-from __future__ import print_function
-
 import os
 import abc
 import subprocess
+import logging
 
 import numpy as np
 import cv2
 
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.device.video import (
-    BaseVideoDevice,
     VideoDeviceUVC,
     VideoDeviceFLIR,
 )
 from pupil_recording_interface.recorder import BaseStreamRecorder
+
+
+logger = logging.getLogger(__name__)
 
 
 class BaseVideoEncoder(object):
@@ -29,6 +30,7 @@ class BaseVideoEncoder(object):
         color_format="bgr24",
         codec="libx264",
         overwrite=False,
+        **kwargs
     ):
         """ Constructor.
 
@@ -56,6 +58,7 @@ class BaseVideoEncoder(object):
         overwrite: bool, default False
             If True, overwrite existing video files with the same name.
         """
+        self.ffmpeg_counter = 0
         self.video_file = os.path.join(folder, "{}.mp4".format(device_name))
         if os.path.exists(self.video_file):
             if overwrite:
@@ -66,7 +69,7 @@ class BaseVideoEncoder(object):
                 )
 
         self.video_writer = self._init_video_writer(
-            self.video_file, codec, color_format, fps, resolution
+            self.video_file, codec, color_format, fps, resolution, **kwargs
         )
 
         # TODO move timestamp writer to BaseStreamRecorder
@@ -81,7 +84,7 @@ class BaseVideoEncoder(object):
     @classmethod
     @abc.abstractmethod
     def _init_video_writer(
-        cls, video_file, codec, color_format, fps, resolution
+        cls, video_file, codec, color_format, fps, resolution, **kwargs
     ):
         """ Init the video writer. """
 
@@ -89,11 +92,16 @@ class BaseVideoEncoder(object):
     def write(self, img):
         """ Write a frame to disk. """
 
+    def stop(self):
+        """ Stop the encoder. """
+
 
 class VideoEncoderOpenCV(BaseVideoEncoder):
+    """ OpenCV encoder interface. """
+
     @classmethod
     def _init_video_writer(
-        cls, video_file, codec, color_format, fps, resolution
+        cls, video_file, codec, color_format, fps, resolution, **kwargs
     ):
         """ Init the video writer. """
         codec = cv2.VideoWriter_fourcc(*"MP4V")  # TODO
@@ -116,27 +124,83 @@ class VideoEncoderOpenCV(BaseVideoEncoder):
 class VideoEncoderFFMPEG(BaseVideoEncoder):
     """ FFMPEG encoder interface. """
 
+    def __init__(
+        self,
+        folder,
+        device_name,
+        resolution,
+        fps,
+        color_format="bgr24",
+        codec="libx264",
+        overwrite=False,
+        preset="ultrafast",
+        crf="18",
+        flags=None,
+    ):
+        """ Constructor. """
+        super(VideoEncoderFFMPEG, self).__init__(
+            folder,
+            device_name,
+            resolution,
+            fps,
+            color_format=color_format,
+            codec=codec,
+            overwrite=overwrite,
+            preset=preset,
+            crf=crf,
+            flags=flags,
+        )
+
     @classmethod
     def _init_video_writer(
-        cls, video_file, codec, color_format, fps, resolution
+        cls,
+        video_file,
+        codec,
+        color_format,
+        fps,
+        resolution,
+        preset="ultrafast",
+        crf="18",
+        flags=None,
     ):
         """ Init the video writer. """
+        # Example for flags: "-profile:v high444 -refs 5"
         cmd = cls._get_ffmpeg_cmd(
-            video_file, resolution[::-1], fps, codec, color_format
+            video_file,
+            resolution,
+            fps,
+            codec,
+            color_format,
+            preset,
+            crf,
+            flags,
+        )
+        logger.debug(
+            "ffmpeg called with arguments: {}".format(" ".join(cmd[1:]))
         )
 
         return subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
     @classmethod
-    def _get_ffmpeg_cmd(cls, filename, frame_shape, fps, codec, color_format):
+    def _get_ffmpeg_cmd(
+        cls,
+        filename,
+        frame_shape,
+        fps,
+        codec,
+        color_format,
+        preset="ultrafast",
+        crf="18",
+        flags=None,
+    ):
         """ Get the FFMPEG command to start the sub-process. """
-        size = "{}x{}".format(frame_shape[1], frame_shape[0])
-        return [
+        size = "{}x{}".format(frame_shape[0], frame_shape[1])
+
+        cmd = [
             "ffmpeg",
             "-hide_banner",
             "-loglevel",
             "error",
-            # -- Input -- #
             "-an",  # no audio
             "-r",
             str(fps),  # fps
@@ -148,12 +212,17 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             color_format,  # color format
             "-i",
             "pipe:",  # piped to stdin
-            # -- Output -- #
-            "-c:v",
-            codec,  # video codec
-            # '-tune', 'film',  # codec tuning
-            filename,
         ]
+
+        if preset is not None:
+            cmd += ["-preset", preset, "-crf", crf]
+
+        if flags is not None:
+            cmd += flags.split()
+
+        cmd += ["-c:v", codec, filename]
+
+        return cmd
 
     def write(self, img):
         """ Write a frame to disk.
@@ -164,6 +233,10 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             The input frame.
         """
         self.video_writer.stdin.write(img.tostring())
+
+    def stop(self):
+        """ Stop the encoder. """
+        self.video_writer.stdin.close()
 
 
 class VideoRecorder(BaseStreamRecorder):
@@ -180,7 +253,7 @@ class VideoRecorder(BaseStreamRecorder):
         color_format="bgr24",
         codec="libx264",
         show_video=False,
-        **kwargs
+        **encoder_kwargs
     ):
         """ Constructor.
 
@@ -212,9 +285,12 @@ class VideoRecorder(BaseStreamRecorder):
 
         show_video: bool, default False,
             If True, show the video stream in a window.
+
+        encoder_kwargs:
+            Addtional keyword arguments passed to the encoder.
         """
         super(VideoRecorder, self).__init__(
-            folder, device, name=name, policy=policy, **kwargs
+            folder, device, name=name, policy=policy
         )
 
         self.encoder = VideoEncoderFFMPEG(
@@ -225,6 +301,7 @@ class VideoRecorder(BaseStreamRecorder):
             color_format,
             codec,
             self.overwrite,
+            **encoder_kwargs
         )
 
         self.color_format = color_format
@@ -286,4 +363,5 @@ class VideoRecorder(BaseStreamRecorder):
     def stop(self):
         """ Stop the recorder. """
         # TODO additionally save timestamps continuously if paranoid=True
+        self.encoder.stop()
         np.save(self.encoder.timestamp_file, np.array(self._timestamps))

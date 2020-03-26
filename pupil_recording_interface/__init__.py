@@ -14,9 +14,11 @@ from .recorder.odometry import OdometryRecorder
 from .recorder.video import VideoRecorder, VideoEncoderFFMPEG
 from .recorder.multi_stream import MultiStreamRecorder
 
-from .config import StreamConfig, VideoConfig
+from .config import StreamConfig, VideoConfig, OdometryConfig
 
 from .cli import CLI
+
+from ._version import __version__
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 TEST_RECORDING = os.path.join(DATA_DIR, "test_recording")
@@ -46,6 +48,7 @@ __all__ = [
     # Configs
     "StreamConfig",
     "VideoConfig",
+    "OdometryConfig",
 ]
 
 
