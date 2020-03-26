@@ -33,7 +33,6 @@ PLData = collections.namedtuple("PLData", ["data", "timestamps", "topics"])
 
 
 class DictWrapper(collections.Mapping):
-
     def __init__(self, data):
         self._data = data
 
@@ -69,7 +68,8 @@ class Persistent_Dict(dict):
         except (KeyError, EOFError):  # KeyError, EOFError
             logger.warning(
                 "Session settings file '{}'could not be read. "
-                "Will overwrite on exit.".format(self.file_path))
+                "Will overwrite on exit.".format(self.file_path)
+            )
             logger.debug(tb.format_exc())
 
     def save(self):
@@ -102,7 +102,8 @@ def load_object(file_path, allow_legacy=True):
             else:
                 logger.info(
                     "{} has a deprecated format: "
-                    "Will be updated on save".format(file_path))
+                    "Will be updated on save".format(file_path)
+                )
                 data = _load_object_legacy(file_path)
         finally:
             gc.enable()
@@ -135,7 +136,8 @@ class Incremental_Legacy_Pupil_Data_Loader(object):
     def __enter__(self):
         self.file_handle = open(self.file_loc, "rb")
         self.unpacker = msgpack.Unpacker(
-            self.file_handle, raw=False, use_list=False)
+            self.file_handle, raw=False, use_list=False
+        )
         self.num_key_value_pairs = self.unpacker.read_map_header()
         self._skipped = True
         return self
@@ -160,8 +162,9 @@ def load_pldata_file(directory, topic):
         topics = collections.deque()
         data_ts = np.load(ts_file)
         with open(msgpack_file, "rb") as fh:
-            for topic, payload in \
-                    msgpack.Unpacker(fh, raw=False, use_list=False):
+            for topic, payload in msgpack.Unpacker(
+                fh, raw=False, use_list=False
+            ):
                 data.append(Serialized_Dict(msgpack_bytes=payload))
                 topics.append(topic)
     except IOError:
@@ -186,7 +189,8 @@ class PLData_Writer(object):
     def append(self, datum):
         datum_serialized = msgpack.packb(datum, use_bin_type=True)
         self.append_serialized(
-            datum["timestamp"], datum["topic"], datum_serialized)
+            datum["timestamp"], datum["topic"], datum_serialized
+        )
 
     def append_serialized(self, timestamp, topic, datum_serialized):
         self.ts_queue.append(timestamp)

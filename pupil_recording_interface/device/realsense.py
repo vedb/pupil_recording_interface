@@ -11,8 +11,9 @@ from pupil_recording_interface.config import VideoConfig, OdometryConfig
 class RealSenseDeviceT265(BaseDevice):
     """ RealSense T265 device. """
 
-    def __init__(self, uid,
-                 resolution=None, fps=None, video=False, odometry=False):
+    def __init__(
+        self, uid, resolution=None, fps=None, video=False, odometry=False
+    ):
         """ Constructor.
 
         Parameters
@@ -58,16 +59,21 @@ class RealSenseDeviceT265(BaseDevice):
             from inspect import getargspec as getfullargspec
 
         argspect = getfullargspec(cls.__init__)
-        kwargs = {k: v for k, v in
-                  zip(reversed(argspect.args), reversed(argspect.defaults))}
+        kwargs = {
+            k: v
+            for k, v in zip(
+                reversed(argspect.args), reversed(argspect.defaults)
+            )
+        }
 
         for config in config_list:
             if isinstance(config, VideoConfig):
-                kwargs['video'] = getattr(config, 'side')
+                kwargs["video"] = getattr(config, "side")
                 kwargs.update(
-                    {k: getattr(config, k) for k in ('resolution', 'fps')})
+                    {k: getattr(config, k) for k in ("resolution", "fps")}
+                )
             elif isinstance(config, OdometryConfig):
-                kwargs['odometry'] = True
+                kwargs["odometry"] = True
 
         kwargs.update(extra_kwargs)
 
@@ -97,36 +103,46 @@ class RealSenseDeviceT265(BaseDevice):
         w = pose.pose_data.angular_velocity
 
         return {
-            'topic': 'odometry',
-            'timestamp': t,
-            'tracker_confidence': c,
-            'position': (p.x, p.y, p.z),
-            'orientation': (q.w, q.x, q.y, q.z),
-            'linear_velocity': (v.x, v.y, v.z),
-            'angular_velocity': (w.x, w.y, w.z)
+            "topic": "odometry",
+            "timestamp": t,
+            "tracker_confidence": c,
+            "position": (p.x, p.y, p.z),
+            "orientation": (q.w, q.x, q.y, q.z),
+            "linear_velocity": (v.x, v.y, v.z),
+            "angular_velocity": (w.x, w.y, w.z),
         }
 
     @classmethod
-    def _get_video_frame(cls, rs_frame, side='both'):
+    def _get_video_frame(cls, rs_frame, side="both"):
         """ Extract video frame and timestamp from a RealSense frame. """
         frameset = rs_frame.as_frameset()
         t = frameset.get_timestamp() / 1e3
 
-        if side == 'left':
+        if side == "left":
             video_frame = np.asanyarray(
-                frameset.get_fisheye_frame(1).as_video_frame().get_data())
-        elif side == 'right':
+                frameset.get_fisheye_frame(1).as_video_frame().get_data()
+            )
+        elif side == "right":
             video_frame = np.asanyarray(
-                frameset.get_fisheye_frame(2).as_video_frame().get_data())
-        elif side == 'both':
-            video_frame = np.hstack([
-                np.asanyarray(
-                    frameset.get_fisheye_frame(1).as_video_frame().get_data()),
-                np.asanyarray(
-                    frameset.get_fisheye_frame(2).as_video_frame().get_data())
-            ])
+                frameset.get_fisheye_frame(2).as_video_frame().get_data()
+            )
+        elif side == "both":
+            video_frame = np.hstack(
+                [
+                    np.asanyarray(
+                        frameset.get_fisheye_frame(1)
+                        .as_video_frame()
+                        .get_data()
+                    ),
+                    np.asanyarray(
+                        frameset.get_fisheye_frame(2)
+                        .as_video_frame()
+                        .get_data()
+                    ),
+                ]
+            )
         else:
-            raise ValueError('Unsupported mode: {}'.format(side))
+            raise ValueError("Unsupported mode: {}".format(side))
 
         return video_frame, t
 
@@ -161,7 +177,7 @@ class RealSenseDeviceT265(BaseDevice):
 
         return pipeline
 
-    def _get_frame_and_timestamp(self, mode='img'):
+    def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         # TODO timestamp = uvc.get_time_monotonic()?
         return self.video_queue.get()
@@ -170,7 +186,7 @@ class RealSenseDeviceT265(BaseDevice):
         """ Get a frame and its associated timestamp. """
         odometry = self.odometry_queue.get()
         # TODO timestamp = uvc.get_time_monotonic()?
-        return odometry, odometry['timestamp']
+        return odometry, odometry["timestamp"]
 
     # TODO
     show_frame = BaseVideoDevice.show_frame
@@ -185,7 +201,8 @@ class RealSenseDeviceT265(BaseDevice):
         """ Run hook(s) before dispatching the recording thread. """
         if self.pipeline is None:
             self.pipeline = self._init_pipeline(
-                self._frame_callback, self.video, self.odometry)
+                self._frame_callback, self.video, self.odometry
+            )
 
     def run_post_thread_hooks(self):
         """ Run hook(s) after the recording thread finishes. """

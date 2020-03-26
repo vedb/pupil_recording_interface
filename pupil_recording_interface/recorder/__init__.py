@@ -11,7 +11,7 @@ from pupil_recording_interface.config import VideoConfig, OdometryConfig
 class BaseRecorder(object):
     """ Base class for all recorders. """
 
-    def __init__(self, folder, policy='new_folder'):
+    def __init__(self, folder, policy="new_folder"):
         """ Constructor.
 
         Parameters
@@ -36,19 +36,21 @@ class BaseRecorder(object):
         """"""
         folder = os.path.abspath(os.path.expanduser(folder))
 
-        if policy == 'new_folder':
+        if policy == "new_folder":
             counter = 0
             while os.path.exists(
-                    os.path.join(folder, '{:03d}'.format(counter))):
+                os.path.join(folder, "{:03d}".format(counter))
+            ):
                 counter += 1
-            folder = os.path.join(folder, '{:03d}'.format(counter))
+            folder = os.path.join(folder, "{:03d}".format(counter))
 
-        elif policy == 'here':
+        elif policy == "here":
             pass
 
-        elif policy != 'overwrite':
+        elif policy != "overwrite":
             raise ValueError(
-                'Unsupported file creation policy: {}'.format(policy))
+                "Unsupported file creation policy: {}".format(policy)
+            )
 
         # TODO do this at the start of the recording?
         os.makedirs(folder, exist_ok=True)
@@ -61,8 +63,9 @@ class BaseStreamRecorder(BaseRecorder):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, folder, device, name=None, policy='new_folder',
-                 **kwargs):
+    def __init__(
+        self, folder, device, name=None, policy="new_folder", **kwargs
+    ):
         """ Constructor.
 
         Parameters
@@ -89,10 +92,10 @@ class BaseStreamRecorder(BaseRecorder):
         self.name = name or device.uid
 
         self.device = device
-        self.overwrite = policy == 'overwrite'
+        self.overwrite = policy == "overwrite"
 
         self._timestamps = []
-        self._last_timestamp = 0.
+        self._last_timestamp = 0.0
         self._fps_buffer = deque(maxlen=100)
 
     @classmethod
@@ -106,27 +109,31 @@ class BaseStreamRecorder(BaseRecorder):
         # TODO pass actual policy instead of overwrite
         if isinstance(config, VideoConfig):
             from .video import VideoRecorder
+
             return VideoRecorder._from_config(
-                config, folder, device, overwrite)
+                config, folder, device, overwrite
+            )
         elif isinstance(config, OdometryConfig):
             from .odometry import OdometryRecorder
+
             return OdometryRecorder._from_config(
-                config, folder, device, overwrite)
+                config, folder, device, overwrite
+            )
         else:
-            raise TypeError('Unsupported config type: {}'.format(type(config)))
+            raise TypeError("Unsupported config type: {}".format(type(config)))
 
     @property
     def current_fps(self):
         """ Current average fps. """
         if len(self._fps_buffer) == 0 or np.all(np.isnan(self._fps_buffer)):
-            return 0.
+            return 0.0
         else:
             return np.nanmean(self._fps_buffer)
 
     def _process_timestamp(self, timestamp, fps_queue=None):
         """ Process a new timestamp. """
         if timestamp != self._last_timestamp:
-            fps = 1. / (timestamp - self._last_timestamp)
+            fps = 1.0 / (timestamp - self._last_timestamp)
         else:
             fps = np.nan
 

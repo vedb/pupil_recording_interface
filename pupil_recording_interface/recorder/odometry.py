@@ -12,11 +12,12 @@ class OdometryRecorder(BaseStreamRecorder):
     def __init__(self, *args, **kwargs):
         super(OdometryRecorder, self).__init__(*args, **kwargs)
 
-        topic = 'odometry'
-        self.filename = os.path.join(self.folder, topic + '.pldata')
+        topic = "odometry"
+        self.filename = os.path.join(self.folder, topic + ".pldata")
         if not self.overwrite and os.path.exists(self.filename):
-            raise IOError('{} exists, will not overwrite'.format(
-                self.filename))
+            raise IOError(
+                "{} exists, will not overwrite".format(self.filename)
+            )
         self.writer = PLData_Writer(self.folder, topic)
 
     @classmethod
@@ -25,10 +26,11 @@ class OdometryRecorder(BaseStreamRecorder):
         if device is None:
             device = RealSenseDeviceT265(config.device_uid, odometry=True)
 
-        policy = 'overwrite' if overwrite else 'here'
+        policy = "overwrite" if overwrite else "here"
 
         return OdometryRecorder(
-            folder, device, name=config.name, policy=policy)
+            folder, device, name=config.name, policy=policy
+        )
 
     def get_data_and_timestamp(self):
         """ Get the last data packet and timestamp from the stream. """
