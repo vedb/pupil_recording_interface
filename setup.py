@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from distutils.util import convert_path
 
 requirements = [
     "numpy",
@@ -9,9 +10,14 @@ requirements = [
     "opencv-python",
 ]
 
+main_ns = {}
+ver_path = convert_path("pupil_recording_interface/_version.py")
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), main_ns)
+
 setup(
     name="pupil_recording_interface",
-    version="0.0.1",
+    version=main_ns["__version__"],
     packages=find_packages(),
     long_description=open("README.rst").read(),
     entry_points={
