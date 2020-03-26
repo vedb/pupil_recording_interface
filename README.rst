@@ -29,12 +29,12 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    pip install git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
 
 If you are using the conda package manager, install these dependencies first:
 
 .. code-block:: console
 
-    conda install xarray scipy msgpack-python opencv
+    $ conda install xarray scipy msgpack-python opencv
 
 Afterwards, install the package via ``pip`` as detailed above.
