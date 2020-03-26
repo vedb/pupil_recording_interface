@@ -28,8 +28,6 @@ class BaseRecorder(object):
             and existing files will possibly be overwritten.
         """
         self.folder = self._init_folder(folder, policy)
-        self.all_devices_initialized = False
-        self.previous_timestamp = 0
 
     @classmethod
     def _init_folder(cls, folder, policy):
@@ -126,7 +124,7 @@ class BaseStreamRecorder(BaseRecorder):
     def current_fps(self):
         """ Current average fps. """
         if len(self._fps_buffer) == 0 or np.all(np.isnan(self._fps_buffer)):
-            return 0.0
+            return float("nan")
         else:
             return np.nanmean(self._fps_buffer)
 

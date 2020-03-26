@@ -1,5 +1,11 @@
+from __future__ import print_function
+
+import sys
+import logging
+
 from pupil_recording_interface.config import VideoConfig
 from pupil_recording_interface import MultiStreamRecorder
+
 
 if __name__ == "__main__":
 
@@ -33,6 +39,14 @@ if __name__ == "__main__":
         ),
     ]
 
+    # set up logger
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
+    )
+
     # start recorder
     recorder = MultiStreamRecorder(folder, configs, show_video=True)
-    recorder.run()
+    for fps_dict in recorder.run():
+        fps_str = recorder.format_fps(fps_dict)
+        if fps_str is not None:
+            print("\rSampling rates: " + fps_str, end="")

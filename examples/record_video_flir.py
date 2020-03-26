@@ -1,3 +1,8 @@
+from __future__ import print_function
+
+import sys
+import logging
+
 from pupil_recording_interface import (
     VideoConfig,
     VideoRecorder,
@@ -5,16 +10,18 @@ from pupil_recording_interface import (
 )
 from pupil_recording_interface.config import OdometryConfig
 
+
 if __name__ == "__main__":
 
     # recording folder
     folder = "~/recordings/flir_test"
 
-    # Todo: Change this according to pupils instructions
+    # TODO: Change this according to pupils instructions
     # string that uniquely identifies the FLIR camera
     flir_uid = "FLIR_19238305"
 
     codec = "libx265"
+
     # camera configurations
     recording_duration = 60
     flir_fps = 30
@@ -24,6 +31,7 @@ if __name__ == "__main__":
     # 100 fps : 9900.0 #50 fps : 19000 # 30 fps : 31000.0
     exposure_value = 31000.0
     gain = 18
+
     configs = [
         VideoConfig(
             "flir",
@@ -59,6 +67,11 @@ if __name__ == "__main__":
         OdometryConfig("t265", "t265", name="odometry"),
     ]
 
+    # set up logger
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
+    )
+
     # change this to False for multi-threaded recording
     single_threaded = False
 
@@ -67,8 +80,13 @@ if __name__ == "__main__":
             configs[0], folder, overwrite=True
         )
         recorder.show_video = False
+        recorder.run()
+
     else:
         recorder = MultiStreamRecorder(
             folder, configs, show_video=False, duration=recording_duration
         )
-    recorder.run()
+        for fps_dict in recorder.run():
+            fps_str = recorder.format_fps(fps_dict)
+            if fps_str is not None:
+                print("\rSampling rates: " + fps_str, end="")
