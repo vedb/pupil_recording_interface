@@ -227,7 +227,7 @@ class MultiStreamRecorder(BaseRecorder):
         self.save_info(run_duration)
 
         # log info
-        logger.info(
+        logger.debug(
             "Stopped recording after {:.2f} seconds".format(run_duration)
         )
 
