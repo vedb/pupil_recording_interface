@@ -55,8 +55,8 @@ class MultiStreamRecorder(BaseRecorder):
         self.duration = duration or float("inf")
 
         self._max_queue_size = 20  # max size of process fps queue
-        self._start_time = 0.
-        self._start_time_monotonic = 0.
+        self._start_time = 0.0
+        self._start_time_monotonic = 0.0
         self._processes = {}
         self._queues = {}
         self._stop_event = None
@@ -240,5 +240,7 @@ class MultiStreamRecorder(BaseRecorder):
             Mapping from recorder name to current fps.
         """
         self.start()
-        yield from self.spin()
+        # TODO use yield from once we drop Python 2.7
+        for fps in self.spin():
+            yield fps
         self.stop()
