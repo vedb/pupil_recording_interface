@@ -55,9 +55,11 @@ class MultiStreamRecorder(BaseRecorder):
         self.duration = duration or float("inf")
 
         self._max_queue_size = 20  # max size of process fps queue
-        self._start_time_monotonic = 0
-        self._start_time = 0
-        self._run_duration = 0
+        self._start_time = 0.
+        self._start_time_monotonic = 0.
+        self._processes = {}
+        self._queues = {}
+        self._stop_event = None
 
     @classmethod
     def _init_recorders(cls, folder, configs, show_video, overwrite):
@@ -119,7 +121,8 @@ class MultiStreamRecorder(BaseRecorder):
     @classmethod
     def _stop_processes(cls, processes, stop_event):
         """ Stop all recorder processes. """
-        stop_event.set()
+        if stop_event is not None:
+            stop_event.set()
         for process in processes.values():
             process.join()
 
@@ -134,10 +137,10 @@ class MultiStreamRecorder(BaseRecorder):
         else:
             return None
 
-    def save_info(self):
+    def save_info(self, run_duration):
         """ Save info.player.json file. """
         json_file = {
-            "duration_s": self._run_duration,
+            "duration_s": run_duration,
             "meta_version": "2.1",
             "min_player_version": "1.16",
             "recording_name": self.folder,
@@ -156,45 +159,48 @@ class MultiStreamRecorder(BaseRecorder):
         ) as f:
             json.dump(json_file, f, ensure_ascii=False, indent=4)
 
-    def run(self):
-        """ Main recording loop.
-
-        Yields
-        ------
-        fps_dict: dict
-            Mapping from recorder name to current fps.
-        """
+    def start(self):
+        """ Start recording. """
         from uvc import get_time_monotonic
-
-        logger.info("Started recording to {}".format(self.folder))
 
         # run hooks that need to be run in the main thread
         for recorder in self.recorders.values():
             recorder.run_pre_thread_hooks()
 
         # dispatch recording threads
-        processes, queues, stop_event = self._init_processes(
+        self._processes, self._queues, self._stop_event = self._init_processes(
             self.recorders, self._max_queue_size
         )
-        self._start_processes(processes)
+        self._start_processes(self._processes)
 
         # Record times
         self._start_time = time.time()
         self._start_time_monotonic = get_time_monotonic()
+
+        # Log info
+        logger.debug("Recording folder: {}".format(self.folder))
         logger.debug("Recording for {} seconds".format(self.duration))
         logger.debug("Run start time: {}".format(self._start_time))
         logger.debug(
             "Run start time monotonic: {}".format(self._start_time_monotonic)
         )
 
+    def spin(self):
+        """ Poll fps queues for new data.
+
+        Yields
+        ------
+        fps_dict: dict
+            Mapping from recorder name to current fps.
+        """
         while time.time() - self._start_time_monotonic < self.duration:
             try:
                 # get fps from queues
                 # TODO can the recorder instance do this by itself?
                 for recorder_name, recorder in self.recorders.items():
-                    while not queues[recorder_name].empty():
+                    while not self._queues[recorder_name].empty():
                         recorder._fps_buffer.append(
-                            queues[recorder_name].get()
+                            self._queues[recorder_name].get()
                         )
 
                 # yield current fps for each recorder
@@ -206,19 +212,33 @@ class MultiStreamRecorder(BaseRecorder):
             except KeyboardInterrupt:
                 break
 
-        self._run_duration = time.time() - self._start_time
-        logger.debug("Recording duration: {}".format(self._run_duration))
+    def stop(self):
+        """ Stop recording. """
+        run_duration = time.time() - self._start_time
 
         # stop recording threads
-        self._stop_processes(processes, stop_event)
+        self._stop_processes(self._processes, self._stop_event)
 
         # run hooks that need to be run in the main thread
         for recorder in self.recorders.values():
             recorder.run_post_thread_hooks()
 
         # save info.player.json
-        self.save_info()
+        self.save_info(run_duration)
 
-        # TODO new line is for compatibility with print-based sampling rate
-        #  display
-        logger.info("\nStopped recording")
+        # log info
+        logger.info(
+            "Stopped recording after {:.2f} seconds".format(run_duration)
+        )
+
+    def run(self):
+        """ Main recording loop.
+
+        Yields
+        ------
+        fps_dict: dict
+            Mapping from recorder name to current fps.
+        """
+        self.start()
+        yield from self.spin()
+        self.stop()
