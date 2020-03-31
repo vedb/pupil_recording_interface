@@ -23,7 +23,7 @@ class BaseDevice(object):
         """ Stop this device. """
 
     def run_pre_thread_hooks(self):
-        """ Run hook(s) before dispatching the recording thread. """
+        """ Run hook(s) before dispatching processing thread(s). """
 
     def run_post_thread_hooks(self):
-        """ Run hook(s) after the recording thread finishes. """
+        """ Run hook(s) after processing thread(s) finish(es). """

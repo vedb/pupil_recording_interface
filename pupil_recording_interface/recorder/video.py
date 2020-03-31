@@ -339,10 +339,6 @@ class VideoRecorder(BaseStreamRecorder):
 
         return VideoRecorder(folder, device, name=config.name, policy=policy)
 
-    def start(self):
-        """ Start the recorder. """
-        self.device.start()
-
     def get_data_and_timestamp(self):
         """ Get the last data packet and timestamp from the stream. """
         # TODO handle uvc.StreamError and reinitialize capture
@@ -366,5 +362,6 @@ class VideoRecorder(BaseStreamRecorder):
     def stop(self):
         """ Stop the recorder. """
         # TODO additionally save timestamps continuously if paranoid=True
+        super(VideoRecorder, self).stop()
         self.encoder.stop()
         np.save(self.encoder.timestamp_file, np.array(self._timestamps))

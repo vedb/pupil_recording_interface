@@ -147,7 +147,6 @@ class VideoDeviceUVC(BaseVideoDevice):
 
     def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
-
         if mode not in ("img", "bgr", "gray", "jpeg_buffer"):
             raise ValueError("Unsupported mode: {}".format(mode))
 
