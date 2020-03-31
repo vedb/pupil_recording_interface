@@ -1,10 +1,22 @@
 """"""
 
 
-class StreamConfig(object):
+class BaseConfig(object):
+    """ Base class for all configurations. """
+
+    def __init__(self, **kwargs):
+        """ Constructor. """
+        # TODO Replace with self.kwargs = kwargs?
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+
+class StreamConfig(BaseConfig):
     """ Configuration for streams. """
 
-    def __init__(self, device_type, device_uid, name=None, **kwargs):
+    def __init__(
+        self, device_type, device_uid, pipeline=None, name=None, **kwargs
+    ):
         """ Constructor.
 
         Parameters
@@ -21,10 +33,10 @@ class StreamConfig(object):
         """
         self.device_type = device_type
         self.device_uid = device_uid
+        self.pipeline = pipeline
         self.name = name or self.device_uid
 
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        super(StreamConfig, self).__init__(**kwargs)
 
 
 class VideoConfig(StreamConfig):
@@ -36,6 +48,7 @@ class VideoConfig(StreamConfig):
         device_uid,
         resolution,
         fps,
+        pipeline=None,
         name=None,
         color_format="bgr24",
         side="both",
@@ -69,7 +82,7 @@ class VideoConfig(StreamConfig):
             or 'both'.
         """
         super(VideoConfig, self).__init__(
-            device_type, device_uid, name, **kwargs
+            device_type, device_uid, pipeline=pipeline, name=name, **kwargs
         )
 
         self.fps = fps
@@ -82,3 +95,35 @@ class OdometryConfig(StreamConfig):
     """ Configuration for odometry streams. """
 
     # TODO rename to MotionConfig
+
+
+class ProcessConfig(BaseConfig):
+    """ Configuration for processes. """
+
+
+class VideoDisplayConfig(ProcessConfig):
+    """ Configuration for video displays. """
+
+
+class VideoRecorderConfig(ProcessConfig):
+    """ Configuration for video recorders. """
+
+    def __init__(
+        self,
+        folder,
+        policy="new_folder",
+        resolution=None,
+        fps=None,
+        color_format=None,
+        codec="libx264",
+        **kwargs
+    ):
+        """ Constructor. """
+        self.folder = folder
+        self.policy = policy
+        self.resolution = resolution
+        self.fps = fps
+        self.color_format = color_format
+        self.codec = codec
+
+        super(VideoRecorderConfig, self).__init__(**kwargs)
