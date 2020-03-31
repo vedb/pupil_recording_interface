@@ -6,8 +6,10 @@ from pupil_recording_interface.config import (
     OdometryConfig,
     VideoDisplayConfig,
     VideoRecorderConfig,
+    OdometryRecorderConfig,
 )
 from pupil_recording_interface.stream import StreamManager
+
 
 if __name__ == "__main__":
 
@@ -17,16 +19,16 @@ if __name__ == "__main__":
     # camera configurations
     configs = [
         VideoConfig(
-            "uvc",
-            "Pupil Cam1 ID2",
+            device_type="uvc",
+            device_uid="Pupil Cam1 ID2",
             name="world",
             resolution=(1280, 720),
             fps=60,
             pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
         ),
         VideoConfig(
-            "uvc",
-            "Pupil Cam1 ID0",
+            device_type="uvc",
+            device_uid="Pupil Cam1 ID0",
             name="eye0",
             resolution=(320, 240),
             fps=120,
@@ -34,8 +36,8 @@ if __name__ == "__main__":
             pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
         ),
         VideoConfig(
-            "uvc",
-            "Pupil Cam1 ID1",
+            device_type="uvc",
+            device_uid="Pupil Cam1 ID1",
             name="eye1",
             resolution=(320, 240),
             fps=120,
@@ -43,14 +45,19 @@ if __name__ == "__main__":
             pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
         ),
         VideoConfig(
-            "t265",
-            "t265",
+            device_type="t265",
+            device_uid="t265",
             resolution=(1696, 800),
             fps=30,
             color_format="gray",
             pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
         ),
-        OdometryConfig("t265", "t265", name="odometry"),
+        OdometryConfig(
+            device_type="t265",
+            device_uid="t265",
+            name="odometry",
+            pipeline=[OdometryRecorderConfig()],
+        ),
     ]
 
     # set up logger

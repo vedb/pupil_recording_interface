@@ -1,6 +1,7 @@
 """"""
 import abc
 import os
+import logging
 
 import numpy as np
 import cv2
@@ -8,8 +9,13 @@ import cv2
 from pupil_recording_interface.config import (
     VideoDisplayConfig,
     VideoRecorderConfig,
+    OdometryRecorderConfig,
 )
 from pupil_recording_interface.recorder.video import VideoEncoderFFMPEG
+from pupil_recording_interface.externals.file_methods import PLData_Writer
+
+
+logger = logging.getLogger(__name__)
 
 
 class Pipeline(object):
@@ -42,6 +48,10 @@ class Pipeline(object):
                             codec=step.codec,
                         )
                     )
+                elif isinstance(step, OdometryRecorderConfig):
+                    steps.append(
+                        OdometryRecorderProcess(step.folder or folder)
+                    )
                 else:
                     raise ValueError(
                         "Unsupported process type: {}".format(type(step))
@@ -49,6 +59,12 @@ class Pipeline(object):
             return cls(steps)
         else:
             return None
+
+    def start(self):
+        """ Start the pipeline. """
+        logger.debug("Starting pipeline with steps: {}".format(self.steps))
+        for step in self.steps:
+            step.start()
 
     def flush(self, data, timestamp):
         """ Flush the pipeline with new data. """
@@ -65,6 +81,9 @@ class Pipeline(object):
 
 class BaseProcess(object):
     """ Base class for all processes. """
+
+    def start(self):
+        """ Start the process"""
 
     @abc.abstractmethod
     def process_data_and_timestamp(self, data, timestamp):
@@ -182,7 +201,7 @@ class VideoRecorderProcess(BaseRecorderProcess):
         """ Process data and timestamp. """
         self.write(data)
         # TODO check if this works
-        # self._timestamps.append(timestamp)
+        self._timestamps.append(timestamp)
 
         return data, timestamp
 
@@ -191,3 +210,36 @@ class VideoRecorderProcess(BaseRecorderProcess):
         self.encoder.stop()
         # TODO additionally save timestamps continuously if paranoid=True
         np.save(self.timestamp_file, np.array(self._timestamps))
+
+
+class OdometryRecorderProcess(BaseRecorderProcess):
+    """ Recorder for an odometry stream. """
+
+    def __init__(self, folder, name=None, topic="odometry"):
+        """ Constructor. """
+        super(OdometryRecorderProcess, self).__init__(folder, name=name)
+
+        self.filename = os.path.join(self.folder, topic + ".pldata")
+        if os.path.exists(self.filename):
+            raise IOError(
+                "{} exists, will not overwrite".format(self.filename)
+            )
+        self.writer = PLData_Writer(self.folder, topic)
+
+    def start(self):
+        """ Start the recorder. """
+        logger.debug("Started odometry recorder.")
+
+    def write(self, data):
+        """ Write data to disk. """
+        self.writer.append(data)
+
+    def process_data_and_timestamp(self, data, timestamp):
+        """ Process data and timestamp. """
+        self.write(data)
+
+        return data, timestamp
+
+    def stop(self):
+        """ Stop the recorder. """
+        self.writer.close()

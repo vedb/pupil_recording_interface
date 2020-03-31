@@ -108,6 +108,8 @@ class BaseStream(object):
         logger.debug("Starting stream: {}".format(self.name))
         if not self.device.is_started:
             self.device.start()
+        if self.pipeline is not None:
+            self.pipeline.start()
 
     def get_data_and_timestamp(self):
         """ Get the last data packet and timestamp from the stream. """
@@ -261,7 +263,11 @@ class OdometryStream(BaseStream):
         if device is None:
             device = RealSenseDeviceT265(config.device_uid, odometry=True)
 
-        return cls(device, name=config.name)
+        return cls(
+            device,
+            name=config.name,
+            pipeline=Pipeline.from_config(config, device, folder),
+        )
 
     def get_data_and_timestamp(self):
         """ Get the last data packet and timestamp from the stream. """
@@ -278,11 +284,12 @@ class StreamManager(object):
 
         Parameters
         ----------
-        folder: str
-            Path to the recording folder.
-
         configs: iterable of StreamConfig
             An iterable of stream configurations.
+
+        folder: str, optional
+            Path to the recording folder if any of the streams are being
+            recorded.
 
         policy: str, default 'new_folder'
             Policy for recording folder creation. If 'new_folder',
@@ -291,6 +298,10 @@ class StreamManager(object):
             will throw an error when existing files would be overwritten. If
             'overwrite', the data will be recorded to the specified folder
             and existing files will possibly be overwritten.
+
+        duration: float, optional
+            If provided, the number of seconds after which the streams are
+            stopped.
         """
         self.folder = self._init_folder(folder, policy)
         self.streams = self._init_streams(configs, self.folder)

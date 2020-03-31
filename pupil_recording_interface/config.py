@@ -125,3 +125,13 @@ class VideoRecorderConfig(ProcessConfig):
         self.codec = codec
 
         super(VideoRecorderConfig, self).__init__(**kwargs)
+
+
+class OdometryRecorderConfig(ProcessConfig):
+    """ Configuration for odometry recorders. """
+
+    def __init__(self, folder=None, **kwargs):
+        """ Constructor. """
+        self.folder = folder
+
+        super(OdometryRecorderConfig, self).__init__(**kwargs)
