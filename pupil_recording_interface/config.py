@@ -110,8 +110,7 @@ class VideoRecorderConfig(ProcessConfig):
 
     def __init__(
         self,
-        folder,
-        policy="new_folder",
+        folder=None,
         resolution=None,
         fps=None,
         color_format=None,
@@ -120,7 +119,6 @@ class VideoRecorderConfig(ProcessConfig):
     ):
         """ Constructor. """
         self.folder = folder
-        self.policy = policy
         self.resolution = resolution
         self.fps = fps
         self.color_format = color_format

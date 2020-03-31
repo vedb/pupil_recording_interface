@@ -9,7 +9,6 @@ from pupil_recording_interface.config import (
     VideoDisplayConfig,
     VideoRecorderConfig,
 )
-from pupil_recording_interface.recorder import BaseRecorder
 from pupil_recording_interface.recorder.video import VideoEncoderFFMPEG
 
 
@@ -21,7 +20,7 @@ class Pipeline(object):
         self.steps = steps
 
     @classmethod
-    def from_config(cls, config, device):
+    def from_config(cls, config, device, folder=None):
         """ Create an instance from a StreamConfig. """
         if config.pipeline is not None:
             steps = []
@@ -34,11 +33,10 @@ class Pipeline(object):
                 elif isinstance(step, VideoRecorderConfig):
                     steps.append(
                         VideoRecorderProcess(
-                            step.folder,
+                            step.folder or folder,
                             step.resolution or device.resolution,
                             step.fps or device.fps,
                             name=config.name or device.uid,
-                            policy=step.policy,
                             color_format=step.color_format
                             or config.color_format,
                             codec=step.codec,
@@ -91,10 +89,10 @@ class VideoDisplayProcess(BaseProcess):
         return data, timestamp
 
 
-class BaseRecorderProcess(BaseProcess, BaseRecorder):
+class BaseRecorderProcess(BaseProcess):
     """ Recorder for stream. """
 
-    def __init__(self, folder, name=None, policy="new_folder"):
+    def __init__(self, folder, name=None):
         """ Constructor.
 
         Parameters
@@ -104,16 +102,12 @@ class BaseRecorderProcess(BaseProcess, BaseRecorder):
 
         name: str, optional
             The name of the recorder.
-
-        policy: str, default 'new_folder'
-            Policy for recording folder creation. If 'new_folder',
-            new sub-folders will be created with incremental numbering. If
-            'here', the data will be recorded to the specified folder but
-            will throw an error when existing files would be overwritten. If
-            'overwrite', the data will be recorded to the specified folder
-            and existing files will possibly overwritten.
         """
-        super(BaseRecorderProcess, self).__init__(folder, policy=policy)
+        if folder is None:
+            raise ValueError("Recording folder cannot be None")
+        else:
+            self.folder = folder
+
         self.name = name
 
     @abc.abstractmethod
@@ -130,7 +124,6 @@ class VideoRecorderProcess(BaseRecorderProcess):
         resolution,
         fps,
         name=None,
-        policy="new_folder",
         color_format="bgr24",
         codec="libx264",
         **encoder_kwargs
@@ -149,29 +142,16 @@ class VideoRecorderProcess(BaseRecorderProcess):
             The name of the recorder. If not specified, `device.uid` will be
             used.
 
-        policy: str, default 'new_folder'
-            Policy for recording folder creation. If 'new_folder',
-            new sub-folders will be created with incremental numbering. If
-            'here', the data will be recorded to the specified folder but
-            will throw an error when existing files would be overwritten. If
-            'overwrite', the data will be recorded to the specified folder
-            and existing files will possibly overwritten.
-
         color_format: str, default 'bgr24'
             The target color format. Set to 'gray' for eye cameras.
 
         codec: str, default 'libx264'
             The desired video codec.
 
-        show_video: bool, default False,
-            If True, show the video stream in a window.
-
         encoder_kwargs:
             Addtional keyword arguments passed to the encoder.
         """
-        super(VideoRecorderProcess, self).__init__(
-            folder, name=name, policy=policy
-        )
+        super(VideoRecorderProcess, self).__init__(folder, name=name)
 
         self.encoder = VideoEncoderFFMPEG(
             self.folder,
@@ -180,14 +160,14 @@ class VideoRecorderProcess(BaseRecorderProcess):
             fps,
             color_format,
             codec,
-            policy == "overwrite",
+            overwrite=False,
             **encoder_kwargs
         )
 
         self.timestamp_file = os.path.join(
             self.folder, "{}_timestamps.npy".format(self.name)
         )
-        if os.path.exists(self.timestamp_file) and policy != "overwrite":
+        if os.path.exists(self.timestamp_file):
             raise IOError(
                 "{} exists, will not overwrite".format(self.timestamp_file)
             )
@@ -202,7 +182,7 @@ class VideoRecorderProcess(BaseRecorderProcess):
         """ Process data and timestamp. """
         self.write(data)
         # TODO check if this works
-        self._timestamps.append(timestamp)
+        # self._timestamps.append(timestamp)
 
         return data, timestamp
 

@@ -58,7 +58,6 @@ class BaseVideoEncoder(object):
         overwrite: bool, default False
             If True, overwrite existing video files with the same name.
         """
-        self.ffmpeg_counter = 0
         self.video_file = os.path.join(folder, "{}.mp4".format(device_name))
         if os.path.exists(self.video_file):
             if overwrite:
@@ -232,11 +231,16 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         img : array_like
             The input frame.
         """
-        self.video_writer.stdin.write(img.tostring())
+        try:
+            self.video_writer.stdin.write(img.tostring())
+        except BrokenPipeError:
+            # TODO figure out why this is happening in the first place
+            pass
 
     def stop(self):
         """ Stop the encoder. """
         self.video_writer.stdin.write(b"q")
+        self.video_writer.wait()
         logger.debug(
             "Stopped ffmpeg encoder {self.video_writer}".format(self=self)
         )
