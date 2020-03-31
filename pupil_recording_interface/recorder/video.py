@@ -236,7 +236,10 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
 
     def stop(self):
         """ Stop the encoder. """
-        self.video_writer.stdin.close()
+        self.video_writer.stdin.write(b"q")
+        logger.debug(
+            "Stopped ffmpeg encoder {self.video_writer}".format(self=self)
+        )
 
 
 class VideoRecorder(BaseStreamRecorder):

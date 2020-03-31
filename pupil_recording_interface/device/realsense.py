@@ -1,11 +1,15 @@
 """"""
 import multiprocessing as mp
+import logging
 
 import numpy as np
 
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import BaseVideoDevice
 from pupil_recording_interface.config import VideoConfig, OdometryConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class RealSenseDeviceT265(BaseDevice):
@@ -58,6 +62,7 @@ class RealSenseDeviceT265(BaseDevice):
         except ImportError:
             from inspect import getargspec as getfullargspec
 
+        # get keyword arguments of this class
         argspect = getfullargspec(cls.__init__)
         kwargs = {
             k: v
@@ -66,6 +71,7 @@ class RealSenseDeviceT265(BaseDevice):
             )
         }
 
+        # set parameters for video and odometry devices
         for config in config_list:
             if isinstance(config, VideoConfig):
                 kwargs["video"] = getattr(config, "side")
@@ -76,6 +82,11 @@ class RealSenseDeviceT265(BaseDevice):
                 kwargs["odometry"] = True
 
         kwargs.update(extra_kwargs)
+
+        logger.debug(
+            "Creating T265 video device with serial number "
+            "{uid} and parameters: {kwargs}".format(uid=uid, kwargs=kwargs)
+        )
 
         return cls(uid, **kwargs)
 
@@ -174,6 +185,11 @@ class RealSenseDeviceT265(BaseDevice):
             pipeline.start(config, callback)
         else:
             pipeline.start(config)
+
+        logger.debug(
+            "T265 pipeline started with video={video}, "
+            "odometry={odometry}".format(video=video, odometry=odometry)
+        )
 
         return pipeline
 
