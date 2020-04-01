@@ -424,7 +424,7 @@ class StreamManager(object):
         if not any(
             math.isnan(status["fps"]) for status in status_dict.values()
         ):
-            return "Sampling rates: " + ", ".join(
+            return ", ".join(
                 "{}: {:.2f} Hz".format(name, status["fps"])
                 for name, status in status_dict.items()
             )
