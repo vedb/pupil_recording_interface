@@ -13,7 +13,7 @@ import logging
 
 import numpy as np
 
-from pupil_recording_interface import __version__
+from pupil_recording_interface._version import __version__
 from pupil_recording_interface.config import (
     VideoConfig,
     OdometryConfig,
