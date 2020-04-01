@@ -306,6 +306,7 @@ class StreamManager(object):
         self.folder = self._init_folder(folder, policy)
         self.streams = self._init_streams(configs, self.folder)
         self.duration = duration or float("inf")
+        self.stopped = False
 
         self._max_queue_size = 20  # max size of process fps queue
         self._start_time = 0.0
@@ -357,9 +358,8 @@ class StreamManager(object):
 
         devices_by_uid, streams = {}, {}
         for uid, config_list in configs_by_uid.items():
-
-            # init t265 device separately
             if config_list[0].device_type == "t265":
+                # init t265 device separately
                 from pupil_recording_interface.device.realsense import (
                     RealSenseDeviceT265,
                 )
@@ -453,9 +453,22 @@ class StreamManager(object):
         ) as f:
             json.dump(json_file, f, ensure_ascii=False, indent=4)
 
+    def _handle_interrupt(self, signal, frame):
+        """ Handle keyboard interrupt. """
+        logger.debug("Caught keyboard interrupt")
+        self.stopped = True
+
+    def set_interrupt_handler(self):
+        """ Set handler for keyboard interrupts. """
+        signal.signal(signal.SIGINT, self._handle_interrupt)
+
     def start(self):
         """ Start recording. """
         from uvc import get_time_monotonic
+
+        # set up interrupt handler
+        self.set_interrupt_handler()
+        self.stopped = False
 
         # run hooks that need to be run in the main thread
         for stream in self.streams.values():
@@ -489,7 +502,10 @@ class StreamManager(object):
         status_dict: dict
             Mapping from stream name to current status.
         """
-        while time.time() - self._start_time_monotonic < self.duration:
+        while (
+            time.time() - self._start_time_monotonic < self.duration
+            and not self.stopped
+        ):
             try:
                 # get fps from queues
                 # TODO can the stream instance do this by itself?
