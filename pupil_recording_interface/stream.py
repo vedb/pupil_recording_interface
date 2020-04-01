@@ -117,11 +117,11 @@ class BaseStream(object):
 
     def stop(self):
         """ Stop the stream. """
-        logger.debug("Stopping stream: {}".format(self.name))
         if self.pipeline is not None:
             self.pipeline.stop()
         if self.device.is_started:
             self.device.stop()
+        logger.debug("Stopped stream: {}".format(self.name))
 
     def run_post_thread_hooks(self):
         """ Run hook(s) after processing thread(s) finish(es). """
@@ -349,6 +349,7 @@ class StreamManager(object):
     @classmethod
     def _init_streams(cls, configs, folder=None):
         """ Init stream instances for all configs. """
+        # mapping from uids to configs
         uids = {c.device_uid for c in configs}
         configs_by_uid = {
             uid: [c for c in configs if c.device_uid == uid] for uid in uids
@@ -375,6 +376,10 @@ class StreamManager(object):
                     config, devices_by_uid[uid], folder
                 )
                 devices_by_uid[uid] = devices_by_uid[uid] or stream.device
+                if config.name in streams:
+                    raise ValueError(
+                        "Duplicate config name: {}".format(config.name)
+                    )
                 streams[config.name] = stream
 
         return streams
