@@ -14,7 +14,22 @@ from .recorder.odometry import OdometryRecorder
 from .recorder.video import VideoRecorder, VideoEncoderFFMPEG
 from .recorder.multi_stream import MultiStreamRecorder
 
-from .config import StreamConfig, VideoConfig, OdometryConfig
+from .stream import VideoStream, OdometryStream, StreamManager
+from .pipeline import (
+    Pipeline,
+    VideoRecorderProcess,
+    OdometryRecorderProcess,
+    VideoDisplayProcess,
+)
+
+from .config import (
+    StreamConfig,
+    VideoConfig,
+    OdometryConfig,
+    VideoRecorderConfig,
+    OdometryRecorderConfig,
+    VideoDisplayConfig,
+)
 
 from .cli import CLI
 
@@ -45,10 +60,22 @@ __all__ = [
     "VideoRecorder",
     "MultiStreamRecorder",
     "VideoEncoderFFMPEG",
+    # Streams
+    "VideoStream",
+    "OdometryStream",
+    "StreamManager",
+    # Pipeline & processes
+    "Pipeline",
+    "VideoRecorderProcess",
+    "OdometryRecorderProcess",
+    "VideoDisplayProcess",
     # Configs
     "StreamConfig",
     "VideoConfig",
     "OdometryConfig",
+    "VideoRecorderConfig",
+    "OdometryRecorderConfig",
+    "VideoDisplayConfig",
 ]
 
 

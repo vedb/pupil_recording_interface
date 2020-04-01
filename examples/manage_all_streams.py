@@ -1,14 +1,16 @@
+from __future__ import print_function
+
 import sys
 import logging
 
-from pupil_recording_interface.config import (
+from pupil_recording_interface import (
     VideoConfig,
     OdometryConfig,
     VideoDisplayConfig,
     VideoRecorderConfig,
     OdometryRecorderConfig,
+    StreamManager,
 )
-from pupil_recording_interface.stream import StreamManager
 
 
 if __name__ == "__main__":
