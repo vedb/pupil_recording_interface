@@ -231,11 +231,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         img : array_like
             The input frame.
         """
-        try:
-            self.video_writer.stdin.write(img.tostring())
-        except BrokenPipeError:
-            # TODO figure out why this is happening in the first place
-            pass
+        self.video_writer.stdin.write(img.tostring())
 
     def stop(self):
         """ Stop the encoder. """
