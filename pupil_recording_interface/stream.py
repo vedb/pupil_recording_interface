@@ -52,7 +52,7 @@ class BaseStream(object):
         self.name = name or device.uid
 
         self._last_timestamp = 0.0
-        self._fps_buffer = deque(maxlen=100)
+        self._fps_buffer = deque(maxlen=20)
 
     @classmethod
     @abc.abstractmethod
@@ -76,6 +76,11 @@ class BaseStream(object):
             return float("nan")
         else:
             return np.nanmean(self._fps_buffer)
+
+    def update_status(self, queue):
+        """ Update status from queue. """
+        while not queue.empty():
+            self._fps_buffer.append(queue.get())
 
     def get_status(self):
         """ Get information about the stream status. """
@@ -506,24 +511,15 @@ class StreamManager(object):
             time.time() - self._start_time_monotonic < self.duration
             and not self.stopped
         ):
-            try:
-                # get fps from queues
-                # TODO can the stream instance do this by itself?
-                for stream_name, stream in self.streams.items():
-                    while not self._queues[stream_name].empty():
-                        stream._fps_buffer.append(
-                            self._queues[stream_name].get()
-                        )
+            # update status for each stream
+            for stream_name, stream in self.streams.items():
+                stream.update_status(self._queues[stream_name])
 
-                # yield current status for each stream
-                yield {
-                    c_name: c.get_status()
-                    for c_name, c in self.streams.items()
-                }
-
-            except (KeyboardInterrupt, SystemExit):
-                logger.debug("Stopped by keyboard interrupt.")
-                break
+            # yield current status for each stream
+            yield {
+                c_name: c.get_status()
+                for c_name, c in self.streams.items()
+            }
 
     def stop(self):
         """ Stop streams. """
