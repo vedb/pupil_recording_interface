@@ -228,7 +228,9 @@ class OdometryRecorderProcess(BaseRecorderProcess):
 
     def start(self):
         """ Start the recorder. """
-        logger.debug("Started odometry recorder.")
+        logger.debug(
+            "Started odometry recorder, recording to {}".format(self.filename)
+        )
 
     def write(self, data):
         """ Write data to disk. """

@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
 
     # start stream
@@ -71,3 +71,5 @@ if __name__ == "__main__":
         status = manager.format_status(status_dict)
         if status is not None:
             print("\r" + status, end="")
+
+    print("\nStopped")
