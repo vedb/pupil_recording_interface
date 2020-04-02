@@ -223,8 +223,6 @@ class RealSenseDeviceT265(BaseDevice):
     def run_post_thread_hooks(self):
         """ Run hook(s) after the recording thread finishes. """
         if self.pipeline is not None:
-            logger.debug(
-                f"Stopping T265 pipeline for device: {self.uid}."
-            )
+            logger.debug(f"Stopping T265 pipeline for device: {self.uid}.")
             self.pipeline.stop()
             self.pipeline = None

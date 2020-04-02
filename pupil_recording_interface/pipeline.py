@@ -46,9 +46,7 @@ class Pipeline(object):
                 elif isinstance(step, OdometryRecorderConfig):
                     steps.append(OdometryRecorder(step.folder or folder))
                 else:
-                    raise ValueError(
-                        f"Unsupported process type: {type(step)}"
-                    )
+                    raise ValueError(f"Unsupported process type: {type(step)}")
             return cls(steps)
         else:
             return None

@@ -77,7 +77,7 @@ class VideoRecorder(BaseRecorder):
         name=None,
         color_format="bgr24",
         codec="libx264",
-        **encoder_kwargs
+        **encoder_kwargs,
     ):
         """ Constructor.
 
@@ -112,16 +112,14 @@ class VideoRecorder(BaseRecorder):
             color_format,
             codec,
             overwrite=False,
-            **encoder_kwargs
+            **encoder_kwargs,
         )
 
         self.timestamp_file = os.path.join(
             self.folder, f"{self.name}_timestamps.npy"
         )
         if os.path.exists(self.timestamp_file):
-            raise IOError(
-                f"{self.timestamp_file} exists, will not overwrite"
-            )
+            raise IOError(f"{self.timestamp_file} exists, will not overwrite")
 
         self._timestamps = []
 
@@ -153,9 +151,7 @@ class OdometryRecorder(BaseRecorder):
 
         self.filename = os.path.join(self.folder, topic + ".pldata")
         if os.path.exists(self.filename):
-            raise IOError(
-                f"{self.filename} exists, will not overwrite"
-            )
+            raise IOError(f"{self.filename} exists, will not overwrite")
         self.writer = PLData_Writer(self.folder, topic)
 
     def start(self):

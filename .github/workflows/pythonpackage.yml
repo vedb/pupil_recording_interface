@@ -46,7 +46,7 @@ jobs:
     - name: Check black code style
       run: |
         pip install black
-        black -l 79 --check .
+        black --check .
 
   docs:
 

@@ -26,7 +26,7 @@ class VideoRecorder(BaseStreamRecorder):
         color_format="bgr24",
         codec="libx264",
         show_video=False,
-        **encoder_kwargs
+        **encoder_kwargs,
     ):
         """ Constructor.
 
@@ -74,7 +74,7 @@ class VideoRecorder(BaseStreamRecorder):
             color_format,
             codec,
             self.overwrite,
-            **encoder_kwargs
+            **encoder_kwargs,
         )
 
         self.color_format = color_format

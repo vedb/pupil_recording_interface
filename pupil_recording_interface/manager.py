@@ -66,9 +66,7 @@ class StreamManager(object):
 
         if policy == "new_folder":
             counter = 0
-            while os.path.exists(
-                os.path.join(folder, f"{counter:03d}")
-            ):
+            while os.path.exists(os.path.join(folder, f"{counter:03d}")):
                 counter += 1
             folder = os.path.join(folder, f"{counter:03d}")
 
@@ -79,9 +77,7 @@ class StreamManager(object):
             shutil.rmtree(folder, ignore_errors=True)
 
         else:
-            raise ValueError(
-                f"Unsupported file creation policy: {policy}"
-            )
+            raise ValueError(f"Unsupported file creation policy: {policy}")
 
         # TODO do this at the start of the recording?
         os.makedirs(folder, exist_ok=True)
@@ -118,9 +114,7 @@ class StreamManager(object):
                 )
                 devices_by_uid[uid] = devices_by_uid[uid] or stream.device
                 if config.name in streams:
-                    raise ValueError(
-                        f"Duplicate config name: {config.name}"
-                    )
+                    raise ValueError(f"Duplicate config name: {config.name}")
                 streams[config.name] = stream
 
         return streams
@@ -231,9 +225,7 @@ class StreamManager(object):
         if self.duration < float("inf"):
             logger.debug(f"Streaming for {self.duration} seconds")
         logger.debug(f"Run start time: {self._start_time}")
-        logger.debug(
-            f"Run start time monotonic: {self._start_time_monotonic}"
-        )
+        logger.debug(f"Run start time monotonic: {self._start_time_monotonic}")
 
     def spin(self):
         """ Poll status queues for new data.
@@ -272,9 +264,7 @@ class StreamManager(object):
             self.save_info(run_duration)
 
         # log info
-        logger.debug(
-            f"Stopped streams after {run_duration:.2f} seconds"
-        )
+        logger.debug(f"Stopped streams after {run_duration:.2f} seconds")
 
     def run(self):
         """ Main loop.

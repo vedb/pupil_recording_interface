@@ -21,7 +21,7 @@ class BaseVideoEncoder(object):
         color_format="bgr24",
         codec="libx264",
         overwrite=False,
-        **kwargs
+        **kwargs,
     ):
         """ Constructor.
 
@@ -54,9 +54,7 @@ class BaseVideoEncoder(object):
             if overwrite:
                 os.remove(self.video_file)
             else:
-                raise IOError(
-                    f"{self.video_file} exists, will not overwrite"
-                )
+                raise IOError(f"{self.video_file} exists, will not overwrite")
 
         self.video_writer = self._init_video_writer(
             self.video_file, codec, color_format, fps, resolution, **kwargs
@@ -67,9 +65,7 @@ class BaseVideoEncoder(object):
             folder, f"{device_name}_timestamps.npy"
         )
         if os.path.exists(self.timestamp_file) and not overwrite:
-            raise IOError(
-                f"{self.timestamp_file} exists, will not overwrite"
-            )
+            raise IOError(f"{self.timestamp_file} exists, will not overwrite")
 
     @classmethod
     @abc.abstractmethod
@@ -165,9 +161,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             crf,
             flags,
         )
-        logger.debug(
-            f"ffmpeg called with arguments: {' '.join(cmd[1:])}"
-        )
+        logger.debug(f"ffmpeg called with arguments: {' '.join(cmd[1:])}")
 
         return subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
@@ -232,6 +226,4 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         """ Stop the encoder. """
         self.video_writer.stdin.write(b"q")
         self.video_writer.wait()
-        logger.debug(
-            f"Stopped ffmpeg encoder {self.video_writer}"
-        )
+        logger.debug(f"Stopped ffmpeg encoder {self.video_writer}")

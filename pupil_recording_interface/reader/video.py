@@ -232,9 +232,7 @@ class VideoReader(BaseReader):
         if self.color_format == "gray":
             return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
-            raise ValueError(
-                f"Unsupported color format: {self.color_format}"
-            )
+            raise ValueError(f"Unsupported color format: {self.color_format}")
 
     def get_roi(self, frame, norm_pos):
         """ Extract the ROI from a video frame.

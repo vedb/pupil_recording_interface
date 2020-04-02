@@ -52,7 +52,7 @@ class VideoConfig(StreamConfig):
         name=None,
         color_format="bgr24",
         side="both",
-        **kwargs
+        **kwargs,
     ):
         """ Constructor.
 
@@ -115,7 +115,7 @@ class VideoRecorderConfig(ProcessConfig):
         fps=None,
         color_format=None,
         codec="libx264",
-        **kwargs
+        **kwargs,
     ):
         """ Constructor. """
         self.folder = folder

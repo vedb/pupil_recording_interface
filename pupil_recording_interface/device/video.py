@@ -98,9 +98,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         try:
             return cls._get_connected_device_uids()[device_name]
         except KeyError:
-            raise ValueError(
-                f"Device with name {device_name} not connected."
-            )
+            raise ValueError(f"Device with name {device_name} not connected.")
 
     @classmethod
     def _get_available_modes(cls, device_uid):
