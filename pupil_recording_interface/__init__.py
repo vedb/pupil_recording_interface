@@ -1,6 +1,5 @@
 """"""
 import os
-import sys
 
 from .reader import BaseReader
 from .reader.odometry import OdometryReader
@@ -10,16 +9,14 @@ from .reader.video import VideoReader, OpticalFlowReader
 from .device.video import VideoDeviceUVC, VideoDeviceFLIR
 from .device.realsense import RealSenseDeviceT265
 
-from .recorder.odometry import OdometryRecorder
-from .recorder.video import VideoRecorder, VideoEncoderFFMPEG
-from .recorder.multi_stream import MultiStreamRecorder
+from .stream import VideoStream, OdometryStream
+from .manager import StreamManager
 
-from .stream import VideoStream, OdometryStream, StreamManager
-from .pipeline import (
-    Pipeline,
-    VideoRecorderProcess,
-    OdometryRecorderProcess,
-    VideoDisplayProcess,
+from .pipeline import Pipeline
+from .process import (
+    VideoDisplay,
+    VideoRecorder,
+    OdometryRecorder,
 )
 
 from .config import (
@@ -31,7 +28,7 @@ from .config import (
     VideoDisplayConfig,
 )
 
-from .cli import CLI
+from .legacy import CLI
 
 from ._version import __version__
 
@@ -55,20 +52,11 @@ __all__ = [
     "VideoDeviceUVC",
     "VideoDeviceFLIR",
     "RealSenseDeviceT265",
-    # Recorders
-    "OdometryRecorder",
-    "VideoRecorder",
-    "MultiStreamRecorder",
-    "VideoEncoderFFMPEG",
     # Streams
     "VideoStream",
     "OdometryStream",
-    "StreamManager",
     # Pipeline & processes
     "Pipeline",
-    "VideoRecorderProcess",
-    "OdometryRecorderProcess",
-    "VideoDisplayProcess",
     # Configs
     "StreamConfig",
     "VideoConfig",
@@ -77,11 +65,6 @@ __all__ = [
     "OdometryRecorderConfig",
     "VideoDisplayConfig",
 ]
-
-
-def _run_cli():
-    """ CLI entry point. """
-    CLI().run(sys.argv)
 
 
 def load_dataset(folder, gaze=None, odometry=None):

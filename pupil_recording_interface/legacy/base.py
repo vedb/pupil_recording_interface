@@ -1,11 +1,10 @@
-""""""
 import abc
 import os
 from collections import deque
 
 import numpy as np
 
-from pupil_recording_interface.config import VideoConfig, OdometryConfig
+from pupil_recording_interface import VideoConfig, OdometryConfig
 
 
 class BaseRecorder(object):
@@ -75,7 +74,7 @@ class BaseStreamRecorder(BaseRecorder):
             The device from which to record the stream.
 
         name: str, optional
-            The name of the recorder. If not specified, `device.uid` will be
+            The name of the legacy. If not specified, `device.uid` will be
             used.
 
         policy: str, default 'new_folder'
@@ -103,7 +102,7 @@ class BaseStreamRecorder(BaseRecorder):
 
     @classmethod
     def from_config(cls, config, folder, device=None, overwrite=False):
-        """ Create a recorder from a StreamConfig. """
+        """ Create a legacy from a StreamConfig. """
         # TODO pass actual policy instead of overwrite
         if isinstance(config, VideoConfig):
             from .video import VideoRecorder
@@ -147,7 +146,7 @@ class BaseStreamRecorder(BaseRecorder):
         self.device.run_pre_thread_hooks()
 
     def start(self):
-        """ Start the recorder. """
+        """ Start the legacy. """
         if not self.device.is_started:
             self.device.start()
 
@@ -160,7 +159,7 @@ class BaseStreamRecorder(BaseRecorder):
         """ Write data to disk. """
 
     def stop(self):
-        """ Stop the recorder. """
+        """ Stop the legacy. """
         if self.device.is_started:
             self.device.stop()
 

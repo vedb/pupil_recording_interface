@@ -2,7 +2,7 @@
 import os
 
 from pupil_recording_interface.externals.file_methods import PLData_Writer
-from pupil_recording_interface.recorder import BaseStreamRecorder
+from pupil_recording_interface.legacy.base import BaseStreamRecorder
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 
 
@@ -41,6 +41,6 @@ class OdometryRecorder(BaseStreamRecorder):
         self.writer.append(data)
 
     def stop(self):
-        """ Stop the recorder. """
+        """ Stop the legacy. """
         super(OdometryRecorder, self).stop()
         self.writer.close()

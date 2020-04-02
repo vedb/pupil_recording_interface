@@ -2,11 +2,11 @@
 import argparse
 
 from pupil_recording_interface import (
-    OdometryRecorder,
     OdometryReader,
     GazeReader,
     VideoReader,
 )
+from pupil_recording_interface.legacy.odometry import OdometryRecorder
 
 
 class CLI(object):

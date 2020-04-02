@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from pupil_recording_interface.cli import CLI
+from pupil_recording_interface.legacy import CLI
 
 
 class TestCLI(object):

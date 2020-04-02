@@ -25,7 +25,7 @@ setup(
     packages=find_packages(),
     long_description=open("README.rst").read(),
     entry_points={
-        "console_scripts": ["pri = pupil_recording_interface:_run_cli"]
+        "console_scripts": ["pri = pupil_recording_interface.legacy:_run_cli"]
     },
     install_requires=requirements,
     include_package_data=True,

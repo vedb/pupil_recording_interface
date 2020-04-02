@@ -8,7 +8,10 @@ import time
 import uuid
 
 from pupil_recording_interface._version import __version__
-from pupil_recording_interface.recorder import BaseRecorder, BaseStreamRecorder
+from pupil_recording_interface.legacy.base import (
+    BaseRecorder,
+    BaseStreamRecorder,
+)
 from pupil_recording_interface.externals.methods import get_system_info
 
 
@@ -63,7 +66,7 @@ class MultiStreamRecorder(BaseRecorder):
 
     @classmethod
     def _init_recorders(cls, folder, configs, show_video, overwrite):
-        """ Init recorder instances for all configs. """
+        """ Init legacy instances for all configs. """
         uids = {c.device_uid for c in configs}
         configs_by_uid = {
             uid: [c for c in configs if c.device_uid == uid] for uid in uids
@@ -97,7 +100,7 @@ class MultiStreamRecorder(BaseRecorder):
 
     @classmethod
     def _init_processes(cls, recorders, max_queue_size):
-        """ Create one process for each recorder instance. """
+        """ Create one process for each legacy instance. """
         stop_event = mp.Event()
         queues = {
             c_name: mp.Queue(maxsize=max_queue_size)
@@ -114,13 +117,13 @@ class MultiStreamRecorder(BaseRecorder):
 
     @classmethod
     def _start_processes(cls, processes):
-        """ Start all recorder processes. """
+        """ Start all legacy processes. """
         for process in processes.values():
             process.start()
 
     @classmethod
     def _stop_processes(cls, processes, stop_event):
-        """ Stop all recorder processes. """
+        """ Stop all legacy processes. """
         if stop_event is not None:
             stop_event.set()
         for process in processes.values():
@@ -191,19 +194,19 @@ class MultiStreamRecorder(BaseRecorder):
         Yields
         ------
         fps_dict: dict
-            Mapping from recorder name to current fps.
+            Mapping from legacy name to current fps.
         """
         while time.time() - self._start_time_monotonic < self.duration:
             try:
                 # get fps from queues
-                # TODO can the recorder instance do this by itself?
+                # TODO can the legacy instance do this by itself?
                 for recorder_name, recorder in self.recorders.items():
                     while not self._queues[recorder_name].empty():
                         recorder._fps_buffer.append(
                             self._queues[recorder_name].get()
                         )
 
-                # yield current fps for each recorder
+                # yield current fps for each legacy
                 yield {
                     c_name: c.current_fps
                     for c_name, c in self.recorders.items()
@@ -237,7 +240,7 @@ class MultiStreamRecorder(BaseRecorder):
         Yields
         ------
         fps_dict: dict
-            Mapping from recorder name to current fps.
+            Mapping from legacy name to current fps.
         """
         self.start()
         # TODO use yield from once we drop Python 2.7

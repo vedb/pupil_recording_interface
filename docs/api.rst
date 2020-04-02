@@ -47,17 +47,19 @@ Device classes
     RealSenseDeviceT265
 
 
-Recorder and Encoder classes
-............................
+Stream classes
+..............
 
 .. autosummary::
     :nosignatures:
     :toctree: _generated
 
-    OdometryRecorder
-    VideoRecorder
-    MultiStreamRecorder
-    VideoEncoder
+    VideoStream
+    OdometryStream
+    StreamManager
+
+
+.. TODO process, pipeline
 
 
 Config classes
@@ -161,31 +163,4 @@ Optical flow calculation
     OpticalFlowReader.calculate_optical_flow
 
 
-OdometryRecorder
-................
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    OdometryRecorder.run
-
-
-VideoRecorder
-.............
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    VideoRecorder.run
-
-
-MultiStreamRecorder
-...................
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    MultiStreamRecorder.run
+.. TODO streams, processes, pipelines

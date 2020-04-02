@@ -46,7 +46,7 @@ if __name__ == "__main__":
         stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
 
-    # start recorder
+    # start legacy
     recorder = MultiStreamRecorder(folder, configs, show_video=True)
     for fps_dict in recorder.run():
         fps_str = recorder.format_fps(fps_dict)
