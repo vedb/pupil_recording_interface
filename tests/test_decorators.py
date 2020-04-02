@@ -11,6 +11,7 @@ from pupil_recording_interface.process import (
     VideoDisplay,
     VideoRecorder,
     OdometryRecorder,
+    PupilDetector,
 )
 
 
@@ -40,4 +41,5 @@ class TestDecorators:
             "video_display": VideoDisplay,
             "video_recorder": VideoRecorder,
             "odometry_recorder": OdometryRecorder,
+            "pupil_detector": PupilDetector,
         }

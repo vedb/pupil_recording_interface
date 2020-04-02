@@ -17,6 +17,7 @@ from .process import (
     VideoDisplay,
     VideoRecorder,
     OdometryRecorder,
+    PupilDetector,
 )
 
 from .config import (
@@ -26,6 +27,7 @@ from .config import (
     VideoRecorderConfig,
     OdometryRecorderConfig,
     VideoDisplayConfig,
+    PupilDetectorConfig,
 )
 
 from .decorators import device, stream, process
@@ -61,6 +63,7 @@ __all__ = [
     "VideoRecorder",
     "OdometryRecorder",
     "VideoDisplay",
+    "PupilDetector",
     # Configs
     "StreamConfig",
     "VideoConfig",
@@ -68,6 +71,7 @@ __all__ = [
     "VideoRecorderConfig",
     "OdometryRecorderConfig",
     "VideoDisplayConfig",
+    "PupilDetectorConfig",
     # Decorators
     "device",
     "stream",

@@ -149,3 +149,15 @@ class OdometryRecorderConfig(ProcessConfig):
         self.folder = folder
 
         super(OdometryRecorderConfig, self).__init__(**kwargs)
+
+
+class PupilDetectorConfig(ProcessConfig):
+    """ Configuration for pupil detectors. """
+
+    process_type = "pupil_detector"
+
+    def __init__(self, overlay=False, **kwargs):
+        """ Constructor. """
+        self.overlay = overlay
+
+        super(PupilDetectorConfig, self).__init__(**kwargs)

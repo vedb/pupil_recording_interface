@@ -9,6 +9,7 @@ from pupil_recording_interface import (
     VideoDisplayConfig,
     VideoRecorderConfig,
     OdometryRecorderConfig,
+    PupilDetectorConfig,
     StreamManager,
 )
 
@@ -35,7 +36,11 @@ if __name__ == "__main__":
             resolution=(320, 240),
             fps=120,
             color_format="gray",
-            pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
+            pipeline=[
+                VideoRecorderConfig(),
+                PupilDetectorConfig(overlay=True),
+                VideoDisplayConfig(),
+            ],
         ),
         VideoConfig(
             device_type="uvc",
@@ -44,7 +49,11 @@ if __name__ == "__main__":
             resolution=(320, 240),
             fps=120,
             color_format="gray",
-            pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
+            pipeline=[
+                VideoRecorderConfig(),
+                PupilDetectorConfig(overlay=True),
+                VideoDisplayConfig(),
+            ],
         ),
         VideoConfig(
             device_type="t265",

@@ -223,3 +223,39 @@ class OdometryRecorder(BaseRecorder):
     def stop(self):
         """ Stop the recorder. """
         self.writer.close()
+
+
+@process("pupil_detector")
+class PupilDetector(BaseProcess):
+    """ Pupil detector for eye video streams. """
+
+    def __init__(self, overlay=False):
+        """ Constructor. """
+        self.overlay = overlay
+
+    @classmethod
+    def _from_config(cls, config, stream_config, device, **kwargs):
+        """ Per-class implementation of from_config. """
+        return cls(config.overlay)
+
+    def process_data_and_timestamp(self, data, timestamp):
+        """ Process data and timestamp. """
+        from pupil_detectors import Detector2D
+
+        detector = Detector2D()
+        result = detector.detect(data)
+
+        if self.overlay:
+            data = cv2.cvtColor(data, cv2.COLOR_GRAY2BGR)
+            ellipse = result["ellipse"]
+            cv2.ellipse(
+                data,
+                tuple(int(v) for v in ellipse["center"]),
+                tuple(int(v / 2) for v in ellipse["axes"]),
+                ellipse["angle"],
+                0,
+                360,  # start/end angle for drawing
+                (0, 0, 255),  # color (BGR): red
+            )
+
+        return data, timestamp
