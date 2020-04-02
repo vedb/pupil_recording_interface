@@ -85,15 +85,15 @@ class VideoRecorder(BaseStreamRecorder):
         """ Create a device from a StreamConfig. """
         # TODO codec and other parameters
         if device is None:
-            if config.device_type == "uvc":
+            if config.type_name == "uvc":
                 device = VideoDeviceUVC(
                     config.device_uid, config.resolution, config.fps
                 )
-            elif config.device_type == "flir":
+            elif config.type_name == "flir":
                 device = VideoDeviceFLIR(
                     config.device_uid, config.resolution, config.fps
                 )
-            elif config.device_type == "t265":
+            elif config.type_name == "t265":
                 device = RealSenseDeviceT265(
                     config.device_uid,
                     config.resolution,
@@ -102,7 +102,7 @@ class VideoRecorder(BaseStreamRecorder):
                 )
             else:
                 raise ValueError(
-                    "Unsupported device type: {}.".format(config.device_type)
+                    "Unsupported device type: {}.".format(config.type_name)
                 )
 
         policy = "overwrite" if overwrite else "here"

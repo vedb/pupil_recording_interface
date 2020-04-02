@@ -95,7 +95,7 @@ class StreamManager(object):
 
         devices_by_uid, streams = {}, {}
         for uid, config_list in configs_by_uid.items():
-            if config_list[0].device_type == "t265":
+            if config_list[0].type_name == "t265":
                 # init t265 device separately
                 from pupil_recording_interface.device.realsense import (
                     RealSenseDeviceT265,
@@ -275,7 +275,5 @@ class StreamManager(object):
             Mapping from legacy name to current status.
         """
         self.start()
-        # TODO use yield from once we drop Python 2.7
-        for status_dict in self.spin():
-            yield status_dict
+        yield from self.spin()
         self.stop()

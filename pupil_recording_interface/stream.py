@@ -6,6 +6,7 @@ import logging
 
 import numpy as np
 
+from pupil_recording_interface.decorators import stream
 from pupil_recording_interface.config import (
     VideoConfig,
     OdometryConfig,
@@ -182,6 +183,7 @@ class BaseStream(object):
         self.run_post_thread_hooks()
 
 
+@stream("video")
 class VideoStream(BaseStream):
     """ Video stream. """
 
@@ -210,15 +212,15 @@ class VideoStream(BaseStream):
         """ Create a stream from a StreamConfig. """
         if device is None:
             # TODO device = device or BaseDevice.from_config(config)
-            if config.device_type == "uvc":
+            if config.type_name == "uvc":
                 device = VideoDeviceUVC(
                     config.device_uid, config.resolution, config.fps
                 )
-            elif config.device_type == "flir":
+            elif config.type_name == "flir":
                 device = VideoDeviceFLIR(
                     config.device_uid, config.resolution, config.fps
                 )
-            elif config.device_type == "t265":
+            elif config.type_name == "t265":
                 device = RealSenseDeviceT265(
                     config.device_uid,
                     config.resolution,
@@ -227,7 +229,7 @@ class VideoStream(BaseStream):
                 )
             else:
                 raise ValueError(
-                    f"Unsupported device type: {config.device_type}."
+                    f"Unsupported device type: {config.type_name}."
                 )
 
         return cls(
@@ -249,6 +251,7 @@ class VideoStream(BaseStream):
         return frame, timestamp
 
 
+@stream("odometry")
 class OdometryStream(BaseStream):
     """ Odometry stream. """
 

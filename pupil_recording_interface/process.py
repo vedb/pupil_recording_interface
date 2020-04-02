@@ -5,6 +5,7 @@ import logging
 import cv2
 import numpy as np
 
+from pupil_recording_interface.decorators import process
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 from pupil_recording_interface.encoder import VideoEncoderFFMPEG
 
@@ -25,6 +26,7 @@ class BaseProcess(object):
         """ Stop the process. """
 
 
+@process("video_display")
 class VideoDisplay(BaseProcess):
     """ Display for video stream. """
 
@@ -66,6 +68,7 @@ class BaseRecorder(BaseProcess):
         """ Write data to disk. """
 
 
+@process("video_recorder")
 class VideoRecorder(BaseRecorder):
     """ Recorder for a video stream. """
 
@@ -142,6 +145,7 @@ class VideoRecorder(BaseRecorder):
         np.save(self.timestamp_file, np.array(self._timestamps))
 
 
+@process("odometry_recorder")
 class OdometryRecorder(BaseRecorder):
     """ Recorder for an odometry stream. """
 

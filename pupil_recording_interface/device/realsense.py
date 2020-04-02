@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 
+from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import BaseVideoDevice
 from pupil_recording_interface.config import VideoConfig, OdometryConfig
@@ -12,6 +13,7 @@ from pupil_recording_interface.config import VideoConfig, OdometryConfig
 logger = logging.getLogger(__name__)
 
 
+@device("t265")
 class RealSenseDeviceT265(BaseDevice):
     """ RealSense T265 device. """
 

@@ -5,6 +5,7 @@ import logging
 
 import cv2
 
+from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
 
 
@@ -82,6 +83,7 @@ class BaseVideoDevice(BaseDevice):
         self.capture = None
 
 
+@device("uvc")
 class VideoDeviceUVC(BaseVideoDevice):
     """ UVC video device. """
 
@@ -197,6 +199,7 @@ class FLIRCapture(object):
         self.timestamp_offset = timestamp_offset
 
 
+@device("flir")
 class VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
 
