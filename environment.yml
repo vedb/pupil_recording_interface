@@ -3,12 +3,14 @@ channels:
   - conda-forge
   - phausamann
 dependencies:
+  - python=3.7
+  - pip
   # scientific stack
-  - numpy
-  - scipy
-  - pandas
-  - xarray
-  - netcdf4
+  - numpy=1.18
+  - pandas=1.0
+  - xarray=0.15
+  - scipy=1.4
+  - netcdf4=1.5
   # video
   - ffmpeg=4.1.3
   - x264=1!152.20180806
@@ -28,11 +30,10 @@ dependencies:
   - coverage
   - flake8
   - black
-  - sphinx==1.8.5
+  - sphinx=1.8.5
   - sphinx_rtd_theme
   - numpydoc
   - matplotlib
   # pip
   - pip:
-    - opencv-python==4.1.0.25 # reinstall through pip because cli breaks otherwise
     - pyrealsense2

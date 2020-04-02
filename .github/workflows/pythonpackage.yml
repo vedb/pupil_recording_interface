@@ -3,14 +3,13 @@ name: build
 on: [push]
 
 jobs:
-  build:
 
+  build:
     runs-on: ubuntu-18.04
     strategy:
       max-parallel: 3
       matrix:
         python-version: [3.6, 3.7, 3.8]
-
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
@@ -34,9 +33,7 @@ jobs:
         pytest
 
   black:
-
     runs-on: ubuntu-18.04
-
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python 3.6
@@ -49,9 +46,7 @@ jobs:
         black --check .
 
   docs:
-
     runs-on: ubuntu-18.04
-
     steps:
     - uses: actions/checkout@v1
     - name: Install Python
