@@ -2,7 +2,7 @@ numpy
 pandas
 xarray
 scipy
-opencv-python==4.1.0.25
+opencv-python==4.1.2.30
 msgpack==0.6.2
 netcdf4
 pyrealsense2
