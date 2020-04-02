@@ -124,7 +124,8 @@ class VideoDeviceUVC(BaseVideoDevice):
         # verify selected mode
         if resolution + (fps,) not in cls._get_available_modes(device_uid):
             raise ValueError(
-                f"Unsupported frame mode: {resolution[0]}x{resolution[1]}@{fps}fps."
+                f"Unsupported frame mode: "
+                f"{resolution[0]}x{resolution[1]}@{fps}fps."
             )
 
         import uvc

@@ -2,7 +2,7 @@ name: pupil-recording-interface
 channels:
   - conda-forge
 dependencies:
-  - python>=3.6
+  - python=3.7
   - pip
   - numpy
   - scipy
@@ -14,5 +14,4 @@ dependencies:
   - tqdm
   - monotonic
   - pip:
-    - opencv-python # reinstall through pip because cli breaks otherwise
     - pyrealsense2

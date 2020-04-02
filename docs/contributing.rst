@@ -32,24 +32,31 @@ Environment setup
     $ pip install -e --no-deps .
 
 
-Reformatting
-------------
+Reformatting / linting
+----------------------
 
 Reformat with black:
 
 .. code-block:: console
 
-    $ black --target-version=py35 -l 79
-
-
-Testing
--------
+    $ black .
 
 Lint with flake8:
 
 .. code-block:: console
 
     $ flake8 pupil_recording_interface
+
+The above steps are also run by ``pre-commit``. Run this to automatically
+reformat and lint before every commit:
+
+.. code-block:: console
+
+    $ pre-commit install
+
+
+Testing
+-------
 
 Test with pytest
 

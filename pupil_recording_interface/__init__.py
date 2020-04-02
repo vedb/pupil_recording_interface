@@ -28,9 +28,7 @@ from .config import (
     VideoDisplayConfig,
 )
 
-from .legacy import CLI
-
-from ._version import __version__
+from ._version import __version__  # noqa
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 TEST_RECORDING = os.path.join(DATA_DIR, "test_recording")
@@ -55,8 +53,12 @@ __all__ = [
     # Streams
     "VideoStream",
     "OdometryStream",
+    "StreamManager",
     # Pipeline & processes
     "Pipeline",
+    "VideoRecorder",
+    "OdometryRecorder",
+    "VideoDisplay",
     # Configs
     "StreamConfig",
     "VideoConfig",
