@@ -8,12 +8,36 @@ import numpy as np
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 from pupil_recording_interface.encoder import VideoEncoderFFMPEG
+from pupil_recording_interface.utils import get_constructor_args
 
 logger = logging.getLogger(__name__)
 
 
-class BaseProcess(object):
+class BaseProcess:
     """ Base class for all processes. """
+
+    @classmethod
+    def from_config(cls, config, stream_config, device, **kwargs):
+        """ Create a process from a StreamConfig. """
+        try:
+            return process.registry[config.process_type]._from_config(
+                config, stream_config, device, **kwargs
+            )
+        except KeyError:
+            raise ValueError(
+                f"No such process type: {config.process_type}. "
+                f"If you are implementing a custom process, remember to use "
+                f"the @pupil_recording_interface.process class decorator."
+            )
+
+    @classmethod
+    def _from_config(cls, config, stream_config, device, **kwargs):
+        """ Per-class implementation of from_config. """
+        assert process.registry[config.process_type] is cls
+
+        cls_kwargs = get_constructor_args(cls, config, **kwargs)
+
+        return cls(**cls_kwargs)
 
     def start(self):
         """ Start the process"""
@@ -33,6 +57,11 @@ class VideoDisplay(BaseProcess):
     def __init__(self, name):
         """ Constructor. """
         self.name = name
+
+    @classmethod
+    def _from_config(cls, config, stream_config, device, **kwargs):
+        """ Per-class implementation of from_config. """
+        return cls(stream_config.name or device.device_uid)
 
     def process_data_and_timestamp(self, data, timestamp):
         """ Process data and timestamp. """
@@ -54,7 +83,7 @@ class BaseRecorder(BaseProcess):
             Path to the recording folder.
 
         name: str, optional
-            The name of the legacy.
+            The name of the recorder.
         """
         if folder is None:
             raise ValueError("Recording folder cannot be None")
@@ -93,8 +122,8 @@ class VideoRecorder(BaseRecorder):
             The device from which to record the video.
 
         name: str, optional
-            The name of the legacy. If not specified, `device.uid` will be
-            used.
+            The name of the recorder. If not specified, `device.device_uid`
+            will be used.
 
         color_format: str, default 'bgr24'
             The target color format. Set to 'gray' for eye cameras.
@@ -126,6 +155,18 @@ class VideoRecorder(BaseRecorder):
 
         self._timestamps = []
 
+    @classmethod
+    def _from_config(cls, config, stream_config, device, **kwargs):
+        """ Per-class implementation of from_config. """
+        return cls(
+            config.folder or kwargs.get("folder", None),
+            config.resolution or device.resolution,
+            config.fps or device.fps,
+            name=stream_config.name or device.device_uid,
+            color_format=config.color_format or stream_config.color_format,
+            codec=config.codec,
+        )
+
     def write(self, frame):
         """ Write data to disk. """
         self.encoder.write(frame)
@@ -139,7 +180,7 @@ class VideoRecorder(BaseRecorder):
         return data, timestamp
 
     def stop(self):
-        """ Stop the legacy. """
+        """ Stop the recorder. """
         self.encoder.stop()
         # TODO additionally save timestamps continuously if paranoid=True
         np.save(self.timestamp_file, np.array(self._timestamps))
@@ -158,8 +199,13 @@ class OdometryRecorder(BaseRecorder):
             raise IOError(f"{self.filename} exists, will not overwrite")
         self.writer = PLData_Writer(self.folder, topic)
 
+    @classmethod
+    def _from_config(cls, config, stream_config, device, **kwargs):
+        """ Per-class implementation of from_config. """
+        return cls(config.folder or kwargs.get("folder", None))
+
     def start(self):
-        """ Start the legacy. """
+        """ Start the recorder. """
         logger.debug(
             f"Started odometry recorder, recording to {self.filename}"
         )
@@ -175,5 +221,5 @@ class OdometryRecorder(BaseRecorder):
         return data, timestamp
 
     def stop(self):
-        """ Stop the legacy. """
+        """ Stop the recorder. """
         self.writer.close()

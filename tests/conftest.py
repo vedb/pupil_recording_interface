@@ -4,6 +4,7 @@ import shutil
 import pytest
 
 from pupil_recording_interface import DATA_DIR
+from pupil_recording_interface.config import VideoConfig
 
 
 @pytest.fixture()
@@ -35,3 +36,9 @@ def info():
         "start_time_system_s": 1570725800.220913,
         "system_info": "User: test_user, Platform: Linux",
     }
+
+
+@pytest.fixture()
+def video_config():
+    """"""
+    return VideoConfig("uvc", "test_cam", (1280, 720), 30)

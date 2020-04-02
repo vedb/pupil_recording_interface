@@ -14,6 +14,8 @@ class BaseConfig(object):
 class StreamConfig(BaseConfig):
     """ Configuration for streams. """
 
+    stream_type: str
+
     def __init__(
         self, device_type, device_uid, pipeline=None, name=None, **kwargs
     ):
@@ -41,6 +43,8 @@ class StreamConfig(BaseConfig):
 
 class VideoConfig(StreamConfig):
     """ Configuration for video streams. """
+
+    stream_type = "video"
 
     def __init__(
         self,
@@ -94,19 +98,27 @@ class VideoConfig(StreamConfig):
 class OdometryConfig(StreamConfig):
     """ Configuration for odometry streams. """
 
+    stream_type = "odometry"
+
     # TODO rename to MotionConfig
 
 
 class ProcessConfig(BaseConfig):
     """ Configuration for processes. """
 
+    process_type: str
+
 
 class VideoDisplayConfig(ProcessConfig):
     """ Configuration for video displays. """
 
+    process_type = "video_display"
+
 
 class VideoRecorderConfig(ProcessConfig):
     """ Configuration for video recorders. """
+
+    process_type = "video_recorder"
 
     def __init__(
         self,
@@ -129,6 +141,8 @@ class VideoRecorderConfig(ProcessConfig):
 
 class OdometryRecorderConfig(ProcessConfig):
     """ Configuration for odometry recorders. """
+
+    process_type = "odometry_recorder"
 
     def __init__(self, folder=None, **kwargs):
         """ Constructor. """

@@ -9,6 +9,7 @@ import time
 import uuid
 
 from pupil_recording_interface._version import __version__
+from pupil_recording_interface.decorators import device
 from pupil_recording_interface.externals.methods import get_system_info
 from pupil_recording_interface.stream import BaseStream
 
@@ -95,15 +96,11 @@ class StreamManager(object):
 
         devices_by_uid, streams = {}, {}
         for uid, config_list in configs_by_uid.items():
-            if config_list[0].type_name == "t265":
-                # init t265 device separately
-                from pupil_recording_interface.device.realsense import (
-                    RealSenseDeviceT265,
-                )
-
-                devices_by_uid[uid] = RealSenseDeviceT265.from_config_list(
-                    config_list
-                )
+            # init devices with multiple configs separately
+            if len(config_list) > 1:
+                devices_by_uid[uid] = device.registry[
+                    config_list[0].device_type
+                ].from_config_list(config_list)
             else:
                 devices_by_uid[uid] = None
 

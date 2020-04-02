@@ -7,7 +7,7 @@ import numpy as np
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import BaseVideoDevice
-from pupil_recording_interface.config import VideoConfig, OdometryConfig
+from pupil_recording_interface.utils import get_params, get_constructor_args
 
 
 logger = logging.getLogger(__name__)
@@ -18,13 +18,18 @@ class RealSenseDeviceT265(BaseDevice):
     """ RealSense T265 device. """
 
     def __init__(
-        self, uid, resolution=None, fps=None, video=False, odometry=False
+        self,
+        device_uid,
+        resolution=None,
+        fps=None,
+        video=False,
+        odometry=False,
     ):
         """ Constructor.
 
         Parameters
         ----------
-        uid: str
+        device_uid: str
             The unique identity of this device. Depending on the device this
             will be a serial number or similar.
 
@@ -41,7 +46,7 @@ class RealSenseDeviceT265(BaseDevice):
         odometry: bool, default False
             If True, activate the odometry stream.
         """
-        BaseDevice.__init__(self, uid)
+        BaseDevice.__init__(self, device_uid)
 
         self.video = video
         self.odometry = odometry
@@ -54,43 +59,45 @@ class RealSenseDeviceT265(BaseDevice):
         self.odometry_queue = mp.Queue() if self.odometry else None
 
     @classmethod
-    def from_config_list(cls, config_list, **extra_kwargs):
+    def _from_config(cls, config, **kwargs):
+        """ Per-class implementation of from_config. """
+        cls_kwargs = get_constructor_args(cls, config, **kwargs)
+
+        # TODO this is a little hacky, maybe rename the parameter to "side"
+        cls_kwargs["video"] = config.side
+
+        return cls(**cls_kwargs)
+
+    @classmethod
+    def from_config_list(cls, config_list, **kwargs):
         """ Create a device from a list of configs. """
         # TODO make sure all configs have the same UID
         uid = config_list[0].device_uid
 
-        try:
-            from inspect import getfullargspec
-        except ImportError:
-            from inspect import getargspec as getfullargspec
-
-        # get keyword arguments of this class
-        argspect = getfullargspec(cls.__init__)
-        kwargs = {
-            k: v
-            for k, v in zip(
-                reversed(argspect.args), reversed(argspect.defaults)
-            )
-        }
+        _, cls_kwargs = get_params(cls)
 
         # set parameters for video and odometry devices
         for config in config_list:
-            if isinstance(config, VideoConfig):
-                kwargs["video"] = getattr(config, "side")
-                kwargs.update(
+            if config.stream_type == "video":
+                cls_kwargs["video"] = getattr(config, "side")
+                cls_kwargs.update(
                     {k: getattr(config, k) for k in ("resolution", "fps")}
                 )
-            elif isinstance(config, OdometryConfig):
-                kwargs["odometry"] = True
+            elif config.stream_type == "odometry":
+                cls_kwargs["odometry"] = True
+            else:
+                raise ValueError(
+                    f"Unsupported stream type: {config.stream_type}"
+                )
 
-        kwargs.update(extra_kwargs)
+        cls_kwargs.update(kwargs)
 
         logger.debug(
-            "Creating T265 video device with serial number "
-            "{uid} and parameters: {kwargs}".format(uid=uid, kwargs=kwargs)
+            f"Creating T265 video device with serial number {uid} "
+            f"and parameters: {cls_kwargs}"
         )
 
-        return cls(uid, **kwargs)
+        return cls(uid, **cls_kwargs)
 
     @property
     def is_started(self):
@@ -189,8 +196,7 @@ class RealSenseDeviceT265(BaseDevice):
             pipeline.start(config)
 
         logger.debug(
-            "T265 pipeline started with video={video}, "
-            "odometry={odometry}".format(video=video, odometry=odometry)
+            f"T265 pipeline started with video={video}, odometry={odometry}"
         )
 
         return pipeline
@@ -225,6 +231,8 @@ class RealSenseDeviceT265(BaseDevice):
     def run_post_thread_hooks(self):
         """ Run hook(s) after the recording thread finishes. """
         if self.pipeline is not None:
-            logger.debug(f"Stopping T265 pipeline for device: {self.uid}.")
+            logger.debug(
+                f"Stopping T265 pipeline for device: {self.device_uid}."
+            )
             self.pipeline.stop()
             self.pipeline = None

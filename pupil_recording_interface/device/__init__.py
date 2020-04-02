@@ -1,13 +1,44 @@
 """"""
 import abc
 
+from pupil_recording_interface.decorators import device
+from pupil_recording_interface.utils import get_constructor_args
 
-class BaseDevice(object):
+
+class BaseDevice:
     """ Base class for all devices. """
 
-    def __init__(self, uid):
+    def __init__(self, device_uid):
         """ Constructor. """
-        self.uid = uid
+        self.device_uid = device_uid
+
+    @classmethod
+    def from_config(cls, config, **kwargs):
+        """ Create a device from a StreamConfig. """
+        try:
+            return device.registry[config.device_type]._from_config(
+                config, **kwargs
+            )
+        except KeyError:
+            raise ValueError(
+                f"No such device type: {config.device_type}. "
+                f"If you are implementing a custom device, remember to use "
+                f"the @pupil_recording_interface.device class decorator."
+            )
+
+    @classmethod
+    def _from_config(cls, config, **kwargs):
+        """ Per-class implementation of from_config. """
+        assert device.registry[config.device_type] is cls
+
+        cls_kwargs = get_constructor_args(cls, config, **kwargs)
+
+        return cls(**cls_kwargs)
+
+    @classmethod
+    def from_config_list(cls, config_list):
+        """ Create a device from a list of StreamConfigs. """
+        raise NotImplementedError
 
     @property
     @abc.abstractmethod
@@ -17,6 +48,10 @@ class BaseDevice(object):
     @abc.abstractmethod
     def start(self):
         """ Start this device. """
+
+    @abc.abstractmethod
+    def get_data_and_timestamp(self):
+        """ Get new data and timestamp. """
 
     @abc.abstractmethod
     def stop(self):

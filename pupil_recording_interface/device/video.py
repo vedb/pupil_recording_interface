@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 class BaseVideoDevice(BaseDevice):
     """ Base class for all video devices. """
 
-    def __init__(self, uid, resolution, fps, **kwargs):
+    def __init__(self, device_uid, resolution, fps, **kwargs):
         """ Constructor.
 
         Parameters
         ----------
-        uid: str
+        device_uid: str
             The unique identity of this device. Depending on the device this
             will be a serial number or similar.
 
@@ -34,7 +34,7 @@ class BaseVideoDevice(BaseDevice):
             If True, initialize the underlying capture upon construction.
             Set to False for multi-threaded recording.
         """
-        super(BaseVideoDevice, self).__init__(uid)
+        super(BaseVideoDevice, self).__init__(device_uid)
 
         self.resolution = resolution
         self.fps = fps
@@ -66,7 +66,7 @@ class BaseVideoDevice(BaseDevice):
         frame : array_like
             The frame to display.
         """
-        cv2.imshow(self.uid, frame)
+        cv2.imshow(self.device_uid, frame)
         return cv2.waitKey(1)
 
     def start(self):
@@ -75,7 +75,10 @@ class BaseVideoDevice(BaseDevice):
         #  multi-threaded operation, check if we can circumvent this
         if not self.is_started:
             self.capture = self._get_capture(
-                self.uid, self.resolution, self.fps, **self.capture_kwargs
+                self.device_uid,
+                self.resolution,
+                self.fps,
+                **self.capture_kwargs,
             )
 
     def stop(self):
@@ -156,7 +159,7 @@ class VideoDeviceUVC(BaseVideoDevice):
     @property
     def uvc_device_uid(self):
         """ The UID of the UVC device. """
-        return self._get_uvc_device_uid(self.uid)
+        return self._get_uvc_device_uid(self.device_uid)
 
     @property
     def available_modes(self):
@@ -204,13 +207,13 @@ class VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
 
     def __init__(
-        self, uid, resolution, fps, exposure_value=31000.0, gain=18,
+        self, device_uid, resolution, fps, exposure_value=31000.0, gain=18,
     ):
         """ Constructor.
 
         Parameters
         ----------
-        uid: str
+        device_uid: str
             The unique identity of this device. Depending on the device this
             will be a serial number or similar.
 
@@ -226,7 +229,11 @@ class VideoDeviceFLIR(BaseVideoDevice):
         """
         # TODO specify additional keyword arguments
         super(VideoDeviceFLIR, self).__init__(
-            uid, resolution, fps, exposure_value=exposure_value, gain=gain
+            device_uid,
+            resolution,
+            fps,
+            exposure_value=exposure_value,
+            gain=gain,
         )
 
     @classmethod

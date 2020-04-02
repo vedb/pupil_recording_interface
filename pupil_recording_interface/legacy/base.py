@@ -86,7 +86,7 @@ class BaseStreamRecorder(BaseRecorder):
             and existing files will possibly be overwritten.
         """
         super(BaseStreamRecorder, self).__init__(folder, policy)
-        self.name = name or device.uid
+        self.name = name or device.device_uid
 
         self.device = device
         self.overwrite = policy == "overwrite"

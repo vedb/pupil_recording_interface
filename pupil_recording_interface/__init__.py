@@ -28,6 +28,8 @@ from .config import (
     VideoDisplayConfig,
 )
 
+from .decorators import device, stream, process
+
 from ._version import __version__  # noqa
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -66,6 +68,10 @@ __all__ = [
     "VideoRecorderConfig",
     "OdometryRecorderConfig",
     "VideoDisplayConfig",
+    # Decorators
+    "device",
+    "stream",
+    "process",
 ]
 
 

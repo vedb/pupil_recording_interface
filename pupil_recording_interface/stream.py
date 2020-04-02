@@ -1,5 +1,4 @@
 """"""
-import abc
 from collections import deque
 import signal
 import logging
@@ -7,15 +6,7 @@ import logging
 import numpy as np
 
 from pupil_recording_interface.decorators import stream
-from pupil_recording_interface.config import (
-    VideoConfig,
-    OdometryConfig,
-)
-from pupil_recording_interface.device.realsense import RealSenseDeviceT265
-from pupil_recording_interface.device.video import (
-    VideoDeviceUVC,
-    VideoDeviceFLIR,
-)
+from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
@@ -40,25 +31,34 @@ class BaseStream(object):
         """
         self.device = device
         self.pipeline = pipeline
-        self.name = name or device.uid
+        self.name = name or device.device_uid
 
         self._last_timestamp = 0.0
         self._fps_buffer = deque(maxlen=20)
 
     @classmethod
-    @abc.abstractmethod
-    def _from_config(cls, config, device=None):
-        """ Per-class implementation of from_config. """
+    def _from_config(cls, config, device=None, folder=None):
+        """ Create a stream from a StreamConfig. """
+        device = device or BaseDevice.from_config(config)
+        return cls(
+            device,
+            name=config.name,
+            pipeline=Pipeline.from_config(config, device, folder),
+        )
 
     @classmethod
     def from_config(cls, config, device=None, folder=None):
         """ Create a stream from a StreamConfig. """
-        if isinstance(config, VideoConfig):
-            return VideoStream._from_config(config, device, folder)
-        elif isinstance(config, OdometryConfig):
-            return OdometryStream._from_config(config, device, folder)
-        else:
-            raise TypeError(f"Unsupported config type: {type(config)}")
+        try:
+            return stream.registry[config.stream_type]._from_config(
+                config, device=device, folder=folder,
+            )
+        except KeyError:
+            raise ValueError(
+                f"No such stream type: {config.stream_type}. "
+                f"If you are implementing a custom stream, remember to use "
+                f"the @pupil_recording_interface.stream class decorator."
+            )
 
     @property
     def current_fps(self):
@@ -210,28 +210,7 @@ class VideoStream(BaseStream):
     @classmethod
     def _from_config(cls, config, device=None, folder=None):
         """ Create a stream from a StreamConfig. """
-        if device is None:
-            # TODO device = device or BaseDevice.from_config(config)
-            if config.type_name == "uvc":
-                device = VideoDeviceUVC(
-                    config.device_uid, config.resolution, config.fps
-                )
-            elif config.type_name == "flir":
-                device = VideoDeviceFLIR(
-                    config.device_uid, config.resolution, config.fps
-                )
-            elif config.type_name == "t265":
-                device = RealSenseDeviceT265(
-                    config.device_uid,
-                    config.resolution,
-                    config.fps,
-                    video=config.side,
-                )
-            else:
-                raise ValueError(
-                    f"Unsupported device type: {config.type_name}."
-                )
-
+        device = device or BaseDevice.from_config(config)
         return cls(
             device,
             name=config.name,
@@ -254,18 +233,6 @@ class VideoStream(BaseStream):
 @stream("odometry")
 class OdometryStream(BaseStream):
     """ Odometry stream. """
-
-    @classmethod
-    def _from_config(cls, config, device=None, folder=None):
-        """ Per-class implementation of from_config. """
-        if device is None:
-            device = RealSenseDeviceT265(config.device_uid, odometry=True)
-
-        return cls(
-            device,
-            name=config.name,
-            pipeline=Pipeline.from_config(config, device, folder),
-        )
 
     def get_data_and_timestamp(self):
         """ Get the last data packet and timestamp from the stream. """

@@ -1,16 +1,7 @@
 """"""
 import logging
 
-from pupil_recording_interface.process import (
-    VideoDisplay,
-    VideoRecorder,
-    OdometryRecorder,
-)
-from pupil_recording_interface.config import (
-    VideoDisplayConfig,
-    VideoRecorderConfig,
-    OdometryRecorderConfig,
-)
+from pupil_recording_interface.process import BaseProcess
 
 logger = logging.getLogger(__name__)
 
@@ -27,26 +18,12 @@ class Pipeline(object):
         """ Create an instance from a StreamConfig. """
         if config.pipeline is not None:
             steps = []
-            for step in config.pipeline:
-                # TODO BaseProcess.from_config(step, config, device, folder)
-                if isinstance(step, VideoDisplayConfig):
-                    steps.append(VideoDisplay(config.name or device.uid))
-                elif isinstance(step, VideoRecorderConfig):
-                    steps.append(
-                        VideoRecorder(
-                            step.folder or folder,
-                            step.resolution or device.resolution,
-                            step.fps or device.fps,
-                            name=config.name or device.uid,
-                            color_format=step.color_format
-                            or config.color_format,
-                            codec=step.codec,
-                        )
+            for process_config in config.pipeline:
+                steps.append(
+                    BaseProcess.from_config(
+                        process_config, config, device, folder=folder
                     )
-                elif isinstance(step, OdometryRecorderConfig):
-                    steps.append(OdometryRecorder(step.folder or folder))
-                else:
-                    raise ValueError(f"Unsupported process type: {type(step)}")
+                )
             return cls(steps)
         else:
             return None

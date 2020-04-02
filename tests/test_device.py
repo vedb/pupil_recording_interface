@@ -1,12 +1,20 @@
+from pupil_recording_interface.device import BaseDevice
+from pupil_recording_interface.device.video import VideoDeviceUVC
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 
 
-class TestBaseVideoDevice(object):
+class TestBaseDevice:
+    def test_from_config(self, video_config):
+        """"""
+        assert isinstance(BaseDevice.from_config(video_config), VideoDeviceUVC)
+
+
+class TestBaseVideoDevice:
     def test_start(self):
         """"""
 
 
-class TestRealSenseDeviceT265(object):
+class TestRealSenseDeviceT265:
     def test_from_config_list(self):
         """"""
         from pupil_recording_interface.config import (
