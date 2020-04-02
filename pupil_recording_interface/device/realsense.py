@@ -153,7 +153,7 @@ class RealSenseDeviceT265(BaseDevice):
                 ]
             )
         else:
-            raise ValueError("Unsupported mode: {}".format(side))
+            raise ValueError(f"Unsupported mode: {side}")
 
         return video_frame, t
 
@@ -224,7 +224,7 @@ class RealSenseDeviceT265(BaseDevice):
         """ Run hook(s) after the recording thread finishes. """
         if self.pipeline is not None:
             logger.debug(
-                "Stopping T265 pipeline for device: {}.".format(self.uid)
+                f"Stopping T265 pipeline for device: {self.uid}."
             )
             self.pipeline.stop()
             self.pipeline = None

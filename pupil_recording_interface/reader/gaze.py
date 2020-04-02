@@ -42,9 +42,7 @@ class GazeReader(BaseReader):
 
         if df.size == 0:
             raise ValueError(
-                "No gaze data in {}".format(
-                    os.path.join(folder, topic + ".pldata")
-                )
+                f"No gaze data in {os.path.join(folder, topic + '.pldata')}"
             )
 
         t = df.timestamp
@@ -127,7 +125,7 @@ class GazeReader(BaseReader):
         }:
             t, c, n, p = self._load_merged_gaze(self.folder, self.source)
         else:
-            raise ValueError("Invalid gaze source: {}".format(self.source))
+            raise ValueError(f"Invalid gaze source: {self.source}")
 
         t = self._timestamps_to_datetimeindex(t, self.info)
 

@@ -67,10 +67,10 @@ class StreamManager(object):
         if policy == "new_folder":
             counter = 0
             while os.path.exists(
-                os.path.join(folder, "{:03d}".format(counter))
+                os.path.join(folder, f"{counter:03d}")
             ):
                 counter += 1
-            folder = os.path.join(folder, "{:03d}".format(counter))
+            folder = os.path.join(folder, f"{counter:03d}")
 
         elif policy == "here":
             pass
@@ -80,7 +80,7 @@ class StreamManager(object):
 
         else:
             raise ValueError(
-                "Unsupported file creation policy: {}".format(policy)
+                f"Unsupported file creation policy: {policy}"
             )
 
         # TODO do this at the start of the recording?
@@ -119,7 +119,7 @@ class StreamManager(object):
                 devices_by_uid[uid] = devices_by_uid[uid] or stream.device
                 if config.name in streams:
                     raise ValueError(
-                        "Duplicate config name: {}".format(config.name)
+                        f"Duplicate config name: {config.name}"
                     )
                 streams[config.name] = stream
 
@@ -147,7 +147,7 @@ class StreamManager(object):
     def _start_processes(cls, processes):
         """ Start all stream processes. """
         for process_name, process in processes.items():
-            logger.debug("Starting process: {}".format(process_name))
+            logger.debug(f"Starting process: {process_name}")
             process.start()
 
     @classmethod
@@ -156,7 +156,7 @@ class StreamManager(object):
         if stop_event is not None:
             stop_event.set()
         for process_name, process in processes.items():
-            logger.debug("Stopping process: {}".format(process_name))
+            logger.debug(f"Stopping process: {process_name}")
             process.join()
 
     @classmethod
@@ -166,7 +166,7 @@ class StreamManager(object):
             math.isnan(status["fps"]) for status in status_dict.values()
         ):
             return ", ".join(
-                "{}: {:.2f} Hz".format(name, status["fps"])
+                f"{name}: {status['fps']:.2f} Hz"
                 for name, status in status_dict.items()
             )
         else:
@@ -227,12 +227,12 @@ class StreamManager(object):
 
         # Log info
         if self.folder is not None:
-            logger.debug("Recording folder: {}".format(self.folder))
+            logger.debug(f"Recording folder: {self.folder}")
         if self.duration < float("inf"):
-            logger.debug("Streaming for {} seconds".format(self.duration))
-        logger.debug("Run start time: {}".format(self._start_time))
+            logger.debug(f"Streaming for {self.duration} seconds")
+        logger.debug(f"Run start time: {self._start_time}")
         logger.debug(
-            "Run start time monotonic: {}".format(self._start_time_monotonic)
+            f"Run start time monotonic: {self._start_time_monotonic}"
         )
 
     def spin(self):
@@ -273,7 +273,7 @@ class StreamManager(object):
 
         # log info
         logger.debug(
-            "Stopped streams after {:.2f} seconds".format(run_duration)
+            f"Stopped streams after {run_duration:.2f} seconds"
         )
 
     def run(self):

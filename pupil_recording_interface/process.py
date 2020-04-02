@@ -116,11 +116,11 @@ class VideoRecorder(BaseRecorder):
         )
 
         self.timestamp_file = os.path.join(
-            self.folder, "{}_timestamps.npy".format(self.name)
+            self.folder, f"{self.name}_timestamps.npy"
         )
         if os.path.exists(self.timestamp_file):
             raise IOError(
-                "{} exists, will not overwrite".format(self.timestamp_file)
+                f"{self.timestamp_file} exists, will not overwrite"
             )
 
         self._timestamps = []
@@ -154,14 +154,14 @@ class OdometryRecorder(BaseRecorder):
         self.filename = os.path.join(self.folder, topic + ".pldata")
         if os.path.exists(self.filename):
             raise IOError(
-                "{} exists, will not overwrite".format(self.filename)
+                f"{self.filename} exists, will not overwrite"
             )
         self.writer = PLData_Writer(self.folder, topic)
 
     def start(self):
         """ Start the legacy. """
         logger.debug(
-            "Started odometry legacy, recording to {}".format(self.filename)
+            f"Started odometry recorder, recording to {self.filename}"
         )
 
     def write(self, data):

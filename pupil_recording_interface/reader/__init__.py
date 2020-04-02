@@ -27,7 +27,7 @@ class BaseReader(object):
             be used.
         """
         if not os.path.exists(folder):
-            raise FileNotFoundError("No such folder: {}".format(folder))
+            raise FileNotFoundError(f"No such folder: {folder}")
 
         self.folder = folder
         self.source = source
@@ -77,7 +77,7 @@ class BaseReader(object):
         """ Load recording info file as dict. """
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
-                "File {} not found in folder {}".format(filename, folder)
+                f"File {filename} not found in folder {folder}"
             )
 
         with open(os.path.join(folder, filename)) as f:
@@ -95,7 +95,7 @@ class BaseReader(object):
         """ Load data from user_info.csv file as dict. """
         if not os.path.exists(os.path.join(folder, filename)):
             raise FileNotFoundError(
-                "File {} not found in folder {}".format(filename, folder)
+                f"File {filename} not found in folder {folder}"
             )
 
         with open(os.path.join(folder, filename)) as f:
@@ -117,7 +117,7 @@ class BaseReader(object):
         """ Load data from a .pldata file into a pandas.DataFrame. """
         if not os.path.exists(os.path.join(folder, topic + ".pldata")):
             raise FileNotFoundError(
-                "File {}.pldata not found in folder {}".format(topic, folder)
+                f"File {topic}.pldata not found in folder {folder}"
             )
 
         pldata = load_pldata_file(folder, topic)
@@ -139,9 +139,7 @@ class BaseReader(object):
         filepath = os.path.join(folder, topic + "_timestamps.npy")
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                "File {}_timestamps.npy not found in folder {}".format(
-                    topic, folder
-                )
+                f"File {topic}_timestamps.npy not found in folder {folder}"
             )
 
         timestamps = np.load(filepath)

@@ -57,7 +57,7 @@ class BaseStream(object):
         elif isinstance(config, OdometryConfig):
             return OdometryStream._from_config(config, device, folder)
         else:
-            raise TypeError("Unsupported config type: {}".format(type(config)))
+            raise TypeError(f"Unsupported config type: {type(config)}")
 
     @property
     def current_fps(self):
@@ -100,7 +100,7 @@ class BaseStream(object):
 
     def start(self):
         """ Start the stream. """
-        logger.debug("Starting stream: {}".format(self.name))
+        logger.debug(f"Starting stream: {self.name}")
         if not self.device.is_started:
             self.device.start()
         if self.pipeline is not None:
@@ -116,7 +116,7 @@ class BaseStream(object):
             self.pipeline.stop()
         if self.device.is_started:
             self.device.stop()
-        logger.debug("Stopped stream: {}".format(self.name))
+        logger.debug(f"Stopped stream: {self.name}")
 
     def run_post_thread_hooks(self):
         """ Run hook(s) after processing thread(s) finish(es). """
@@ -227,7 +227,7 @@ class VideoStream(BaseStream):
                 )
             else:
                 raise ValueError(
-                    "Unsupported device type: {}.".format(config.device_type)
+                    f"Unsupported device type: {config.device_type}."
                 )
 
         return cls(

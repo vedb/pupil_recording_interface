@@ -38,7 +38,7 @@ class OdometryReader(BaseReader):
         if self.source == "recording":
             t, c, p, q, v, w = self._load_odometry(self.folder)
         else:
-            raise ValueError("Invalid odometry source: {}".format(self.source))
+            raise ValueError(f"Invalid odometry source: {self.source}")
 
         t = self._timestamps_to_datetimeindex(t, self.info)
 

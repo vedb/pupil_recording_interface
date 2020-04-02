@@ -127,7 +127,7 @@ class VideoReader(BaseReader):
         filepath = os.path.join(folder, topic + ".mp4")
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                "File {}.mp4 not found in folder {}".format(topic, folder)
+                f"File {topic}.mp4 not found in folder {folder}"
             )
 
         return cv2.VideoCapture(filepath)
@@ -233,7 +233,7 @@ class VideoReader(BaseReader):
             return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
             raise ValueError(
-                "Unsupported color format: {}".format(self.color_format)
+                f"Unsupported color format: {self.color_format}"
             )
 
     def get_roi(self, frame, norm_pos):

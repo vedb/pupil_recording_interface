@@ -47,7 +47,7 @@ class Pipeline(object):
                     steps.append(OdometryRecorder(step.folder or folder))
                 else:
                     raise ValueError(
-                        "Unsupported process type: {}".format(type(step))
+                        f"Unsupported process type: {type(step)}"
                     )
             return cls(steps)
         else:
@@ -55,7 +55,7 @@ class Pipeline(object):
 
     def start(self):
         """ Start the pipeline. """
-        logger.debug("Starting pipeline with steps: {}".format(self.steps))
+        logger.debug(f"Starting pipeline with steps: {self.steps}")
         for step in self.steps:
             step.start()
 

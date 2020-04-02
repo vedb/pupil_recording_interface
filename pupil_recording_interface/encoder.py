@@ -49,13 +49,13 @@ class BaseVideoEncoder(object):
         overwrite: bool, default False
             If True, overwrite existing video files with the same name.
         """
-        self.video_file = os.path.join(folder, "{}.mp4".format(device_name))
+        self.video_file = os.path.join(folder, f"{device_name}.mp4")
         if os.path.exists(self.video_file):
             if overwrite:
                 os.remove(self.video_file)
             else:
                 raise IOError(
-                    "{} exists, will not overwrite".format(self.video_file)
+                    f"{self.video_file} exists, will not overwrite"
                 )
 
         self.video_writer = self._init_video_writer(
@@ -64,11 +64,11 @@ class BaseVideoEncoder(object):
 
         # TODO move timestamp writer to BaseStreamRecorder
         self.timestamp_file = os.path.join(
-            folder, "{}_timestamps.npy".format(device_name)
+            folder, f"{device_name}_timestamps.npy"
         )
         if os.path.exists(self.timestamp_file) and not overwrite:
             raise IOError(
-                "{} exists, will not overwrite".format(self.timestamp_file)
+                f"{self.timestamp_file} exists, will not overwrite"
             )
 
     @classmethod
@@ -166,7 +166,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             flags,
         )
         logger.debug(
-            "ffmpeg called with arguments: {}".format(" ".join(cmd[1:]))
+            f"ffmpeg called with arguments: {' '.join(cmd[1:])}"
         )
 
         return subprocess.Popen(cmd, stdin=subprocess.PIPE)
@@ -184,7 +184,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         flags=None,
     ):
         """ Get the FFMPEG command to start the sub-process. """
-        size = "{}x{}".format(frame_shape[0], frame_shape[1])
+        size = f"{frame_shape[0]}x{frame_shape[1]}"
 
         cmd = [
             "ffmpeg",
@@ -233,5 +233,5 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         self.video_writer.stdin.write(b"q")
         self.video_writer.wait()
         logger.debug(
-            "Stopped ffmpeg encoder {self.video_writer}".format(self=self)
+            f"Stopped ffmpeg encoder {self.video_writer}"
         )

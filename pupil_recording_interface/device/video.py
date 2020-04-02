@@ -99,7 +99,7 @@ class VideoDeviceUVC(BaseVideoDevice):
             return cls._get_connected_device_uids()[device_name]
         except KeyError:
             raise ValueError(
-                "Device with name {} not connected.".format(device_name)
+                f"Device with name {device_name} not connected."
             )
 
     @classmethod
@@ -126,9 +126,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         # verify selected mode
         if resolution + (fps,) not in cls._get_available_modes(device_uid):
             raise ValueError(
-                "Unsupported frame mode: {}x{}@{}fps.".format(
-                    resolution[0], resolution[1], fps
-                )
+                f"Unsupported frame mode: {resolution[0]}x{resolution[1]}@{fps}fps."
             )
 
         import uvc
@@ -148,7 +146,7 @@ class VideoDeviceUVC(BaseVideoDevice):
     def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         if mode not in ("img", "bgr", "gray", "jpeg_buffer"):
-            raise ValueError("Unsupported mode: {}".format(mode))
+            raise ValueError(f"Unsupported mode: {mode}")
 
         uvc_frame = self.capture.get_frame()
 
@@ -260,7 +258,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
                     datetime.now().timestamp() - cam.Timestamp.GetValue() / 1e9
                 )
             else:
-                raise ValueError("Invalid camera type: {}".format(camera_type))
+                raise ValueError(f"Invalid camera type: {camera_type}")
 
             # Append
             timestamp_offsets.append(timestamp_offset)
@@ -318,7 +316,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         cam_list = system.GetCameras()
         logger.debug("List of Cameras: ", cam_list)
         num_cameras = cam_list.GetSize()
-        logger.debug("Number of cameras detected: {}".format(num_cameras))
+        logger.debug(f"Number of cameras detected: {num_cameras}")
 
         # Finish if there are no cameras
         if num_cameras == 0:
@@ -352,7 +350,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         elif "Blackfly" in device_model:
             camera_type = "BlackFly"
         else:
-            raise ValueError("Invalid camera type: {}".format(device_model))
+            raise ValueError(f"Invalid camera type: {device_model}")
 
         logger.debug("FLIR Camera Type = ", camera_type)
 
@@ -408,7 +406,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
             camera.AcquisitionFrameRateEnable.SetValue(True)
             camera.AcquisitionFrameRate.SetValue(fps)
         else:
-            raise ValueError("Invalid camera type: {}".format(camera_type))
+            raise ValueError(f"Invalid camera type: {camera_type}")
 
         logger.debug("Set FLIR fps to:", fps)
 
@@ -474,7 +472,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 )
             else:
                 raise ValueError(
-                    "Invalid camera type: {}".format(self.capture.camera_type)
+                    f"Invalid camera type: {self.capture.camera_type}"
                 )
 
             #  Ensure image completion
