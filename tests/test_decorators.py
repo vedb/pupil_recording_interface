@@ -1,12 +1,10 @@
 import pytest
 
 from pupil_recording_interface.decorators import device, stream, process
-from pupil_recording_interface.device.video import (
-    VideoDeviceUVC,
-    VideoDeviceFLIR,
-)
-from pupil_recording_interface.stream import VideoStream, OdometryStream
+from pupil_recording_interface.device.video import VideoDeviceUVC
+from pupil_recording_interface.device.flir import VideoDeviceFLIR
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
+from pupil_recording_interface.stream import VideoStream, OdometryStream
 from pupil_recording_interface.process import (
     VideoDisplay,
     VideoRecorder,

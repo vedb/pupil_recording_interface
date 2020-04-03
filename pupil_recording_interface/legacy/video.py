@@ -3,11 +3,9 @@ import abc
 
 import numpy as np
 
+from pupil_recording_interface.device.video import VideoDeviceUVC
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
-from pupil_recording_interface.device.video import (
-    VideoDeviceUVC,
-    VideoDeviceFLIR,
-)
+from pupil_recording_interface.device.flir import VideoDeviceFLIR
 from pupil_recording_interface.legacy.base import BaseStreamRecorder
 from pupil_recording_interface.encoder import VideoEncoderFFMPEG
 

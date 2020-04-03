@@ -6,7 +6,8 @@ from .reader.odometry import OdometryReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
 
-from .device.video import VideoDeviceUVC, VideoDeviceFLIR
+from .device.video import VideoDeviceUVC
+from .device.flir import VideoDeviceFLIR
 from .device.realsense import RealSenseDeviceT265
 
 from .stream import VideoStream, OdometryStream
