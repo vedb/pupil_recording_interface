@@ -83,15 +83,15 @@ class VideoRecorder(BaseStreamRecorder):
         """ Create a device from a StreamConfig. """
         # TODO codec and other parameters
         if device is None:
-            if config.type_name == "uvc":
+            if config.device_type == "uvc":
                 device = VideoDeviceUVC(
                     config.device_uid, config.resolution, config.fps
                 )
-            elif config.type_name == "flir":
+            elif config.device_type == "flir":
                 device = VideoDeviceFLIR(
                     config.device_uid, config.resolution, config.fps
                 )
-            elif config.type_name == "t265":
+            elif config.device_type == "t265":
                 device = RealSenseDeviceT265(
                     config.device_uid,
                     config.resolution,

@@ -76,7 +76,7 @@ class MultiStreamRecorder(BaseRecorder):
         for uid, config_list in configs_by_uid.items():
 
             # init t265 device separately
-            if config_list[0].type_name == "t265":
+            if config_list[0].device_type == "t265":
                 from pupil_recording_interface.device.realsense import (
                     RealSenseDeviceT265,
                 )
