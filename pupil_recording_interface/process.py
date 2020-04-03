@@ -43,7 +43,7 @@ class BaseProcess:
         """ Start the process"""
 
     @abc.abstractmethod
-    def process_data_and_timestamp(self, data, timestamp):
+    def process_packet(self, data):
         """ Process data and timestamp. """
 
     def stop(self):
@@ -63,12 +63,12 @@ class VideoDisplay(BaseProcess):
         """ Per-class implementation of from_config. """
         return cls(stream_config.name or device.device_uid)
 
-    def process_data_and_timestamp(self, data, timestamp):
+    def process_packet(self, packet):
         """ Process data and timestamp. """
-        cv2.imshow(self.name, data)
+        cv2.imshow(self.name, packet.frame)
         cv2.waitKey(1)
 
-        return data, timestamp
+        return packet
 
 
 class BaseRecorder(BaseProcess):
@@ -171,13 +171,12 @@ class VideoRecorder(BaseRecorder):
         """ Write data to disk. """
         self.encoder.write(frame)
 
-    def process_data_and_timestamp(self, data, timestamp):
+    def process_packet(self, packet):
         """ Process data and timestamp. """
-        self.write(data)
-        # TODO check if this works
-        self._timestamps.append(timestamp)
+        self.write(packet.frame)
+        self._timestamps.append(packet.timestamp)
 
-        return data, timestamp
+        return packet
 
     def stop(self):
         """ Stop the recorder. """
@@ -214,11 +213,11 @@ class OdometryRecorder(BaseRecorder):
         """ Write data to disk. """
         self.writer.append(data)
 
-    def process_data_and_timestamp(self, data, timestamp):
+    def process_packet(self, packet):
         """ Process data and timestamp. """
-        self.write(data)
+        self.write(packet.odometry)
 
-        return data, timestamp
+        return packet
 
     def stop(self):
         """ Stop the recorder. """
@@ -238,18 +237,18 @@ class PupilDetector(BaseProcess):
         """ Per-class implementation of from_config. """
         return cls(config.overlay)
 
-    def process_data_and_timestamp(self, data, timestamp):
+    def process_packet(self, packet):
         """ Process data and timestamp. """
         from pupil_detectors import Detector2D
 
         detector = Detector2D()
-        result = detector.detect(data)
+        packet.pupil = detector.detect(packet.frame)
 
         if self.overlay:
-            data = cv2.cvtColor(data, cv2.COLOR_GRAY2BGR)
-            ellipse = result["ellipse"]
+            packet.frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
+            ellipse = packet.pupil["ellipse"]
             cv2.ellipse(
-                data,
+                packet.frame,
                 tuple(int(v) for v in ellipse["center"]),
                 tuple(int(v / 2) for v in ellipse["axes"]),
                 ellipse["angle"],
@@ -258,4 +257,4 @@ class PupilDetector(BaseProcess):
                 (0, 0, 255),  # color (BGR): red
             )
 
-        return data, timestamp
+        return packet

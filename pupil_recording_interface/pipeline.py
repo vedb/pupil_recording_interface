@@ -34,12 +34,12 @@ class Pipeline(object):
         for step in self.steps:
             step.start()
 
-    def flush(self, data, timestamp):
+    def flush(self, packet):
         """ Flush the pipeline with new data. """
         for step in self.steps:
-            data, timestamp = step.process_data_and_timestamp(data, timestamp)
+            packet = step.process_packet(packet)
 
-        return data, timestamp
+        return packet
 
     def stop(self):
         """ Stop the pipeline. """

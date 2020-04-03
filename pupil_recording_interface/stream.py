@@ -2,6 +2,7 @@
 from collections import deque
 import signal
 import logging
+from copy import deepcopy
 
 import numpy as np
 
@@ -12,7 +13,55 @@ from pupil_recording_interface.pipeline import Pipeline
 logger = logging.getLogger(__name__)
 
 
-class BaseStream(object):
+class Packet:
+    """ A data packet with a timestamp and content. """
+
+    def __init__(
+        self,
+        timestamp,
+        source_timestamp=None,
+        source_timebase="monotonic",
+        **kwargs,
+    ):
+        """ Constructor. """
+        if source_timebase not in ("monotonic", "epoch"):
+            raise ValueError(f"Unknown timebase: {source_timebase}")
+
+        self._data = {
+            "timestamp": timestamp,
+            "source_timestamp": source_timestamp or timestamp,
+            "source_timebase": source_timebase,
+        }
+
+        self._data.update(kwargs)
+
+    def __getattr__(self, item):
+        try:
+            return self._data[item]
+        except KeyError:
+            raise AttributeError
+
+    def __setattr__(self, key, value):
+        if key == "_data":
+            super().__setattr__(key, value)
+        else:
+            self._data[key] = value
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def __getitem__(self, item):
+        return self._data[item]
+
+    def to_dict(self, deep=True):
+        """ Convert to dict. """
+        if deep:
+            return deepcopy(self._data)
+        else:
+            return self._data.copy()
+
+
+class BaseStream:
     """ Base class for all streams. """
 
     def __init__(
@@ -107,9 +156,9 @@ class BaseStream(object):
         if self.pipeline is not None:
             self.pipeline.start()
 
-    def get_data_and_timestamp(self):
+    def get_packet(self):
         """ Get the last data packet and timestamp from the stream. """
-        return self.device.get_data_and_timestamp()
+        return self.device.get_packet()
 
     def stop(self):
         """ Stop the stream. """
@@ -151,13 +200,13 @@ class BaseStream(object):
                     logger.debug("Thread stopped via stop event.")
                     break
 
-                data, timestamp = self.get_data_and_timestamp()
+                packet = self.get_packet()
 
                 if self.pipeline is not None:
-                    self.pipeline.flush(data, timestamp)
+                    self.pipeline.flush(packet)
 
                 # save timestamp and fps
-                self._process_timestamp(timestamp, fps_queue)
+                self._process_timestamp(packet.timestamp, fps_queue)
 
                 # TODO yield stream status
                 #  yield self.get_status()
@@ -218,8 +267,8 @@ class VideoStream(BaseStream):
             color_format=config.color_format,
         )
 
-    def get_data_and_timestamp(self):
-        """ Get the last data packet and timestamp from the stream. """
+    def get_packet(self):
+        """ Get the last data packet from the stream. """
         # TODO handle uvc.StreamError and reinitialize capture
         # TODO get only jpeg buffer when not showing video
         if self.color_format == "gray":
@@ -227,13 +276,15 @@ class VideoStream(BaseStream):
         else:
             frame, timestamp = self.device._get_frame_and_timestamp()
 
-        return frame, timestamp
+        return Packet(timestamp, frame=frame)
 
 
 @stream("odometry")
 class OdometryStream(BaseStream):
     """ Odometry stream. """
 
-    def get_data_and_timestamp(self):
-        """ Get the last data packet and timestamp from the stream. """
-        return self.device._get_odometry_and_timestamp()
+    def get_packet(self):
+        """ Get the last data packet from the stream. """
+        odometry, timestamp = self.device._get_odometry_and_timestamp()
+
+        return Packet(timestamp, odometry=odometry)

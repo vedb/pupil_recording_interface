@@ -50,8 +50,8 @@ class BaseDevice:
         """ Start this device. """
 
     @abc.abstractmethod
-    def get_data_and_timestamp(self):
-        """ Get new data and timestamp. """
+    def get_packet(self):
+        """ Get a new data packet from the device. """
 
     @abc.abstractmethod
     def stop(self):

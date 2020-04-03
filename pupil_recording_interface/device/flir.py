@@ -2,7 +2,7 @@
 from datetime import datetime
 import logging
 
-from pupil_recording_interface import device
+from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device.video import BaseVideoDevice
 
 logger = logging.getLogger(__name__)

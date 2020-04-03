@@ -1,3 +1,5 @@
+import pytest
+
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import VideoDeviceUVC
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
@@ -10,6 +12,7 @@ class TestBaseDevice:
 
 
 class TestBaseVideoDevice:
+    @pytest.mark.skip("Not yet implemented")
     def test_start(self):
         """"""
 
