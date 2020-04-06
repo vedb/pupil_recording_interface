@@ -1,7 +1,7 @@
 import abc
 import os
 import logging
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
 
 import cv2
 import numpy as np
@@ -71,7 +71,11 @@ class VideoDisplay(BaseProcess):
         """ Process a new packet. """
         if self.overlay_pupil and "pupil" in packet:
             packet.frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
-            ellipse = packet.pupil["ellipse"]
+            if isinstance(packet.pupil, Future):
+                # TODO timeout
+                ellipse = packet.pupil.result()["ellipse"]
+            else:
+                ellipse = packet.pupil["ellipse"]
             cv2.ellipse(
                 packet.frame,
                 tuple(int(v) for v in ellipse["center"]),
@@ -255,35 +259,19 @@ class PupilDetector(BaseProcess):
         self.block = block
         self.detector = Detector2D()
 
-        self._future = None
         self._executor = ThreadPoolExecutor() if not self.block else None
 
     @classmethod
     def _detect(cls, detector, frame):
-        """"""
+        """ Detect pupil in frame. """
         return detector.detect(frame)
-
-    def detect(self, packet):
-        """"""
-        packet.pupil = self.detector.detect(packet.frame)
-
-        return packet
 
     def process_packet(self, packet):
         """ Process a new packet. """
         if self.block:
-            return self.detect(packet)
+            packet.pupil = self._detect(self.detector, packet.frame)
         else:
-            if self._future is None:
-                self._future = self._executor.submit(
-                    self._detect, self.detector, packet.frame
-                )
-                # TODO return future or placeholder?
-                return packet
-            elif self._future.done():
-                packet.pupil = self._future.result()
-                self._future = self._executor.submit(
-                    self._detect, self.detector, packet.frame
-                )
-                # TODO return source packet
-                return packet
+            packet.pupil = self._executor.submit(
+                self._detect, self.detector, packet.frame
+            )
+        return packet
