@@ -80,10 +80,8 @@ if __name__ == "__main__":
     manager = StreamManager(configs, folder, policy="overwrite")
 
     for status in manager.run():
-        status_str = manager.format_status(status)
+        status_str = manager.format_status(status, max_cols=72)
         if status_str is not None:
-            if len(status_str) > 72:
-                status_str = status_str[:72]
             print("\r" + status_str, end="")
 
     print("\nStopped")

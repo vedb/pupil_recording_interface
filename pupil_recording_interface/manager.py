@@ -165,15 +165,18 @@ class StreamManager(object):
         return self._status
 
     @classmethod
-    def format_status(cls, status_dict):
+    def format_status(cls, status_dict, max_cols=None):
         """ Format status dictionary to string. """
         if not any(
             math.isnan(status["fps"]) for status in status_dict.values()
         ):
-            return ", ".join(
+            status_str = ", ".join(
                 f"{name}: {status['fps']:.2f} Hz"
                 for name, status in status_dict.items()
             )
+            if max_cols is not None and len(status_str) > max_cols:
+                status_str = status_str[: max_cols - 3] + "..."
+            return status_str
         else:
             return None
 
