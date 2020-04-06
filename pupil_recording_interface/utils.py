@@ -1,5 +1,9 @@
 """"""
 import inspect
+from collections import deque
+from multiprocessing.managers import SyncManager
+
+SyncManager.register("deque", deque)
 
 
 def get_params(cls):
@@ -49,3 +53,10 @@ def get_constructor_args(cls, config, **kwargs):
     cls_kwargs.update(kwargs)
 
     return cls_kwargs
+
+
+def multiprocessing_deque(maxlen=None):
+    """"""
+    manager = SyncManager()
+    manager.start()
+    return manager.deque(maxlen=maxlen)

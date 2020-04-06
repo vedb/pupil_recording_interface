@@ -1,4 +1,8 @@
-from pupil_recording_interface.utils import get_params, get_constructor_args
+from pupil_recording_interface.utils import (
+    get_params,
+    get_constructor_args,
+    multiprocessing_deque,
+)
 from pupil_recording_interface.device.video import BaseVideoDevice
 
 
@@ -17,3 +21,16 @@ class TestUtils:
             "resolution": (1280, 720),
             "fps": 30,
         }
+
+    def test_multiprocessing_deque(self):
+        """"""
+        max_len = 10
+        test_len = 12
+        deque = multiprocessing_deque(max_len)
+        for it in range(test_len):
+            deque.append(it)
+
+        for it in range(test_len - 1, test_len - max_len - 1, -1):
+            assert deque.pop() == it
+
+        assert not deque._getvalue()

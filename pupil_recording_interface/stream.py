@@ -202,7 +202,7 @@ class BaseStream:
                 # TODO yield stream status
                 #  yield self.get_status()
                 if status_queue is not None:
-                    status_queue.put(self.get_status())
+                    status_queue.append(self.get_status())
 
             except KeyboardInterrupt:
                 logger.debug("Thread stopped via keyboard interrupt.")

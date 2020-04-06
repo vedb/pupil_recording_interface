@@ -12,6 +12,7 @@ from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.externals.methods import get_system_info
 from pupil_recording_interface.stream import BaseStream
+from pupil_recording_interface.utils import multiprocessing_deque
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ class StreamManager(object):
         self._processes = {}
         self._queues = {}
         self._stop_event = None
+        self._status = {}
 
     @classmethod
     def _init_folder(cls, folder, policy):
@@ -121,7 +123,7 @@ class StreamManager(object):
         """ Create one process for each stream instance. """
         stop_event = mp.Event()
         queues = {
-            stream_name: mp.Queue(maxsize=max_queue_size)
+            stream_name: multiprocessing_deque(maxlen=max_queue_size)
             for stream_name in streams.keys()
         }
         processes = {
@@ -152,12 +154,15 @@ class StreamManager(object):
 
     def get_status(self):
         """ Get information about the status of all streams. """
-        return {
-            stream_name: queue.get()
-            if not queue.empty()
-            else self.streams[stream_name].get_status()
-            for stream_name, queue in self._queues.items()
-        }
+        for stream_name, queue in self._queues.items():
+            if stream_name not in self._status:
+                self._status[stream_name] = self.streams[
+                    stream_name
+                ].get_status()  # Proxy for getting "empty" status
+            elif queue._getvalue():
+                self._status[stream_name] = queue.popleft()
+
+        return self._status
 
     @classmethod
     def format_status(cls, status_dict):
