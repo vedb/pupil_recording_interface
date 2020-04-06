@@ -1,6 +1,7 @@
 import abc
 import os
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 import cv2
 import numpy as np
@@ -33,9 +34,7 @@ class BaseProcess:
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        assert process.registry[config.process_type] is cls
-
-        cls_kwargs = get_constructor_args(cls, config, **kwargs)
+        cls_kwargs = get_constructor_args(cls, config)
 
         return cls(**cls_kwargs)
 
@@ -43,8 +42,8 @@ class BaseProcess:
         """ Start the process"""
 
     @abc.abstractmethod
-    def process_packet(self, data):
-        """ Process data and timestamp. """
+    def process_packet(self, packet):
+        """ Process a new packet. """
 
     def stop(self):
         """ Stop the process. """
@@ -54,17 +53,35 @@ class BaseProcess:
 class VideoDisplay(BaseProcess):
     """ Display for video stream. """
 
-    def __init__(self, name):
+    def __init__(self, name, overlay_pupil=False):
         """ Constructor. """
         self.name = name
+        self.overlay_pupil = overlay_pupil
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        return cls(stream_config.name or device.device_uid)
+        cls_kwargs = get_constructor_args(
+            cls, config, name=stream_config.name or device.device_uid
+        )
+
+        return cls(**cls_kwargs)
 
     def process_packet(self, packet):
-        """ Process data and timestamp. """
+        """ Process a new packet. """
+        if self.overlay_pupil and "pupil" in packet:
+            packet.frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
+            ellipse = packet.pupil["ellipse"]
+            cv2.ellipse(
+                packet.frame,
+                tuple(int(v) for v in ellipse["center"]),
+                tuple(int(v / 2) for v in ellipse["axes"]),
+                ellipse["angle"],
+                0,
+                360,  # start/end angle for drawing
+                (0, 0, 255),  # color (BGR): red
+            )
+
         cv2.imshow(self.name, packet.frame)
         cv2.waitKey(1)
 
@@ -158,21 +175,24 @@ class VideoRecorder(BaseRecorder):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        return cls(
-            config.folder or kwargs.get("folder", None),
-            config.resolution or device.resolution,
-            config.fps or device.fps,
+        cls_kwargs = get_constructor_args(
+            cls,
+            config,
+            folder=config.folder or kwargs.get("folder", None),
+            resolution=config.resolution or device.resolution,
+            fps=config.fps or device.fps,
             name=stream_config.name or device.device_uid,
             color_format=config.color_format or stream_config.color_format,
-            codec=config.codec,
         )
+
+        return cls(**cls_kwargs)
 
     def write(self, frame):
         """ Write data to disk. """
         self.encoder.write(frame)
 
     def process_packet(self, packet):
-        """ Process data and timestamp. """
+        """ Process a new packet. """
         self.write(packet.frame)
         self._timestamps.append(packet.timestamp)
 
@@ -214,7 +234,7 @@ class OdometryRecorder(BaseRecorder):
         self.writer.append(data)
 
     def process_packet(self, packet):
-        """ Process data and timestamp. """
+        """ Process a new packet. """
         self.write(packet.odometry)
 
         return packet
@@ -228,33 +248,42 @@ class OdometryRecorder(BaseRecorder):
 class PupilDetector(BaseProcess):
     """ Pupil detector for eye video streams. """
 
-    def __init__(self, overlay=False):
+    def __init__(self, block=False):
         """ Constructor. """
-        self.overlay = overlay
-
-    @classmethod
-    def _from_config(cls, config, stream_config, device, **kwargs):
-        """ Per-class implementation of from_config. """
-        return cls(config.overlay)
-
-    def process_packet(self, packet):
-        """ Process data and timestamp. """
         from pupil_detectors import Detector2D
 
-        detector = Detector2D()
-        packet.pupil = detector.detect(packet.frame)
+        self.block = block
+        self.detector = Detector2D()
 
-        if self.overlay:
-            packet.frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
-            ellipse = packet.pupil["ellipse"]
-            cv2.ellipse(
-                packet.frame,
-                tuple(int(v) for v in ellipse["center"]),
-                tuple(int(v / 2) for v in ellipse["axes"]),
-                ellipse["angle"],
-                0,
-                360,  # start/end angle for drawing
-                (0, 0, 255),  # color (BGR): red
-            )
+        self._future = None
+        self._executor = ThreadPoolExecutor() if not self.block else None
+
+    @classmethod
+    def _detect(cls, detector, frame):
+        """"""
+        return detector.detect(frame)
+
+    def detect(self, packet):
+        """"""
+        packet.pupil = self.detector.detect(packet.frame)
 
         return packet
+
+    def process_packet(self, packet):
+        """ Process a new packet. """
+        if self.block:
+            return self.detect(packet)
+        else:
+            if self._future is None:
+                self._future = self._executor.submit(
+                    self._detect, self.detector, packet.frame
+                )
+                # TODO return future or placeholder?
+                return packet
+            elif self._future.done():
+                packet.pupil = self._future.result()
+                self._future = self._executor.submit(
+                    self._detect, self.detector, packet.frame
+                )
+                # TODO return source packet
+                return packet

@@ -53,12 +53,19 @@ class Packet:
     def __getitem__(self, item):
         return self._data[item]
 
+    def __contains__(self, item):
+        return item in self._data
+
     def to_dict(self, deep=True):
         """ Convert to dict. """
         if deep:
             return deepcopy(self._data)
         else:
             return self._data.copy()
+
+    def copy(self, deep=True):
+        """ Create a copy of this instance. """
+        return type(self)(**self.to_dict(deep=deep))
 
 
 class BaseStream:

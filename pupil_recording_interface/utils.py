@@ -45,11 +45,11 @@ def get_constructor_args(cls, config, **kwargs):
             try:
                 cls_kwargs[name] = getattr(config, name)
             except AttributeError:
-                raise ValueError(
-                    f"The supplied config does not specify the argument "
-                    f"{name} required for constructing an instance of "
-                    f"{cls}"
-                )
+                # TODO the missing arguments can be supplied by
+                #  kwargs. We should still check if all positional arguments
+                #  are set at the end.
+                pass
+
     cls_kwargs.update(kwargs)
 
     return cls_kwargs

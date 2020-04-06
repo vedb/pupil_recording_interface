@@ -114,6 +114,12 @@ class VideoDisplayConfig(ProcessConfig):
 
     process_type = "video_display"
 
+    def __init__(self, overlay_pupil=False, **kwargs):
+        """ Constructor. """
+        self.overlay_pupil = overlay_pupil
+
+        super(VideoDisplayConfig, self).__init__(**kwargs)
+
 
 class VideoRecorderConfig(ProcessConfig):
     """ Configuration for video recorders. """
@@ -156,8 +162,8 @@ class PupilDetectorConfig(ProcessConfig):
 
     process_type = "pupil_detector"
 
-    def __init__(self, overlay=False, **kwargs):
+    def __init__(self, block=True, **kwargs):
         """ Constructor. """
-        self.overlay = overlay
+        self.block = block
 
         super(PupilDetectorConfig, self).__init__(**kwargs)

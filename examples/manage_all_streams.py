@@ -38,8 +38,8 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 VideoRecorderConfig(),
-                PupilDetectorConfig(overlay=True),
-                VideoDisplayConfig(),
+                PupilDetectorConfig(block=False),
+                VideoDisplayConfig(overlay_pupil=True),
             ],
         ),
         VideoConfig(
@@ -51,8 +51,8 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 VideoRecorderConfig(),
-                PupilDetectorConfig(overlay=True),
-                VideoDisplayConfig(),
+                PupilDetectorConfig(block=False),
+                VideoDisplayConfig(overlay_pupil=True),
             ],
         ),
         VideoConfig(
@@ -73,14 +73,17 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.INFO, format="%(message)s"
+        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
     )
 
     # start stream
     manager = StreamManager(configs, folder, policy="overwrite")
-    for status_dict in manager.run():
-        status = manager.format_status(status_dict)
-        if status is not None:
-            print("\r" + status, end="")
+
+    for status in manager.run():
+        status_str = manager.format_status(status)
+        if status_str is not None:
+            if len(status_str) > 72:
+                status_str = status_str[:72]
+            print("\r" + status_str, end="")
 
     print("\nStopped")
