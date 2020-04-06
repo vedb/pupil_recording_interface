@@ -37,7 +37,10 @@ def get_constructor_args(cls, config, **kwargs):
 
     # update matching keyword arguments
     for name, param in cls_kwargs.items():
-        cls_kwargs[name] = getattr(config, name, None) or param
+        try:
+            cls_kwargs[name] = getattr(config, name)
+        except AttributeError:
+            cls_kwargs[name] = param
 
     # update matching positional arguments
     for name in cls_args:

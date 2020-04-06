@@ -178,7 +178,7 @@ class BaseStream:
         stop_event: multiprocessing.Event, optional
             An event that stops the stream in a multi-threaded setting.
 
-        status_queue: multiprocessing.Queue, optional
+        status_queue: thread safe deque, optional
             A queue for the current status in a multi-threaded setting.
 
         Yields

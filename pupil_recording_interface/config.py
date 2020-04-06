@@ -38,7 +38,7 @@ class StreamConfig(BaseConfig):
         self.pipeline = pipeline
         self.name = name or self.device_uid
 
-        super(StreamConfig, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class VideoConfig(StreamConfig):
@@ -85,7 +85,7 @@ class VideoConfig(StreamConfig):
             For stereo cameras, which side to record. Can be 'left', 'right'
             or 'both'.
         """
-        super(VideoConfig, self).__init__(
+        super().__init__(
             device_type, device_uid, pipeline=pipeline, name=name, **kwargs
         )
 
@@ -108,6 +108,12 @@ class ProcessConfig(BaseConfig):
 
     process_type: str
 
+    def __init__(self, block=True, **kwargs):
+        """ Constructor. """
+        self.block = block
+
+        super().__init__(**kwargs)
+
 
 class VideoDisplayConfig(ProcessConfig):
     """ Configuration for video displays. """
@@ -118,7 +124,7 @@ class VideoDisplayConfig(ProcessConfig):
         """ Constructor. """
         self.overlay_pupil = overlay_pupil
 
-        super(VideoDisplayConfig, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class VideoRecorderConfig(ProcessConfig):
@@ -142,7 +148,7 @@ class VideoRecorderConfig(ProcessConfig):
         self.color_format = color_format
         self.codec = codec
 
-        super(VideoRecorderConfig, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class OdometryRecorderConfig(ProcessConfig):
@@ -154,16 +160,10 @@ class OdometryRecorderConfig(ProcessConfig):
         """ Constructor. """
         self.folder = folder
 
-        super(OdometryRecorderConfig, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class PupilDetectorConfig(ProcessConfig):
     """ Configuration for pupil detectors. """
 
     process_type = "pupil_detector"
-
-    def __init__(self, block=True, **kwargs):
-        """ Constructor. """
-        self.block = block
-
-        super(PupilDetectorConfig, self).__init__(**kwargs)

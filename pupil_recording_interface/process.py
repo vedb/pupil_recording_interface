@@ -17,6 +17,12 @@ logger = logging.getLogger(__name__)
 class BaseProcess:
     """ Base class for all processes. """
 
+    def __init__(self, block=True, **kwargs):
+        """ Constructor. """
+        self.block = block
+
+        self._executor = ThreadPoolExecutor()
+
     @classmethod
     def from_config(cls, config, stream_config, device, **kwargs):
         """ Create a process from a StreamConfig. """
@@ -41,8 +47,21 @@ class BaseProcess:
     def start(self):
         """ Start the process"""
 
-    @abc.abstractmethod
     def process_packet(self, packet):
+        """ Process a new packet. """
+        if isinstance(packet, Future):
+            # TODO timeout?
+            packet = packet.result()
+
+        if self.block:
+            return self._process_packet(packet)
+        else:
+            # TODO this still doesn't help if the processing takes longer
+            #  than the packet interval
+            return self._executor.submit(self._process_packet, packet)
+
+    @abc.abstractmethod
+    def _process_packet(self, packet):
         """ Process a new packet. """
 
     def stop(self):
@@ -53,10 +72,12 @@ class BaseProcess:
 class VideoDisplay(BaseProcess):
     """ Display for video stream. """
 
-    def __init__(self, name, overlay_pupil=False):
+    def __init__(self, name, overlay_pupil=False, **kwargs):
         """ Constructor. """
         self.name = name
         self.overlay_pupil = overlay_pupil
+
+        super().__init__(**kwargs)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -67,15 +88,11 @@ class VideoDisplay(BaseProcess):
 
         return cls(**cls_kwargs)
 
-    def process_packet(self, packet):
+    def _process_packet(self, packet):
         """ Process a new packet. """
         if self.overlay_pupil and "pupil" in packet:
             packet.frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
-            if isinstance(packet.pupil, Future):
-                # TODO timeout
-                ellipse = packet.pupil.result()["ellipse"]
-            else:
-                ellipse = packet.pupil["ellipse"]
+            ellipse = packet.pupil["ellipse"]
             cv2.ellipse(
                 packet.frame,
                 tuple(int(v) for v in ellipse["center"]),
@@ -95,7 +112,7 @@ class VideoDisplay(BaseProcess):
 class BaseRecorder(BaseProcess):
     """ Recorder for stream. """
 
-    def __init__(self, folder, name=None):
+    def __init__(self, folder, name=None, **kwargs):
         """ Constructor.
 
         Parameters
@@ -112,6 +129,8 @@ class BaseRecorder(BaseProcess):
             self.folder = folder
 
         self.name = name
+
+        super().__init__(**kwargs)
 
     @abc.abstractmethod
     def write(self, data):
@@ -195,7 +214,7 @@ class VideoRecorder(BaseRecorder):
         """ Write data to disk. """
         self.encoder.write(frame)
 
-    def process_packet(self, packet):
+    def _process_packet(self, packet):
         """ Process a new packet. """
         self.write(packet.frame)
         self._timestamps.append(packet.timestamp)
@@ -237,7 +256,7 @@ class OdometryRecorder(BaseRecorder):
         """ Write data to disk. """
         self.writer.append(data)
 
-    def process_packet(self, packet):
+    def _process_packet(self, packet):
         """ Process a new packet. """
         self.write(packet.odometry)
 
@@ -252,26 +271,15 @@ class OdometryRecorder(BaseRecorder):
 class PupilDetector(BaseProcess):
     """ Pupil detector for eye video streams. """
 
-    def __init__(self, block=False):
+    def __init__(self, block=True, **kwargs):
         """ Constructor. """
         from pupil_detectors import Detector2D
 
-        self.block = block
         self.detector = Detector2D()
 
-        self._executor = ThreadPoolExecutor() if not self.block else None
+        super().__init__(block=block, **kwargs)
 
-    @classmethod
-    def _detect(cls, detector, frame):
-        """ Detect pupil in frame. """
-        return detector.detect(frame)
-
-    def process_packet(self, packet):
+    def _process_packet(self, packet):
         """ Process a new packet. """
-        if self.block:
-            packet.pupil = self._detect(self.detector, packet.frame)
-        else:
-            packet.pupil = self._executor.submit(
-                self._detect, self.detector, packet.frame
-            )
+        packet.pupil = self.detector.detect(packet.frame)
         return packet

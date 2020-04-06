@@ -22,6 +22,14 @@ class TestUtils:
             "fps": 30,
         }
 
+        # regression test for overriding parameters with "False"
+        video_config.fps = False
+        assert get_constructor_args(BaseVideoDevice, video_config) == {
+            "device_uid": "test_cam",
+            "resolution": (1280, 720),
+            "fps": False,
+        }
+
     def test_multiprocessing_deque(self):
         """"""
         max_len = 10
