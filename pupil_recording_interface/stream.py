@@ -117,11 +117,6 @@ class BaseStream:
         else:
             return np.nanmean(self._fps_buffer)
 
-    def update_status(self, queue):
-        """ Update status from queue. """
-        while not queue.empty():
-            self._fps_buffer.append(queue.get())
-
     def get_status(self):
         """ Get information about the stream status. """
         return {
@@ -130,18 +125,14 @@ class BaseStream:
             "fps": self.current_fps,
         }
 
-    def _process_timestamp(self, timestamp, fps_queue=None):
+    def _process_timestamp(self, timestamp):
         """ Process a new timestamp. """
         if timestamp != self._last_timestamp:
             fps = 1.0 / (timestamp - self._last_timestamp)
         else:
             fps = np.nan
 
-        if fps_queue is not None:
-            fps_queue.put(fps)
-        else:
-            self._fps_buffer.append(fps)
-
+        self._fps_buffer.append(fps)
         self._last_timestamp = timestamp
 
     def run_pre_thread_hooks(self):
@@ -172,7 +163,7 @@ class BaseStream:
         """ Run hook(s) after processing thread(s) finish(es). """
         self.device.run_post_thread_hooks()
 
-    def run_in_thread(self, stop_event=None, fps_queue=None):
+    def run_in_thread(self, stop_event=None, status_queue=None):
         """ Main loop for running in a dedicated thread.
 
         Parameters
@@ -180,8 +171,8 @@ class BaseStream:
         stop_event: multiprocessing.Event, optional
             An event that stops the stream in a multi-threaded setting.
 
-        fps_queue: multiprocessing.Queue, optional
-            A queue for the current fps in a multi-threaded setting.
+        status_queue: multiprocessing.Queue, optional
+            A queue for the current status in a multi-threaded setting.
 
         Yields
         ------
@@ -206,10 +197,12 @@ class BaseStream:
                     self.pipeline.flush(packet)
 
                 # save timestamp and fps
-                self._process_timestamp(packet.timestamp, fps_queue)
+                self._process_timestamp(packet.timestamp)
 
                 # TODO yield stream status
                 #  yield self.get_status()
+                if status_queue is not None:
+                    status_queue.put(self.get_status())
 
             except KeyboardInterrupt:
                 logger.debug("Thread stopped via keyboard interrupt.")

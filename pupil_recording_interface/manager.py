@@ -150,6 +150,15 @@ class StreamManager(object):
             logger.debug(f"Stopping process: {process_name}")
             process.join()
 
+    def get_status(self):
+        """ Get information about the status of all streams. """
+        return {
+            stream_name: queue.get()
+            if not queue.empty()
+            else self.streams[stream_name].get_status()
+            for stream_name, queue in self._queues.items()
+        }
+
     @classmethod
     def format_status(cls, status_dict):
         """ Format status dictionary to string. """
@@ -236,14 +245,8 @@ class StreamManager(object):
             time.time() - self._start_time_monotonic < self.duration
             and not self.stopped
         ):
-            # update status for each stream
-            for stream_name, stream in self.streams.items():
-                stream.update_status(self._queues[stream_name])
-
-            # yield current status for each stream
-            yield {
-                c_name: c.get_status() for c_name, c in self.streams.items()
-            }
+            # yield current status
+            yield self.get_status()
 
     def stop(self):
         """ Stop streams. """
