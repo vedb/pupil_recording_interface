@@ -21,6 +21,7 @@ class Packet:
         timestamp,
         source_timestamp=None,
         source_timebase="monotonic",
+        broadcasts=None,
         **kwargs,
     ):
         """ Constructor. """
@@ -31,6 +32,7 @@ class Packet:
             "timestamp": timestamp,
             "source_timestamp": source_timestamp or timestamp,
             "source_timebase": source_timebase,
+            "broadcasts": broadcasts or [],
         }
 
         self._data.update(kwargs)
@@ -66,6 +68,10 @@ class Packet:
     def copy(self, deep=True):
         """ Create a copy of this instance. """
         return type(self)(**self.to_dict(deep=deep))
+
+    def get_broadcasts(self):
+        """"""
+        return {b: self[b] for b in self.broadcasts}
 
 
 class BaseStream:
@@ -124,13 +130,22 @@ class BaseStream:
         else:
             return np.nanmean(self._fps_buffer)
 
-    def get_status(self):
+    def get_status(self, packet=None):
         """ Get information about the stream status. """
-        return {
+        status = {
             "name": self.name,
+            "timestamp": float("nan"),
             "last_timestamp": self._last_timestamp,
             "fps": self.current_fps,
         }
+
+        if packet is not None:
+            status["timestamp"] = packet.timestamp
+            # TODO should this go into a dedicated "broadcasts" entry?
+            for k, v in packet.get_broadcasts().items():
+                status[k] = v
+
+        return status
 
     def _process_timestamp(self, timestamp):
         """ Process a new timestamp. """
@@ -201,15 +216,14 @@ class BaseStream:
                 packet = self.get_packet()
 
                 if self.pipeline is not None:
-                    self.pipeline.flush(packet)
+                    packet = self.pipeline.flush(packet)
 
                 # save timestamp and fps
                 self._process_timestamp(packet.timestamp)
 
-                # TODO yield stream status
-                #  yield self.get_status()
+                # TODO yield self.get_status()
                 if status_queue is not None:
-                    status_queue.append(self.get_status())
+                    status_queue.append(self.get_status(packet))
 
             except KeyboardInterrupt:
                 logger.debug("Thread stopped via keyboard interrupt.")
@@ -226,8 +240,7 @@ class BaseStream:
             Information about the current stream status.
         """
         self.run_pre_thread_hooks()
-        # TODO for status in self.run_in_thread():
-        #     yield status
+        # TODO yield from self.run_in_thread()
         self.run_in_thread()
         self.run_post_thread_hooks()
 

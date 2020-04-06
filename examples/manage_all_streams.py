@@ -80,7 +80,9 @@ if __name__ == "__main__":
     manager = StreamManager(configs, folder, policy="overwrite")
 
     for status in manager.run():
-        status_str = manager.format_status(status, max_cols=72)
+        status_str = manager.format_status(
+            status, value="pupil_confidence", max_cols=72
+        )
         if status_str is not None:
             print("\r" + status_str, end="")
 

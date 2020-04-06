@@ -165,20 +165,41 @@ class StreamManager(object):
         return self._status
 
     @classmethod
-    def format_status(cls, status_dict, max_cols=None):
+    def format_status(cls, status_dict, value="fps", max_cols=None):
         """ Format status dictionary to string. """
-        if not any(
-            math.isnan(status["fps"]) for status in status_dict.values()
-        ):
-            status_str = ", ".join(
-                f"{name}: {status['fps']:.2f} Hz"
+        if value == "fps":
+            if not any(
+                math.isnan(status[value])
+                for status in status_dict.values()
+                if value in status
+            ):
+                status_str = ", ".join(
+                    f"{name}: " + f"{status['fps']:.2f} Hz"
+                    for name, status in status_dict.items()
+                )
+            else:
+                return None
+        elif value == "pupil_confidence":
+            confidences = {
+                name: status["pupil"]["confidence"]
                 for name, status in status_dict.items()
-            )
-            if max_cols is not None and len(status_str) > max_cols:
-                status_str = status_str[: max_cols - 3] + "..."
-            return status_str
+                if "pupil" in status
+            }
+            # TODO: return None until all pupil detectors report something
+            if len(confidences) > 0:
+                status_str = ", ".join(
+                    f"{name}: " + f"{confidence:.2f}"
+                    for name, confidence in confidences.items()
+                )
+            else:
+                return None
         else:
-            return None
+            raise ValueError(f"Unrecognized status value: {value}")
+
+        if max_cols is not None and len(status_str) > max_cols:
+            status_str = status_str[: max_cols - 3] + "..."
+
+        return status_str
 
     def save_info(self, run_duration):
         """ Save info.player.json file. """
@@ -230,6 +251,7 @@ class StreamManager(object):
         self._start_processes(self._processes)
 
         # Record times
+        # TODO these should be queried at the same time
         self._start_time = time.time()
         self._start_time_monotonic = get_time_monotonic()
 
@@ -253,7 +275,6 @@ class StreamManager(object):
             time.time() - self._start_time_monotonic < self.duration
             and not self.stopped
         ):
-            # yield current status
             yield self.get_status()
 
     def stop(self):

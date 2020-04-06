@@ -282,4 +282,5 @@ class PupilDetector(BaseProcess):
     def _process_packet(self, packet):
         """ Process a new packet. """
         packet.pupil = self.detector.detect(packet.frame)
+        packet.broadcasts.append("pupil")
         return packet
