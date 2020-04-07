@@ -49,6 +49,8 @@ class BaseProcess:
 
     def process_packet(self, packet):
         """ Process a new packet. """
+        # TODO Packet class should support Future attributes that each
+        #  process resolves if it needs them
         if isinstance(packet, Future):
             # TODO timeout?
             packet = packet.result()
