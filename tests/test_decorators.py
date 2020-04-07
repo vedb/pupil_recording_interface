@@ -10,6 +10,7 @@ from pupil_recording_interface.process import (
     VideoRecorder,
     OdometryRecorder,
     PupilDetector,
+    GazeMapper,
 )
 
 
@@ -24,7 +25,7 @@ class TestDecorators:
 
         # new device with same name raises error
         with pytest.raises(ValueError):
-            device("uvc")(None)
+            device("uvc")(VideoDeviceUVC)
 
     def test_stream_decorator(self):
         """"""
@@ -40,4 +41,5 @@ class TestDecorators:
             "video_recorder": VideoRecorder,
             "odometry_recorder": OdometryRecorder,
             "pupil_detector": PupilDetector,
+            "gaze_mapper": GazeMapper,
         }

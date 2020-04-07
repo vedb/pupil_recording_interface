@@ -1,17 +1,7 @@
-from __future__ import print_function
-
 import sys
 import logging
 
-from pupil_recording_interface import (
-    VideoConfig,
-    OdometryConfig,
-    VideoDisplayConfig,
-    VideoRecorderConfig,
-    OdometryRecorderConfig,
-    PupilDetectorConfig,
-    StreamManager,
-)
+import pupil_recording_interface as pri
 
 
 if __name__ == "__main__":
@@ -21,15 +11,19 @@ if __name__ == "__main__":
 
     # camera configurations
     configs = [
-        VideoConfig(
+        pri.VideoStream.Config(
             device_type="uvc",
             device_uid="Pupil Cam1 ID2",
             name="world",
             resolution=(1280, 720),
             fps=60,
-            pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
+            pipeline=[
+                pri.VideoRecorder.Config(),
+                pri.VideoDisplay.Config(),
+                pri.GazeMapper.Config(),
+            ],
         ),
-        VideoConfig(
+        pri.VideoStream.Config(
             device_type="uvc",
             device_uid="Pupil Cam1 ID0",
             name="eye0",
@@ -37,12 +31,12 @@ if __name__ == "__main__":
             fps=120,
             color_format="gray",
             pipeline=[
-                VideoRecorderConfig(),
-                PupilDetectorConfig(block=False),
-                VideoDisplayConfig(overlay_pupil=True),
+                pri.VideoRecorder.Config(),
+                pri.PupilDetector.Config(block=False),
+                pri.VideoDisplay.Config(overlay_pupil=True),
             ],
         ),
-        VideoConfig(
+        pri.VideoStream.Config(
             device_type="uvc",
             device_uid="Pupil Cam1 ID1",
             name="eye1",
@@ -50,24 +44,24 @@ if __name__ == "__main__":
             fps=120,
             color_format="gray",
             pipeline=[
-                VideoRecorderConfig(),
-                PupilDetectorConfig(block=False),
-                VideoDisplayConfig(overlay_pupil=True),
+                pri.VideoRecorder.Config(),
+                pri.PupilDetector.Config(block=False),
+                pri.VideoDisplay.Config(overlay_pupil=True),
             ],
         ),
-        VideoConfig(
+        pri.VideoStream.Config(
             device_type="t265",
             device_uid="t265",
             resolution=(1696, 800),
             fps=30,
             color_format="gray",
-            pipeline=[VideoDisplayConfig(), VideoRecorderConfig()],
+            pipeline=[pri.VideoDisplay.Config(), pri.VideoRecorder.Config()],
         ),
-        OdometryConfig(
+        pri.OdometryStream.Config(
             device_type="t265",
             device_uid="t265",
             name="odometry",
-            pipeline=[OdometryRecorderConfig()],
+            pipeline=[pri.OdometryRecorder.Config()],
         ),
     ]
 
@@ -77,7 +71,7 @@ if __name__ == "__main__":
     )
 
     # start stream
-    manager = StreamManager(configs, folder, policy="overwrite")
+    manager = pri.StreamManager(configs, folder, policy="overwrite")
 
     for status in manager.run():
         status_str = manager.format_status(

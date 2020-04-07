@@ -1,11 +1,12 @@
 """"""
 import abc
 
+from pupil_recording_interface.base import BaseConfigurable
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.utils import get_constructor_args
 
 
-class BaseDevice:
+class BaseDevice(BaseConfigurable):
     """ Base class for all devices. """
 
     def __init__(self, device_uid):

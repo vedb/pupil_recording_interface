@@ -4,7 +4,7 @@ import shutil
 import pytest
 
 from pupil_recording_interface import DATA_DIR
-from pupil_recording_interface.config import VideoConfig
+from pupil_recording_interface.legacy.config import VideoConfig
 from pupil_recording_interface.stream import VideoStream
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process import VideoDisplay

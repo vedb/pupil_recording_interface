@@ -5,6 +5,7 @@ import logging
 
 import numpy as np
 
+from pupil_recording_interface.base import BaseConfigurable
 from pupil_recording_interface.decorators import stream
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.packet import Packet
@@ -13,7 +14,7 @@ from pupil_recording_interface.pipeline import Pipeline
 logger = logging.getLogger(__name__)
 
 
-class BaseStream:
+class BaseStream(BaseConfigurable):
     """ Base class for all streams. """
 
     def __init__(
@@ -213,8 +214,15 @@ class BaseStream:
 class VideoStream(BaseStream):
     """ Video stream. """
 
+    _config_attrs = {"stream_type": "video"}
+
     def __init__(
-        self, device, pipeline=None, name=None, color_format="bgr24",
+        self,
+        device,
+        pipeline=None,
+        name=None,
+        color_format="bgr24",
+        side="both",
     ):
         """ Constructor.
 
@@ -229,6 +237,10 @@ class VideoStream(BaseStream):
 
         color_format: str, default 'bgr24'
             The target color format. Set to 'gray' for eye cameras.
+
+        side: str, default 'both'
+            For stereo cameras, which side to record. Can be 'left', 'right'
+            or 'both'.
         """
         super(VideoStream, self).__init__(device, pipeline=pipeline, name=name)
         self.color_format = color_format

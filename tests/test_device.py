@@ -20,7 +20,7 @@ class TestBaseVideoDevice:
 class TestRealSenseDeviceT265:
     def test_from_config_list(self):
         """"""
-        from pupil_recording_interface.config import (
+        from pupil_recording_interface.legacy.config import (
             VideoConfig,
             OdometryConfig,
         )

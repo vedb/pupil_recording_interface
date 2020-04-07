@@ -62,18 +62,6 @@ Stream classes
 .. TODO process, pipeline
 
 
-Config classes
-..............
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    StreamConfig
-    VideoConfig
-    OdometryConfig
-
-
 Class member details
 --------------------
 

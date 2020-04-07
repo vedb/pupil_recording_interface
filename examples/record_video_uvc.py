@@ -1,10 +1,7 @@
-from __future__ import print_function
-
 import sys
 import logging
 
-from pupil_recording_interface import VideoConfig
-from pupil_recording_interface.legacy import MultiStreamRecorder
+from pupil_recording_interface.legacy import MultiStreamRecorder, VideoConfig
 
 
 if __name__ == "__main__":

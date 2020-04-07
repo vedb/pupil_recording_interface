@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 import cv2
 import numpy as np
 
+from pupil_recording_interface.base import BaseConfigurable
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 from pupil_recording_interface.encoder import VideoEncoderFFMPEG
@@ -14,7 +15,7 @@ from pupil_recording_interface.utils import get_constructor_args
 logger = logging.getLogger(__name__)
 
 
-class BaseProcess:
+class BaseProcess(BaseConfigurable):
     """ Base class for all processes. """
 
     def __init__(self, block=True, listen_for=None, **kwargs):
@@ -80,7 +81,7 @@ class BaseProcess:
         """ Stop the process. """
 
 
-@process("video_display")
+@process("video_display", optional=("name",))
 class VideoDisplay(BaseProcess):
     """ Display for video stream. """
 
@@ -149,7 +150,9 @@ class BaseRecorder(BaseProcess):
         """ Write data to disk. """
 
 
-@process("video_recorder")
+@process(
+    "video_recorder", optional=("folder", "resolution", "fps", "color_format")
+)
 class VideoRecorder(BaseRecorder):
     """ Recorder for a video stream. """
 
@@ -161,7 +164,7 @@ class VideoRecorder(BaseRecorder):
         name=None,
         color_format="bgr24",
         codec="libx264",
-        **encoder_kwargs,
+        encoder_kwargs=None,
     ):
         """ Constructor.
 
@@ -183,7 +186,7 @@ class VideoRecorder(BaseRecorder):
         codec: str, default 'libx264'
             The desired video codec.
 
-        encoder_kwargs:
+        encoder_kwargs: dict
             Addtional keyword arguments passed to the encoder.
         """
         super().__init__(folder, name=name)
@@ -196,7 +199,7 @@ class VideoRecorder(BaseRecorder):
             color_format,
             codec,
             overwrite=False,
-            **encoder_kwargs,
+            **(encoder_kwargs or {}),
         )
 
         self.timestamp_file = os.path.join(
@@ -240,7 +243,7 @@ class VideoRecorder(BaseRecorder):
         np.save(self.timestamp_file, np.array(self._timestamps))
 
 
-@process("odometry_recorder")
+@process("odometry_recorder", optional=("folder",))
 class OdometryRecorder(BaseRecorder):
     """ Recorder for an odometry stream. """
 

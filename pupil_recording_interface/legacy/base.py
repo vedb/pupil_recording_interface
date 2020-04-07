@@ -4,7 +4,7 @@ from collections import deque
 
 import numpy as np
 
-from pupil_recording_interface import VideoConfig, OdometryConfig
+from pupil_recording_interface.legacy.config import VideoConfig, OdometryConfig
 
 
 class BaseRecorder(object):

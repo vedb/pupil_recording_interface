@@ -1,14 +1,5 @@
 """"""
-
-
-class BaseConfig(object):
-    """ Base class for all configurations. """
-
-    def __init__(self, **kwargs):
-        """ Constructor. """
-        # TODO Replace with self.kwargs = kwargs?
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+from pupil_recording_interface.base import BaseConfig
 
 
 class StreamConfig(BaseConfig):
@@ -122,6 +113,7 @@ class VideoDisplayConfig(ProcessConfig):
 
     def __init__(self, overlay_pupil=False, **kwargs):
         """ Constructor. """
+        # TODO flip, *_min_confidence, overlay_gaze, overlay_marker
         self.overlay_pupil = overlay_pupil
 
         super().__init__(**kwargs)
