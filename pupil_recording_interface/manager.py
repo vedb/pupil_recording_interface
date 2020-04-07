@@ -55,7 +55,8 @@ class StreamManager(object):
         self._start_time = 0.0
         self._start_time_monotonic = 0.0
         self._processes = {}
-        self._queues = {}
+        self._status_queues = {}
+        self._notification_queues = {}
         self._stop_event = None
         self._status = {}
 
@@ -122,19 +123,27 @@ class StreamManager(object):
     def _init_processes(cls, streams, max_queue_size):
         """ Create one process for each stream instance. """
         stop_event = mp.Event()
-        queues = {
+        status_queues = {
+            stream_name: multiprocessing_deque(maxlen=max_queue_size)
+            for stream_name in streams.keys()
+        }
+        notification_queues = {
             stream_name: multiprocessing_deque(maxlen=max_queue_size)
             for stream_name in streams.keys()
         }
         processes = {
             stream_name: mp.Process(
                 target=stream.run_in_thread,
-                args=(stop_event, queues[stream_name]),
+                args=(
+                    stop_event,
+                    status_queues[stream_name],
+                    notification_queues[stream_name],
+                ),
             )
             for stream_name, stream in streams.items()
         }
 
-        return processes, queues, stop_event
+        return processes, status_queues, notification_queues, stop_event
 
     @classmethod
     def _start_processes(cls, processes):
@@ -154,15 +163,38 @@ class StreamManager(object):
 
     def get_status(self):
         """ Get information about the status of all streams. """
-        for stream_name, queue in self._queues.items():
+        for stream_name, queue in self._status_queues.items():
             if stream_name not in self._status:
                 self._status[stream_name] = self.streams[
                     stream_name
-                ].get_status()  # Proxy for getting "empty" status
+                ].get_status()  # TODO proxy for getting "empty" status
             elif queue._getvalue():
                 self._status[stream_name] = queue.popleft()
 
         return self._status
+
+    @classmethod
+    def _get_notifications(cls, statuses, target_stream):
+        """ Get notifications for a target stream. """
+        notifications = {}
+        for source_name, source_status in statuses.items():
+            stream_notification = {
+                info: source_status[info]
+                for info in target_stream.listen_for
+                if info in source_status
+            }
+            if len(stream_notification) > 0:
+                stream_notification["timestamp"] = source_status["timestamp"]
+                notifications[source_name] = stream_notification
+
+        return notifications
+
+    def notify_streams(self, statuses):
+        """ Notify streams of status updates they are listening for. """
+        for name, stream in self.streams.items():
+            self._notification_queues[name].append(
+                self._get_notifications(statuses, stream)
+            )
 
     @classmethod
     def format_status(cls, status_dict, value="fps", max_cols=None):
@@ -245,9 +277,12 @@ class StreamManager(object):
             stream.run_pre_thread_hooks()
 
         # dispatch recording threads
-        self._processes, self._queues, self._stop_event = self._init_processes(
-            self.streams, self._max_queue_size
-        )
+        (
+            self._processes,
+            self._status_queues,
+            self._notification_queues,
+            self._stop_event,
+        ) = self._init_processes(self.streams, self._max_queue_size)
         self._start_processes(self._processes)
 
         # Record times
@@ -275,7 +310,9 @@ class StreamManager(object):
             time.time() - self._start_time_monotonic < self.duration
             and not self.stopped
         ):
-            yield self.get_status()
+            statuses = self.get_status()
+            self.notify_streams(statuses)
+            yield statuses
 
     def stop(self):
         """ Stop streams. """

@@ -17,15 +17,16 @@ logger = logging.getLogger(__name__)
 class BaseProcess:
     """ Base class for all processes. """
 
-    def __init__(self, block=True, **kwargs):
+    def __init__(self, block=True, listen_for=None, **kwargs):
         """ Constructor. """
         self.block = block
+        self.listen_for = listen_for or []
 
         self._executor = ThreadPoolExecutor()
 
     @classmethod
     def from_config(cls, config, stream_config, device, **kwargs):
-        """ Create a process from a StreamConfig. """
+        """ Create a process from a ProcessConfig. """
         try:
             return process.registry[config.process_type]._from_config(
                 config, stream_config, device, **kwargs
@@ -47,6 +48,15 @@ class BaseProcess:
     def start(self):
         """ Start the process"""
 
+    def process(self, packet, notifications):
+        """ Process new data. """
+        self.process_notifications(notifications)
+
+        return self.process_packet(packet)
+
+    def process_notifications(self, notifications):
+        """ Process new notifications. """
+
     def process_packet(self, packet):
         """ Process a new packet. """
         # TODO Packet class should support Future attributes that each
@@ -62,9 +72,9 @@ class BaseProcess:
             #  than the packet interval
             return self._executor.submit(self._process_packet, packet)
 
-    @abc.abstractmethod
     def _process_packet(self, packet):
         """ Process a new packet. """
+        return packet
 
     def stop(self):
         """ Stop the process. """
@@ -176,7 +186,7 @@ class VideoRecorder(BaseRecorder):
         encoder_kwargs:
             Addtional keyword arguments passed to the encoder.
         """
-        super(VideoRecorder, self).__init__(folder, name=name)
+        super().__init__(folder, name=name)
 
         self.encoder = VideoEncoderFFMPEG(
             self.folder,
@@ -236,7 +246,7 @@ class OdometryRecorder(BaseRecorder):
 
     def __init__(self, folder, name=None, topic="odometry"):
         """ Constructor. """
-        super(OdometryRecorder, self).__init__(folder, name=name)
+        super().__init__(folder, name=name)
 
         self.filename = os.path.join(self.folder, topic + ".pldata")
         if os.path.exists(self.filename):
@@ -285,4 +295,36 @@ class PupilDetector(BaseProcess):
         """ Process a new packet. """
         packet.pupil = self.detector.detect(packet.frame)
         packet.broadcasts.append("pupil")
+        return packet
+
+
+@process("gaze_mapper")
+class GazeMapper(BaseProcess):
+    """ Gaze mapper. """
+
+    def __init__(self, left="eye0", right="eye1", **kwargs):
+        """ Constructor. """
+        super().__init__(listen_for=["pupil"], **kwargs)
+        self.left = left
+        self.right = right
+
+    def map_gaze(self, left_pupil, right_pupil):
+        """ Map gaze. """
+        # TODO implement this
+        return left_pupil["location"]
+
+    def process(self, packet, notifications):
+        """ Process new data. """
+        packet.gaze_points = []
+        for notification in notifications:
+            try:
+                packet.gaze_points.append(
+                    self.map_gaze(
+                        notification[self.left]["pupil"],
+                        notification[self.right]["pupil"],
+                    )
+                )
+            except KeyError:
+                pass
+
         return packet

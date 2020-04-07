@@ -13,6 +13,14 @@ class Pipeline(object):
         """ Constructor. """
         self.steps = steps
 
+    @property
+    def listen_for(self):
+        return [
+            notification_type
+            for step in self.steps
+            for notification_type in step.listen_for
+        ]
+
     @classmethod
     def from_config(cls, config, device, folder=None):
         """ Create an instance from a StreamConfig. """
@@ -34,10 +42,10 @@ class Pipeline(object):
         for step in self.steps:
             step.start()
 
-    def flush(self, packet):
+    def flush(self, packet, notifications):
         """ Flush the pipeline with new data. """
         for step in self.steps:
-            packet = step.process_packet(packet)
+            packet = step.process(packet, notifications)
 
         return packet
 

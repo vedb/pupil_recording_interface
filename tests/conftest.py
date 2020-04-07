@@ -5,6 +5,9 @@ import pytest
 
 from pupil_recording_interface import DATA_DIR
 from pupil_recording_interface.config import VideoConfig
+from pupil_recording_interface.stream import VideoStream
+from pupil_recording_interface.pipeline import Pipeline
+from pupil_recording_interface.process import VideoDisplay
 
 
 @pytest.fixture()
@@ -42,3 +45,44 @@ def info():
 def video_config():
     """"""
     return VideoConfig("uvc", "test_cam", (1280, 720), 30)
+
+
+@pytest.fixture()
+def pipeline():
+    """"""
+    return Pipeline([VideoDisplay("test")])
+
+
+@pytest.fixture()
+def video_stream(pipeline):
+    """"""
+    return VideoStream(None, pipeline, "test_stream")
+
+
+@pytest.fixture()
+def statuses():
+    """"""
+    return {
+        "world": {
+            "name": "world",
+            "timestamp": 1.0,
+            "last_timestamp": 0.0,
+            "fps": 30.0,
+        },
+        "eye0": {
+            "name": "eye0",
+            "timestamp": 1.0,
+            "last_timestamp": 0.0,
+            "fps": 120.0,
+            "pupil": {
+                "ellipse": {
+                    "center": (0.0, 0.0),
+                    "axes": (0.0, 0.0),
+                    "angle": -90.0,
+                },
+                "diameter": 0.0,
+                "location": (0.0, 0.0),
+                "confidence": 0.0,
+            },
+        },
+    }

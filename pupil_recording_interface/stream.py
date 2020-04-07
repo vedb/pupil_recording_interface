@@ -31,6 +31,7 @@ class BaseStream:
             used.
         """
         self.device = device
+        # TODO default value for pipeline?
         self.pipeline = pipeline
         self.name = name or device.device_uid
 
@@ -60,6 +61,13 @@ class BaseStream:
                 f"If you are implementing a custom stream, remember to use "
                 f"the @pupil_recording_interface.stream class decorator."
             )
+
+    @property
+    def listen_for(self):
+        if self.pipeline is not None:
+            return self.pipeline.listen_for
+        else:
+            return []
 
     @property
     def current_fps(self):
@@ -108,6 +116,17 @@ class BaseStream:
         if self.pipeline is not None:
             self.pipeline.start()
 
+    @classmethod
+    def _get_notifications(cls, notification_queue):
+        """"""
+        notifications = []
+
+        if notification_queue is not None:
+            while notification_queue._getvalue():
+                notifications.append(notification_queue.popleft())
+
+        return notifications
+
     def get_packet(self):
         """ Get the last data packet and timestamp from the stream. """
         return self.device.get_packet()
@@ -124,7 +143,9 @@ class BaseStream:
         """ Run hook(s) after processing thread(s) finish(es). """
         self.device.run_post_thread_hooks()
 
-    def run_in_thread(self, stop_event=None, status_queue=None):
+    def run_in_thread(
+        self, stop_event=None, status_queue=None, notification_queue=None
+    ):
         """ Main loop for running in a dedicated thread.
 
         Parameters
@@ -134,6 +155,9 @@ class BaseStream:
 
         status_queue: thread safe deque, optional
             A queue for the current status in a multi-threaded setting.
+
+        notification_queue: thread safe deque, optional
+            A queue for incoming notifications in a multi-threaded setting.
 
         Yields
         ------
@@ -152,15 +176,16 @@ class BaseStream:
                     logger.debug("Thread stopped via stop event.")
                     break
 
+                notifications = self._get_notifications(notification_queue)
                 packet = self.get_packet()
 
                 if self.pipeline is not None:
-                    packet = self.pipeline.flush(packet)
+                    packet = self.pipeline.flush(packet, notifications)
 
                 # save timestamp and fps
                 self._process_timestamp(packet.timestamp)
 
-                # TODO yield self.get_status()
+                # TODO yield self.get_status()?
                 if status_queue is not None:
                     status_queue.append(self.get_status(packet))
 
@@ -179,7 +204,7 @@ class BaseStream:
             Information about the current stream status.
         """
         self.run_pre_thread_hooks()
-        # TODO yield from self.run_in_thread()
+        # TODO yield from self.run_in_thread()?
         self.run_in_thread()
         self.run_post_thread_hooks()
 
