@@ -32,6 +32,7 @@ Recorded odometry data can be loaded the same way as gaze data:
 
 .. doctest::
 
+    >>> import pupil_recording_interface as pri
     >>> pri.load_dataset(pri.TEST_RECORDING, odometry='recording')
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, quaternion_axis: 4, time: 4220)
