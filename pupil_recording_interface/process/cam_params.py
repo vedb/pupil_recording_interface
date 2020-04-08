@@ -1,8 +1,12 @@
 """"""
+import logging
+
 import cv2
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
+
+logger = logging.getLogger(__name__)
 
 
 @process("circle_grid_detector")

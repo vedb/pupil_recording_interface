@@ -1,10 +1,14 @@
 """"""
+import logging
+
 import cv2
 import numpy as np
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.utils import get_constructor_args
+
+logger = logging.getLogger(__name__)
 
 
 @process("video_display", optional=("name",))
@@ -86,6 +90,14 @@ class VideoDisplay(BaseProcess):
 
         return packet
 
+    def show_frame(self, packet):
+        """"""
+        frame = packet.frame
+
+        if frame is not None:
+            cv2.imshow(self.name, frame)
+            cv2.waitKey(1)
+
     def _process_packet(self, packet):
         """ Process a new packet. """
         if self.overlay_pupil and "pupil" in packet:
@@ -97,7 +109,6 @@ class VideoDisplay(BaseProcess):
         if self.overlay_circle_grid and "grid_points" in packet:
             packet = self._add_circle_grid_overlay(packet)
 
-        cv2.imshow(self.name, packet.frame)
-        cv2.waitKey(1)
+        self.show_frame(packet)
 
         return packet

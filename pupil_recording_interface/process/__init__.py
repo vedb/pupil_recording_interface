@@ -1,9 +1,12 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor, Future
+from concurrent.futures import Future
 
 from pupil_recording_interface.base import BaseConfigurable
 from pupil_recording_interface.decorators import process
-from pupil_recording_interface.utils import get_constructor_args
+from pupil_recording_interface.utils import (
+    get_constructor_args,
+    DroppingThreadPoolExecutor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +19,7 @@ class BaseProcess(BaseConfigurable):
         self.block = block
         self.listen_for = listen_for or []
 
-        self._executor = ThreadPoolExecutor()
+        self._executor = DroppingThreadPoolExecutor(maxsize=20)
 
     @classmethod
     def from_config(cls, config, stream_config, device, **kwargs):

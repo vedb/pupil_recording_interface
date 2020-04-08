@@ -199,6 +199,8 @@ class StreamManager(object):
     @classmethod
     def format_status(cls, status_dict, value="fps", max_cols=None):
         """ Format status dictionary to string. """
+        # TODO check if status values are too old
+
         if value == "fps":
             if not any(
                 math.isnan(status[value])

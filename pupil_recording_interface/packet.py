@@ -1,11 +1,12 @@
 """"""
-from copy import deepcopy
+import logging
+from concurrent.futures import Future, TimeoutError
+
+logger = logging.getLogger(__name__)
 
 
 class Packet:
     """ A data packet with a timestamp and content. """
-
-    # TODO add get() method for Future attributes
 
     def __init__(
         self,
@@ -13,54 +14,46 @@ class Packet:
         source_timestamp=None,
         source_timebase="monotonic",
         broadcasts=None,
+        timeout=None,
         **kwargs,
     ):
         """ Constructor. """
         if source_timebase not in ("monotonic", "epoch"):
             raise ValueError(f"Unknown timebase: {source_timebase}")
 
-        # TODO revisit this
-        self._data = {
-            "timestamp": timestamp,
-            "source_timestamp": source_timestamp or timestamp,
-            "source_timebase": source_timebase,
-            "broadcasts": broadcasts or [],
-        }
+        self.timestamp = timestamp
+        self.source_timestamp = source_timestamp or timestamp
+        self.source_timebase = source_timebase
+        self.broadcasts = broadcasts or []
+        self.timeout = timeout
 
-        self._data.update(kwargs)
-
-    def __getattr__(self, item):
-        try:
-            return self._data[item]
-        except KeyError:
-            raise AttributeError
-
-    def __setattr__(self, key, value):
-        if key == "_data":
-            super().__setattr__(key, value)
-        else:
-            self._data[key] = value
-
-    def __setitem__(self, key, value):
-        self._data[key] = value
-
-    def __getitem__(self, item):
-        return self._data[item]
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def __contains__(self, item):
-        return item in self._data
+        return hasattr(self, item)
 
-    def to_dict(self, deep=True):
-        """ Convert to dict. """
-        if deep:
-            return deepcopy(self._data)
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def submit(self, executor, attr, func, *args, **kwargs):
+        """"""
+        setattr(self, attr, executor.submit(func, self, *args, **kwargs))
+
+    def get(self, attr, timeout=None):
+        """"""
+        value = getattr(self, attr)
+        if isinstance(value, Future):
+            try:
+                return value.result(timeout=timeout or self.timeout)
+            except TimeoutError:
+                return None
         else:
-            return self._data.copy()
-
-    def copy(self, deep=True):
-        """ Create a copy of this instance. """
-        return type(self)(**self.to_dict(deep=deep))
+            return value
 
     def get_broadcasts(self):
         """"""
-        return {b: self[b] for b in self.broadcasts}
+        return {
+            broadcast: getattr(self, broadcast)
+            for broadcast in self.broadcasts
+        }
