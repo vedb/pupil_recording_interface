@@ -55,11 +55,13 @@ class BaseConfigurable:
     _config_attrs = {}
     _ignore_args = tuple()  # ignore these positional constructor args
     _additional_args = tuple()  # add these positional constructor args
+    # TODO _additional_kwargs?
     _optional_args = tuple()  # make these positional constructor args optional
 
     @classmethod
     def Config(cls, *args, **kwargs):
         """ Configuration for this class. """
+        # TODO also get superclass kwargs?
         cls_args, cls_kwargs = get_params(cls)
 
         for arg in cls._ignore_args:

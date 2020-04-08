@@ -28,8 +28,8 @@ class BaseStream(BaseConfigurable):
             The device producing the stream.
 
         name: str, optional
-            The name of the stream. If not specified, `device.uid` will be
-            used.
+            The name of the stream. If not specified, `device.device_uid`
+            will be used.
         """
         self.device = device
         # TODO default value for pipeline?
@@ -45,7 +45,7 @@ class BaseStream(BaseConfigurable):
         device = device or BaseDevice.from_config(config)
         return cls(
             device,
-            name=config.name,
+            name=config.name or device.device_uid,
             pipeline=Pipeline.from_config(config, device, folder),
         )
 
@@ -232,8 +232,8 @@ class VideoStream(BaseStream):
             The device producing the stream.
 
         name: str, optional
-            The name of the stream. If not specified, `device.uid` will be
-            used.
+            The name of the stream. If not specified, `device.device_uid`
+            will be used.
 
         color_format: str, default 'bgr24'
             The target color format. Set to 'gray' for eye cameras.
@@ -251,7 +251,7 @@ class VideoStream(BaseStream):
         device = device or BaseDevice.from_config(config)
         return cls(
             device,
-            name=config.name,
+            name=config.name or device.device_uid,
             pipeline=Pipeline.from_config(config, device, folder),
             color_format=config.color_format,
         )

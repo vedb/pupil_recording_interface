@@ -22,8 +22,8 @@ tracking camera by calling :py:func:`OdometryRecorder.run`:
 
 .. doctest::
 
-    >>> import pupil_recording_interface as pri
-    >>> pri.OdometryRecorder('/path/to/recording/folder').run() # doctest:+SKIP
+    >>> from pupil_recording_interface.legacy import OdometryRecorder
+    >>> OdometryRecorder('/path/to/recording/folder').run() # doctest:+SKIP
 
 Loading
 .......

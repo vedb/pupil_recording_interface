@@ -14,13 +14,12 @@ from .stream import VideoStream, OdometryStream
 from .manager import StreamManager
 
 from .pipeline import Pipeline
-from .process import (
-    VideoDisplay,
-    VideoRecorder,
-    OdometryRecorder,
-    PupilDetector,
-    GazeMapper,
-)
+
+from .process.recorder import VideoRecorder, OdometryRecorder
+from .process.display import VideoDisplay
+from .process.pupil_detector import PupilDetector
+from .process.gaze_mapper import GazeMapper
+from .process.cam_params import CircleGridDetector
 
 from .decorators import device, stream, process
 
@@ -57,6 +56,7 @@ __all__ = [
     "VideoDisplay",
     "PupilDetector",
     "GazeMapper",
+    "CircleGridDetector",
     # Decorators
     "device",
     "stream",

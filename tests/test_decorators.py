@@ -5,12 +5,13 @@ from pupil_recording_interface.device.video import VideoDeviceUVC
 from pupil_recording_interface.device.flir import VideoDeviceFLIR
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.stream import VideoStream, OdometryStream
-from pupil_recording_interface.process import (
+from pupil_recording_interface import (
     VideoDisplay,
     VideoRecorder,
     OdometryRecorder,
     PupilDetector,
     GazeMapper,
+    CircleGridDetector,
 )
 
 
@@ -42,4 +43,5 @@ class TestDecorators:
             "odometry_recorder": OdometryRecorder,
             "pupil_detector": PupilDetector,
             "gaze_mapper": GazeMapper,
+            "circle_grid_detector": CircleGridDetector,
         }

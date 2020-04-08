@@ -4,10 +4,9 @@ import shutil
 import pytest
 
 from pupil_recording_interface import DATA_DIR
-from pupil_recording_interface.legacy.config import VideoConfig
 from pupil_recording_interface.stream import VideoStream
 from pupil_recording_interface.pipeline import Pipeline
-from pupil_recording_interface.process import VideoDisplay
+from pupil_recording_interface.process.display import VideoDisplay
 
 
 @pytest.fixture()
@@ -44,13 +43,23 @@ def info():
 @pytest.fixture()
 def video_config():
     """"""
-    return VideoConfig("uvc", "test_cam", (1280, 720), 30)
+    return VideoStream.Config(
+        "uvc", "test_cam", resolution=(1280, 720), fps=30
+    )
 
 
 @pytest.fixture()
-def pipeline():
+def video_display():
     """"""
-    return Pipeline([VideoDisplay("test")])
+    return VideoDisplay(
+        "test", overlay_pupil=True, overlay_gaze=True, overlay_circle_grid=True
+    )
+
+
+@pytest.fixture()
+def pipeline(video_display):
+    """"""
+    return Pipeline([video_display])
 
 
 @pytest.fixture()
