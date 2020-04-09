@@ -6,10 +6,7 @@ import pupil_recording_interface as pri
 
 if __name__ == "__main__":
 
-    # recording folder
-    folder = "~/recordings/test"
-
-    # camera configurations
+    # stream configurations
     configs = [
         pri.VideoStream.Config(
             device_type="uvc",
@@ -18,9 +15,8 @@ if __name__ == "__main__":
             resolution=(1280, 720),
             fps=60,
             pipeline=[
-                pri.VideoRecorder.Config(),
-                pri.VideoDisplay.Config(),
                 pri.GazeMapper.Config(),
+                pri.VideoDisplay.Config(overlay_gaze=True),
             ],
         ),
         pri.VideoStream.Config(
@@ -31,8 +27,7 @@ if __name__ == "__main__":
             fps=120,
             color_format="gray",
             pipeline=[
-                pri.VideoRecorder.Config(),
-                pri.PupilDetector.Config(block=False),
+                pri.PupilDetector.Config(),
                 pri.VideoDisplay.Config(overlay_pupil=True),
             ],
         ),
@@ -44,24 +39,9 @@ if __name__ == "__main__":
             fps=120,
             color_format="gray",
             pipeline=[
-                pri.VideoRecorder.Config(),
-                pri.PupilDetector.Config(block=False),
+                pri.PupilDetector.Config(),
                 pri.VideoDisplay.Config(overlay_pupil=True),
             ],
-        ),
-        pri.VideoStream.Config(
-            device_type="t265",
-            device_uid="t265",
-            resolution=(1696, 800),
-            fps=30,
-            color_format="gray",
-            pipeline=[pri.VideoDisplay.Config(), pri.VideoRecorder.Config()],
-        ),
-        pri.OdometryStream.Config(
-            device_type="t265",
-            device_uid="t265",
-            name="odometry",
-            pipeline=[pri.OdometryRecorder.Config()],
         ),
     ]
 
@@ -71,12 +51,10 @@ if __name__ == "__main__":
     )
 
     # start stream
-    manager = pri.StreamManager(configs, folder, policy="overwrite")
+    manager = pri.StreamManager(configs)
 
     for status in manager.run():
-        status_str = manager.format_status(
-            status, value="pupil_confidence", max_cols=72
-        )
+        status_str = manager.format_status(status, value="fps", max_cols=72)
         if status_str is not None:
             print("\r" + status_str, end="")
 

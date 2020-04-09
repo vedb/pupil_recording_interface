@@ -113,13 +113,14 @@ class VideoRecorder(BaseRecorder):
 
         return cls(**cls_kwargs)
 
-    def write(self, frame):
+    def write(self, packet):
         """ Write data to disk. """
-        self.encoder.write(frame)
+        self.encoder.write(packet["frame"])
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
-        self.write(packet.frame)
+        self.call(self.write, packet, block=block)
+
         self._timestamps.append(packet.timestamp)
 
         return packet
@@ -155,13 +156,13 @@ class OdometryRecorder(BaseRecorder):
             f"Started odometry recorder, recording to {self.filename}"
         )
 
-    def write(self, data):
+    def write(self, packet):
         """ Write data to disk. """
-        self.writer.append(data)
+        self.writer.append(packet["odometry"])
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
-        self.write(packet.odometry)
+        self.call(self.write, packet, block=block)
 
         return packet
 
