@@ -69,7 +69,7 @@ class TestVideoDisplay:
         display_packet.gaze_points = []
         video_display._add_gaze_overlay(display_packet)
 
-        # no gaze points
+        # one gaze point
         display_packet.gaze_points = [(0.5, 0.5)]
         video_display._add_gaze_overlay(display_packet)
 
@@ -77,3 +77,11 @@ class TestVideoDisplay:
         """"""
         frame = video_display._add_circle_grid_overlay(display_packet)
         assert frame.ndim == 3
+
+        # multiple grids
+        display_packet.grid_points = [display_packet.grid_points] * 2
+        video_display._add_circle_grid_overlay(display_packet)
+
+        # no grid
+        display_packet.grid_points = None
+        video_display._add_circle_grid_overlay(display_packet)

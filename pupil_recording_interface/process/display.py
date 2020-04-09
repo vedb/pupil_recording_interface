@@ -105,12 +105,17 @@ class VideoDisplay(BaseProcess):
         if frame.ndim == 2:
             frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
 
-        calib_bounds = cv2.convexHull(grid_points).astype(np.int32)
+        if isinstance(grid_points, list):
+            calib_bounds = [
+                cv2.convexHull(gp).astype(np.int32) for gp in grid_points
+            ]
+        else:
+            calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
 
         # TODO make constructor arguments
         color = (0, 0, 255)
 
-        cv2.polylines(frame, [calib_bounds], True, color)
+        cv2.polylines(frame, calib_bounds, True, color)
 
         return frame
 

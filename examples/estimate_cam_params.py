@@ -14,6 +14,7 @@ if __name__ == "__main__":
             name="world",
             resolution=(1280, 720),
             fps=30,
+            color_format="gray",
             pipeline=[
                 pri.CircleGridDetector.Config(),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
@@ -27,7 +28,7 @@ if __name__ == "__main__":
             fps=30,
             color_format="gray",
             pipeline=[
-                pri.CircleGridDetector.Config(),
+                pri.CircleGridDetector.Config(stereo=True),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
             ],
         ),
