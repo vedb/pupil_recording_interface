@@ -65,6 +65,15 @@ class BaseProcess(BaseConfigurable):
 
     def process_notifications(self, notifications):
         """ Process new notifications. """
+        if self.block:
+            return self._process_notifications(notifications, block=True)
+        else:
+            return self._executor.submit(
+                self._process_notifications, notifications, block=True
+            )
+
+    def _process_notifications(self, notifications, block=None):
+        """ Process new notifications. """
 
     def process_packet(self, packet):
         """ Process a new packet. """
