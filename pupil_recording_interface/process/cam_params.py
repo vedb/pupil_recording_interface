@@ -57,6 +57,7 @@ class CircleGridDetector(BaseProcess):
         """ Process a new packet. """
         packet.grid_points = self.call(self.detect_grid, packet, block=block)
 
+        # TODO maybe don't broadcast on every single packet
         packet.broadcasts.append("grid_points")
 
         return packet

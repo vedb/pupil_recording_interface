@@ -61,6 +61,13 @@ class StreamManager(object):
         self._stop_event = None
         self._status = {}
 
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
     @classmethod
     def _init_folder(cls, folder, policy):
         """"""

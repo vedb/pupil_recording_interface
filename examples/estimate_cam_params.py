@@ -41,18 +41,16 @@ if __name__ == "__main__":
     )
 
     # start stream
-    manager = pri.StreamManager(configs)
-    manager.start()
-    for status in manager.spin():
-        status_str = manager.format_status(status, value="fps")
-        if status_str is not None:
-            response = input(
-                "Press enter to capture a pattern or type 's' to stop: "
-            )
-            if response == "s":
-                manager.stop()
-                break
-            else:
-                manager.send_notification({"acquire_pattern": True})
+    with pri.StreamManager(configs) as manager:
+        for status in manager.spin():
+            status_str = manager.format_status(status, value="fps")
+            if status_str is not None:
+                response = input(
+                    "Press enter to capture a pattern or type 's' to stop: "
+                )
+                if response == "s":
+                    break
+                else:
+                    manager.send_notification({"acquire_pattern": True})
 
     print("\nStopped")
