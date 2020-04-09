@@ -19,7 +19,8 @@ class BaseProcess(BaseConfigurable):
         self.block = block
         self.listen_for = listen_for or []
 
-        self._executor = DroppingThreadPoolExecutor(maxsize=10)
+        self._packet_executor = DroppingThreadPoolExecutor(maxsize=10)
+        self._notification_executor = DroppingThreadPoolExecutor(maxsize=10)
 
     @classmethod
     def from_config(cls, config, stream_config, device, **kwargs):
@@ -47,7 +48,8 @@ class BaseProcess(BaseConfigurable):
 
     def process(self, packet, notifications):
         """ Process new data. """
-        self.process_notifications(notifications)
+        if len(notifications) > 0:
+            self.process_notifications(notifications)
 
         return self.process_packet(packet)
 
@@ -59,7 +61,7 @@ class BaseProcess(BaseConfigurable):
         if block:
             return fn(*args, **kwargs)
         else:
-            return self._executor.submit(
+            return self._packet_executor.submit(
                 fn, *args, return_if_full=return_if_full, **kwargs
             )
 
@@ -68,7 +70,7 @@ class BaseProcess(BaseConfigurable):
         if self.block:
             return self._process_notifications(notifications, block=True)
         else:
-            return self._executor.submit(
+            return self._notification_executor.submit(
                 self._process_notifications, notifications, block=True
             )
 
@@ -84,7 +86,7 @@ class BaseProcess(BaseConfigurable):
         if self.block:
             return self._process_packet(packet, block=True)
         else:
-            return self._executor.submit(
+            return self._packet_executor.submit(
                 self._process_packet, packet, block=True
             )
 

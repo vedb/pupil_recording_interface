@@ -90,8 +90,8 @@ class BaseStream(BaseConfigurable):
         if packet is not None:
             status["timestamp"] = packet.timestamp
             # TODO should this go into a dedicated "broadcasts" entry?
-            for k, v in packet.get_broadcasts().items():
-                status[k] = v
+            for key, value in packet.get_broadcasts().items():
+                status[key] = value
 
         return status
 
@@ -118,13 +118,21 @@ class BaseStream(BaseConfigurable):
             self.pipeline.start()
 
     @classmethod
-    def _get_notifications(cls, notification_queue):
+    def _get_notifications(
+        cls, notification_queue, priority_queue, max_len=20
+    ):
         """"""
         notifications = []
 
+        if priority_queue is not None:
+            while priority_queue._getvalue():
+                notifications.append(priority_queue.popleft())
+
+        counter = 0
         if notification_queue is not None:
-            while notification_queue._getvalue():
+            while notification_queue._getvalue() and counter < max_len:
                 notifications.append(notification_queue.popleft())
+                counter += 1
 
         return notifications
 
@@ -145,7 +153,11 @@ class BaseStream(BaseConfigurable):
         self.device.run_post_thread_hooks()
 
     def run_in_thread(
-        self, stop_event=None, status_queue=None, notification_queue=None
+        self,
+        stop_event=None,
+        status_queue=None,
+        notification_queue=None,
+        priority_queue=None,
     ):
         """ Main loop for running in a dedicated thread.
 
@@ -177,7 +189,10 @@ class BaseStream(BaseConfigurable):
                     logger.debug("Thread stopped via stop event.")
                     break
 
-                notifications = self._get_notifications(notification_queue)
+                # TODO configure max number of notifications
+                notifications = self._get_notifications(
+                    notification_queue, priority_queue
+                )
                 packet = self.get_packet()
 
                 if self.pipeline is not None:

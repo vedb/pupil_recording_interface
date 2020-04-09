@@ -19,7 +19,7 @@ from .process.recorder import VideoRecorder, OdometryRecorder
 from .process.display import VideoDisplay
 from .process.pupil_detector import PupilDetector
 from .process.gaze_mapper import GazeMapper
-from .process.cam_params import CircleGridDetector
+from .process.cam_params import CircleGridDetector, CamParamEstimator
 
 from .decorators import device, stream, process
 
@@ -57,6 +57,7 @@ __all__ = [
     "PupilDetector",
     "GazeMapper",
     "CircleGridDetector",
+    "CamParamEstimator",
     # Decorators
     "device",
     "stream",

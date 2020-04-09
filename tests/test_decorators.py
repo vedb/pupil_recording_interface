@@ -12,6 +12,7 @@ from pupil_recording_interface import (
     PupilDetector,
     GazeMapper,
     CircleGridDetector,
+    CamParamEstimator,
 )
 
 
@@ -44,4 +45,5 @@ class TestDecorators:
             "pupil_detector": PupilDetector,
             "gaze_mapper": GazeMapper,
             "circle_grid_detector": CircleGridDetector,
+            "cam_param_estimator": CamParamEstimator,
         }

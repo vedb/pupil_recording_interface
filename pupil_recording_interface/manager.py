@@ -57,6 +57,7 @@ class StreamManager(object):
         self._processes = {}
         self._status_queues = {}
         self._notification_queues = {}
+        self._priority_queues = {}
         self._stop_event = None
         self._status = {}
 
@@ -131,6 +132,10 @@ class StreamManager(object):
             stream_name: multiprocessing_deque(maxlen=max_queue_size)
             for stream_name in streams.keys()
         }
+        priority_queues = {
+            stream_name: multiprocessing_deque()
+            for stream_name in streams.keys()
+        }
         processes = {
             stream_name: mp.Process(
                 target=stream.run_in_thread,
@@ -138,12 +143,19 @@ class StreamManager(object):
                     stop_event,
                     status_queues[stream_name],
                     notification_queues[stream_name],
+                    priority_queues[stream_name],
                 ),
             )
             for stream_name, stream in streams.items()
         }
 
-        return processes, status_queues, notification_queues, stop_event
+        return (
+            processes,
+            status_queues,
+            notification_queues,
+            priority_queues,
+            stop_event,
+        )
 
     @classmethod
     def _start_processes(cls, processes):
@@ -192,9 +204,14 @@ class StreamManager(object):
     def notify_streams(self, statuses):
         """ Notify streams of status updates they are listening for. """
         for name, stream in self.streams.items():
-            self._notification_queues[name].append(
-                self._get_notifications(statuses, stream)
-            )
+            notifications = self._get_notifications(statuses, stream)
+            if len(notifications) > 0:
+                self._notification_queues[name].append(notifications)
+
+    def send_notification(self, notification):
+        """ Send a notification over the priority queues. """
+        for name, stream in self.streams.items():
+            self._priority_queues[name].append(notification)
 
     @classmethod
     def format_status(cls, status_dict, value="fps", max_cols=None):
@@ -282,7 +299,9 @@ class StreamManager(object):
         (
             self._processes,
             self._status_queues,
+            # TODO maybe rename in message_ and notification_queues?
             self._notification_queues,
+            self._priority_queues,
             self._stop_event,
         ) = self._init_processes(self.streams, self._max_queue_size)
         self._start_processes(self._processes)

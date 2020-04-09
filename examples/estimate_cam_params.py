@@ -17,6 +17,7 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 pri.CircleGridDetector.Config(),
+                pri.CamParamEstimator.Config(streams=("world", "t265")),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
             ],
         ),
@@ -41,10 +42,17 @@ if __name__ == "__main__":
 
     # start stream
     manager = pri.StreamManager(configs)
-
-    for status in manager.run():
-        status_str = manager.format_status(status, value="fps", max_cols=72)
+    manager.start()
+    for status in manager.spin():
+        status_str = manager.format_status(status, value="fps")
         if status_str is not None:
-            print("\r" + status_str, end="")
+            response = input(
+                "Press enter to capture a pattern or type 's' to stop: "
+            )
+            if response == "s":
+                manager.stop()
+                break
+            else:
+                manager.send_notification({"acquire_pattern": True})
 
     print("\nStopped")
