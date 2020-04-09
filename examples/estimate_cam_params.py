@@ -22,6 +22,7 @@ if __name__ == "__main__":
         pri.VideoStream.Config(
             device_type="t265",
             device_uid="t265",
+            name="t265",
             resolution=(1696, 800),
             fps=30,
             color_format="gray",

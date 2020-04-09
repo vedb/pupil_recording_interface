@@ -24,6 +24,7 @@ class RealSenseDeviceT265(BaseDevice):
         fps=None,
         video=False,
         odometry=False,
+        queue_size=1,
     ):
         """ Constructor.
 
@@ -45,6 +46,11 @@ class RealSenseDeviceT265(BaseDevice):
 
         odometry: bool, default False
             If True, activate the odometry stream.
+
+        queue_size: int, default 1
+            Size of the video and odometry queues. If not None, frames will
+            be dropped if the other ends of the queues cannot keep up with
+            the device frame rates.
         """
         BaseDevice.__init__(self, device_uid)
 
@@ -55,8 +61,10 @@ class RealSenseDeviceT265(BaseDevice):
         self.fps = fps
 
         self.pipeline = None
-        self.video_queue = mp.Queue() if self.video else None
-        self.odometry_queue = mp.Queue() if self.odometry else None
+        self.video_queue = mp.Queue(maxsize=queue_size) if self.video else None
+        self.odometry_queue = (
+            mp.Queue(maxsize=queue_size) if self.odometry else None
+        )
 
     @classmethod
     def _from_config(cls, config, **kwargs):
@@ -106,7 +114,10 @@ class RealSenseDeviceT265(BaseDevice):
     def _frame_callback(self, rs_frame):
         """ Callback for new RealSense frames. """
         if rs_frame.is_frameset() and self.video_queue is not None:
-            self.video_queue.put(self._get_video_frame(rs_frame, self.video))
+            if not self.video_queue.full():
+                self.video_queue.put(
+                    self._get_video_frame(rs_frame, self.video)
+                )
         elif rs_frame.is_pose_frame() and self.odometry_queue is not None:
             self.odometry_queue.put(self._get_odometry(rs_frame))
 
