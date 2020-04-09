@@ -73,8 +73,6 @@ def multiprocessing_deque(maxlen=None):
 class DroppingThreadPoolExecutor(ThreadPoolExecutor):
     """"""
 
-    DROPPED = None
-
     def __init__(self, maxsize=None, *args, **kwargs):
         """"""
         super().__init__(*args, **kwargs)
@@ -88,9 +86,9 @@ class DroppingThreadPoolExecutor(ThreadPoolExecutor):
         """"""
         return self._work_queue.full()
 
-    def submit(self, fn, *args, **kwargs):
+    def submit(self, fn, *args, return_if_full=None, **kwargs):
         """"""
         if self.full():
-            return self.DROPPED
+            return return_if_full
         else:
             return super().submit(fn, *args, **kwargs)

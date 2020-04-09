@@ -10,6 +10,7 @@ def display_packet():
     return Packet(
         0.0,
         frame=np.zeros((1280, 720), dtype=np.uint8),
+        display_frame=np.zeros((1280, 720), dtype=np.uint8),
         pupil={
             "ellipse": {
                 "center": (0.0, 0.0),
@@ -56,15 +57,23 @@ class TestOdometryRecorder:
 class TestVideoDisplay:
     def test_add_pupil_overlay(self, video_display, display_packet):
         """"""
-        packet = video_display._add_pupil_overlay(display_packet)
-        assert packet.frame.ndim == 3
+        frame = video_display._add_pupil_overlay(display_packet)
+        assert frame.ndim == 3
 
     def test_add_gaze_overlay(self, video_display, display_packet):
         """"""
-        packet = video_display._add_gaze_overlay(display_packet)
-        assert packet.frame.ndim == 3
+        frame = video_display._add_gaze_overlay(display_packet)
+        assert frame.ndim == 3
+
+        # no gaze points
+        display_packet.gaze_points = []
+        video_display._add_gaze_overlay(display_packet)
+
+        # no gaze points
+        display_packet.gaze_points = [(0.5, 0.5)]
+        video_display._add_gaze_overlay(display_packet)
 
     def test_add_circle_grid_overlay(self, video_display, display_packet):
         """"""
-        packet = video_display._add_circle_grid_overlay(display_packet)
-        assert packet.frame.ndim == 3
+        frame = video_display._add_circle_grid_overlay(display_packet)
+        assert frame.ndim == 3

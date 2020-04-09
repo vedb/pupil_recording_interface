@@ -117,7 +117,7 @@ class VideoRecorder(BaseRecorder):
         """ Write data to disk. """
         self.encoder.write(frame)
 
-    def _process_packet(self, packet):
+    def _process_packet(self, packet, block=None):
         """ Process a new packet. """
         self.write(packet.frame)
         self._timestamps.append(packet.timestamp)
@@ -159,7 +159,7 @@ class OdometryRecorder(BaseRecorder):
         """ Write data to disk. """
         self.writer.append(data)
 
-    def _process_packet(self, packet):
+    def _process_packet(self, packet, block=None):
         """ Process a new packet. """
         self.write(packet.odometry)
 

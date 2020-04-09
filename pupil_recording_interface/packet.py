@@ -1,6 +1,6 @@
 """"""
 import logging
-from concurrent.futures import Future, TimeoutError
+from concurrent.futures import Future
 
 logger = logging.getLogger(__name__)
 
@@ -34,26 +34,31 @@ class Packet:
         return hasattr(self, item)
 
     def __getitem__(self, item):
-        return getattr(self, item)
-
-    def submit(self, executor, attr, func, *args, **kwargs):
-        """"""
-        setattr(self, attr, executor.submit(func, self, *args, **kwargs))
+        return self.get(item)
 
     def get(self, attr, timeout=None):
-        """"""
+        """
+
+        Parameters
+        ----------
+        attr
+        timeout
+
+        Returns
+        -------
+
+        Raises
+        ------
+
+        """
         value = getattr(self, attr)
         if isinstance(value, Future):
-            try:
-                return value.result(timeout=timeout or self.timeout)
-            except TimeoutError:
-                return None
+            if timeout is None:
+                timeout = self.timeout
+            return value.result(timeout=timeout)
         else:
             return value
 
     def get_broadcasts(self):
         """"""
-        return {
-            broadcast: getattr(self, broadcast)
-            for broadcast in self.broadcasts
-        }
+        return {broadcast: self[broadcast] for broadcast in self.broadcasts}

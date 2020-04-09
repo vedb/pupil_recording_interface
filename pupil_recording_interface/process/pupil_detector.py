@@ -6,7 +6,7 @@ from pupil_recording_interface.process import BaseProcess
 class PupilDetector(BaseProcess):
     """ Pupil detector for eye video streams. """
 
-    def __init__(self, block=True, **kwargs):
+    def __init__(self, block=False, **kwargs):
         """ Constructor. """
         from pupil_detectors import Detector2D
 
@@ -14,8 +14,14 @@ class PupilDetector(BaseProcess):
 
         super().__init__(block=block, **kwargs)
 
-    def _process_packet(self, packet):
+    def detect_pupil(self, packet):
+        """"""
+        return self.detector.detect(packet["frame"])
+
+    def _process_packet(self, packet, block=None):
         """ Process a new packet. """
-        packet.pupil = self.detector.detect(packet.frame)
+        packet.pupil = self.call(self.detect_pupil, packet, block=block)
+
         packet.broadcasts.append("pupil")
+
         return packet

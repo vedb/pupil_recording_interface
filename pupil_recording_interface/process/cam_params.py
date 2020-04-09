@@ -19,13 +19,21 @@ class CircleGridDetector(BaseProcess):
 
         super().__init__(block=block, **kwargs)
 
-    def _process_packet(self, packet):
-        """ Process a new packet. """
+    def detect_grid(self, packet):
+        """"""
+        frame = packet["frame"]
+
         status, grid_points = cv2.findCirclesGrid(
-            packet.frame, self.grid_shape, flags=cv2.CALIB_CB_ASYMMETRIC_GRID,
+            frame, self.grid_shape, flags=cv2.CALIB_CB_ASYMMETRIC_GRID,
         )
 
         if status:
-            packet.grid_points = grid_points
+            return grid_points
+        else:
+            return None
+
+    def _process_packet(self, packet, block=None):
+        """ Process a new packet. """
+        packet.grid_points = self.call(self.detect_grid, packet, block=block)
 
         return packet

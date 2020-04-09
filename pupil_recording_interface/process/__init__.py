@@ -19,7 +19,7 @@ class BaseProcess(BaseConfigurable):
         self.block = block
         self.listen_for = listen_for or []
 
-        self._executor = DroppingThreadPoolExecutor(maxsize=20)
+        self._executor = DroppingThreadPoolExecutor(maxsize=10)
 
     @classmethod
     def from_config(cls, config, stream_config, device, **kwargs):
@@ -51,25 +51,35 @@ class BaseProcess(BaseConfigurable):
 
         return self.process_packet(packet)
 
+    def call(self, fn, *args, block=None, return_if_full=None, **kwargs):
+        """ Call a function, either blocking or non-blocking. """
+        if block is None:
+            block = self.block
+
+        if block:
+            return fn(*args, **kwargs)
+        else:
+            return self._executor.submit(
+                fn, *args, return_if_full=return_if_full, **kwargs
+            )
+
     def process_notifications(self, notifications):
         """ Process new notifications. """
 
     def process_packet(self, packet):
         """ Process a new packet. """
-        # TODO Packet class should support Future attributes that each
-        #  process resolves if it needs them
+        # TODO use per-attribute future mechanism of Packet
         if isinstance(packet, Future):
-            # TODO timeout?
             packet = packet.result()
 
         if self.block:
-            return self._process_packet(packet)
+            return self._process_packet(packet, block=True)
         else:
-            # TODO this still doesn't help if the processing takes longer
-            #  than the packet interval
-            return self._executor.submit(self._process_packet, packet)
+            return self._executor.submit(
+                self._process_packet, packet, block=True
+            )
 
-    def _process_packet(self, packet):
+    def _process_packet(self, packet, block=None):
         """ Process a new packet. """
         return packet
 
