@@ -21,6 +21,7 @@ class VideoDisplay(BaseProcess):
         block=True,
         overlay_pupil=False,
         overlay_gaze=False,
+        overlay_circle_marker=False,
         overlay_circle_grid=False,
         **kwargs,
     ):
@@ -28,6 +29,7 @@ class VideoDisplay(BaseProcess):
         self.name = name
         self.overlay_pupil = overlay_pupil
         self.overlay_gaze = overlay_gaze
+        self.overlay_circle_marker = overlay_circle_marker
         self.overlay_circle_grid = overlay_circle_grid
 
         super().__init__(block=block, **kwargs)
@@ -94,6 +96,35 @@ class VideoDisplay(BaseProcess):
 
         return frame
 
+    def _add_circle_marker_overlay(self, packet):
+        """ Add gaze overlay onto frame. """
+        circle_markers = packet["circle_markers"]
+        if circle_markers is None:
+            # Return the attribute to avoid unnecessary waiting
+            return packet.display_frame
+
+        if len(circle_markers) == 0:
+            # Return the attribute to avoid unnecessary waiting
+            return packet.display_frame
+        else:
+            # TODO get the largest marker
+            marker_position = (
+                int(circle_markers[0]["img_pos"][0]),
+                int(circle_markers[0]["img_pos"][1]),
+            )
+
+        frame = packet["display_frame"]
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
+
+        # TODO make constructor arguments
+        color = (255, 0, 0)
+        radius = 20
+
+        cv2.circle(frame, marker_position, radius, color)
+
+        return frame
+
     def _add_circle_grid_overlay(self, packet):
         """ Add circle grid overlay onto frame. """
         grid_points = packet["grid_points"]
@@ -113,7 +144,7 @@ class VideoDisplay(BaseProcess):
             calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
 
         # TODO make constructor arguments
-        color = (0, 0, 255)
+        color = (0, 255, 0)
 
         cv2.polylines(frame, calib_bounds, True, color)
 
@@ -142,6 +173,14 @@ class VideoDisplay(BaseProcess):
         if self.overlay_gaze and "gaze_points" in packet:
             packet.display_frame = self.call(
                 self._add_gaze_overlay,
+                packet,
+                block=block,
+                return_if_full=packet.display_frame,
+            )
+
+        if self.overlay_circle_marker and "circle_markers" in packet:
+            packet.display_frame = self.call(
+                self._add_circle_marker_overlay,
                 packet,
                 block=block,
                 return_if_full=packet.display_frame,

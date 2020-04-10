@@ -424,5 +424,5 @@ class StreamManager(object):
     def run(self):
         """ Main loop (blocking). """
         self.start()
-        self.spin(mode="block")
+        self.spin(block=True)
         self.stop()

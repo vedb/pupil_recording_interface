@@ -22,6 +22,35 @@ def display_packet():
             "confidence": 0.0,
         },
         gaze_points=[(0.5, 0.5), (0.6, 0.6)],
+        circle_markers=[
+            {
+                "ellipses": [
+                    (
+                        (399.16404724121094, 215.4773941040039),
+                        (7.052967071533203, 8.333015441894531),
+                        43.05573272705078,
+                    ),
+                    (
+                        (399.69960021972656, 215.33668518066406),
+                        (53.05698776245117, 67.6202621459961),
+                        8.497730255126953,
+                    ),
+                    (
+                        (400.78492736816406, 215.5298080444336),
+                        (109.97621154785156, 137.57115173339844),
+                        8.513727188110352,
+                    ),
+                    (
+                        (402.8581237792969, 215.88968658447266),
+                        (170.45883178710938, 213.98965454101562),
+                        8.824980735778809,
+                    ),
+                ],
+                "img_pos": (399.16404724121094, 215.4773941040039),
+                "norm_pos": (0.31184691190719604, 0.7007258415222168),
+                "marker_type": "Ref",
+            }
+        ],
         grid_points=np.array(
             [
                 [[100.0, 100.0]],
@@ -85,3 +114,8 @@ class TestVideoDisplay:
         # no grid
         display_packet.grid_points = None
         video_display._add_circle_grid_overlay(display_packet)
+
+    def test_add_circle_marker_overlay(self, video_display, display_packet):
+        """"""
+        frame = video_display._add_circle_marker_overlay(display_packet)
+        assert frame.ndim == 3
