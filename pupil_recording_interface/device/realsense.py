@@ -71,8 +71,11 @@ class RealSenseDeviceT265(BaseDevice):
         """ Per-class implementation of from_config. """
         cls_kwargs = get_constructor_args(cls, config, **kwargs)
 
-        # TODO this is a little hacky, maybe rename the parameter to "side"
-        cls_kwargs["video"] = config.side
+        if config.stream_type == "video":
+            # TODO this is a little hacky, maybe rename the parameter to "side"
+            cls_kwargs["video"] = config.side
+        elif config.stream_type == "odometry":
+            cls_kwargs["odometry"] = True
 
         return cls(**cls_kwargs)
 
@@ -87,7 +90,7 @@ class RealSenseDeviceT265(BaseDevice):
         # set parameters for video and odometry devices
         for config in config_list:
             if config.stream_type == "video":
-                cls_kwargs["video"] = getattr(config, "side")
+                cls_kwargs["video"] = config.side
                 cls_kwargs.update(
                     {k: getattr(config, k) for k in ("resolution", "fps")}
                 )
@@ -215,12 +218,14 @@ class RealSenseDeviceT265(BaseDevice):
     def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         # TODO timestamp = uvc.get_time_monotonic()?
+        # TODO timeout
         return self.video_queue.get()
 
     def _get_odometry_and_timestamp(self):
         """ Get a frame and its associated timestamp. """
         odometry = self.odometry_queue.get()
         # TODO timestamp = uvc.get_time_monotonic()?
+        # TODO timeout
         return odometry, odometry["timestamp"]
 
     # TODO
@@ -243,7 +248,8 @@ class RealSenseDeviceT265(BaseDevice):
         """ Run hook(s) after the recording thread finishes. """
         if self.pipeline is not None:
             logger.debug(
-                f"Stopping T265 pipeline for device: {self.device_uid}."
+                f"Stopping T265 pipeline for device: {self.device_uid}"
             )
             self.pipeline.stop()
+            logger.debug(f"Pipeline stopped")
             self.pipeline = None
