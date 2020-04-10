@@ -172,10 +172,9 @@ class BaseStream(BaseConfigurable):
         notification_queue: thread safe deque, optional
             A queue for incoming notifications in a multi-threaded setting.
 
-        Yields
-        ------
-        status: dict
-            Information about the current stream status.
+        priority_queue: thread safe deque, optional
+            A queue for incoming priority notifications in a multi-threaded
+            setting.
         """
         self.start()
 
@@ -212,13 +211,7 @@ class BaseStream(BaseConfigurable):
         self.stop()
 
     def run(self):
-        """ Main loop.
-
-        Yields
-        ------
-        status: dict
-            Information about the current stream status.
-        """
+        """ Main loop. """
         self.run_pre_thread_hooks()
         # TODO yield from self.run_in_thread()?
         self.run_in_thread()

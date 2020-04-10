@@ -65,7 +65,7 @@ class StreamManager(object):
 
     def __enter__(self):
         self.start()
-        self.spin(mode="thread")
+        self.spin(block=False)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -359,8 +359,14 @@ class StreamManager(object):
 
         logger.debug("Stopped spinning")
 
-    def _spin_generator(self):
-        """ Generator implementation of spin. """
+    def spin_generator(self):
+        """ Main worker loop of the manager, implemented as a generator.
+
+        Yields
+        ------
+        statuses: dict
+            A mapping from stream names to their current status.
+        """
         while (
             time.time() - self._start_time_monotonic < self.duration
             and not self.stopped
@@ -369,39 +375,28 @@ class StreamManager(object):
             self.notify_streams(statuses)
             yield statuses
 
-    def spin(self, mode="block"):
+    def spin(self, block=True):
         """ Main worker loop of the manager.
 
         Parameters
         ----------
-        mode: str, default "block"
-            If "block", this method will block until the manager is stopped,
-            e.g. by a keyboard interrupt. If "thread", the main loop is
+        block: bool, default False
+            If True, this method will block until the manager is stopped,
+            e.g. by a keyboard interrupt. Otherwise, the main loop is
             dispatched to a separate thread which is returned by this
-            function. If "generator", this function returns a generator that
-            yields the current status for each stream.
+            function.
 
         Returns
         -------
         thread: threading.Thread
-            If `mode="generator"`, the Thread instance that runs the loop.
-
-        Yields
-        ------
-        statuses: dict
-            If `mode="generator"`, a mapping from stream names to current
-            status.
+            If `block=True`, the Thread instance that runs the loop.
         """
-        if mode == "block":
+        if block:
             return self._spin_blocking()
-        elif mode == "thread":
+        else:
             self._thread = Thread(target=self._spin_blocking)
             self._thread.start()
             return self._thread
-        elif mode == "generator":
-            return self._spin_generator()
-        else:
-            raise ValueError(f"Unrecognized mode: {mode}")
 
     def stop(self):
         """ Stop streams. """
