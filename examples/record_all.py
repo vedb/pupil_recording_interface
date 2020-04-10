@@ -40,6 +40,7 @@ if __name__ == "__main__":
         pri.VideoStream.Config(
             device_type="t265",
             device_uid="t265",
+            name="t265_video",
             resolution=(1696, 800),
             fps=30,
             color_format="gray",
@@ -58,12 +59,11 @@ if __name__ == "__main__":
         stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
     )
 
-    # start stream
-    manager = pri.StreamManager(configs, folder, policy="overwrite")
-
-    for status in manager.run():
-        status_str = manager.format_status(status, value="fps", max_cols=72)
-        if status_str is not None:
-            print("\r" + status_str, end="")
+    # run manager
+    with pri.StreamManager(configs, folder, policy="overwrite") as manager:
+        while not manager.stopped:
+            if manager.all_streams_running:
+                status = manager.format_status(value="fps", max_cols=72)
+                print("\r" + status, end="")
 
     print("\nStopped")

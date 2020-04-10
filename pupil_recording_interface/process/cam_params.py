@@ -85,6 +85,9 @@ class CamParamEstimator(BaseProcess):
             f"{self.num_patterns}"
         )
 
+        if self._pattern_queue.full():
+            self._estimate_params()
+
     def _estimate_params(self):
         """"""
         logger.debug("Estimating camera parameters")
@@ -112,16 +115,14 @@ class CamParamEstimator(BaseProcess):
                 stream in notification for stream in self.streams
             ):
                 try:
-                    self._add_pattern(
-                        [
-                            notification[stream]["grid_points"]
-                            for stream in self.streams
-                        ]
-                    )
+                    pattern = [
+                        notification[stream]["grid_points"]
+                        for stream in self.streams
+                    ]
                     # TODO with Lock?
                     self._acquire_pattern = False
+                    self._add_pattern(pattern)
                 except KeyError:
                     pass
                 except Full:
-                    self._estimate_params()
                     break

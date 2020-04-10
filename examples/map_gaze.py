@@ -50,12 +50,13 @@ if __name__ == "__main__":
         stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
     )
 
-    # start stream
-    manager = pri.StreamManager(configs)
-
-    for status in manager.run():
-        status_str = manager.format_status(status, value="fps", max_cols=72)
-        if status_str is not None:
-            print("\r" + status_str, end="")
+    # run manager
+    with pri.StreamManager(configs) as manager:
+        while not manager.stopped:
+            if manager.all_streams_running:
+                status = manager.format_status(
+                    value="pupil_confidence", max_cols=72
+                )
+                print("\r" + status, end="")
 
     print("\nStopped")

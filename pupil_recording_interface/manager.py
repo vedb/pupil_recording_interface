@@ -1,6 +1,7 @@
 import json
 import logging
 import math
+from threading import Thread
 import multiprocessing as mp
 import os
 import shutil
@@ -60,12 +61,15 @@ class StreamManager(object):
         self._priority_queues = {}
         self._stop_event = None
         self._status = {}
+        self._thread = None
 
     def __enter__(self):
         self.start()
+        self.spin(mode="thread")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stopped = True
         self.stop()
 
     @classmethod
@@ -182,6 +186,8 @@ class StreamManager(object):
 
     def get_status(self):
         """ Get information about the status of all streams. """
+        # TODO updating self._status should be made thread-safe
+        # TODO timeout for statuses that are too old
         for stream_name, queue in self._status_queues.items():
             if stream_name not in self._status:
                 self._status[stream_name] = self.streams[
@@ -191,6 +197,22 @@ class StreamManager(object):
                 self._status[stream_name] = queue.popleft()
 
         return self._status
+
+    @property
+    def all_streams_running(self):
+        """"""
+        if self.stopped:
+            return False
+
+        for stream in self.streams:
+            if stream not in self._status:
+                return False
+            elif "fps" not in self._status[stream]:
+                return False
+            elif math.isnan(self._status[stream]["fps"]):
+                return False
+
+        return True
 
     @classmethod
     def _get_notifications(cls, statuses, target_stream):
@@ -220,10 +242,11 @@ class StreamManager(object):
         for name, stream in self.streams.items():
             self._priority_queues[name].append(notification)
 
-    @classmethod
-    def format_status(cls, status_dict, value="fps", max_cols=None):
+    def format_status(self, status_dict=None, value="fps", max_cols=None):
         """ Format status dictionary to string. """
         # TODO check if status values are too old
+
+        status_dict = status_dict or self._status
 
         if value == "fps":
             if not any(
@@ -283,7 +306,7 @@ class StreamManager(object):
 
     def _handle_interrupt(self, signal, frame):
         """ Handle keyboard interrupt. """
-        logger.debug("Caught keyboard interrupt")
+        logger.debug(f"{type(self).__name__} caught keyboard interrupt")
         self.stopped = True
 
     def set_interrupt_handler(self):
@@ -326,14 +349,18 @@ class StreamManager(object):
         logger.debug(f"Run start time: {self._start_time}")
         logger.debug(f"Run start time monotonic: {self._start_time_monotonic}")
 
-    def spin(self):
-        """ Poll status queues for new data.
+    def _spin_blocking(self):
+        """ Non-generator implementation of spin. """
+        while (
+            time.time() - self._start_time_monotonic < self.duration
+            and not self.stopped
+        ):
+            self.notify_streams(self.get_status())
 
-        Yields
-        ------
-        status_dict: dict
-            Mapping from stream name to current status.
-        """
+        logger.debug("Stopped spinning")
+
+    def _spin_generator(self):
+        """ Generator implementation of spin. """
         while (
             time.time() - self._start_time_monotonic < self.duration
             and not self.stopped
@@ -342,32 +369,65 @@ class StreamManager(object):
             self.notify_streams(statuses)
             yield statuses
 
+    def spin(self, mode="block"):
+        """ Main worker loop of the manager.
+
+        Parameters
+        ----------
+        mode: str, default "block"
+            If "block", this method will block until the manager is stopped,
+            e.g. by a keyboard interrupt. If "thread", the main loop is
+            dispatched to a separate thread which is returned by this
+            function. If "generator", this function returns a generator that
+            yields the current status for each stream.
+
+        Returns
+        -------
+        thread: threading.Thread
+            If `mode="generator"`, the Thread instance that runs the loop.
+
+        Yields
+        ------
+        statuses: dict
+            If `mode="generator"`, a mapping from stream names to current
+            status.
+        """
+        if mode == "block":
+            return self._spin_blocking()
+        elif mode == "thread":
+            self._thread = Thread(target=self._spin_blocking)
+            self._thread.start()
+            return self._thread
+        elif mode == "generator":
+            return self._spin_generator()
+        else:
+            raise ValueError(f"Unrecognized mode: {mode}")
+
     def stop(self):
         """ Stop streams. """
         run_duration = time.time() - self._start_time
-
-        # stop recording threads
-        self._stop_processes(self._processes, self._stop_event)
-
-        # run hooks that need to be run in the main thread
-        for stream in self.streams.values():
-            stream.run_post_thread_hooks()
 
         # save info.player.json
         if self.folder is not None:
             self.save_info(run_duration)
 
+        # stop recording threads
+        self._stop_processes(self._processes, self._stop_event)
+
+        # if we were spinning in the background, wait for thread to stop
+        if self._thread is not None:
+            self._thread.join()
+            self._thread = None
+
+        # run hooks that need to be run in the main thread
+        for stream in self.streams.values():
+            stream.run_post_thread_hooks()
+
         # log info
         logger.debug(f"Stopped streams after {run_duration:.2f} seconds")
 
     def run(self):
-        """ Main loop.
-
-        Yields
-        ------
-        status_dict: dict
-            Mapping from legacy name to current status.
-        """
+        """ Main loop (blocking). """
         self.start()
-        yield from self.spin()
+        self.spin(mode="block")
         self.stop()

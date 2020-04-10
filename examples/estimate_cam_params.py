@@ -40,11 +40,10 @@ if __name__ == "__main__":
         stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
     )
 
-    # start stream
+    # run manager
     with pri.StreamManager(configs) as manager:
-        for status in manager.spin():
-            status_str = manager.format_status(status, value="fps")
-            if status_str is not None:
+        while not manager.stopped:
+            if manager.all_streams_running:
                 response = input(
                     "Press enter to capture a pattern or type 's' to stop: "
                 )
