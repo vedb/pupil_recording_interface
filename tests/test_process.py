@@ -47,11 +47,13 @@ class TestVideoDisplay:
         assert frame.ndim == 3
 
         # multiple grids
-        packet.grid_points = [packet.grid_points] * 2
+        packet.circle_grid["grid_points"] = [
+            packet.circle_grid["grid_points"]
+        ] * 2
         video_display._add_circle_grid_overlay(packet)
 
         # no grid
-        packet.grid_points = None
+        packet.circle_grid = None
         video_display._add_circle_grid_overlay(packet)
 
     def test_add_circle_marker_overlay(self, video_display, packet):
@@ -67,11 +69,75 @@ class TestCamParamEstimator:
 
         assert resolutions == {
             "world": (1280, 720),
-            "t265_0": (1280, 720),
-            "t265_1": (1280, 720),
+            "t265_left": (848, 800),
+            "t265_right": (848, 800),
         }
 
-        assert patterns.keys() == {"world", "t265_0", "t265_1"}
-        np.testing.assert_equal(patterns["world"], [packet.grid_points])
-        np.testing.assert_equal(patterns["t265_0"], [packet.grid_points])
-        np.testing.assert_equal(patterns["t265_1"], [packet.grid_points])
+        assert patterns.keys() == {"world", "t265_left", "t265_right"}
+        np.testing.assert_equal(
+            patterns["world"], [packet.circle_grid["grid_points"]] * 2
+        )
+        np.testing.assert_equal(
+            patterns["t265_left"], [packet.circle_grid["grid_points"]] * 2
+        )
+        np.testing.assert_equal(
+            patterns["t265_right"], [packet.circle_grid["grid_points"]] * 2
+        )
+
+    def test_calculate_intrinsics(self, cam_param_estimator, patterns):
+        """"""
+        # Pupil world cam
+        cam_mtx, dist_coefs = cam_param_estimator.calculate_intrinsics(
+            (1280, 720), patterns["world"], cam_param_estimator._obj_points
+        )
+        assert cam_mtx.shape == (3, 3)
+        assert dist_coefs.shape == (1, 5)
+
+        # T265
+        cam_mtx, dist_coefs = cam_param_estimator.calculate_intrinsics(
+            (848, 800),
+            patterns["t265_left"],
+            cam_param_estimator._obj_points,
+            dist_mode="Fisheye",
+        )
+        assert cam_mtx.shape == (3, 3)
+        assert dist_coefs.shape == (4, 1)
+
+        cam_mtx, dist_coefs = cam_param_estimator.calculate_intrinsics(
+            (848, 800),
+            patterns["t265_right"],
+            cam_param_estimator._obj_points,
+            dist_mode="Fisheye",
+        )
+        assert cam_mtx.shape == (3, 3)
+        assert dist_coefs.shape == (4, 1)
+
+    def test_calculate_extrinsics(self, cam_param_estimator, patterns):
+        """"""
+        cam_mtx_a, dist_coefs_a = cam_param_estimator.calculate_intrinsics(
+            (848, 800),
+            patterns["t265_left"],
+            cam_param_estimator._obj_points,
+            dist_mode="Fisheye",
+        )
+
+        cam_mtx_b, dist_coefs_b = cam_param_estimator.calculate_intrinsics(
+            (848, 800),
+            patterns["t265_right"],
+            cam_param_estimator._obj_points,
+            dist_mode="Fisheye",
+        )
+
+        R, T = cam_param_estimator.calculate_extrinsics(
+            patterns["t265_left"],
+            patterns["t265_right"],
+            cam_param_estimator._obj_points,
+            cam_mtx_a,
+            dist_coefs_a,
+            cam_mtx_b,
+            dist_coefs_b,
+            dist_mode="Fisheye",
+        )
+
+        np.testing.assert_allclose(R, np.eye(3), atol=0.02, rtol=1e-4)
+        assert T.shape == (3, 1)

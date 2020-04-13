@@ -17,7 +17,9 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 pri.CircleGridDetector.Config(),
-                pri.CamParamEstimator.Config(streams=("world", "t265")),
+                pri.CamParamEstimator.Config(
+                    streams=("world", "t265"), num_patterns=5, block=True
+                ),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
             ],
         ),

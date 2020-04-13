@@ -127,10 +127,12 @@ class VideoDisplay(BaseProcess):
 
     def _add_circle_grid_overlay(self, packet):
         """ Add circle grid overlay onto frame. """
-        grid_points = packet["grid_points"]
-        if grid_points is None:
+        circle_grid = packet["circle_grid"]
+        if circle_grid is None:
             # Return the attribute to avoid unnecessary waiting
             return packet.display_frame
+        else:
+            grid_points = circle_grid["grid_points"]
 
         frame = packet["display_frame"]
         if frame.ndim == 2:
@@ -186,7 +188,7 @@ class VideoDisplay(BaseProcess):
                 return_if_full=packet.display_frame,
             )
 
-        if self.overlay_circle_grid and "grid_points" in packet:
+        if self.overlay_circle_grid and "circle_grid" in packet:
             packet.display_frame = self.call(
                 self._add_circle_grid_overlay,
                 packet,
