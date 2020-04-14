@@ -10,6 +10,7 @@ from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process.display import VideoDisplay
 from pupil_recording_interface.process.pupil_detector import PupilDetector
+from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.cam_params import CamParamEstimator
 
 
@@ -93,61 +94,101 @@ def packet():
         0.0,
         frame=np.zeros((1280, 720), dtype=np.uint8),
         display_frame=np.zeros((1280, 720), dtype=np.uint8),
-        pupil={
-            "ellipse": {
-                "center": (0.0, 0.0),
-                "axes": (0.0, 0.0),
-                "angle": -90.0,
-            },
-            "diameter": 0.0,
-            "location": (0.0, 0.0),
-            "norm_pos": (0.0, 0.0),
-            "confidence": 0.0,
-        },
-        gaze_points=[(0.5, 0.5), (0.6, 0.6)],
-        circle_markers=[
-            {
-                "ellipses": [
-                    (
-                        (399.16404724121094, 215.4773941040039),
-                        (7.052967071533203, 8.333015441894531),
-                        43.05573272705078,
-                    ),
-                    (
-                        (399.69960021972656, 215.33668518066406),
-                        (53.05698776245117, 67.6202621459961),
-                        8.497730255126953,
-                    ),
-                    (
-                        (400.78492736816406, 215.5298080444336),
-                        (109.97621154785156, 137.57115173339844),
-                        8.513727188110352,
-                    ),
-                    (
-                        (402.8581237792969, 215.88968658447266),
-                        (170.45883178710938, 213.98965454101562),
-                        8.824980735778809,
-                    ),
-                ],
-                "img_pos": (399.16404724121094, 215.4773941040039),
-                "norm_pos": (0.31184691190719604, 0.7007258415222168),
-                "marker_type": "Ref",
-            }
-        ],
-        circle_grid={
-            "grid_points": np.array(
-                [
-                    [[100.0, 100.0]],
-                    [[100.0, 200.0]],
-                    [[200.0, 100.0]],
-                    [[200.0, 200.0]],
-                ],
-                dtype=np.float32,
-            ),
-            "resolution": (1280, 720),
-            "stereo": False,
-        },
     )
+
+
+@pytest.fixture()
+def pupil_packet(packet):
+    """"""
+    packet.pupil = {
+        "ellipse": {"center": (0.0, 0.0), "axes": (0.0, 0.0), "angle": -90.0},
+        "diameter": 0.0,
+        "location": (0.0, 0.0),
+        "norm_pos": (0.0, 0.0),
+        "confidence": 0.0,
+        "timestamp": packet.timestamp,
+    }
+
+    return packet
+
+
+@pytest.fixture()
+def gaze_packet(pupil_packet):
+    """"""
+    pupil_packet.gaze = [
+        {
+            "topic": "gaze.2d.01.",
+            "norm_pos": (0.5, 0.5),
+            "confidence": 0.0,
+            "timestamp": pupil_packet.timestamp,
+            "base_data": [pupil_packet.pupil, pupil_packet.pupil],
+        },
+        {
+            "topic": "gaze.2d.01.",
+            "norm_pos": (0.6, 0.6),
+            "confidence": 0.0,
+            "timestamp": pupil_packet.timestamp,
+            "base_data": [pupil_packet.pupil, pupil_packet.pupil],
+        },
+    ]
+
+    return pupil_packet
+
+
+@pytest.fixture()
+def circle_marker_packet(packet):
+    """"""
+    packet.circle_markers = [
+        {
+            "ellipses": [
+                (
+                    (399.16404724121094, 215.4773941040039),
+                    (7.052967071533203, 8.333015441894531),
+                    43.05573272705078,
+                ),
+                (
+                    (399.69960021972656, 215.33668518066406),
+                    (53.05698776245117, 67.6202621459961),
+                    8.497730255126953,
+                ),
+                (
+                    (400.78492736816406, 215.5298080444336),
+                    (109.97621154785156, 137.57115173339844),
+                    8.513727188110352,
+                ),
+                (
+                    (402.8581237792969, 215.88968658447266),
+                    (170.45883178710938, 213.98965454101562),
+                    8.824980735778809,
+                ),
+            ],
+            "img_pos": (399.16404724121094, 215.4773941040039),
+            "norm_pos": (0.31184691190719604, 0.7007258415222168),
+            "marker_type": "Ref",
+        }
+    ]
+
+    return packet
+
+
+@pytest.fixture()
+def circle_grid_packet(packet):
+    """"""
+    packet.circle_grid = {
+        "grid_points": np.array(
+            [
+                [[100.0, 100.0]],
+                [[100.0, 200.0]],
+                [[200.0, 100.0]],
+                [[200.0, 200.0]],
+            ],
+            dtype=np.float32,
+        ),
+        "resolution": (1280, 720),
+        "stereo": False,
+    }
+
+    return packet
 
 
 @pytest.fixture()
@@ -667,18 +708,24 @@ def pupil_detector(temp_folder):
 
 
 @pytest.fixture()
-def cam_param_estimator(temp_folder, packet):
+def gaze_mapper(temp_folder):
+    """"""
+    return GazeMapper(folder=temp_folder, record=True)
+
+
+@pytest.fixture()
+def cam_param_estimator(temp_folder, circle_grid_packet):
     """"""
     estimator = CamParamEstimator(["world", "t265"], temp_folder)
 
-    grid_points_right = packet.circle_grid["grid_points"].copy()
+    grid_points_right = circle_grid_packet.circle_grid["grid_points"].copy()
     grid_points_right[:, :, 0] += 848
 
     pattern = {
-        "world": packet.circle_grid,
+        "world": circle_grid_packet.circle_grid,
         "t265": {
             "grid_points": [
-                packet.circle_grid["grid_points"],
+                circle_grid_packet.circle_grid["grid_points"],
                 grid_points_right,
             ],
             "resolution": (1696, 800),

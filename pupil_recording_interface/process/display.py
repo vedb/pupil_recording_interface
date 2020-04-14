@@ -7,6 +7,7 @@ import numpy as np
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.utils import get_constructor_args
+from pupil_recording_interface.externals.methods import denormalize
 
 logger = logging.getLogger(__name__)
 
@@ -69,12 +70,16 @@ class VideoDisplay(BaseProcess):
 
     def _add_gaze_overlay(self, packet):
         """ Add gaze overlay onto frame. """
-        gaze_points = packet["gaze_points"]
-        if gaze_points is None:
+        gaze = packet["gaze"]
+        if gaze is None:
             # Return the attribute to avoid unnecessary waiting
             return packet.display_frame
 
-        # TODO denormalize gaze point
+        frame = packet["display_frame"]
+        gaze_points = [
+            denormalize(g["norm_pos"], frame.shape[1::-1]) for g in gaze
+        ]
+
         if len(gaze_points) == 0:
             # Return the attribute to avoid unnecessary waiting
             return packet.display_frame
@@ -84,7 +89,6 @@ class VideoDisplay(BaseProcess):
             gaze_point = np.mean(gaze_points, axis=0)
             gaze_point = tuple(gaze_point.astype(int))
 
-        frame = packet["display_frame"]
         if frame.ndim == 2:
             frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
 
@@ -172,7 +176,7 @@ class VideoDisplay(BaseProcess):
                 return_if_full=packet.display_frame,
             )
 
-        if self.overlay_gaze and "gaze_points" in packet:
+        if self.overlay_gaze and "gaze" in packet:
             packet.display_frame = self.call(
                 self._add_gaze_overlay,
                 packet,

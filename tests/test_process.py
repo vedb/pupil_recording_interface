@@ -34,50 +34,52 @@ class TestOdometryRecorder:
 
 
 class TestVideoDisplay:
-    def test_add_pupil_overlay(self, video_display, packet):
+    def test_add_pupil_overlay(self, video_display, pupil_packet):
         """"""
-        frame = video_display._add_pupil_overlay(packet)
+        frame = video_display._add_pupil_overlay(pupil_packet)
         assert frame.ndim == 3
 
-    def test_add_gaze_overlay(self, video_display, packet):
+    def test_add_gaze_overlay(self, video_display, gaze_packet):
         """"""
-        frame = video_display._add_gaze_overlay(packet)
+        frame = video_display._add_gaze_overlay(gaze_packet)
         assert frame.ndim == 3
-
-        # no gaze points
-        packet.gaze_points = []
-        video_display._add_gaze_overlay(packet)
 
         # one gaze point
-        packet.gaze_points = [(0.5, 0.5)]
-        video_display._add_gaze_overlay(packet)
+        gaze_packet.gaze = [gaze_packet.gaze[0]]
+        video_display._add_gaze_overlay(gaze_packet)
 
-    def test_add_circle_grid_overlay(self, video_display, packet):
+        # no gaze points
+        gaze_packet.gaze = []
+        video_display._add_gaze_overlay(gaze_packet)
+
+    def test_add_circle_grid_overlay(self, video_display, circle_grid_packet):
         """"""
-        frame = video_display._add_circle_grid_overlay(packet)
+        frame = video_display._add_circle_grid_overlay(circle_grid_packet)
         assert frame.ndim == 3
 
         # multiple grids
-        packet.circle_grid["grid_points"] = [
-            packet.circle_grid["grid_points"]
+        circle_grid_packet.circle_grid["grid_points"] = [
+            circle_grid_packet.circle_grid["grid_points"]
         ] * 2
-        video_display._add_circle_grid_overlay(packet)
+        video_display._add_circle_grid_overlay(circle_grid_packet)
 
         # no grid
-        packet.circle_grid = None
-        video_display._add_circle_grid_overlay(packet)
+        circle_grid_packet.circle_grid = None
+        video_display._add_circle_grid_overlay(circle_grid_packet)
 
-    def test_add_circle_marker_overlay(self, video_display, packet):
+    def test_add_circle_marker_overlay(
+        self, video_display, circle_marker_packet
+    ):
         """"""
-        frame = video_display._add_circle_marker_overlay(packet)
+        frame = video_display._add_circle_marker_overlay(circle_marker_packet)
         assert frame.ndim == 3
 
 
 class TestPupilDetector:
-    def test_record_data(self, pupil_detector, packet):
+    def test_record_data(self, pupil_detector, pupil_packet):
         """"""
-        packet.device_uid = "Pupil Cam1 ID0"
-        pupil_detector.record_data(packet)
+        pupil_packet.device_uid = "Pupil Cam1 ID0"
+        pupil_detector.record_data(pupil_packet)
         pupil_detector.stop()
 
         pldata = [
@@ -99,6 +101,25 @@ class TestPupilDetector:
             "topic": "pupil.0",
             "id": 0,
             "method": "2d c++",
+        }
+
+
+class TestGazeMapper:
+    def test_record_data(self, gaze_mapper, gaze_packet):
+        """"""
+        gaze_mapper.record_data(gaze_packet)
+        gaze_mapper.stop()
+
+        pldata = [
+            dict(d) for d in load_pldata_file(gaze_mapper.folder, "gaze").data
+        ]
+
+        assert pldata[0] == {
+            "topic": "gaze.2d.01.",
+            "norm_pos": (0.5, 0.5),
+            "confidence": 0.0,
+            "timestamp": gaze_packet.timestamp,
+            "base_data": (gaze_packet.pupil, gaze_packet.pupil),
         }
 
 

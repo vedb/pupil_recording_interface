@@ -18,7 +18,7 @@ if __name__ == "__main__":
             resolution=(1280, 720),
             fps=60,
             pipeline=[
-                pri.GazeMapper.Config(),
+                pri.GazeMapper.Config(record=True),
                 pri.VideoDisplay.Config(overlay_gaze=True),
             ],
         ),

@@ -53,9 +53,11 @@ class PupilDetector(BaseProcess):
 
     def detect_pupil(self, packet):
         """"""
+        # TODO add topic, method
         frame = packet["frame"]
         pupil = self.detector.detect(frame)
         pupil["norm_pos"] = normalize(pupil["location"], frame.shape[2::-1])
+        pupil["timestamp"] = packet["timestamp"]
 
         return pupil
 

@@ -61,8 +61,11 @@ class VideoRecorder(BaseRecorder):
         folder: str
             Path to the recording folder.
 
-        device: BaseVideoDevice
-            The device from which to record the video.
+        resolution: tuple, len 2
+            Resolution of the recorded video.
+
+        fps: int
+            Frame rate of the recorded video.
 
         name: str, optional
             The name of the recorder. If not specified, `device.device_uid`
