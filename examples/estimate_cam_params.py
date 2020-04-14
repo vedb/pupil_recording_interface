@@ -18,7 +18,7 @@ if __name__ == "__main__":
             pipeline=[
                 pri.CircleGridDetector.Config(),
                 pri.CamParamEstimator.Config(
-                    streams=("world", "t265"), num_patterns=5, block=True
+                    streams=("world", "t265"), num_patterns=10
                 ),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
             ],
@@ -53,5 +53,6 @@ if __name__ == "__main__":
                     break
                 else:
                     manager.send_notification({"acquire_pattern": True})
+                    manager.await_status("world", pattern_acquired=True)
 
     print("\nStopped")

@@ -28,7 +28,7 @@ class CircleGridDetector(BaseProcess):
         super().__init__(block=block, **kwargs)
 
     def detect_grid(self, packet):
-        """"""
+        """ Detect circle grid in frame. """
         frame = packet["frame"]
 
         if self.stereo:
@@ -71,6 +71,106 @@ class CircleGridDetector(BaseProcess):
         return packet
 
 
+def calculate_intrinsics(
+    resolution, img_points, obj_points, dist_mode="Radial"
+):
+    """ Calculate intrinsic parameters for one camera. """
+    logger.debug(f"Calibrating camera with resolution: {resolution}")
+
+    obj_points = [obj_points.reshape(1, -1, 3) for _ in range(len(img_points))]
+
+    if dist_mode == "Fisheye":
+        calibration_flags = (
+            cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC
+            + cv2.fisheye.CALIB_FIX_SKEW
+            + cv2.fisheye.CALIB_CHECK_COND
+        )
+
+        max_iter = 30
+        eps = 1e-6
+
+        camera_matrix = np.eye(3, dtype=np.float64)
+        dist_coefs = np.zeros((4, 1), dtype=np.float64)
+        rms, _, _, _, _ = cv2.fisheye.calibrate(
+            obj_points,
+            img_points,
+            resolution[::-1],
+            camera_matrix,
+            dist_coefs,
+            flags=calibration_flags,
+            criteria=(
+                cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER,
+                max_iter,
+                eps,
+            ),
+        )
+        logger.debug(f"Calibrated camera, RMS:{rms:.6f}")
+        return camera_matrix, dist_coefs
+
+    elif dist_mode == "Radial":
+        rms, camera_matrix, dist_coefs, _, _ = cv2.calibrateCamera(
+            obj_points, img_points, resolution[::-1], None, None,
+        )
+        logger.debug(f"Calibrated camera, RMS:{rms:.6f}")
+        return camera_matrix, dist_coefs
+
+    else:
+        logger.error(f"Unknown distortion model: {dist_mode}")
+        return None, None
+
+
+def calculate_extrinsics(
+    img_points_a,
+    img_points_b,
+    obj_points,
+    cam_mtx_a,
+    dist_coefs_a,
+    cam_mtx_b,
+    dist_coefs_b,
+    dist_mode="Radial",
+):
+    """ Calculate extrinsics for pairs of cameras. """
+    logger.debug("Calculating extrinsics for camera pair")
+
+    img_points_a = [x.reshape(1, -1, 2) for x in img_points_a]
+    img_points_b = [x.reshape(1, -1, 2) for x in img_points_b]
+    obj_points = [
+        obj_points.reshape(1, -1, 3) for _ in range(len(img_points_a))
+    ]
+
+    if dist_mode == "Fisheye":
+        rms, _, _, _, _, R, T = cv2.fisheye.stereoCalibrate(
+            obj_points,
+            img_points_a,
+            img_points_b,
+            cam_mtx_a,
+            dist_coefs_a,
+            cam_mtx_b,
+            dist_coefs_b,
+            (0, 0),
+            flags=cv2.CALIB_FIX_INTRINSIC,
+        )
+        return R, T
+
+    elif dist_mode == "Radial":
+        rms, _, _, _, _, R, T, _, _ = cv2.stereoCalibrate(
+            obj_points,
+            img_points_a,
+            img_points_b,
+            cam_mtx_a,
+            dist_coefs_a,
+            cam_mtx_b,
+            dist_coefs_b,
+            (0, 0),
+            flags=cv2.CALIB_FIX_INTRINSIC,
+        )
+        return R, T
+
+    else:
+        logger.error(f"Unknown distortion model: {dist_mode}")
+        return None, None
+
+
 @process("cam_param_estimator")
 class CamParamEstimator(BaseProcess):
     """"""
@@ -81,11 +181,13 @@ class CamParamEstimator(BaseProcess):
         block=False,
         grid_shape=(4, 11),
         num_patterns=10,
+        extrinsics=False,
         **kwargs,
     ):
         """ Constructor. """
         self.streams = streams
         self.num_patterns = num_patterns
+        self.extrinsics = extrinsics
 
         super().__init__(block=block, listen_for=["circle_grid"], **kwargs)
 
@@ -95,10 +197,11 @@ class CamParamEstimator(BaseProcess):
         self._obj_points = gen_pattern_grid(grid_shape)
         self._pattern_queue = Queue(maxsize=self.num_patterns)
         self._acquire_pattern = False
+        self._pattern_acquired = False
         self._lock = Lock()
 
     def _add_pattern(self, circle_grid):
-        """"""
+        """ Add a new pattern to the queue. """
         self._pattern_queue.put(circle_grid, False)
         logger.info(
             f"Captured pattern {self._pattern_queue.qsize()} of "
@@ -112,7 +215,7 @@ class CamParamEstimator(BaseProcess):
     def _add_grid_points(
         cls, patterns, resolutions, camera, grid_points, resolution
     ):
-        """"""
+        """ Add grid points to the pattern dict. """
         if camera not in resolutions:
             resolutions[camera] = resolution
         elif resolution != resolutions[camera]:
@@ -162,118 +265,15 @@ class CamParamEstimator(BaseProcess):
 
         return resolutions, patterns
 
-    @classmethod
-    def calculate_intrinsics(
-        cls, resolution, img_points, obj_points, dist_mode="Radial"
-    ):
-        """ Calculate intrinsic parameters for one camera. """
-        logger.debug(f"Calibrating camera with resolution: {resolution}")
-
-        obj_points = [
-            obj_points.reshape(1, -1, 3) for _ in range(len(img_points))
-        ]
-
-        if dist_mode == "Fisheye":
-            calibration_flags = (
-                cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC
-                + cv2.fisheye.CALIB_FIX_SKEW
-                + cv2.fisheye.CALIB_CHECK_COND
-            )
-
-            max_iter = 30
-            eps = 1e-6
-
-            camera_matrix = np.eye(3, dtype=np.float64)
-            dist_coefs = np.zeros((4, 1), dtype=np.float64)
-            rms, _, _, _, _ = cv2.fisheye.calibrate(
-                obj_points,
-                img_points,
-                resolution[::-1],
-                camera_matrix,
-                dist_coefs,
-                flags=calibration_flags,
-                criteria=(
-                    cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER,
-                    max_iter,
-                    eps,
-                ),
-            )
-            logger.debug(f"Calibrated camera, RMS:{rms:.6f}")
-            return camera_matrix, dist_coefs
-
-        elif dist_mode == "Radial":
-            rms, camera_matrix, dist_coefs, _, _ = cv2.calibrateCamera(
-                obj_points, img_points, resolution[::-1], None, None,
-            )
-            logger.debug(f"Calibrated camera, RMS:{rms:.6f}")
-            return camera_matrix, dist_coefs
-
-        else:
-            logger.error(f"Unknown distortion model: {dist_mode}")
-            return None, None
-
-    @classmethod
-    def calculate_extrinsics(
-        cls,
-        img_points_a,
-        img_points_b,
-        obj_points,
-        cam_mtx_a,
-        dist_coefs_a,
-        cam_mtx_b,
-        dist_coefs_b,
-        dist_mode="Radial",
-    ):
-        """ Calculate extrinsics for pairs of cameras. """
-        logger.debug("Calculating extrinsics for camera pair")
-
-        img_points_a = [x.reshape(1, -1, 2) for x in img_points_a]
-        img_points_b = [x.reshape(1, -1, 2) for x in img_points_b]
-        obj_points = [
-            obj_points.reshape(1, -1, 3) for _ in range(len(img_points_a))
-        ]
-
-        if dist_mode == "Fisheye":
-            rms, _, _, _, _, R, T = cv2.fisheye.stereoCalibrate(
-                obj_points,
-                img_points_a,
-                img_points_b,
-                cam_mtx_a,
-                dist_coefs_a,
-                cam_mtx_b,
-                dist_coefs_b,
-                (0, 0),
-                flags=cv2.CALIB_FIX_INTRINSIC,
-            )
-            return R, T
-
-        elif dist_mode == "Radial":
-            rms, _, _, _, _, R, T, _, _ = cv2.stereoCalibrate(
-                obj_points,
-                img_points_a,
-                img_points_b,
-                cam_mtx_a,
-                dist_coefs_a,
-                cam_mtx_b,
-                dist_coefs_b,
-                (0, 0),
-                flags=cv2.CALIB_FIX_INTRINSIC,
-            )
-            return R, T
-
-        else:
-            logger.error(f"Unknown distortion model: {dist_mode}")
-            return None, None
-
     def _estimate_params(self):
-        """"""
+        """ Estimate camera parameters. """
         logger.debug("Estimating camera parameters")
 
         resolutions, patterns = self._get_patterns()
 
         try:
             self.intrinsics = {
-                camera: self.calculate_intrinsics(
+                camera: calculate_intrinsics(
                     resolutions[camera], patterns[camera], self._obj_points
                 )
                 for camera in patterns
@@ -285,24 +285,24 @@ class CamParamEstimator(BaseProcess):
             )
             return
 
-        try:
-            self.extrinsics = {
-                (camera_1, camera_2): self.calculate_extrinsics(
-                    patterns[camera_1],
-                    patterns[camera_2],
-                    self._obj_points,
-                    self.intrinsics[camera_1][0],
-                    self.intrinsics[camera_1][1],
-                    self.intrinsics[camera_2][0],
-                    self.intrinsics[camera_2][1],
-                )
-                for camera_1, camera_2 in combinations(patterns, 2)
-            }
-        except cv2.error as e:
-            logger.warning(f"Extrinsics estimation failed. Reason: {e}")
-            return
+        if self.extrinsics:
+            try:
+                self.extrinsics = {
+                    (camera_1, camera_2): calculate_extrinsics(
+                        patterns[camera_1],
+                        patterns[camera_2],
+                        self._obj_points,
+                        self.intrinsics[camera_1][0],
+                        self.intrinsics[camera_1][1],
+                        self.intrinsics[camera_2][0],
+                        self.intrinsics[camera_2][1],
+                    )
+                    for camera_1, camera_2 in combinations(patterns, 2)
+                }
+            except cv2.error as e:
+                logger.warning(f"Extrinsics estimation failed. Reason: {e}")
+                return
 
-        # TODO handle errors
         logger.info("Successfully estimated camera parameters")
 
     def _process_notifications(self, notifications, block=None):
@@ -329,7 +329,17 @@ class CamParamEstimator(BaseProcess):
                     else:
                         self._acquire_pattern = False
                     self._add_pattern(pattern_dict)
+                    self._pattern_acquired = True
                 except KeyError:
                     pass
                 except Full:
                     break
+
+    def _process_packet(self, packet, block=None):
+        """ Process a packet. """
+        if self._pattern_acquired:
+            packet.pattern_acquired = True
+            packet.broadcasts.append("pattern_acquired")
+            self._pattern_acquired = False
+
+        return packet

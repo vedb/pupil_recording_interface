@@ -242,6 +242,28 @@ class StreamManager(object):
         for name, stream in self.streams.items():
             self._priority_queues[name].append(notification)
 
+    def await_status(self, stream, **kwargs):
+        """ Wait for a stream to report a certain status.
+
+        Parameters
+        ----------
+        stream
+        kwargs
+
+        Returns
+        -------
+
+        """
+        while not self.stopped:
+            try:
+                if all(
+                    self._status[stream][key] == value
+                    for key, value in kwargs.items()
+                ):
+                    break
+            except KeyError:
+                pass
+
     def format_status(self, status_dict=None, value="fps", max_cols=None):
         """ Format status dictionary to string. """
         # TODO check if status values are too old

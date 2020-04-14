@@ -1,6 +1,11 @@
 import pytest
 import numpy as np
 
+from pupil_recording_interface.process.cam_params import (
+    calculate_intrinsics,
+    calculate_extrinsics,
+)
+
 
 class TestVideoRecorder:
     @pytest.mark.skip("Not yet implemented")
@@ -87,14 +92,14 @@ class TestCamParamEstimator:
     def test_calculate_intrinsics(self, cam_param_estimator, patterns):
         """"""
         # Pupil world cam
-        cam_mtx, dist_coefs = cam_param_estimator.calculate_intrinsics(
+        cam_mtx, dist_coefs = calculate_intrinsics(
             (1280, 720), patterns["world"], cam_param_estimator._obj_points
         )
         assert cam_mtx.shape == (3, 3)
         assert dist_coefs.shape == (1, 5)
 
         # T265
-        cam_mtx, dist_coefs = cam_param_estimator.calculate_intrinsics(
+        cam_mtx, dist_coefs = calculate_intrinsics(
             (848, 800),
             patterns["t265_left"],
             cam_param_estimator._obj_points,
@@ -103,7 +108,7 @@ class TestCamParamEstimator:
         assert cam_mtx.shape == (3, 3)
         assert dist_coefs.shape == (4, 1)
 
-        cam_mtx, dist_coefs = cam_param_estimator.calculate_intrinsics(
+        cam_mtx, dist_coefs = calculate_intrinsics(
             (848, 800),
             patterns["t265_right"],
             cam_param_estimator._obj_points,
@@ -114,21 +119,21 @@ class TestCamParamEstimator:
 
     def test_calculate_extrinsics(self, cam_param_estimator, patterns):
         """"""
-        cam_mtx_a, dist_coefs_a = cam_param_estimator.calculate_intrinsics(
+        cam_mtx_a, dist_coefs_a = calculate_intrinsics(
             (848, 800),
             patterns["t265_left"],
             cam_param_estimator._obj_points,
             dist_mode="Fisheye",
         )
 
-        cam_mtx_b, dist_coefs_b = cam_param_estimator.calculate_intrinsics(
+        cam_mtx_b, dist_coefs_b = calculate_intrinsics(
             (848, 800),
             patterns["t265_right"],
             cam_param_estimator._obj_points,
             dist_mode="Fisheye",
         )
 
-        R, T = cam_param_estimator.calculate_extrinsics(
+        R, T = calculate_extrinsics(
             patterns["t265_left"],
             patterns["t265_right"],
             cam_param_estimator._obj_points,
