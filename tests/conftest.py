@@ -660,6 +660,9 @@ def video_display():
 @pytest.fixture()
 def pupil_detector(temp_folder):
     """"""
+    # Skip fixture if pupil_detectors is not installed
+    pytest.importorskip("pupil_detectors")
+
     return PupilDetector(folder=temp_folder, record=True)
 
 
