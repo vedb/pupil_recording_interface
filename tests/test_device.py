@@ -3,6 +3,7 @@ import pytest
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import VideoDeviceUVC
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
+from pupil_recording_interface.stream import VideoStream, OdometryStream
 
 
 class TestBaseDevice:
@@ -20,20 +21,17 @@ class TestBaseVideoDevice:
 class TestRealSenseDeviceT265:
     def test_from_config_list(self):
         """"""
-        from pupil_recording_interface.legacy.config import (
-            VideoConfig,
-            OdometryConfig,
-        )
-
         config_list = [
-            VideoConfig(
-                "t265",
-                "t265",
+            VideoStream.Config(
+                device_type="t265",
+                device_uid="t265",
                 resolution=(1696, 800),
                 fps=30,
                 color_format="gray",
             ),
-            OdometryConfig("t265", "t265", name="odometry"),
+            OdometryStream.Config(
+                device_type="t265", device_uid="t265", name="odometry"
+            ),
         ]
 
         device = RealSenseDeviceT265.from_config_list(config_list)
