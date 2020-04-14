@@ -6,6 +6,9 @@ import pupil_recording_interface as pri
 
 if __name__ == "__main__":
 
+    # folder for saving parameters
+    folder = "~/recordings"
+
     # stream configurations
     configs = [
         pri.VideoStream.Config(
@@ -18,7 +21,10 @@ if __name__ == "__main__":
             pipeline=[
                 pri.CircleGridDetector.Config(),
                 pri.CamParamEstimator.Config(
-                    streams=("world", "t265"), num_patterns=10
+                    folder=folder,
+                    streams=("world", "t265"),
+                    extrinsics=True,
+                    block=True,
                 ),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
             ],

@@ -71,7 +71,8 @@ class BaseConfigurable:
             cls_args.append(arg)
 
         for arg in cls._optional_args:
-            kwargs[arg] = None
+            if arg not in kwargs:
+                kwargs[arg] = None
 
         config_type = config_factory(
             cls.__name__ + "Config", cls_args, cls_kwargs, cls._config_attrs

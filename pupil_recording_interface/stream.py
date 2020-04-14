@@ -82,6 +82,7 @@ class BaseStream(BaseConfigurable):
         """ Get information about the stream status. """
         status = {
             "name": self.name,
+            "device_uid": self.device.device_uid,
             "timestamp": float("nan"),
             "last_timestamp": self._last_timestamp,
             "fps": self.current_fps,

@@ -37,5 +37,9 @@ class TestBaseConfigurable:
         assert config.arg1 == "a"
         assert config.arg2 == "b"
 
+        # regression test for optional args being overwritten with None
+        config = configurable.Config("a", "b", arg4="test")
+        assert config.arg4 == "test"
+
         with pytest.raises(TypeError):
             configurable.Config(arg1="a")

@@ -13,6 +13,8 @@ class TestManager:
         video_stream.pipeline.steps[0].listen_for = ["pupil"]
         assert StreamManager._get_notifications(statuses, video_stream) == {
             "eye0": {
+                "name": "eye0",
+                "device_uid": "Pupil Cam1 ID0",
                 "timestamp": 1.0,
                 "pupil": {
                     "ellipse": {

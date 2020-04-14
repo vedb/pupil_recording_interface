@@ -21,6 +21,7 @@ class Packet:
         if source_timebase not in ("monotonic", "epoch"):
             raise ValueError(f"Unknown timebase: {source_timebase}")
 
+        # TODO stream_name, device_uid
         self.timestamp = timestamp
         self.source_timestamp = source_timestamp or timestamp
         self.source_timebase = source_timebase

@@ -364,3 +364,32 @@ class Serialized_Dict(object):
     def __iter__(self):
         self._deser()
         return iter(self._data)
+
+
+def save_intrinsics(directory, cam_name, resolution, intrinsics):
+    """
+    Saves camera intrinsics calibration to a file. For each unique camera name we maintain a single file containing all calibrations associated with this camera name.
+    :param directory: Directory to which the intrinsics file will be written
+    :param cam_name: Name of the camera, e.g. 'Pupil Cam 1 ID2'
+    :param resolution: Camera resolution given as a tuple. This needs to match the resolution the calibration has been computed with.
+    :param intrinsics: The camera intrinsics dictionary.
+    :return:
+    """
+    # Try to load previous camera calibrations
+    save_path = os.path.join(
+        directory, "{}.intrinsics".format(cam_name.replace(" ", "_"))
+    )
+    try:
+        calib_dict = load_object(save_path, allow_legacy=False)
+    except Exception:
+        calib_dict = {}
+
+    calib_dict["version"] = 1
+    calib_dict[str(resolution)] = intrinsics
+
+    save_object(calib_dict, save_path)
+    logger.info(
+        "Calibration for camera {} at resolution {} saved to {}".format(
+            cam_name, resolution, save_path
+        )
+    )

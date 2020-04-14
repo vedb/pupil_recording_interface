@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import numpy as np
 
@@ -5,6 +7,7 @@ from pupil_recording_interface.process.cam_params import (
     calculate_intrinsics,
     calculate_extrinsics,
 )
+from pupil_recording_interface.externals.file_methods import load_object
 
 
 class TestVideoRecorder:
@@ -103,7 +106,7 @@ class TestCamParamEstimator:
             (848, 800),
             patterns["t265_left"],
             cam_param_estimator._obj_points,
-            dist_mode="Fisheye",
+            dist_mode="fisheye",
         )
         assert cam_mtx.shape == (3, 3)
         assert dist_coefs.shape == (4, 1)
@@ -112,7 +115,7 @@ class TestCamParamEstimator:
             (848, 800),
             patterns["t265_right"],
             cam_param_estimator._obj_points,
-            dist_mode="Fisheye",
+            dist_mode="fisheye",
         )
         assert cam_mtx.shape == (3, 3)
         assert dist_coefs.shape == (4, 1)
@@ -123,14 +126,14 @@ class TestCamParamEstimator:
             (848, 800),
             patterns["t265_left"],
             cam_param_estimator._obj_points,
-            dist_mode="Fisheye",
+            dist_mode="fisheye",
         )
 
         cam_mtx_b, dist_coefs_b = calculate_intrinsics(
             (848, 800),
             patterns["t265_right"],
             cam_param_estimator._obj_points,
-            dist_mode="Fisheye",
+            dist_mode="fisheye",
         )
 
         R, T = calculate_extrinsics(
@@ -141,8 +144,29 @@ class TestCamParamEstimator:
             dist_coefs_a,
             cam_mtx_b,
             dist_coefs_b,
-            dist_mode="Fisheye",
+            dist_mode="fisheye",
         )
 
         np.testing.assert_allclose(R, np.eye(3), atol=0.02, rtol=1e-4)
         assert T.shape == (3, 1)
+
+    def test_save_intrinsics(self, cam_param_estimator, intrinsics):
+        """"""
+        cam_param_estimator._save_intrinsics(
+            cam_param_estimator.folder, intrinsics
+        )
+        intrinsics = load_object(
+            os.path.join(cam_param_estimator.folder, "world.intrinsics")
+        )
+        assert intrinsics["(1280, 720)"] == {
+            "camera_matrix": [
+                [1091.0284, 0.0, 540.758028],
+                [0.0, 906.409752, 448.742036],
+                [0.0, 0.0, 1.0],
+            ],
+            "dist_coefs": [
+                [-0.59883649, 0.54028932, -0.03402168, 0.03306559, -0.3829259]
+            ],
+            "cam_type": "radial",
+            "resolution": [1280, 720],
+        }

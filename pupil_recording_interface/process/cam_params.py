@@ -9,7 +9,9 @@ import numpy as np
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
+from pupil_recording_interface.utils import get_constructor_args
 from pupil_recording_interface.externals.methods import gen_pattern_grid
+from pupil_recording_interface.externals.file_methods import save_intrinsics
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +74,14 @@ class CircleGridDetector(BaseProcess):
 
 
 def calculate_intrinsics(
-    resolution, img_points, obj_points, dist_mode="Radial"
+    resolution, img_points, obj_points, dist_mode="radial"
 ):
     """ Calculate intrinsic parameters for one camera. """
     logger.debug(f"Calibrating camera with resolution: {resolution}")
 
     obj_points = [obj_points.reshape(1, -1, 3) for _ in range(len(img_points))]
 
-    if dist_mode == "Fisheye":
+    if dist_mode.lower() == "fisheye":
         calibration_flags = (
             cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC
             + cv2.fisheye.CALIB_FIX_SKEW
@@ -107,7 +109,7 @@ def calculate_intrinsics(
         logger.debug(f"Calibrated camera, RMS:{rms:.6f}")
         return camera_matrix, dist_coefs
 
-    elif dist_mode == "Radial":
+    elif dist_mode.lower() == "radial":
         rms, camera_matrix, dist_coefs, _, _ = cv2.calibrateCamera(
             obj_points, img_points, resolution[::-1], None, None,
         )
@@ -127,7 +129,7 @@ def calculate_extrinsics(
     dist_coefs_a,
     cam_mtx_b,
     dist_coefs_b,
-    dist_mode="Radial",
+    dist_mode="radial",
 ):
     """ Calculate extrinsics for pairs of cameras. """
     logger.debug("Calculating extrinsics for camera pair")
@@ -138,7 +140,7 @@ def calculate_extrinsics(
         obj_points.reshape(1, -1, 3) for _ in range(len(img_points_a))
     ]
 
-    if dist_mode == "Fisheye":
+    if dist_mode.lower() == "fisheye":
         rms, _, _, _, _, R, T = cv2.fisheye.stereoCalibrate(
             obj_points,
             img_points_a,
@@ -152,7 +154,7 @@ def calculate_extrinsics(
         )
         return R, T
 
-    elif dist_mode == "Radial":
+    elif dist_mode.lower() == "radial":
         rms, _, _, _, _, R, T, _, _ = cv2.stereoCalibrate(
             obj_points,
             img_points_a,
@@ -171,22 +173,26 @@ def calculate_extrinsics(
         return None, None
 
 
-@process("cam_param_estimator")
+@process("cam_param_estimator", optional=("folder",))
 class CamParamEstimator(BaseProcess):
     """"""
 
     def __init__(
         self,
         streams,
+        folder,
         block=False,
         grid_shape=(4, 11),
         num_patterns=10,
+        distortion_model="radial",
         extrinsics=False,
         **kwargs,
     ):
         """ Constructor. """
         self.streams = streams
+        self.folder = folder
         self.num_patterns = num_patterns
+        self.distortion_model = distortion_model
         self.extrinsics = extrinsics
 
         super().__init__(block=block, listen_for=["circle_grid"], **kwargs)
@@ -199,6 +205,15 @@ class CamParamEstimator(BaseProcess):
         self._acquire_pattern = False
         self._pattern_acquired = False
         self._lock = Lock()
+
+    @classmethod
+    def _from_config(cls, config, stream_config, device, **kwargs):
+        """ Per-class implementation of from_config. """
+        cls_kwargs = get_constructor_args(
+            cls, config, folder=config.folder or kwargs.get("folder", None),
+        )
+
+        return cls(**cls_kwargs)
 
     def _add_pattern(self, circle_grid):
         """ Add a new pattern to the queue. """
@@ -230,7 +245,7 @@ class CamParamEstimator(BaseProcess):
 
         while not self._pattern_queue.empty():
             pattern = self._pattern_queue.get()
-            for stream, circle_grid in pattern.items():
+            for device, circle_grid in pattern.items():
                 if circle_grid["stereo"]:
                     resolution = (
                         circle_grid["resolution"][0] // 2,
@@ -243,14 +258,14 @@ class CamParamEstimator(BaseProcess):
                     self._add_grid_points(
                         patterns,
                         resolutions,
-                        stream + "_left",
+                        device + "_left",
                         circle_grid["grid_points"][0],
                         resolution,
                     )
                     self._add_grid_points(
                         patterns,
                         resolutions,
-                        stream + "_right",
+                        device + "_right",
                         grid_points_right,
                         resolution,
                     )
@@ -258,12 +273,32 @@ class CamParamEstimator(BaseProcess):
                     self._add_grid_points(
                         patterns,
                         resolutions,
-                        stream,
+                        device,
                         circle_grid["grid_points"],
                         circle_grid["resolution"],
                     )
 
         return resolutions, patterns
+
+    @classmethod
+    def _save_intrinsics(cls, folder, intrinsics):
+        """ Save estimated intrinsics. """
+        # TODO get device_uid
+        for (
+            device,
+            (resolution, dist_mode, cam_mtx, dist_coefs),
+        ) in intrinsics.items():
+            save_intrinsics(
+                folder,
+                device,
+                resolution,
+                {
+                    "camera_matrix": cam_mtx.tolist(),
+                    "dist_coefs": dist_coefs.tolist(),
+                    "cam_type": dist_mode,
+                    "resolution": list(resolution),
+                },
+            )
 
     def _estimate_params(self):
         """ Estimate camera parameters. """
@@ -273,8 +308,12 @@ class CamParamEstimator(BaseProcess):
 
         try:
             self.intrinsics = {
-                camera: calculate_intrinsics(
-                    resolutions[camera], patterns[camera], self._obj_points
+                camera: (
+                    resolutions[camera],
+                    self.distortion_model,
+                    *calculate_intrinsics(
+                        resolutions[camera], patterns[camera], self._obj_points
+                    ),
                 )
                 for camera in patterns
             }
@@ -284,6 +323,8 @@ class CamParamEstimator(BaseProcess):
                 f"Please try again with a better coverage of the camera's FOV!"
             )
             return
+
+        self._save_intrinsics(self.folder, self.intrinsics)
 
         if self.extrinsics:
             try:
@@ -318,7 +359,9 @@ class CamParamEstimator(BaseProcess):
                 try:
                     # Add data from notifications
                     pattern_dict = {
-                        stream: notification[stream]["circle_grid"]
+                        notification[stream]["device_uid"]: notification[
+                            stream
+                        ]["circle_grid"]
                         for stream in self.streams
                     }
                     # Check if we got grid points from all streams

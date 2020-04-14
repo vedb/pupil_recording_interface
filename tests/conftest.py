@@ -19,6 +19,15 @@ def folder():
 
 
 @pytest.fixture()
+def temp_folder():
+    """"""
+    temp_folder = ".tmp"
+    os.makedirs(temp_folder, exist_ok=True)
+    yield temp_folder
+    shutil.rmtree(temp_folder, ignore_errors=True)
+
+
+@pytest.fixture()
 def export_folder(folder):
     """"""
     export_folder = os.path.join(folder, "exports")
@@ -49,12 +58,14 @@ def statuses():
     return {
         "world": {
             "name": "world",
+            "device_uid": "Pupil Cam1 ID2",
             "timestamp": 1.0,
             "last_timestamp": 0.0,
             "fps": 30.0,
         },
         "eye0": {
             "name": "eye0",
+            "device_uid": "Pupil Cam1 ID0",
             "timestamp": 1.0,
             "last_timestamp": 0.0,
             "fps": 120.0,
@@ -589,6 +600,35 @@ def patterns():
     }
 
 
+@pytest.fixture()
+def intrinsics():
+    """"""
+    return {
+        "world": (
+            (1280, 720),
+            "radial",
+            np.array(
+                [
+                    [1.09102840e03, 0.00000000e00, 5.40758028e02],
+                    [0.00000000e00, 9.06409752e02, 4.48742036e02],
+                    [0.00000000e00, 0.00000000e00, 1.00000000e00],
+                ]
+            ),
+            np.array(
+                [
+                    [
+                        -0.59883649,
+                        0.54028932,
+                        -0.03402168,
+                        0.03306559,
+                        -0.3829259,
+                    ]
+                ]
+            ),
+        )
+    }
+
+
 # -- STREAMS -- #
 @pytest.fixture()
 def video_stream(pipeline):
@@ -614,9 +654,9 @@ def video_display():
 
 
 @pytest.fixture()
-def cam_param_estimator(packet):
+def cam_param_estimator(temp_folder, packet):
     """"""
-    estimator = CamParamEstimator(["world", "t265"])
+    estimator = CamParamEstimator(["world", "t265"], temp_folder)
 
     grid_points_right = packet.circle_grid["grid_points"].copy()
     grid_points_right[:, :, 0] += 848

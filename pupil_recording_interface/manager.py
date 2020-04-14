@@ -225,6 +225,8 @@ class StreamManager(object):
                 if info in source_status
             }
             if len(stream_notification) > 0:
+                stream_notification["name"] = source_status["name"]
+                stream_notification["device_uid"] = source_status["device_uid"]
                 stream_notification["timestamp"] = source_status["timestamp"]
                 notifications[source_name] = stream_notification
 
