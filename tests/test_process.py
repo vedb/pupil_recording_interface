@@ -76,6 +76,9 @@ class TestVideoDisplay:
 class TestPupilDetector:
     def test_record_data(self, pupil_detector, packet):
         """"""
+        # Skip test if pupil_detectors is not installed
+        pytest.importorskip("pupil_detectors")
+
         packet.device_uid = "Pupil Cam1 ID0"
         pupil_detector.record_data(packet)
         pupil_detector.stop()

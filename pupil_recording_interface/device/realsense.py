@@ -6,7 +6,6 @@ import numpy as np
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
-from pupil_recording_interface.device.video import BaseVideoDevice
 from pupil_recording_interface.utils import get_params, get_constructor_args
 
 
@@ -227,9 +226,6 @@ class RealSenseDeviceT265(BaseDevice):
         # TODO timestamp = uvc.get_time_monotonic()?
         # TODO timeout
         return odometry, odometry["timestamp"]
-
-    # TODO
-    show_frame = BaseVideoDevice.show_frame
 
     def start(self):
         """ Start this device. """

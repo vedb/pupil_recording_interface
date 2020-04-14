@@ -2,8 +2,6 @@
 import abc
 import logging
 
-import cv2
-
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
 
@@ -57,22 +55,8 @@ class BaseVideoDevice(BaseDevice):
     def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
 
-    def show_frame(self, frame):
-        """ Show a frame through OpenCV's imshow.
-
-        Parameters
-        ----------
-        frame : array_like
-            The frame to display.
-        """
-        # TODO deprecate / remove
-        cv2.imshow(self.device_uid, frame)
-        return cv2.waitKey(1)
-
     def start(self):
         """ Start this device. """
-        # TODO for some devices, capture has to be initialized here for
-        #  multi-threaded operation, check if we can circumvent this
         if not self.is_started:
             self.capture = self._get_capture(
                 self.device_uid,

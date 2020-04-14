@@ -4,26 +4,10 @@ Additional features
 Head tracking (Odometry)
 ------------------------
 
-The package also includes a mechanism for recording and loading head
+The package also includes a mechanism for loading head
 tracking data from an Intel RealSense T265 tracking camera attached to the
 Pupil Core system. Head tracking data is referred to as odometry throughout
 the package as it includes positions and velocities.
-
-Recording
-.........
-
-.. note::
-
-    Make sure you have installed the necessary dependencies for odometry
-    recording (see :ref:`optional_dependencies`).
-
-The :py:class:`OdometryRecorder` can record data from a connected T265
-tracking camera by calling :py:func:`OdometryRecorder.run`:
-
-.. doctest::
-
-    >>> from pupil_recording_interface.legacy import OdometryRecorder
-    >>> OdometryRecorder('/path/to/recording/folder').run() # doctest:+SKIP
 
 Loading
 .......
