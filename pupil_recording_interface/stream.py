@@ -274,7 +274,9 @@ class VideoStream(BaseStream):
         else:
             frame, timestamp = self.device._get_frame_and_timestamp()
 
-        return Packet(timestamp, frame=frame)
+        return Packet(
+            self.name, self.device.device_uid, timestamp, frame=frame
+        )
 
 
 @stream("odometry")
@@ -285,4 +287,6 @@ class OdometryStream(BaseStream):
         """ Get the last data packet from the stream. """
         odometry, timestamp = self.device._get_odometry_and_timestamp()
 
-        return Packet(timestamp, odometry=odometry)
+        return Packet(
+            self.name, self.device.device_uid, timestamp, odometry=odometry
+        )

@@ -9,6 +9,7 @@ from pupil_recording_interface.stream import VideoStream
 from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process.display import VideoDisplay
+from pupil_recording_interface.process.pupil_detector import PupilDetector
 from pupil_recording_interface.process.cam_params import CamParamEstimator
 
 
@@ -87,6 +88,8 @@ def statuses():
 def packet():
     """"""
     return Packet(
+        "world",
+        "Pupil Cam1 ID2",
         0.0,
         frame=np.zeros((1280, 720), dtype=np.uint8),
         display_frame=np.zeros((1280, 720), dtype=np.uint8),
@@ -98,6 +101,7 @@ def packet():
             },
             "diameter": 0.0,
             "location": (0.0, 0.0),
+            "norm_pos": (0.0, 0.0),
             "confidence": 0.0,
         },
         gaze_points=[(0.5, 0.5), (0.6, 0.6)],
@@ -651,6 +655,12 @@ def video_display():
     return VideoDisplay(
         "test", overlay_pupil=True, overlay_gaze=True, overlay_circle_grid=True
     )
+
+
+@pytest.fixture()
+def pupil_detector(temp_folder):
+    """"""
+    return PupilDetector(folder=temp_folder, record=True)
 
 
 @pytest.fixture()

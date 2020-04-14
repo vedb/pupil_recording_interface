@@ -10,6 +10,8 @@ class Packet:
 
     def __init__(
         self,
+        stream_name,
+        device_uid,
         timestamp,
         source_timestamp=None,
         source_timebase="monotonic",
@@ -18,13 +20,14 @@ class Packet:
         **kwargs,
     ):
         """ Constructor. """
-        if source_timebase not in ("monotonic", "epoch"):
-            raise ValueError(f"Unknown timebase: {source_timebase}")
-
-        # TODO stream_name, device_uid
+        self.stream_name = stream_name
+        self.device_uid = device_uid
         self.timestamp = timestamp
         self.source_timestamp = source_timestamp or timestamp
-        self.source_timebase = source_timebase
+        if source_timebase not in ("monotonic", "epoch"):
+            raise ValueError(f"Unknown timebase: {source_timebase}")
+        else:
+            self.source_timebase = source_timebase
         self.broadcasts = broadcasts or []
         self.timeout = timeout
 

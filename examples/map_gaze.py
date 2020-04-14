@@ -6,6 +6,9 @@ import pupil_recording_interface as pri
 
 if __name__ == "__main__":
 
+    # recording folder
+    folder = "~/recordings/test"
+
     # stream configurations
     configs = [
         pri.VideoStream.Config(
@@ -27,7 +30,7 @@ if __name__ == "__main__":
             fps=120,
             color_format="gray",
             pipeline=[
-                pri.PupilDetector.Config(),
+                pri.PupilDetector.Config(record=True),
                 pri.VideoDisplay.Config(overlay_pupil=True),
             ],
         ),
@@ -39,7 +42,7 @@ if __name__ == "__main__":
             fps=120,
             color_format="gray",
             pipeline=[
-                pri.PupilDetector.Config(),
+                pri.PupilDetector.Config(record=True),
                 pri.VideoDisplay.Config(overlay_pupil=True),
             ],
         ),
@@ -51,7 +54,9 @@ if __name__ == "__main__":
     )
 
     # run manager
-    with pri.StreamManager(configs) as manager:
+    with pri.StreamManager(
+        configs, folder=folder, policy="overwrite"
+    ) as manager:
         while not manager.stopped:
             if manager.all_streams_running:
                 status = manager.format_status(

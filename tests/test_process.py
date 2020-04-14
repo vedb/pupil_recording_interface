@@ -7,7 +7,10 @@ from pupil_recording_interface.process.cam_params import (
     calculate_intrinsics,
     calculate_extrinsics,
 )
-from pupil_recording_interface.externals.file_methods import load_object
+from pupil_recording_interface.externals.file_methods import (
+    load_object,
+    load_pldata_file,
+)
 
 
 class TestVideoRecorder:
@@ -68,6 +71,35 @@ class TestVideoDisplay:
         """"""
         frame = video_display._add_circle_marker_overlay(packet)
         assert frame.ndim == 3
+
+
+class TestPupilDetector:
+    def test_record_data(self, pupil_detector, packet):
+        """"""
+        packet.device_uid = "Pupil Cam1 ID0"
+        pupil_detector.record_data(packet)
+        pupil_detector.stop()
+
+        pldata = [
+            dict(d)
+            for d in load_pldata_file(pupil_detector.folder, "pupil").data
+        ]
+
+        assert pldata[0] == {
+            "ellipse": {
+                "center": (0.0, 0.0),
+                "axes": (0.0, 0.0),
+                "angle": -90.0,
+            },
+            "diameter": 0.0,
+            "location": (0.0, 0.0),
+            "confidence": 0.0,
+            "norm_pos": (0.0, 0.0),
+            "timestamp": 0.0,
+            "topic": "pupil.0",
+            "id": 0,
+            "method": "2d c++",
+        }
 
 
 class TestCamParamEstimator:
