@@ -41,6 +41,7 @@ def get_params(cls):
     return args, kwargs
 
 
+# TODO make BaseConfigurable method
 def get_constructor_args(cls, config, **kwargs):
     """ Construct and instance of a class from a Config. """
     # get constructor signature

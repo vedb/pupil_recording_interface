@@ -93,6 +93,15 @@ class GazeMapper(BaseProcess):
 
     def _process_packet(self, packet, block=None):
         """ Process new data. """
+        if "calibration_result" in packet:
+            try:
+                self.params = packet["calibration_result"]["args"]["params"]
+                logger.info(
+                    "Updated gaze mapper params with calibration results"
+                )
+            except KeyError:
+                pass
+
         packet.gaze = []
 
         while not self._gaze_queue.empty():

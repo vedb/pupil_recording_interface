@@ -16,7 +16,12 @@ class CircleDetector(BaseProcess):
 
     def detect_circle(self, packet):
         """"""
-        return self.circle_tracker.update(packet["frame"])
+        circle_markers = self.circle_tracker.update(packet["frame"])
+
+        for marker in circle_markers:
+            marker["timestamp"] = packet.timestamp
+
+        return circle_markers
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """

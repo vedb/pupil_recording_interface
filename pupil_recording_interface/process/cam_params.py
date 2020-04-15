@@ -175,7 +175,7 @@ def calculate_extrinsics(
 
 @process("cam_param_estimator", optional=("folder",))
 class CamParamEstimator(BaseProcess):
-    """"""
+    """ Camera parameter estimator. """
 
     def __init__(
         self,
@@ -349,11 +349,14 @@ class CamParamEstimator(BaseProcess):
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """
         for notification in notifications:
+            # check for triggers
             if (
                 "acquire_pattern" in notification
                 and notification["acquire_pattern"]
             ):
                 self._acquire_pattern = True
+
+            # collect new data
             if self._acquire_pattern:
                 # TODO with self._lock?
                 try:

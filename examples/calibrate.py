@@ -17,7 +17,11 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 pri.CircleDetector.Config(),
-                pri.VideoDisplay.Config(overlay_circle_marker=True),
+                pri.Calibration.Config(),
+                pri.GazeMapper.Config(),
+                pri.VideoDisplay.Config(
+                    overlay_circle_marker=True, overlay_gaze=True
+                ),
             ],
         ),
         pri.VideoStream.Config(
@@ -48,16 +52,31 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
 
     # run manager
     with pri.StreamManager(configs) as manager:
         while not manager.stopped:
+            pass
             if manager.all_streams_running:
-                status = manager.format_status(
-                    "fps", format="{:.2f} Hz", max_cols=72
+                response = input(
+                    "Press enter to start calibration or type 'a' to abort: "
                 )
-                print("\r" + status, end="")
+                if response == "a":
+                    break
+                else:
+                    print("Collecting calibration data...")
+                    manager.send_notification(
+                        {"collect_calibration_data": True}
+                    )
+                response = input(
+                    "Press enter to stop calibration or type 'a' to abort: "
+                )
+                if response == "a":
+                    break
+                else:
+                    manager.send_notification({"calculate_calibration": True})
+                    manager.await_status("world", calibration_calculated=True)
 
     print("\nStopped")
