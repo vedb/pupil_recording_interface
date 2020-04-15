@@ -1,6 +1,5 @@
 import json
 import logging
-import math
 from threading import Thread
 import multiprocessing as mp
 import os
@@ -196,6 +195,11 @@ class StreamManager(object):
                 ].get_status()  # TODO proxy for getting "empty" status
             elif queue._getvalue():
                 self._status[stream_name] = queue.popleft()
+                if "exception" in self._status[stream_name]:
+                    logger.error(
+                        f"Stream {stream_name} has crashed with exception "
+                        f"{self._status[stream_name]['exception']}"
+                    )
 
         return self._status
 
@@ -208,9 +212,9 @@ class StreamManager(object):
         for stream in self.streams:
             if stream not in self._status:
                 return False
-            elif "fps" not in self._status[stream]:
+            elif "running" not in self._status[stream]:
                 return False
-            elif math.isnan(self._status[stream]["fps"]):
+            elif not self._status[stream]["running"]:
                 return False
 
         return True

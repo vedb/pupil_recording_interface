@@ -17,16 +17,30 @@ logger = logging.getLogger(__name__)
 class StreamHandler:
     """ Context manager for main loop. """
 
-    def __init__(self, stream):
-        """ Constructor. """
+    def __init__(self, stream, status_queue=None):
+        """  Constructor.
+
+        Parameters
+        ----------
+        stream: BaseStream
+            BaseStream instance for which to handle the main loop.
+
+        status_queue: thread-safe deque, optional
+            If specified, a last status will be sent over the queue on exit.
+        """
         self.stream = stream
+        self.status_queue = status_queue
 
     def __enter__(self):
         self.stream.start()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stream._fps_buffer.clear()
         self.stream.stop()
+        if self.status_queue is not None:
+            status = self.stream.get_status()
+            if exc_type:
+                status["exception"] = f"{exc_type.__name__}: {exc_val}"
+            self.status_queue.append(status)
 
 
 class BaseStream(BaseConfigurable):
@@ -51,7 +65,6 @@ class BaseStream(BaseConfigurable):
         self.pipeline = pipeline
         self.name = name or device.device_uid
 
-        self._handler = StreamHandler(self)
         self._last_timestamp = 0.0
         self._fps_buffer = deque(maxlen=20)
 
@@ -101,11 +114,13 @@ class BaseStream(BaseConfigurable):
             "device_uid": self.device.device_uid,
             "timestamp": float("nan"),
             "last_timestamp": self._last_timestamp,
+            "running": False,
             "fps": self.current_fps,
         }
 
         if packet is not None:
             status["timestamp"] = packet.timestamp
+            status["running"] = True
             for key, value in packet.get_broadcasts().items():
                 status[key] = value
 
@@ -162,6 +177,7 @@ class BaseStream(BaseConfigurable):
             self.pipeline.stop()
         if self.device.is_started:
             self.device.stop()
+        self._fps_buffer.clear()
         logger.debug(f"Stopped stream: {self.name}")
 
     def run_post_thread_hooks(self):
@@ -196,7 +212,7 @@ class BaseStream(BaseConfigurable):
         if stop_event is not None:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-        with self._handler:
+        with StreamHandler(self, status_queue):
             while True:
                 try:
                     if stop_event is not None and stop_event.is_set():
