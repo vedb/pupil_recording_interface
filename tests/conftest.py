@@ -107,6 +107,9 @@ def pupil_packet(packet):
         "norm_pos": (0.0, 0.0),
         "confidence": 0.0,
         "timestamp": packet.timestamp,
+        "id": 0,
+        "topic": "pupil.0",
+        "method": "2d c++",
     }
 
     return packet
