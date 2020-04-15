@@ -14,6 +14,21 @@ from pupil_recording_interface.pipeline import Pipeline
 logger = logging.getLogger(__name__)
 
 
+class StreamHandler:
+    """ Context manager for main loop. """
+
+    def __init__(self, stream):
+        """ Constructor. """
+        self.stream = stream
+
+    def __enter__(self):
+        self.stream.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stream._fps_buffer.clear()
+        self.stream.stop()
+
+
 class BaseStream(BaseConfigurable):
     """ Base class for all streams. """
 
@@ -36,6 +51,7 @@ class BaseStream(BaseConfigurable):
         self.pipeline = pipeline
         self.name = name or device.device_uid
 
+        self._handler = StreamHandler(self)
         self._last_timestamp = 0.0
         self._fps_buffer = deque(maxlen=20)
 
@@ -176,39 +192,36 @@ class BaseStream(BaseConfigurable):
             A queue for incoming priority notifications in a multi-threaded
             setting.
         """
-        self.start()
-
         # TODO make this a little prettier to avoid the try/except block
         if stop_event is not None:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-        while True:
-            try:
-                if stop_event is not None and stop_event.is_set():
-                    logger.debug("Thread stopped via stop event.")
+        with self._handler:
+            while True:
+                try:
+                    if stop_event is not None and stop_event.is_set():
+                        logger.debug("Thread stopped via stop event.")
+                        break
+
+                    # TODO configure max number of notifications
+                    notifications = self._get_notifications(
+                        notification_queue, priority_queue
+                    )
+                    packet = self.get_packet()
+
+                    if self.pipeline is not None:
+                        packet = self.pipeline.flush(packet, notifications)
+
+                    # save timestamp and fps
+                    self._process_timestamp(packet.timestamp)
+
+                    # TODO yield self.get_status()?
+                    if status_queue is not None:
+                        status_queue.append(self.get_status(packet))
+
+                except KeyboardInterrupt:
+                    logger.debug("Thread stopped via keyboard interrupt.")
                     break
-
-                # TODO configure max number of notifications
-                notifications = self._get_notifications(
-                    notification_queue, priority_queue
-                )
-                packet = self.get_packet()
-
-                if self.pipeline is not None:
-                    packet = self.pipeline.flush(packet, notifications)
-
-                # save timestamp and fps
-                self._process_timestamp(packet.timestamp)
-
-                # TODO yield self.get_status()?
-                if status_queue is not None:
-                    status_queue.append(self.get_status(packet))
-
-            except KeyboardInterrupt:
-                logger.debug("Thread stopped via keyboard interrupt.")
-                break
-
-        self.stop()
 
     def run(self):
         """ Main loop. """
