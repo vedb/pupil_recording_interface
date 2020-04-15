@@ -1,10 +1,11 @@
 """"""
 import abc
+import time
 import logging
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
-
+from pupil_recording_interface.errors import DeviceNotConnected
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,9 @@ class VideoDeviceUVC(BaseVideoDevice):
         try:
             return cls._get_connected_device_uids()[device_name]
         except KeyError:
-            raise ValueError(f"Device with name {device_name} not connected.")
+            raise DeviceNotConnected(
+                f"Device with name {device_name} not connected."
+            )
 
     @classmethod
     def _get_available_modes(cls, device_uid):
@@ -108,6 +111,8 @@ class VideoDeviceUVC(BaseVideoDevice):
     @classmethod
     def _get_capture(cls, uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
+        import uvc
+
         device_uid = cls._get_uvc_device_uid(uid)
 
         # verify selected mode
@@ -117,12 +122,20 @@ class VideoDeviceUVC(BaseVideoDevice):
                 f"{resolution[0]}x{resolution[1]}@{fps}fps."
             )
 
-        import uvc
-
         capture = uvc.Capture(device_uid)
         capture.frame_mode = resolution + (fps,)
 
         return capture
+
+    def restart(self):
+        """ Try restarting this device. """
+        self.stop()
+        while not self.is_started:
+            try:
+                self.start()
+            except DeviceNotConnected:
+                logger.debug("Device is not connected, waiting for 1 second")
+                time.sleep(1)
 
     @classmethod
     def _get_timestamp(cls):
@@ -133,10 +146,17 @@ class VideoDeviceUVC(BaseVideoDevice):
 
     def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
+        import uvc
+
         if mode not in ("img", "bgr", "gray", "jpeg_buffer"):
             raise ValueError(f"Unsupported mode: {mode}")
 
-        uvc_frame = self.capture.get_frame()
+        try:
+            uvc_frame = self.capture.get_frame()
+        except uvc.StreamError:
+            logger.error("Stream error, attempting to re-init")
+            self.restart()
+            return self._get_frame_and_timestamp(mode=mode)
 
         return getattr(uvc_frame, mode), uvc_frame.timestamp
 

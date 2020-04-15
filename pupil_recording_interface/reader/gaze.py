@@ -6,7 +6,6 @@ import xarray as xr
 from msgpack import Unpacker
 
 from pupil_recording_interface import BaseReader
-from pupil_recording_interface.errors import FileNotFoundError
 
 
 class GazeReader(BaseReader):

@@ -266,7 +266,6 @@ class VideoStream(BaseStream):
 
     def get_packet(self):
         """ Get the last data packet from the stream. """
-        # TODO handle uvc.StreamError and reinitialize capture
         # TODO get only jpeg buffer when not showing video
         if self.color_format == "gray":
             frame, timestamp = self.device._get_frame_and_timestamp("gray")

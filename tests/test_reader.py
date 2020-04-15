@@ -18,7 +18,6 @@ from pupil_recording_interface import (
     VideoReader,
     OpticalFlowReader,
 )
-from pupil_recording_interface.errors import FileNotFoundError
 
 
 class TestBaseReader(object):
