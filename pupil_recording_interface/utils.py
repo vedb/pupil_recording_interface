@@ -10,6 +10,12 @@ logger = logging.getLogger(__name__)
 
 SyncManager.register("deque", deque)
 
+try:
+    from uvc import get_time_monotonic as monotonic  # noqa
+except ImportError:
+    logger.warning("Could not import uvc, falling back to time.monotonic")
+    from time import monotonic  # noqa
+
 
 def get_params(cls):
     """ Get constructor parameters for a class. """

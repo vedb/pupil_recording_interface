@@ -13,7 +13,7 @@ from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.externals.methods import get_system_info
 from pupil_recording_interface.stream import BaseStream
-from pupil_recording_interface.utils import multiprocessing_deque
+from pupil_recording_interface.utils import multiprocessing_deque, monotonic
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,12 @@ class StreamManager(object):
     """ Manager for multiple streams. """
 
     def __init__(
-        self, configs, folder=None, policy="new_folder", duration=None,
+        self,
+        configs,
+        folder=None,
+        policy="new_folder",
+        duration=None,
+        max_queue_size=20,
     ):
         """ Constructor.
 
@@ -46,21 +51,27 @@ class StreamManager(object):
         duration: float, optional
             If provided, the number of seconds after which the streams are
             stopped.
+
+        max_queue_size: int, default 20
+            Maximum size of process status and notification queues. Higher
+            values might lead to delays in communicating with the processes
+            while lower values might lead to dropped messages.
         """
         self.folder = self._init_folder(folder, policy)
         self.streams = self._init_streams(configs, self.folder)
         self.duration = duration or float("inf")
+        self.max_queue_size = max_queue_size
+
+        self.status = {}
         self.stopped = False
 
-        self._max_queue_size = 20  # max size of status queue
-        self._start_time = 0.0
-        self._start_time_monotonic = 0.0
+        self._start_time = float("nan")
+        self._start_time_monotonic = float("nan")
         self._processes = {}
         self._status_queues = {}
         self._notification_queues = {}
         self._priority_queues = {}
         self._stop_event = None
-        self._status = {}
         self._thread = None
 
     def __enter__(self):
@@ -74,7 +85,7 @@ class StreamManager(object):
 
     @classmethod
     def _init_folder(cls, folder, policy):
-        """"""
+        """ Init folder if specified. """
         if folder is None:
             return None
 
@@ -184,40 +195,24 @@ class StreamManager(object):
             logger.debug(f"Stopping process: {process_name}")
             process.join()
 
-    def get_status(self):
+    def _get_status(self):
         """ Get information about the status of all streams. """
         # TODO updating self._status should be made thread-safe
         # TODO timeout for statuses that are too old
         for stream_name, queue in self._status_queues.items():
-            if stream_name not in self._status:
-                self._status[stream_name] = self.streams[
+            if stream_name not in self.status:
+                self.status[stream_name] = self.streams[
                     stream_name
                 ].get_status()  # TODO proxy for getting "empty" status
             elif queue._getvalue():
-                self._status[stream_name] = queue.popleft()
-                if "exception" in self._status[stream_name]:
+                self.status[stream_name] = queue.popleft()
+                if "exception" in self.status[stream_name]:
                     logger.error(
                         f"Stream {stream_name} has crashed with exception "
-                        f"{self._status[stream_name]['exception']}"
+                        f"{self.status[stream_name]['exception']}"
                     )
 
-        return self._status
-
-    @property
-    def all_streams_running(self):
-        """"""
-        if self.stopped:
-            return False
-
-        for stream in self.streams:
-            if stream not in self._status:
-                return False
-            elif "running" not in self._status[stream]:
-                return False
-            elif not self._status[stream]["running"]:
-                return False
-
-        return True
+        return self.status
 
     @classmethod
     def _get_notifications(cls, statuses, target_stream):
@@ -237,12 +232,41 @@ class StreamManager(object):
 
         return notifications
 
-    def notify_streams(self, statuses):
+    def _notify_streams(self, statuses):
         """ Notify streams of status updates they are listening for. """
         for name, stream in self.streams.items():
             notifications = self._get_notifications(statuses, stream)
             if len(notifications) > 0:
                 self._notification_queues[name].append(notifications)
+
+    def _handle_interrupt(self, signal, frame):
+        """ Handle keyboard interrupt. """
+        logger.debug(f"{type(self).__name__} caught keyboard interrupt")
+        self.stopped = True
+
+    def _set_interrupt_handler(self):
+        """ Set handler for keyboard interrupts. """
+        signal.signal(signal.SIGINT, self._handle_interrupt)
+
+    @property
+    def all_streams_running(self):
+        """"""
+        if self.stopped:
+            return False
+
+        for stream in self.streams:
+            if stream not in self.status:
+                return False
+            elif "running" not in self.status[stream]:
+                return False
+            elif not self.status[stream]["running"]:
+                return False
+
+        return True
+
+    @property
+    def run_duration(self):
+        return time.time() - self._start_time
 
     def send_notification(self, notification):
         """ Send a notification over the priority queues. """
@@ -250,22 +274,12 @@ class StreamManager(object):
             self._priority_queues[name].append(notification)
 
     def await_status(self, stream, **kwargs):
-        """ Wait for a stream to report a certain status.
-
-        Parameters
-        ----------
-        stream
-        kwargs
-
-        Returns
-        -------
-
-        """
+        """ Wait for a stream to report a certain status. """
         # TODO timeout
         while not self.stopped:
             try:
                 if all(
-                    self._status[stream][key] == value
+                    self.status[stream][key] == value
                     for key, value in kwargs.items()
                 ):
                     break
@@ -276,7 +290,6 @@ class StreamManager(object):
         self, key, format="{:.2f}", status_dict=None, max_cols=None
     ):
         """ Format status dictionary to string. """
-        # TODO check if status values are too old
 
         def recursive_get(d, *keys):
             try:
@@ -284,7 +297,7 @@ class StreamManager(object):
             except KeyError:
                 return None
 
-        status_dict = status_dict or self._status
+        status_dict = status_dict or self.status
 
         values = {
             name: recursive_get(status, *key.split("."))
@@ -305,10 +318,10 @@ class StreamManager(object):
 
         return status_str
 
-    def save_info(self, run_duration):
+    def save_info(self):
         """ Save info.player.json file. """
         json_file = {
-            "duration_s": run_duration,
+            "duration_s": self.run_duration,
             "meta_version": "2.1",
             "min_player_version": "1.16",
             "recording_name": self.folder,
@@ -327,21 +340,9 @@ class StreamManager(object):
         ) as f:
             json.dump(json_file, f, ensure_ascii=False, indent=4)
 
-    def _handle_interrupt(self, signal, frame):
-        """ Handle keyboard interrupt. """
-        logger.debug(f"{type(self).__name__} caught keyboard interrupt")
-        self.stopped = True
-
-    def set_interrupt_handler(self):
-        """ Set handler for keyboard interrupts. """
-        signal.signal(signal.SIGINT, self._handle_interrupt)
-
     def start(self):
         """ Start recording. """
-        from uvc import get_time_monotonic
-
-        # set up interrupt handler
-        self.set_interrupt_handler()
+        self._set_interrupt_handler()
         self.stopped = False
 
         # run hooks that need to be run in the main thread
@@ -356,13 +357,13 @@ class StreamManager(object):
             self._notification_queues,
             self._priority_queues,
             self._stop_event,
-        ) = self._init_processes(self.streams, self._max_queue_size)
+        ) = self._init_processes(self.streams, self.max_queue_size)
         self._start_processes(self._processes)
 
         # Record times
         # TODO these should be queried at the same time
         self._start_time = time.time()
-        self._start_time_monotonic = get_time_monotonic()
+        self._start_time_monotonic = monotonic()
 
         # Log info
         if self.folder is not None:
@@ -374,11 +375,8 @@ class StreamManager(object):
 
     def _spin_blocking(self):
         """ Non-generator implementation of spin. """
-        while (
-            time.time() - self._start_time_monotonic < self.duration
-            and not self.stopped
-        ):
-            self.notify_streams(self.get_status())
+        while self.run_duration < self.duration and not self.stopped:
+            self._notify_streams(self._get_status())
 
         logger.debug("Stopped spinning")
 
@@ -390,12 +388,9 @@ class StreamManager(object):
         statuses: dict
             A mapping from stream names to their current status.
         """
-        while (
-            time.time() - self._start_time_monotonic < self.duration
-            and not self.stopped
-        ):
-            statuses = self.get_status()
-            self.notify_streams(statuses)
+        while self.run_duration < self.duration and not self.stopped:
+            statuses = self._get_status()
+            self._notify_streams(statuses)
             yield statuses
 
     def spin(self, block=True):
@@ -423,11 +418,9 @@ class StreamManager(object):
 
     def stop(self):
         """ Stop streams. """
-        run_duration = time.time() - self._start_time
-
         # save info.player.json
         if self.folder is not None:
-            self.save_info(run_duration)
+            self.save_info()
 
         # stop recording threads
         self._stop_processes(self._processes, self._stop_event)
@@ -442,7 +435,7 @@ class StreamManager(object):
             stream.run_post_thread_hooks()
 
         # log info
-        logger.debug(f"Stopped streams after {run_duration:.2f} seconds")
+        logger.debug(f"Stopped streams after {self.run_duration:.2f} seconds")
 
     def run(self):
         """ Main loop (blocking). """

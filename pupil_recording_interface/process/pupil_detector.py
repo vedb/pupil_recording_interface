@@ -55,12 +55,10 @@ class PupilDetector(BaseProcess):
 
         if cls_kwargs["camera_id"] is None:
             try:
-                cls_kwargs["camera_id"] = int(stream_config["name"][-1])
+                cls_kwargs["camera_id"] = int(stream_config.name[-1])
             except (ValueError, TypeError):
                 try:
-                    cls_kwargs["camera_id"] = int(
-                        stream_config["device_uid"][-1]
-                    )
+                    cls_kwargs["camera_id"] = int(stream_config.device_uid[-1])
                 except (ValueError, TypeError):
                     logger.debug("Could not auto-determine eye camera ID")
 

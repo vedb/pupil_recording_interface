@@ -251,8 +251,6 @@ class BaseStream(BaseConfigurable):
 class VideoStream(BaseStream):
     """ Video stream. """
 
-    _config_attrs = {"stream_type": "video"}
-
     def __init__(
         self,
         device,
