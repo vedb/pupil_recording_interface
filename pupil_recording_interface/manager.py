@@ -8,6 +8,7 @@ import shutil
 import signal
 import time
 import uuid
+from functools import reduce
 
 from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
@@ -52,7 +53,7 @@ class StreamManager(object):
         self.duration = duration or float("inf")
         self.stopped = False
 
-        self._max_queue_size = 20  # max size of process fps queue
+        self._max_queue_size = 20  # max size of status queue
         self._start_time = 0.0
         self._start_time_monotonic = 0.0
         self._processes = {}
@@ -256,6 +257,7 @@ class StreamManager(object):
         -------
 
         """
+        # TODO timeout
         while not self.stopped:
             try:
                 if all(
@@ -266,40 +268,33 @@ class StreamManager(object):
             except KeyError:
                 pass
 
-    def format_status(self, status_dict=None, value="fps", max_cols=None):
+    def format_status(
+        self, key, format="{:.2f}", status_dict=None, max_cols=None
+    ):
         """ Format status dictionary to string. """
         # TODO check if status values are too old
 
+        def recursive_get(d, *keys):
+            try:
+                return reduce(lambda c, k: c[k], keys, d)
+            except KeyError:
+                return None
+
         status_dict = status_dict or self._status
 
-        if value == "fps":
-            if not any(
-                math.isnan(status[value])
-                for status in status_dict.values()
-                if value in status
-            ):
-                status_str = ", ".join(
-                    f"{name}: " + f"{status['fps']:.2f} Hz"
-                    for name, status in status_dict.items()
-                )
-            else:
-                return None
-        elif value == "pupil_confidence":
-            confidences = {
-                name: status["pupil"]["confidence"]
-                for name, status in status_dict.items()
-                if "pupil" in status
-            }
-            # TODO: return None until all pupil detectors report something
-            if len(confidences) > 0:
-                status_str = ", ".join(
-                    f"{name}: " + f"{confidence:.2f}"
-                    for name, confidence in confidences.items()
-                )
-            else:
-                return None
+        values = {
+            name: recursive_get(status, *key.split("."))
+            for name, status in status_dict.items()
+        }
+
+        if len(values) > 0:
+            status_str = ", ".join(
+                f"{name}: " + format.format(value)
+                for name, value in values.items()
+                if value is not None
+            )
         else:
-            raise ValueError(f"Unrecognized status value: {value}")
+            return None
 
         if max_cols is not None and len(status_str) > max_cols:
             status_str = status_str[: max_cols - 3] + "..."

@@ -59,9 +59,7 @@ if __name__ == "__main__":
     ) as manager:
         while not manager.stopped:
             if manager.all_streams_running:
-                status = manager.format_status(
-                    value="pupil_confidence", max_cols=72
-                )
+                status = manager.format_status("pupil.confidence", max_cols=72)
                 print("\r" + status, end="")
 
     print("\nStopped")

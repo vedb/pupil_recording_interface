@@ -90,7 +90,6 @@ class BaseStream(BaseConfigurable):
 
         if packet is not None:
             status["timestamp"] = packet.timestamp
-            # TODO should this go into a dedicated "broadcasts" entry?
             for key, value in packet.get_broadcasts().items():
                 status[key] = value
 
@@ -120,7 +119,7 @@ class BaseStream(BaseConfigurable):
 
     @classmethod
     def _get_notifications(
-        cls, notification_queue, priority_queue, max_len=20
+        cls, notification_queue, priority_queue, max_len=100
     ):
         """"""
         notifications = []
@@ -129,11 +128,11 @@ class BaseStream(BaseConfigurable):
             while priority_queue._getvalue():
                 notifications.append(priority_queue.popleft())
 
-        counter = 0
         if notification_queue is not None:
-            while notification_queue._getvalue() and counter < max_len:
+            while (
+                notification_queue._getvalue() and len(notifications) < max_len
+            ):
                 notifications.append(notification_queue.popleft())
-                counter += 1
 
         return notifications
 
