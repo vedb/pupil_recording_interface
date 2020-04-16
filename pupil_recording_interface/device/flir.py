@@ -4,6 +4,7 @@ import logging
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device.video import BaseVideoDevice
+from pupil_recording_interface.utils import monotonic
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # Retrieve list of cameras from the system
         cam_list = system.GetCameras()
-        logger.debug("List of Cameras: ", cam_list)
+        logger.debug(f"List of Cameras: {cam_list}")
         num_cameras = cam_list.GetSize()
         logger.debug(f"Number of cameras detected: {num_cameras}")
 
@@ -155,14 +156,13 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         # TODO: Use uid to identify camera
         camera = cam_list[0]
-        logger.debug("FLIR Camera : ", camera)
+        logger.debug(f"FLIR Camera : {camera}")
 
         # Initialize camera
         camera.Init()
 
         # Retrieve TL device nodemap and print device information
         nodemap_tldevice = camera.GetTLDeviceNodeMap()
-        nodemap_tlstream = camera.GetTLStreamNodeMap()
         cls._log_device_info(nodemap_tldevice)
 
         camera.TriggerMode.SetValue(PySpin.TriggerMode_Off)
@@ -181,7 +181,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         else:
             raise ValueError(f"Invalid camera type: {device_model}")
 
-        logger.debug("FLIR Camera Type = ", camera_type)
+        logger.debug(f"FLIR Camera Type = {camera_type}")
 
         if camera_type == "Chameleon":
             logger.debug("Initializing Chameleon ...")
@@ -220,7 +220,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 nodemap.GetNode("AcquisitionFrameRate")
             )
             frame_rate_node.SetValue(fps)
-            logger.debug("fps set to: ", frame_rate_node.GetValue())
+            logger.debug(f"fps set to: {frame_rate_node.GetValue()}")
 
             # TODO Ensure desired exposure time does not exceed the maximum
             #  exposure_time_to_set = exposure_value
@@ -237,32 +237,35 @@ class VideoDeviceFLIR(BaseVideoDevice):
         else:
             raise ValueError(f"Invalid camera type: {camera_type}")
 
-        logger.debug("Set FLIR fps to:", fps)
+        logger.debug(f"Set FLIR fps to: {fps}")
 
-        buffer_handling_node = PySpin.CEnumerationPtr(
-            nodemap_tlstream.GetNode("buffer_handling_node")
-        )
-        buffer_handling_node_entry = buffer_handling_node.GetEntryByName(
-            "NewestOnly"
-        )
-        buffer_handling_node.SetIntValue(buffer_handling_node_entry.GetValue())
-        logger.debug(
-            "Set FLIR buffer handling to: NewestOnly: ",
-            buffer_handling_node_entry.GetValue(),
-        )
+        # TODO figure out why this throws an error
+        #  nodemap_tlstream = camera.GetTLStreamNodeMap()
+        #  buffer_handling_node = PySpin.CEnumerationPtr(
+        #     nodemap_tlstream.GetNode("buffer_handling_node")
+        #  )
+        #  buffer_handling_node_entry = buffer_handling_node.GetEntryByName(
+        #     "NewestOnly"
+        #  )
+        #  buffer_handling_node.SetIntValue(
+        #  buffer_handling_node_entry.GetValue())
+        #  logger.debug(
+        #     f"Set FLIR buffer handling to: NewestOnly: "
+        #     f"{buffer_handling_node_entry.GetValue()}",
+        #  )
 
         # TODO: Find a way of reading the actual frame rate for Chameleon
         #  Chameleon doesn't have this register or anything similar to this
         if camera_type == "BlackFly":
             logger.debug(
-                "Actual frame rate: ",
-                camera.AcquisitionResultingFrameRate.GetValue(),
+                f"Actual frame rate: "
+                f"{camera.AcquisitionResultingFrameRate.GetValue()}",
             )
 
         timestamp_offset = cls._compute_timestamp_offset(
             camera, 20, camera_type
         )
-        logger.debug("TimeStamp offset: ", timestamp_offset / 1e9)
+        logger.debug(f"TimeStamp offset: {timestamp_offset / 1e9}")
 
         #  Begin acquiring images
         camera.BeginAcquisition()
@@ -276,28 +279,26 @@ class VideoDeviceFLIR(BaseVideoDevice):
         """ Get a frame and its associated timestamp. """
         # TODO return grayscale frame if mode=='gray'
         import PySpin
-        import uvc
 
         try:
             #  Retrieve next received image
-            image_result = self.capture.GetNextImage()
+            image_result = self.capture.camera.GetNextImage()
 
-            # TODO: Make sure there is no harm reading uvc time stamp
-            uvc_timestamp = uvc.get_time_monotonic()
+            pupil_timestamp = monotonic()
 
             # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
             #  timestamp = float(image_result.GetTimestamp()) / 1e9
             # TODO: Temporary solution to fix the FLIR timestamp issue
-            self.capture.TimestampLatch.Execute()
+            self.capture.camera.TimestampLatch.Execute()
             if self.capture.camera_type == "BlackFly":
-                timestamp = (
+                timestamp = (  # noqa
                     self.capture.timestamp_offset
-                    + self.capture.TimestampLatchValue.GetValue() / 1e9
+                    + self.capture.camera.TimestampLatchValue.GetValue() / 1e9
                 )
             elif self.capture.camera_type == "Chameleon":
-                timestamp = (
+                timestamp = (  # noqa
                     self.capture.timestamp_offset
-                    + self.capture.Timestamp.GetValue() / 1e9
+                    + self.capture.camera.Timestamp.GetValue() / 1e9
                 )
             else:
                 raise ValueError(
@@ -323,7 +324,5 @@ class VideoDeviceFLIR(BaseVideoDevice):
             # TODO check correct error handling
             raise ValueError(ex)
 
-        # TODO: Make a note to remember we're using uvc timestamp
-        timestamp = uvc_timestamp
-
-        return frame.GetNDArray(), timestamp
+        # TODO: return both pupil and FLIR timestamp
+        return frame.GetNDArray(), pupil_timestamp
