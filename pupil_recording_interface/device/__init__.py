@@ -46,15 +46,9 @@ class BaseDevice(BaseConfigurable):
     def is_started(self):
         """ Whether this device has been started. """
 
-    @abc.abstractmethod
     def start(self):
         """ Start this device. """
 
-    @abc.abstractmethod
-    def get_packet(self):
-        """ Get a new data packet from the device. """
-
-    @abc.abstractmethod
     def stop(self):
         """ Stop this device. """
 

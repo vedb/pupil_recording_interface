@@ -1,6 +1,8 @@
 """"""
 import logging
 
+import cv2
+
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.utils import get_constructor_args
@@ -67,6 +69,9 @@ class PupilDetector(BaseProcess):
     def detect_pupil(self, packet):
         """ Detect pupil in frame. """
         frame = packet["frame"]
+
+        if frame.ndim == 3:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         pupil = self.detector.detect(frame)
 

@@ -417,6 +417,7 @@ class VideoReader(BaseReader):
         if idx < 0 or idx >= self.frame_count:
             raise ValueError("Frame index out of range")
 
+        # TODO this is very inefficient for consecutive frames
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
         _, frame = self.capture.read()
 

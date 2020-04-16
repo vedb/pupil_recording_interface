@@ -17,8 +17,8 @@ class GazeMapper(BaseProcess):
 
     def __init__(
         self,
-        left="eye0",
-        right="eye1",
+        left="eye1",
+        right="eye0",
         params=None,
         folder=None,
         record=False,
@@ -84,8 +84,8 @@ class GazeMapper(BaseProcess):
             try:
                 self._gaze_queue.put(
                     self.map_gaze(
-                        notification[self.left]["pupil"],
                         notification[self.right]["pupil"],
+                        notification[self.left]["pupil"],
                     )
                 )
             except KeyError:

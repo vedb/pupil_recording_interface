@@ -1,4 +1,6 @@
 """"""
+import cv2
+
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.externals.circle_detector import CircleTracker
@@ -16,7 +18,12 @@ class CircleDetector(BaseProcess):
 
     def detect_circle(self, packet):
         """"""
-        circle_markers = self.circle_tracker.update(packet["frame"])
+        frame = packet["frame"]
+
+        if frame.ndim == 3:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        circle_markers = self.circle_tracker.update(frame)
 
         for marker in circle_markers:
             marker["timestamp"] = packet.timestamp

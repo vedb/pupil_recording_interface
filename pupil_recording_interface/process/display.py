@@ -53,7 +53,7 @@ class VideoDisplay(BaseProcess):
 
         frame = packet["display_frame"]
         if frame.ndim == 2:
-            frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         ellipse = pupil["ellipse"]
         cv2.ellipse(
@@ -90,7 +90,7 @@ class VideoDisplay(BaseProcess):
             gaze_point = tuple(gaze_point.astype(int))
 
         if frame.ndim == 2:
-            frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # TODO make constructor arguments
         color = (0, 0, 255)
@@ -119,7 +119,7 @@ class VideoDisplay(BaseProcess):
 
         frame = packet["display_frame"]
         if frame.ndim == 2:
-            frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # TODO make constructor arguments
         color = (255, 0, 0)
@@ -140,7 +140,7 @@ class VideoDisplay(BaseProcess):
 
         frame = packet["display_frame"]
         if frame.ndim == 2:
-            frame = cv2.cvtColor(packet.frame, cv2.COLOR_GRAY2BGR)
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         if isinstance(grid_points, list):
             calib_bounds = [

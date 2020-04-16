@@ -6,7 +6,7 @@ from .reader.odometry import OdometryReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
 
-from .device.video import VideoDeviceUVC
+from .device.video import VideoDeviceUVC, VideoFileDevice
 from .device.flir import VideoDeviceFLIR
 from .device.realsense import RealSenseDeviceT265
 
@@ -45,6 +45,7 @@ __all__ = [
     "OpticalFlowReader",
     # Devices
     "VideoDeviceUVC",
+    "VideoFileDevice",
     "VideoDeviceFLIR",
     "RealSenseDeviceT265",
     # Streams

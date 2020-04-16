@@ -46,7 +46,9 @@ class StreamManager(object):
             'here', the data will be recorded to the specified folder but
             will throw an error when existing files would be overwritten. If
             'overwrite', the data will be recorded to the specified folder
-            and existing files will possibly be overwritten.
+            and existing files will possibly be overwritten. If 'read',
+            the folder is only read from, for example when using a
+            'video_file' device.
 
         duration: float, optional
             If provided, the number of seconds after which the streams are
@@ -58,6 +60,7 @@ class StreamManager(object):
             while lower values might lead to dropped messages.
         """
         self.folder = self._init_folder(folder, policy)
+        self.policy = policy
         self.streams = self._init_streams(configs, self.folder)
         self.duration = duration or float("inf")
         self.max_queue_size = max_queue_size
@@ -103,6 +106,9 @@ class StreamManager(object):
         elif policy == "overwrite":
             shutil.rmtree(folder, ignore_errors=True)
 
+        elif policy == "read":
+            return folder
+
         else:
             raise ValueError(f"Unsupported file creation policy: {policy}")
 
@@ -136,9 +142,9 @@ class StreamManager(object):
                     config, devices_by_uid[uid], folder
                 )
                 devices_by_uid[uid] = devices_by_uid[uid] or stream.device
-                if config.name in streams:
-                    raise ValueError(f"Duplicate config name: {config.name}")
-                streams[config.name] = stream
+                if stream.name in streams:
+                    raise ValueError(f"Duplicate stream name: {stream.name}")
+                streams[stream.name] = stream
 
         return streams
 
@@ -204,7 +210,7 @@ class StreamManager(object):
                 self.status[stream_name] = self.streams[
                     stream_name
                 ].get_status()  # TODO proxy for getting "empty" status
-            elif queue._getvalue():
+            if queue._getvalue():
                 self.status[stream_name] = queue.popleft()
                 if "exception" in self.status[stream_name]:
                     logger.error(
@@ -419,7 +425,7 @@ class StreamManager(object):
     def stop(self):
         """ Stop streams. """
         # save info.player.json
-        if self.folder is not None:
+        if self.folder is not None and self.policy != "read":
             self.save_info()
 
         # stop recording threads

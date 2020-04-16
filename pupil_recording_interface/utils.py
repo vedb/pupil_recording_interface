@@ -65,7 +65,10 @@ def get_constructor_args(cls, config, **kwargs):
                 #  are set at the end.
                 pass
 
-    cls_kwargs.update(kwargs)
+    # update from kwargs
+    for name in cls_kwargs:
+        if name in kwargs:
+            cls_kwargs[name] = kwargs[name]
 
     return cls_kwargs
 

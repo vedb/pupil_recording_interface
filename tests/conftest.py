@@ -1,17 +1,46 @@
 import os
 import shutil
+from time import monotonic
+from collections import deque
 
 import pytest
 import numpy as np
 
 from pupil_recording_interface import DATA_DIR
-from pupil_recording_interface.stream import VideoStream
+from pupil_recording_interface.decorators import device, stream
+from pupil_recording_interface.device import BaseDevice
+from pupil_recording_interface.stream import BaseStream, VideoStream
 from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process.display import VideoDisplay
 from pupil_recording_interface.process.pupil_detector import PupilDetector
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.cam_params import CamParamEstimator
+from pupil_recording_interface.manager import StreamManager
+
+
+class MockMultiprocessingDeque(deque):
+    def _getvalue(self):
+        return len(self) > 0
+
+
+@device("mock_device")
+class MockDevice(BaseDevice):
+    @property
+    def is_started(self):
+        return True
+
+
+@stream("mock_stream")
+class MockStream(BaseStream):
+    def get_packet(self):
+        return Packet(self.name, self.device.device_uid, monotonic())
+
+
+@pytest.fixture()
+def mock_mp_deque():
+    """"""
+    return MockMultiprocessingDeque
 
 
 @pytest.fixture()
@@ -677,11 +706,11 @@ def intrinsics():
     }
 
 
-# -- STREAMS -- #
+# -- CONFIGS -- #
 @pytest.fixture()
-def video_stream(pipeline):
+def mock_stream_config():
     """"""
-    return VideoStream(None, pipeline, "test_stream")
+    return MockStream.Config("mock_device", "mock_device", name="mock_stream")
 
 
 @pytest.fixture()
@@ -690,6 +719,13 @@ def video_config():
     return VideoStream.Config(
         "uvc", "test_cam", resolution=(1280, 720), fps=30
     )
+
+
+# -- STREAMS -- #
+@pytest.fixture()
+def video_stream(pipeline):
+    """"""
+    return VideoStream(None, pipeline, "test_stream")
 
 
 # -- PROCESSES -- #
@@ -742,7 +778,14 @@ def cam_param_estimator(temp_folder, circle_grid_packet):
     return estimator
 
 
+# -- OTHER -- #
 @pytest.fixture()
 def pipeline(video_display):
     """"""
     return Pipeline([video_display])
+
+
+@pytest.fixture()
+def stream_manager(mock_stream_config):
+    """"""
+    return StreamManager([mock_stream_config])

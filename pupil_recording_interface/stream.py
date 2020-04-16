@@ -1,4 +1,5 @@
 """"""
+import abc
 from collections import deque
 import signal
 import logging
@@ -65,13 +66,13 @@ class BaseStream(BaseConfigurable):
         self.pipeline = pipeline
         self.name = name or device.device_uid
 
-        self._last_timestamp = 0.0
+        self._last_timestamp = float("nan")
         self._fps_buffer = deque(maxlen=20)
 
     @classmethod
     def _from_config(cls, config, device=None, folder=None):
         """ Create a stream from a StreamConfig. """
-        device = device or BaseDevice.from_config(config)
+        device = device or BaseDevice.from_config(config, folder=folder)
         return cls(
             device,
             name=config.name or device.device_uid,
@@ -167,9 +168,9 @@ class BaseStream(BaseConfigurable):
 
         return notifications
 
+    @abc.abstractmethod
     def get_packet(self):
-        """ Get the last data packet and timestamp from the stream. """
-        return self.device.get_packet()
+        """ Get a new data packet from the stream. """
 
     def stop(self):
         """ Stop the stream. """
@@ -283,7 +284,7 @@ class VideoStream(BaseStream):
     @classmethod
     def _from_config(cls, config, device=None, folder=None):
         """ Create a stream from a StreamConfig. """
-        device = device or BaseDevice.from_config(config)
+        device = device or BaseDevice.from_config(config, folder=folder)
         return cls(
             device,
             name=config.name or device.device_uid,

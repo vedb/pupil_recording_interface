@@ -2,9 +2,14 @@
 import abc
 import time
 import logging
+from time import monotonic, sleep
+
+import cv2
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
+from pupil_recording_interface.reader.video import VideoReader
+from pupil_recording_interface.utils import get_constructor_args
 from pupil_recording_interface.errors import DeviceNotConnected
 
 logger = logging.getLogger(__name__)
@@ -40,16 +45,13 @@ class BaseVideoDevice(BaseDevice):
         self.capture = None
         self.capture_kwargs = kwargs
 
-        self.previous_timestamp = 0
-        self.current_timestamp = 0
-
     @property
     def is_started(self):
         return self.capture is not None
 
     @classmethod
     @abc.abstractmethod
-    def _get_capture(cls, device_name, resolution, fps, **kwargs):
+    def _get_capture(cls, device_uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
 
     @abc.abstractmethod
@@ -190,3 +192,77 @@ class VideoDeviceUVC(BaseVideoDevice):
             The captured frame.
         """
         return self.capture.get_frame()
+
+
+@device("video_file", optional=("topic",))
+class VideoFileDevice(BaseVideoDevice):
+    """ Video device that reads a video file. """
+
+    def __init__(
+        self, folder, topic, resolution=None, fps=None, loop=True,
+    ):
+        """ Constructor. """
+        BaseVideoDevice.__init__(self, topic, resolution, fps, folder=folder)
+
+        self.loop = loop
+
+        self.speed = 1.0
+        self._frame_index = 0
+        self._last_playback_timestamp = float("nan")
+        self._last_file_timestamp = float("nan")
+
+    @classmethod
+    def _from_config(cls, config, **kwargs):
+        """ Per-class implementation of from_config. """
+        assert device.registry[config.device_type] is cls
+
+        cls_kwargs = get_constructor_args(cls, config,)
+        cls_kwargs["folder"] = kwargs.get("folder", None) or getattr(
+            config, "folder", None
+        )
+        cls_kwargs["topic"] = config.device_uid
+
+        return cls(**cls_kwargs)
+
+    def start(self):
+        """ Start this device. """
+        if not self.is_started:
+            self.capture = self._get_capture(
+                self.device_uid,
+                self.resolution,
+                self.fps,
+                **self.capture_kwargs,
+            )
+            if self.fps is not None:
+                self.speed = self.fps / self.capture.fps
+
+    @classmethod
+    def _get_capture(cls, topic, resolution, fps, folder=None):
+        """ Get a capture instance for a device by name. """
+        # TODO get subsampling from resolution
+        return VideoReader(folder, topic)
+
+    def _get_frame_and_timestamp(self, mode="img"):
+        """ Get a frame and its associated timestamp. """
+        # TODO get gray image when mode="gray"
+        if self.loop and self._frame_index >= self.capture.frame_count - 1:
+            self._frame_index = 0
+            self.capture.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+        _, frame = self.capture.capture.read()
+        file_timestamp = (
+            float(self.capture.timestamps[self._frame_index].value) / 1e9
+        )
+        self._frame_index += 1
+
+        if self.speed < float("inf"):
+            playback_timestamp = monotonic()
+            elapsed = playback_timestamp - self._last_playback_timestamp
+            desired = (file_timestamp - self._last_file_timestamp) / self.speed
+            diff = desired - elapsed
+            if diff > 0:
+                sleep(diff)
+            self._last_file_timestamp = file_timestamp
+            self._last_playback_timestamp = playback_timestamp
+
+        return frame, file_timestamp
