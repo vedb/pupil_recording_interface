@@ -786,6 +786,9 @@ def pipeline(video_display):
 
 
 @pytest.fixture()
-def stream_manager(mock_stream_config):
+def stream_manager(mock_stream_config, mock_mp_deque):
     """"""
-    return StreamManager([mock_stream_config])
+    manager = StreamManager([mock_stream_config])
+    manager._status_queues["mock_stream"] = mock_mp_deque()
+
+    return manager

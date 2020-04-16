@@ -203,22 +203,30 @@ class StreamManager(object):
 
     def _get_status(self):
         """ Get information about the status of all streams. """
-        # TODO updating self._status should be made thread-safe
+        status = {}
+
+        for stream_name, queue in self._status_queues.items():
+            if queue._getvalue():
+                status[stream_name] = queue.popleft()
+                if "exception" in status[stream_name]:
+                    logger.error(
+                        f"Stream {stream_name} has crashed with exception "
+                        f"{status[stream_name]['exception']}"
+                    )
+
+        return status
+
+    def _update_status(self, status):
+        """ Update the status of all streams. """
+        # TODO updating self.status should be made thread-safe
         # TODO timeout for statuses that are too old
         for stream_name, queue in self._status_queues.items():
-            if stream_name not in self.status:
+            if stream_name in status:
+                self.status[stream_name].update(status[stream_name])
+            elif stream_name not in status:
                 self.status[stream_name] = self.streams[
                     stream_name
                 ].get_status()  # TODO proxy for getting "empty" status
-            if queue._getvalue():
-                self.status[stream_name] = queue.popleft()
-                if "exception" in self.status[stream_name]:
-                    logger.error(
-                        f"Stream {stream_name} has crashed with exception "
-                        f"{self.status[stream_name]['exception']}"
-                    )
-
-        return self.status
 
     @classmethod
     def _get_notifications(cls, statuses, target_stream):
@@ -382,7 +390,9 @@ class StreamManager(object):
     def _spin_blocking(self):
         """ Non-generator implementation of spin. """
         while self.run_duration < self.duration and not self.stopped:
-            self._notify_streams(self._get_status())
+            status = self._get_status()
+            self._notify_streams(status)
+            self._update_status(status)
 
         logger.debug("Stopped spinning")
 
@@ -391,13 +401,14 @@ class StreamManager(object):
 
         Yields
         ------
-        statuses: dict
+        status: dict
             A mapping from stream names to their current status.
         """
         while self.run_duration < self.duration and not self.stopped:
-            statuses = self._get_status()
-            self._notify_streams(statuses)
-            yield statuses
+            status = self._get_status()
+            self._notify_streams(status)
+            self._update_status(status)
+            yield status
 
     def spin(self, block=True):
         """ Main worker loop of the manager.

@@ -9,10 +9,9 @@ class TestManager:
     def test_init_folder(self, temp_folder):
         """"""
 
-    def test_get_status(self, stream_manager, packet, mock_mp_deque):
+    def test_get_status(self, stream_manager, packet):
         """"""
         status = stream_manager.streams["mock_stream"].get_status()
-        stream_manager._status_queues["mock_stream"] = mock_mp_deque()
         stream_manager._status_queues["mock_stream"].append(status)
 
         np.testing.assert_equal(
@@ -45,6 +44,8 @@ class TestManager:
                 }
             },
         )
+
+        assert stream_manager._get_status() == {}
 
     def test_get_notifications(self, statuses, video_stream):
         """"""
