@@ -19,15 +19,17 @@ class VideoDisplay(BaseProcess):
     def __init__(
         self,
         name,
-        block=True,
+        resolution=None,
         overlay_pupil=False,
         overlay_gaze=False,
         overlay_circle_marker=False,
         overlay_circle_grid=False,
+        block=True,
         **kwargs,
     ):
         """ Constructor. """
         self.name = name
+        self.resolution = resolution
         self.overlay_pupil = overlay_pupil
         self.overlay_gaze = overlay_gaze
         self.overlay_circle_marker = overlay_circle_marker
@@ -39,10 +41,22 @@ class VideoDisplay(BaseProcess):
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
         cls_kwargs = get_constructor_args(
-            cls, config, name=stream_config.name or device.device_uid
+            cls,
+            config,
+            name=stream_config.name or device.device_uid,
+            resolution=stream_config.resolution,
         )
 
         return cls(**cls_kwargs)
+
+    def start(self):
+        """ Start the process. """
+        cv2.namedWindow(
+            self.name,
+            cv2.WINDOW_NORMAL + cv2.WINDOW_KEEPRATIO + cv2.WINDOW_GUI_NORMAL,
+        )
+        if self.resolution is not None:
+            cv2.resizeWindow(self.name, self.resolution[0], self.resolution[1])
 
     def _add_pupil_overlay(self, packet):
         """ Add pupil overlay onto frame. """

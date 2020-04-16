@@ -12,10 +12,10 @@ import os
 import sys
 import getpass
 import platform
+import warnings
 import logging
 
 import numpy as np
-
 
 logger = logging.getLogger(__name__)
 
@@ -101,16 +101,20 @@ def dist_pts_ellipse(ellipse, points):
         pts * M_rot
     )  # rotate so that ellipse axis align with coordinate system
 
-    pts /= np.array((rx, ry))  # normalize such that ellipse radii=1
-    norm_mag = np.sqrt((pts * pts).sum(axis=1))
-    norm_dist = abs(norm_mag - 1)  # distance of pt to ellipse in scaled space
-    ratio = (
-        norm_dist
-    ) / norm_mag  # scale factor to make the pts represent their dist to ellipse
-    scaled_error = np.transpose(
-        pts.T * ratio
-    )  # per vector scalar multiplication: makeing sure that boradcasting is done right
-    real_error = scaled_error * np.array((rx, ry))
-    error_mag = np.sqrt((real_error * real_error).sum(axis=1))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        pts /= np.array((rx, ry))  # normalize such that ellipse radii=1
+        norm_mag = np.sqrt((pts * pts).sum(axis=1))
+        norm_dist = abs(
+            norm_mag - 1
+        )  # distance of pt to ellipse in scaled space
+        ratio = (
+            norm_dist
+        ) / norm_mag  # scale factor to make the pts represent their dist to ellipse
+        scaled_error = np.transpose(
+            pts.T * ratio
+        )  # per vector scalar multiplication: makeing sure that boradcasting is done right
+        real_error = scaled_error * np.array((rx, ry))
+        error_mag = np.sqrt((real_error * real_error).sum(axis=1))
 
     return error_mag
