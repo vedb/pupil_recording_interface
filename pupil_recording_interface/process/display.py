@@ -19,6 +19,7 @@ class VideoDisplay(BaseProcess):
     def __init__(
         self,
         name,
+        flip=False,
         resolution=None,
         overlay_pupil=False,
         overlay_gaze=False,
@@ -29,6 +30,7 @@ class VideoDisplay(BaseProcess):
     ):
         """ Constructor. """
         self.name = name
+        self.flip = flip
         self.resolution = resolution
         self.overlay_pupil = overlay_pupil
         self.overlay_gaze = overlay_gaze
@@ -36,6 +38,8 @@ class VideoDisplay(BaseProcess):
         self.overlay_circle_grid = overlay_circle_grid
 
         super().__init__(block=block, **kwargs)
+
+        self._last_gaze_point = None
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -94,24 +98,25 @@ class VideoDisplay(BaseProcess):
             denormalize(g["norm_pos"], frame.shape[1::-1]) for g in gaze
         ]
 
+        # TODO smoothed + timeout or similar
         if len(gaze_points) == 0:
-            # Return the attribute to avoid unnecessary waiting
-            return packet.display_frame
+            gaze_point = self._last_gaze_point
         elif len(gaze_points) == 1:
             gaze_point = int(gaze_points[0][0]), int(gaze_points[0][1])
         else:
             gaze_point = np.mean(gaze_points, axis=0)
             gaze_point = tuple(gaze_point.astype(int))
+        self._last_gaze_point = gaze_point
 
         if frame.ndim == 2:
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # TODO make constructor arguments
-        color = (0, 0, 255)
+        color = (0, 255, 0)
         radius = 10
 
         try:
-            cv2.circle(frame, gaze_point, radius, color)
+            cv2.circle(frame, gaze_point, radius, color, thickness=-1)
         except OverflowError as e:
             logger.debug(e)
 
@@ -176,6 +181,9 @@ class VideoDisplay(BaseProcess):
     def show_frame(self, packet):
         """"""
         frame = packet["display_frame"]
+
+        if self.flip:
+            frame = np.rot90(frame, 2)
 
         if frame is not None:
             cv2.imshow(self.name, frame)

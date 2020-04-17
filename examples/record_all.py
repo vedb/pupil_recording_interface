@@ -26,7 +26,10 @@ if __name__ == "__main__":
             resolution=(320, 240),
             fps=120,
             color_format="gray",
-            pipeline=[pri.VideoRecorder.Config(), pri.VideoDisplay.Config()],
+            pipeline=[
+                pri.VideoRecorder.Config(),
+                pri.VideoDisplay.Config(flip=True),
+            ],
         ),
         pri.VideoStream.Config(
             device_type="uvc",

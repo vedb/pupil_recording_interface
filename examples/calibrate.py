@@ -33,7 +33,7 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(overlay_pupil=True),
+                pri.VideoDisplay.Config(flip=True, overlay_pupil=True),
             ],
         ),
         pri.VideoStream.Config(
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.INFO, format="%(message)s"
+        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
     )
 
     # run manager

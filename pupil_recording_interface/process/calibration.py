@@ -106,6 +106,8 @@ class Calibration(BaseProcess):
         self.result = self._fix_result(method, result)
 
         logger.info("Calculated calibration")
+        logger.debug(result)
+
         self._calculated = True
 
     def _process_notifications(self, notifications, block=None):

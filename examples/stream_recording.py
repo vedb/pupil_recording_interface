@@ -26,7 +26,7 @@ if __name__ == "__main__":
             resolution=(192, 192),
             pipeline=[
                 pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(overlay_pupil=True),
+                pri.VideoDisplay.Config(flip=True, overlay_pupil=True),
             ],
         ),
         pri.VideoStream.Config(
