@@ -54,6 +54,34 @@ class Calibration(BaseProcess):
 
         return cls(**cls_kwargs)
 
+    @classmethod
+    def _fix_result(cls, method, result):
+        """ Fix result to match calibration obtained by Pupil Software. """
+        # TODO find out why and get rid of this method
+        if method == "binocular polynomial regression":
+            # y parameters are flipped
+            result["args"]["params"] = (
+                result["args"]["params"][0],
+                [-p for p in result["args"]["params"][1]],
+                result["args"]["params"][2],
+            )
+            result["args"]["params_eye0"] = (
+                result["args"]["params_eye0"][0],
+                [-p for p in result["args"]["params_eye0"][1]],
+                result["args"]["params_eye0"][2],
+            )
+            result["args"]["params_eye1"] = (
+                result["args"]["params_eye1"][0],
+                [-p for p in result["args"]["params_eye1"][1]],
+                result["args"]["params_eye1"][2],
+            )
+            # last coefficients are exactly one off
+            result["args"]["params"][1][-1] += 1
+            result["args"]["params_eye0"][1][-1] += 1
+            result["args"]["params_eye1"][1][-1] += 1
+
+        return result
+
     def calculate_calibration(self):
         """ Calculate calibration from collected data. """
         pupil_list = []
@@ -72,11 +100,12 @@ class Calibration(BaseProcess):
             detection_mapping_mode=self.mode,
             min_calibration_confidence=self.min_confidence,
         )
-        _, self.result = select_method_and_perform_calibration(
+        method, result = select_method_and_perform_calibration(
             g_pool, pupil_list, circle_marker_list
         )
-        logger.info("Calculated calibration")
+        self.result = self._fix_result(method, result)
 
+        logger.info("Calculated calibration")
         self._calculated = True
 
     def _process_notifications(self, notifications, block=None):

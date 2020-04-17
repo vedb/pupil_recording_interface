@@ -119,6 +119,24 @@ class TestGazeMapper:
         }
 
 
+class TestCalibration:
+    def test_calculate_calibration(
+        self, calibration, pupil, reference_locations, calibration_2d
+    ):
+        """"""
+        for p in pupil:
+            calibration._pupil_queue.put(p)
+
+        for r in reference_locations:
+            calibration._circle_marker_queue.put(r)
+
+        calibration.calculate_calibration()
+
+        for param, actual in calibration.result["args"].items():
+            expected = calibration_2d["data"][8][1][param]
+            np.testing.assert_allclose(actual[:2], expected[:2])
+
+
 class TestCamParamEstimator:
     def test_get_patterns(self, cam_param_estimator, packet):
         """"""

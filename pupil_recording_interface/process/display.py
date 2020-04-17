@@ -44,7 +44,7 @@ class VideoDisplay(BaseProcess):
             cls,
             config,
             name=stream_config.name or device.device_uid,
-            resolution=stream_config.resolution,
+            resolution=getattr(stream_config, "resolution", None),
         )
 
         return cls(**cls_kwargs)
@@ -110,7 +110,10 @@ class VideoDisplay(BaseProcess):
         color = (0, 0, 255)
         radius = 10
 
-        cv2.circle(frame, gaze_point, radius, color)
+        try:
+            cv2.circle(frame, gaze_point, radius, color)
+        except OverflowError as e:
+            logger.debug(e)
 
         return frame
 

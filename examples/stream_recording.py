@@ -49,7 +49,7 @@ if __name__ == "__main__":
     with pri.StreamManager(configs, folder=folder, policy="read") as manager:
         while not manager.stopped:
             if manager.all_streams_running:
-                status = manager.format_status("fps", max_cols=72)
+                status = manager.format_status("fps")
                 print("\r" + status, end="")
 
     print("\nStopped")
