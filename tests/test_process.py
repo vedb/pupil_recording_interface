@@ -87,24 +87,19 @@ class TestPupilDetector:
             for d in load_pldata_file(pupil_detector.folder, "pupil").data
         ]
 
-        assert pldata[0] == {
-            "ellipse": {
-                "center": (0.0, 0.0),
-                "axes": (0.0, 0.0),
-                "angle": -90.0,
-            },
-            "diameter": 0.0,
-            "location": (0.0, 0.0),
-            "confidence": 0.0,
-            "norm_pos": (0.0, 0.0),
-            "timestamp": 0.0,
-            "topic": "pupil.0",
-            "id": 0,
-            "method": "2d c++",
-        }
+        assert pldata[0] == pupil_packet.pupil
 
 
 class TestGazeMapper:
+    def test_map_gaze(self, gaze_mapper, gaze_packet):
+        """"""
+        gaze = gaze_mapper.map_gaze(
+            gaze_packet.gaze[0]["base_data"][0],
+            gaze_packet.gaze[0]["base_data"][1],
+        )
+
+        np.testing.assert_equal(gaze, gaze_packet.gaze[0])
+
     def test_record_data(self, gaze_mapper, gaze_packet):
         """"""
         gaze_mapper.record_data(gaze_packet)
@@ -114,12 +109,13 @@ class TestGazeMapper:
             dict(d) for d in load_pldata_file(gaze_mapper.folder, "gaze").data
         ]
 
+        pldata[0].pop("base_data")
+
         assert pldata[0] == {
             "topic": "gaze.2d.01.",
-            "norm_pos": (0.5, 0.5),
-            "confidence": 0.0,
-            "timestamp": gaze_packet.timestamp,
-            "base_data": (gaze_packet.pupil, gaze_packet.pupil),
+            "norm_pos": (0.4629928051354275, 0.535180803465634),
+            "confidence": 0.9748326882542296,
+            "timestamp": 2295.232966,
         }
 
 

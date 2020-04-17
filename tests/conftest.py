@@ -17,6 +17,10 @@ from pupil_recording_interface.process.pupil_detector import PupilDetector
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.cam_params import CamParamEstimator
 from pupil_recording_interface.manager import StreamManager
+from pupil_recording_interface.externals.file_methods import (
+    load_object,
+    load_pldata_file,
+)
 
 
 class MockMultiprocessingDeque(deque):
@@ -114,6 +118,45 @@ def statuses():
     }
 
 
+# -- PUPIL DATA -- #
+@pytest.fixture()
+def pupil(folder):
+    """"""
+    pldata = load_pldata_file(folder, "pupil",)
+
+    pupil = [dict(d) for d in pldata.data]
+
+    return pupil
+
+
+@pytest.fixture()
+def gaze_2d(folder):
+    """"""
+    pldata = load_pldata_file(
+        os.path.join(folder, "offline_data", "gaze-mappings"),
+        "2d_Gaze_Mapper_-28b2161b-24dd-4265-b12f-7d09c380bf4f",
+    )
+
+    gaze = [dict(d) for d in pldata.data]
+    for g in gaze:
+        g["base_data"] = tuple(dict(pupil) for pupil in g["base_data"])
+
+    return gaze
+
+
+@pytest.fixture()
+def calibration_2d(folder):
+    """"""
+    return load_object(
+        os.path.join(
+            folder,
+            "calibrations",
+            "2d_Calibration-4fb6bf62-0ae8-42d2-a16c-913e68a5f3c3.plcal",
+        )
+    )
+
+
+# -- PACKETS -- #
 @pytest.fixture()
 def packet():
     """"""
@@ -127,44 +170,19 @@ def packet():
 
 
 @pytest.fixture()
-def pupil_packet(packet):
+def pupil_packet(packet, pupil):
     """"""
-    packet.pupil = {
-        "ellipse": {"center": (0.0, 0.0), "axes": (0.0, 0.0), "angle": -90.0},
-        "diameter": 0.0,
-        "location": (0.0, 0.0),
-        "norm_pos": (0.0, 0.0),
-        "confidence": 0.0,
-        "timestamp": packet.timestamp,
-        "id": 0,
-        "topic": "pupil.0",
-        "method": "2d c++",
-    }
+    packet.pupil = pupil[100]
 
     return packet
 
 
 @pytest.fixture()
-def gaze_packet(pupil_packet):
+def gaze_packet(packet, gaze_2d):
     """"""
-    pupil_packet.gaze = [
-        {
-            "topic": "gaze.2d.01.",
-            "norm_pos": (0.5, 0.5),
-            "confidence": 0.0,
-            "timestamp": pupil_packet.timestamp,
-            "base_data": [pupil_packet.pupil, pupil_packet.pupil],
-        },
-        {
-            "topic": "gaze.2d.01.",
-            "norm_pos": (0.6, 0.6),
-            "confidence": 0.0,
-            "timestamp": pupil_packet.timestamp,
-            "base_data": [pupil_packet.pupil, pupil_packet.pupil],
-        },
-    ]
+    packet.gaze = gaze_2d[100:102]
 
-    return pupil_packet
+    return packet
 
 
 @pytest.fixture()
@@ -706,6 +724,92 @@ def intrinsics():
     }
 
 
+@pytest.fixture()
+def calibration_result():
+    """"""
+    return {
+        "subject": "start_plugin",
+        "name": "Binocular_Gaze_Mapper",
+        "args": {
+            "params": (
+                [
+                    2201803.1215753704,
+                    2134705.7493349165,
+                    113252.48800440133,
+                    191125.2437602058,
+                    -741488.9914512336,
+                    -696985.4062740915,
+                    -2874021.3296480775,
+                    1263361.703233622,
+                    -36567.19551026076,
+                    -104147.17969385907,
+                    -249399.26482605934,
+                    177340.90921813995,
+                    -1291651.5777982175,
+                ],
+                [
+                    -9250079.4496762,
+                    -8967641.140702963,
+                    1582050.1186696626,
+                    2663862.858192548,
+                    3114114.5521235764,
+                    2926847.2293437794,
+                    12074064.593445852,
+                    -5305797.045291908,
+                    -515952.01958952565,
+                    -1462825.3859930038,
+                    -3469844.1659641415,
+                    2481926.845902629,
+                    4241896.629694015,
+                ],
+                13,
+            ),
+            "params_eye0": (
+                [
+                    1901596.143230319,
+                    1843686.6778810173,
+                    -640413.2830189317,
+                    -602001.9125128463,
+                    -2482164.351716414,
+                    1091150.9066975042,
+                    -1059131.2351655439,
+                ],
+                [
+                    -8989852.192927942,
+                    -8715344.546584591,
+                    3026529.129553769,
+                    2844518.9448581897,
+                    11734232.122967154,
+                    -5156429.598533429,
+                    5007446.74479349,
+                ],
+                7,
+            ),
+            "params_eye1": (
+                [
+                    97333.22986156493,
+                    164405.11170060933,
+                    -31361.14048637636,
+                    -89479.99620907754,
+                    -214589.44272871315,
+                    152448.13607300073,
+                    -56162.76455439627,
+                ],
+                [
+                    1670049.9027859792,
+                    2811992.178282343,
+                    -544643.2285774685,
+                    -1544121.0888915882,
+                    -3662796.401930243,
+                    2619865.2864553183,
+                    -961118.9146865197,
+                ],
+                7,
+            ),
+        },
+    }
+
+
 # -- CONFIGS -- #
 @pytest.fixture()
 def mock_stream_config():
@@ -747,9 +851,13 @@ def pupil_detector(temp_folder):
 
 
 @pytest.fixture()
-def gaze_mapper(temp_folder):
+def gaze_mapper(temp_folder, calibration_2d):
     """"""
-    return GazeMapper(folder=temp_folder, record=True)
+    return GazeMapper(
+        folder=temp_folder,
+        params=calibration_2d["data"][8][1]["params"],
+        record=True,
+    )
 
 
 @pytest.fixture()

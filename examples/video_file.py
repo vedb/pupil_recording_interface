@@ -14,14 +14,16 @@ if __name__ == "__main__":
         pri.VideoStream.Config(
             device_type="video_file",
             device_uid="world",
+            resolution=(1280, 720),
             pipeline=[
-                pri.CircleDetector.Config(),
-                pri.VideoDisplay.Config(overlay_circle_marker=True),
+                pri.GazeMapper.Config(),
+                pri.VideoDisplay.Config(overlay_gaze=True),
             ],
         ),
         pri.VideoStream.Config(
             device_type="video_file",
             device_uid="eye0",
+            resolution=(192, 192),
             pipeline=[
                 pri.PupilDetector.Config(),
                 pri.VideoDisplay.Config(overlay_pupil=True),
@@ -30,6 +32,7 @@ if __name__ == "__main__":
         pri.VideoStream.Config(
             device_type="video_file",
             device_uid="eye1",
+            resolution=(192, 192),
             pipeline=[
                 pri.PupilDetector.Config(),
                 pri.VideoDisplay.Config(overlay_pupil=True),

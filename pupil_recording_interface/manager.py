@@ -221,12 +221,12 @@ class StreamManager(object):
         # TODO updating self.status should be made thread-safe
         # TODO timeout for statuses that are too old
         for stream_name, queue in self._status_queues.items():
-            if stream_name in status:
-                self.status[stream_name].update(status[stream_name])
-            elif stream_name not in status:
+            if stream_name not in self.status:
                 self.status[stream_name] = self.streams[
                     stream_name
                 ].get_status()  # TODO proxy for getting "empty" status
+            if stream_name in status:
+                self.status[stream_name].update(status[stream_name])
 
     @classmethod
     def _get_notifications(cls, statuses, target_stream):
