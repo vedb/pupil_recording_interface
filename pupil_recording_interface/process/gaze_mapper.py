@@ -222,7 +222,7 @@ class GazeMapper(BaseProcess):
                 logger.info(
                     "Updated gaze mapper params with calibration results"
                 )
-            except KeyError:
+            except (KeyError, TypeError):
                 pass
 
         packet.gaze = self.call(self.map_recent_gaze, block=block)
@@ -235,6 +235,6 @@ class GazeMapper(BaseProcess):
         return packet
 
     def stop(self):
-        """"""
+        """ Stop the process. """
         if self.writer is not None:
             self.writer.close()

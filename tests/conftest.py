@@ -159,6 +159,18 @@ def calibration_2d(folder):
 
 
 @pytest.fixture()
+def calibration_recorded(folder):
+    """"""
+    return load_object(
+        os.path.join(
+            folder,
+            "calibrations",
+            "Recorded_Calibration-85f75cc5-e2b2-5a46-b083-0a2054bbc810.plcal",
+        )
+    )
+
+
+@pytest.fixture()
 def reference_locations(folder):
     """"""
     resolution = (1280, 720)

@@ -17,7 +17,9 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 pri.CircleDetector.Config(),
-                pri.Calibration.Config(),
+                pri.Calibration.Config(
+                    save=True, folder="~/recordings", block=True
+                ),
                 pri.GazeMapper.Config(),
                 pri.VideoDisplay.Config(
                     overlay_circle_marker=True, overlay_gaze=True
@@ -70,6 +72,7 @@ if __name__ == "__main__":
                     manager.send_notification(
                         {"collect_calibration_data": True}
                     )
+                    manager.await_status("world", collected_markers=None)
                 response = input(
                     "Press enter to stop calibration or type 'a' to abort: "
                 )

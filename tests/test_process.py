@@ -141,6 +141,26 @@ class TestCalibration:
             expected = calibration_2d["data"][8][1][param]
             np.testing.assert_allclose(actual[:2], expected[:2])
 
+        # no data
+        calibration.calculate_calibration()
+        assert calibration.result is None
+
+    def test_save_result(self, calibration, calibration_2d, temp_folder):
+        """"""
+        calibration.folder = temp_folder
+        calibration.uuid = calibration_2d["data"][0]
+        calibration.recording_uuid = calibration_2d["data"][2]
+        calibration.frame_index_range = [0, 541]
+        calibration.result = {
+            "subject": "start_plugin",
+            "name": "Binocular_Gaze_Mapper",
+            "args": calibration_2d["data"][8][1],
+        }
+
+        filename = calibration.save_result()
+
+        np.testing.assert_equal(load_object(filename), calibration_2d)
+
 
 class TestCamParamEstimator:
     def test_get_patterns(self, cam_param_estimator, packet):

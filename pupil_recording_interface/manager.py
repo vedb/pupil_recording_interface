@@ -294,6 +294,8 @@ class StreamManager(object):
             try:
                 if all(
                     self.status[stream][key] == value
+                    or key in self.status[stream]
+                    and value is None
                     for key, value in kwargs.items()
                 ):
                     break

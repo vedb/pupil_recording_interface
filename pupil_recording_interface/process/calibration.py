@@ -1,14 +1,17 @@
 """"""
+import os
 from queue import Queue
+from uuid import uuid4
 import logging
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.utils import get_constructor_args
+from pupil_recording_interface.utils import get_constructor_args, monotonic
 from pupil_recording_interface.externals import GPoolDummy
 from pupil_recording_interface.externals.finish_calibration import (
     select_method_and_perform_calibration,
 )
+from pupil_recording_interface.externals.file_methods import save_object
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +28,9 @@ class Calibration(BaseProcess):
         left="eye1",
         right="eye0",
         world="world",
+        name=None,
+        folder=None,
+        save=False,
         block=False,
         **kwargs,
     ):
@@ -35,10 +41,23 @@ class Calibration(BaseProcess):
         self.left = left
         self.right = right
         self.world = world
+        self.name = name or f"{self.mode} Calibration"
+        self.folder = folder
+        self.save = save
 
         super().__init__(block=block, listen_for=["pupil"], **kwargs)
 
+        if self.save and self.folder is None:
+            raise ValueError("folder cannot be None")
+
         self.result = None
+        self.uuid = None
+        self.version = 1
+
+        # TODO these need to be set
+        self.recording_uuid = None
+        self.frame_index_range = None
+
         self._collect = False
         self._calculated = False
         self._pupil_queue = Queue()
@@ -49,7 +68,10 @@ class Calibration(BaseProcess):
         """ Per-class implementation of from_config. """
         # TODO this breaks when resolution is changed on the fly
         cls_kwargs = get_constructor_args(
-            cls, config, resolution=stream_config.resolution,
+            cls,
+            config,
+            resolution=stream_config.resolution,
+            folder=config.folder or kwargs.get("folder", None),
         )
 
         return cls(**cls_kwargs)
@@ -82,12 +104,44 @@ class Calibration(BaseProcess):
 
         return result
 
+    def save_result(self):
+        """ Save result of calibration. """
+        folder = os.path.join(os.path.expanduser(self.folder), "calibrations")
+        os.makedirs(folder, exist_ok=True)
+        filename = os.path.join(
+            folder, f"{self.name.replace(' ', '_')}-{self.uuid}.plcal"
+        )
+
+        data = {
+            "version": self.version,
+            "data": [
+                self.uuid,
+                self.name,
+                self.recording_uuid,
+                self.mode,
+                self.frame_index_range,
+                self.min_confidence,
+                "Calibration successful",
+                True,
+                [self.result["name"], self.result["args"]],
+            ],
+        }
+
+        save_object(data, filename)
+
+        logger.info(f"Saved calibration to {filename}")
+
+        return filename
+
     def calculate_calibration(self):
         """ Calculate calibration from collected data. """
+        # gather pupils
         pupil_list = []
+
         while not self._pupil_queue.empty():
             pupil_list.append(self._pupil_queue.get())
 
+        # gather reference markers
         circle_marker_list = []
         while not self._circle_marker_queue.empty():
             # TODO get biggest circle marker
@@ -95,20 +149,32 @@ class Calibration(BaseProcess):
             if len(circle_markers) > 0:
                 circle_marker_list.append(circle_markers[0])
 
+        # call calibration function
         g_pool = GPoolDummy(
             capture=GPoolDummy(frame_size=self.resolution),
             detection_mapping_mode=self.mode,
             min_calibration_confidence=self.min_confidence,
+            get_timestamp=monotonic,
         )
         method, result = select_method_and_perform_calibration(
             g_pool, pupil_list, circle_marker_list
         )
-        self.result = self._fix_result(method, result)
-
-        logger.info("Calculated calibration")
-        logger.debug(result)
 
         self._calculated = True
+
+        # process result
+        if result["subject"] == "calibration.failed":
+            self.result = None
+            logger.error("Calibration failed")
+        else:
+            self.result = self._fix_result(method, result)
+            logger.info("Calibration successful")
+            logger.debug(result)
+
+            self.uuid = str(uuid4())
+
+            if self.save:
+                self.save_result()
 
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """
@@ -144,6 +210,8 @@ class Calibration(BaseProcess):
         """ Process a packet. """
         if self._collect and "circle_markers" in packet:
             self._circle_marker_queue.put(packet["circle_markers"])
+            packet.collected_markers = self._circle_marker_queue.qsize()
+            packet.broadcasts.append("collected_markers")
 
         if self._calculated:
             if self.resolution != packet["frame"].shape[1::-1]:
