@@ -282,10 +282,11 @@ class StreamManager(object):
     def run_duration(self):
         return time.time() - self._start_time
 
-    def send_notification(self, notification):
+    def send_notification(self, notification, streams=None):
         """ Send a notification over the priority queues. """
         for name, stream in self.streams.items():
-            self._priority_queues[name].append(notification)
+            if streams is None or name in streams:
+                self._priority_queues[name].append(notification)
 
     def await_status(self, stream, **kwargs):
         """ Wait for a stream to report a certain status. """

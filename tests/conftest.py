@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 
 from pupil_recording_interface import DATA_DIR
-from pupil_recording_interface.decorators import device, stream
+from pupil_recording_interface.decorators import device, stream, process
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.stream import BaseStream, VideoStream
 from pupil_recording_interface.packet import Packet
@@ -35,6 +35,13 @@ class MockDevice(BaseDevice):
     @property
     def is_started(self):
         return True
+
+
+@device("mock_video_device")
+class MockVideoDevice(MockDevice):
+
+    resolution = (1280, 720)
+    fps = 30
 
 
 @stream("mock_stream")
@@ -860,6 +867,30 @@ def video_config():
     return VideoStream.Config(
         "uvc", "test_cam", resolution=(1280, 720), fps=30
     )
+
+
+@pytest.fixture()
+def process_configs(temp_folder):
+    """ Mapping from process type to working test config for each process. """
+    process_kwargs = {
+        "video_recorder": {"folder": temp_folder},
+        "odometry_recorder": {"folder": temp_folder},
+        "cam_param_estimator": {"streams": ["world"], "folder": temp_folder},
+    }
+
+    configs = {
+        process_type: cls.Config(**process_kwargs.get(process_type, {}))
+        for process_type, cls in process.registry.items()
+    }
+
+    return configs
+
+
+# -- DEVICES -- #
+@pytest.fixture()
+def mock_video_device():
+    """"""
+    return MockVideoDevice("mock_video_device")
 
 
 # -- STREAMS -- #

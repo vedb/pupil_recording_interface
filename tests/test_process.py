@@ -3,6 +3,7 @@ import os
 import pytest
 import numpy as np
 
+from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.process.cam_params import (
     calculate_intrinsics,
     calculate_extrinsics,
@@ -11,6 +12,34 @@ from pupil_recording_interface.externals.file_methods import (
     load_object,
     load_pldata_file,
 )
+from pupil_recording_interface.decorators import process
+
+
+class TestAllProcesses:
+    @pytest.mark.parametrize("process_type", process.registry.keys())
+    def test_pause_resume(
+        self, process_type, process_configs, video_config, mock_video_device
+    ):
+        """"""
+        config = process_configs[process_type]
+        config.process_name = "test"
+
+        # construct paused
+        config.paused = True
+        process = BaseProcess.from_config(
+            config, video_config, mock_video_device,
+        )
+        assert process.paused
+
+        # pause via notification
+        process.paused = False
+        process.process_notifications([{"pause_process": "test"}])
+        assert process.paused
+
+        # resume via notification
+        process.paused = True
+        process.process_notifications([{"resume_process": "test"}])
+        assert not process.paused
 
 
 class TestVideoRecorder:

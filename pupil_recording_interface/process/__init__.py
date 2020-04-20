@@ -3,10 +3,7 @@ from concurrent.futures import Future
 
 from pupil_recording_interface.base import BaseConfigurable
 from pupil_recording_interface.decorators import process
-from pupil_recording_interface.utils import (
-    get_constructor_args,
-    DroppingThreadPoolExecutor,
-)
+from pupil_recording_interface.utils import DroppingThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +11,12 @@ logger = logging.getLogger(__name__)
 class BaseProcess(BaseConfigurable):
     """ Base class for all processes. """
 
-    def __init__(self, block=True, listen_for=None, **kwargs):
+    def __init__(
+        self, process_name=None, paused=False, block=True, listen_for=None,
+    ):
         """ Constructor. """
+        self.process_name = process_name or type(self).__name__
+        self.paused = paused
         self.block = block
         self.listen_for = listen_for or []
 
@@ -39,7 +40,14 @@ class BaseProcess(BaseConfigurable):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = get_constructor_args(cls, config)
+        cls_kwargs = cls.get_constructor_args(config)
+        if stream_config.name is not None:
+            cls_kwargs["process_name"] = ".".join(
+                (
+                    stream_config.name,
+                    cls_kwargs["process_name"] or cls.__name__,
+                )
+            )
 
         return cls(**cls_kwargs)
 
@@ -67,18 +75,34 @@ class BaseProcess(BaseConfigurable):
 
     def process_notifications(self, notifications):
         """ Process new notifications. """
-        if self.block:
-            return self._process_notifications(notifications, block=True)
-        else:
-            return self._notification_executor.submit(
-                self._process_notifications, notifications, block=True
-            )
+        for notification in notifications:
+            if (
+                "pause_process" in notification
+                and notification["pause_process"] == self.process_name
+            ):
+                self.paused = True
+            if (
+                "resume_process" in notification
+                and notification["resume_process"] == self.process_name
+            ):
+                self.paused = False
+
+        if not self.paused:
+            if self.block:
+                return self._process_notifications(notifications, block=True)
+            else:
+                return self._notification_executor.submit(
+                    self._process_notifications, notifications, block=True
+                )
 
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """
 
     def process_packet(self, packet):
         """ Process a new packet. """
+        if self.paused:
+            return packet
+
         # TODO use per-attribute future mechanism of Packet
         if isinstance(packet, Future):
             packet = packet.result()

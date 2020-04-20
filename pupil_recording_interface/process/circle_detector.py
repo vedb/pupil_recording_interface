@@ -10,9 +10,9 @@ from pupil_recording_interface.externals.circle_detector import CircleTracker
 class CircleDetector(BaseProcess):
     """ Circle detector for the world video stream. """
 
-    def __init__(self, block=False, **kwargs):
+    def __init__(self, **kwargs):
         """ Constructor. """
-        super().__init__(block=block, **kwargs)
+        super().__init__(**kwargs)
 
         self.circle_tracker = CircleTracker()
 

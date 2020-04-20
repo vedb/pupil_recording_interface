@@ -9,7 +9,6 @@ import numpy as np
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.utils import get_constructor_args
 from pupil_recording_interface.externals.methods import gen_pattern_grid
 from pupil_recording_interface.externals.file_methods import save_intrinsics
 
@@ -21,13 +20,13 @@ class CircleGridDetector(BaseProcess):
     """ Detector for circle grids. """
 
     def __init__(
-        self, grid_shape=(4, 11), stereo=False, block=False, **kwargs
+        self, grid_shape=(4, 11), stereo=False, **kwargs,
     ):
         """ Constructor. """
         self.grid_shape = grid_shape
         self.stereo = stereo
 
-        super().__init__(block=block, **kwargs)
+        super().__init__(**kwargs)
 
     def detect_grid(self, packet):
         """ Detect circle grid in frame. """
@@ -181,7 +180,6 @@ class CamParamEstimator(BaseProcess):
         self,
         streams,
         folder,
-        block=False,
         grid_shape=(4, 11),
         num_patterns=10,
         distortion_model="radial",
@@ -195,7 +193,7 @@ class CamParamEstimator(BaseProcess):
         self.distortion_model = distortion_model
         self.extrinsics = extrinsics
 
-        super().__init__(block=block, listen_for=["circle_grid"], **kwargs)
+        super().__init__(listen_for=["circle_grid"], **kwargs)
 
         self.intrinsics = None
         self.extrinsics = None
@@ -209,8 +207,8 @@ class CamParamEstimator(BaseProcess):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = get_constructor_args(
-            cls, config, folder=config.folder or kwargs.get("folder", None),
+        cls_kwargs = cls.get_constructor_args(
+            config, folder=config.folder or kwargs.get("folder", None),
         )
 
         return cls(**cls_kwargs)

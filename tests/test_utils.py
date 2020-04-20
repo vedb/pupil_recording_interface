@@ -1,35 +1,7 @@
-from pupil_recording_interface.utils import (
-    get_params,
-    get_constructor_args,
-    multiprocessing_deque,
-)
-from pupil_recording_interface.device.video import BaseVideoDevice
+from pupil_recording_interface.utils import multiprocessing_deque
 
 
 class TestUtils:
-    def test_get_params(self):
-        """"""
-        assert get_params(BaseVideoDevice) == (
-            ["device_uid", "resolution", "fps"],
-            {},
-        )
-
-    def test_get_constructor_args(self, video_config):
-        """"""
-        assert get_constructor_args(BaseVideoDevice, video_config) == {
-            "device_uid": "test_cam",
-            "resolution": (1280, 720),
-            "fps": 30,
-        }
-
-        # regression test for overriding parameters with "False"
-        video_config.fps = False
-        assert get_constructor_args(BaseVideoDevice, video_config) == {
-            "device_uid": "test_cam",
-            "resolution": (1280, 720),
-            "fps": False,
-        }
-
     def test_multiprocessing_deque(self):
         """"""
         max_len = 10

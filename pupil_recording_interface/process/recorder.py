@@ -7,7 +7,6 @@ from pupil_recording_interface.decorators import process
 from pupil_recording_interface.encoder import VideoEncoderFFMPEG
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 from pupil_recording_interface.process import BaseProcess, logger
-from pupil_recording_interface.utils import get_constructor_args
 
 
 class BaseRecorder(BaseProcess):
@@ -53,6 +52,7 @@ class VideoRecorder(BaseRecorder):
         color_format="bgr24",
         codec="libx264",
         encoder_kwargs=None,
+        **kwargs,
     ):
         """ Constructor.
 
@@ -80,7 +80,7 @@ class VideoRecorder(BaseRecorder):
         encoder_kwargs: dict
             Addtional keyword arguments passed to the encoder.
         """
-        super().__init__(folder, name=name)
+        super().__init__(folder, name=name, **kwargs)
 
         self.encoder = VideoEncoderFFMPEG(
             self.folder,
@@ -104,8 +104,7 @@ class VideoRecorder(BaseRecorder):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = get_constructor_args(
-            cls,
+        cls_kwargs = cls.get_constructor_args(
             config,
             folder=config.folder or kwargs.get("folder", None),
             resolution=config.resolution or device.resolution,
@@ -139,9 +138,9 @@ class VideoRecorder(BaseRecorder):
 class OdometryRecorder(BaseRecorder):
     """ Recorder for an odometry stream. """
 
-    def __init__(self, folder, name=None, topic="odometry"):
+    def __init__(self, folder, name=None, topic="odometry", **kwargs):
         """ Constructor. """
-        super().__init__(folder, name=name)
+        super().__init__(folder, name=name, **kwargs)
 
         self.filename = os.path.join(self.folder, topic + ".pldata")
         if os.path.exists(self.filename):
@@ -151,7 +150,11 @@ class OdometryRecorder(BaseRecorder):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        return cls(config.folder or kwargs.get("folder", None))
+        cls_kwargs = cls.get_constructor_args(
+            config, folder=config.folder or kwargs.get("folder", None)
+        )
+
+        return cls(**cls_kwargs)
 
     def start(self):
         """ Start the recorder. """

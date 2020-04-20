@@ -16,10 +16,8 @@ if __name__ == "__main__":
             fps=60,
             color_format="gray",
             pipeline=[
-                pri.CircleDetector.Config(),
-                pri.Calibration.Config(
-                    save=True, folder="~/recordings", block=True
-                ),
+                pri.CircleDetector.Config(paused=True),
+                pri.Calibration.Config(save=True, folder="~/recordings"),
                 pri.GazeMapper.Config(),
                 pri.VideoDisplay.Config(
                     overlay_circle_marker=True, overlay_gaze=True
@@ -60,8 +58,8 @@ if __name__ == "__main__":
     # run manager
     with pri.StreamManager(configs) as manager:
         while not manager.stopped:
-            pass
             if manager.all_streams_running:
+                # Collect data
                 response = input(
                     "Press enter to start calibration or type 'a' to abort: "
                 )
@@ -70,15 +68,25 @@ if __name__ == "__main__":
                 else:
                     print("Collecting calibration data...")
                     manager.send_notification(
-                        {"collect_calibration_data": True}
+                        {"resume_process": "world.CircleDetector"},
+                        streams=["world"],
+                    )
+                    manager.send_notification(
+                        {"collect_calibration_data": True}, streams=["world"],
                     )
                     manager.await_status("world", collected_markers=None)
+
+                # Calculate calibration
                 response = input(
                     "Press enter to stop calibration or type 'a' to abort: "
                 )
                 if response == "a":
                     break
                 else:
+                    manager.send_notification(
+                        {"pause_process": "world.CircleDetector"},
+                        streams=["world"],
+                    )
                     manager.send_notification({"calculate_calibration": True})
                     manager.await_status("world", calibration_calculated=True)
 

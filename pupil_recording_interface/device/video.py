@@ -9,7 +9,6 @@ import cv2
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.reader.video import VideoReader
-from pupil_recording_interface.utils import get_constructor_args
 from pupil_recording_interface.errors import DeviceNotConnected
 
 logger = logging.getLogger(__name__)
@@ -216,7 +215,7 @@ class VideoFileDevice(BaseVideoDevice):
         """ Per-class implementation of from_config. """
         assert device.registry[config.device_type] is cls
 
-        cls_kwargs = get_constructor_args(cls, config,)
+        cls_kwargs = cls.get_constructor_args(config)
         cls_kwargs["folder"] = kwargs.get("folder", None) or getattr(
             config, "folder", None
         )

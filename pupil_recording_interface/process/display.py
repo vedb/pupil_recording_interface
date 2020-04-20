@@ -6,7 +6,6 @@ import numpy as np
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.utils import get_constructor_args
 from pupil_recording_interface.externals.methods import denormalize
 
 logger = logging.getLogger(__name__)
@@ -44,8 +43,7 @@ class VideoDisplay(BaseProcess):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = get_constructor_args(
-            cls,
+        cls_kwargs = cls.get_constructor_args(
             config,
             name=stream_config.name or device.device_uid,
             resolution=getattr(stream_config, "resolution", None),

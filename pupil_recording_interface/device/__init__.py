@@ -3,7 +3,6 @@ import abc
 
 from pupil_recording_interface.base import BaseConfigurable
 from pupil_recording_interface.decorators import device
-from pupil_recording_interface.utils import get_constructor_args
 
 
 class BaseDevice(BaseConfigurable):
@@ -32,7 +31,7 @@ class BaseDevice(BaseConfigurable):
         """ Per-class implementation of from_config. """
         assert device.registry[config.device_type] is cls
 
-        cls_kwargs = get_constructor_args(cls, config, **kwargs)
+        cls_kwargs = cls.get_constructor_args(config, **kwargs)
 
         return cls(**cls_kwargs)
 

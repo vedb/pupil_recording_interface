@@ -5,7 +5,6 @@ import cv2
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.utils import get_constructor_args
 from pupil_recording_interface.externals.methods import normalize
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 
@@ -22,7 +21,6 @@ class PupilDetector(BaseProcess):
         camera_id=None,
         folder=None,
         record=False,
-        block=False,
         **kwargs,
     ):
         """ Constructor. """
@@ -31,7 +29,7 @@ class PupilDetector(BaseProcess):
         self.folder = folder
         self.record = record
 
-        super().__init__(block=block, **kwargs)
+        super().__init__(**kwargs)
 
         if self.method == "2d c++":
             from pupil_detectors import Detector2D
@@ -51,8 +49,8 @@ class PupilDetector(BaseProcess):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = get_constructor_args(
-            cls, config, folder=config.folder or kwargs.get("folder", None),
+        cls_kwargs = cls.get_constructor_args(
+            config, folder=config.folder or kwargs.get("folder", None),
         )
 
         if cls_kwargs["camera_id"] is None:

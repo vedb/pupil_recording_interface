@@ -4,7 +4,6 @@ import logging
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.utils import get_constructor_args
 from pupil_recording_interface.externals.calibrate_2d import make_map_function
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 
@@ -130,8 +129,8 @@ class GazeMapper(BaseProcess):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = get_constructor_args(
-            cls, config, folder=config.folder or kwargs.get("folder", None),
+        cls_kwargs = cls.get_constructor_args(
+            config, folder=config.folder or kwargs.get("folder", None),
         )
 
         return cls(**cls_kwargs)

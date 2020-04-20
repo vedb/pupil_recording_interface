@@ -10,6 +10,7 @@ class _base_decorator:
     config_attr: str
     ignore = tuple()
     add = tuple()
+    add_kwargs = dict()
 
     def __init__(self, type_name, optional=None):
         """ Constructor. """
@@ -33,6 +34,7 @@ class _base_decorator:
         decorated_class._config_attrs = {self.config_attr: self.type_name}
         decorated_class._ignore_args = self.ignore
         decorated_class._additional_args = self.add
+        decorated_class._additional_kwargs = self.add_kwargs
         decorated_class._optional_args = self.optional
 
         return decorated_class
@@ -62,3 +64,4 @@ class process(_base_decorator):
     registry = {}
     name = "Process"
     config_attr = "process_type"
+    add_kwargs = {"process_name": None, "paused": False, "block": False}

@@ -6,7 +6,6 @@ import numpy as np
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
-from pupil_recording_interface.utils import get_params, get_constructor_args
 
 
 logger = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ class RealSenseDeviceT265(BaseDevice):
     @classmethod
     def _from_config(cls, config, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = get_constructor_args(cls, config, **kwargs)
+        cls_kwargs = cls.get_constructor_args(config, **kwargs)
 
         if config.stream_type == "video":
             # TODO this is a little hacky, maybe rename the parameter to "side"
@@ -84,7 +83,7 @@ class RealSenseDeviceT265(BaseDevice):
         # TODO make sure all configs have the same UID
         uid = config_list[0].device_uid
 
-        _, cls_kwargs = get_params(cls)
+        _, cls_kwargs = cls.get_params()
 
         # set parameters for video and odometry devices
         for config in config_list:

@@ -6,7 +6,7 @@ import logging
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.utils import get_constructor_args, monotonic
+from pupil_recording_interface.utils import monotonic
 from pupil_recording_interface.externals import GPoolDummy
 from pupil_recording_interface.externals.finish_calibration import (
     select_method_and_perform_calibration,
@@ -31,7 +31,6 @@ class Calibration(BaseProcess):
         name=None,
         folder=None,
         save=False,
-        block=False,
         **kwargs,
     ):
         """ Constructor. """
@@ -45,7 +44,7 @@ class Calibration(BaseProcess):
         self.folder = folder
         self.save = save
 
-        super().__init__(block=block, listen_for=["pupil"], **kwargs)
+        super().__init__(listen_for=["pupil"], **kwargs)
 
         if self.save and self.folder is None:
             raise ValueError("folder cannot be None")
@@ -67,8 +66,7 @@ class Calibration(BaseProcess):
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
         # TODO this breaks when resolution is changed on the fly
-        cls_kwargs = get_constructor_args(
-            cls,
+        cls_kwargs = cls.get_constructor_args(
             config,
             resolution=stream_config.resolution,
             folder=config.folder or kwargs.get("folder", None),
@@ -109,7 +107,7 @@ class Calibration(BaseProcess):
         folder = os.path.join(os.path.expanduser(self.folder), "calibrations")
         os.makedirs(folder, exist_ok=True)
         filename = os.path.join(
-            folder, f"{self.name.replace(' ', '_')}-{self.uuid}.plcal"
+            folder, f"{self.name.replace(' ', '_')}-{self.uuid}.plcal",
         )
 
         data = {
