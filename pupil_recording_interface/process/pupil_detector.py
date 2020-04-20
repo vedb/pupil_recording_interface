@@ -31,13 +31,10 @@ class PupilDetector(BaseProcess):
 
         super().__init__(**kwargs)
 
-        if self.method == "2d c++":
-            from pupil_detectors import Detector2D
-
-            self.detector = Detector2D()
-
-        else:
+        if self.method not in ("2d c++",):
             raise ValueError(f"Unsupported detection method: {self.method}")
+
+        self.detector = None
 
         if self.record:
             if self.folder is None:
@@ -45,6 +42,15 @@ class PupilDetector(BaseProcess):
             self.writer = PLData_Writer(self.folder, "pupil")
         else:
             self.writer = None
+
+    def start(self):
+        """ Start the process. """
+        if self.method == "2d c++":
+            from pupil_detectors import Detector2D
+
+            self.detector = Detector2D()
+        else:
+            raise ValueError(f"Unsupported detection method: {self.method}")
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):

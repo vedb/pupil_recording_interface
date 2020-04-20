@@ -80,18 +80,15 @@ class VideoRecorder(BaseRecorder):
         encoder_kwargs: dict
             Addtional keyword arguments passed to the encoder.
         """
+        self.fps = fps
+        self.resolution = resolution
+        self.color_format = color_format
+        self.codec = codec
+        self.encoder_kwargs = encoder_kwargs
+
         super().__init__(folder, name=name, **kwargs)
 
-        self.encoder = VideoEncoderFFMPEG(
-            self.folder,
-            self.name,
-            resolution,
-            fps,
-            color_format,
-            codec,
-            overwrite=False,
-            **(encoder_kwargs or {}),
-        )
+        self.encoder = None
 
         self.timestamp_file = os.path.join(
             self.folder, f"{self.name}_timestamps.npy"
@@ -114,6 +111,19 @@ class VideoRecorder(BaseRecorder):
         )
 
         return cls(**cls_kwargs)
+
+    def start(self):
+        """ Start the process. """
+        self.encoder = VideoEncoderFFMPEG(
+            self.folder,
+            self.name,
+            self.resolution,
+            self.fps,
+            self.color_format,
+            self.codec,
+            overwrite=False,
+            **(self.encoder_kwargs or {}),
+        )
 
     def write(self, packet):
         """ Write data to disk. """
