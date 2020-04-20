@@ -13,10 +13,10 @@ if __name__ == "__main__":
     configs = [
         pri.VideoStream.Config(
             device_type="flir",
-            device_uid="FLIR",
+            device_uid=None,
             name="world",
             resolution=(2048, 1536),
-            fps=50,
+            fps=50.0,
             pipeline=[pri.VideoRecorder.Config(), pri.VideoDisplay.Config()],
         ),
     ]

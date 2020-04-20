@@ -5,12 +5,19 @@ import logging
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device.video import BaseVideoDevice
 from pupil_recording_interface.utils import monotonic
+from pupil_recording_interface.errors import DeviceNotConnected
 
 logger = logging.getLogger(__name__)
 
 
 class FLIRCapture(object):
-    """ Capture wrapper for FLIR camera. """
+    """ Capture wrapper for FLIR camera.
+
+    This class is mostly required because of the questionable implementation
+    of the Spinnaker Python wrapper, requiring the user to keep references
+    to unused objects around to avoid dereferencing of the few C++ objects
+    that are actually used.
+    """
 
     def __init__(
         self, camera_type, camera, nodemap, system, timestamp_offset,
@@ -35,18 +42,14 @@ class VideoDeviceFLIR(BaseVideoDevice):
         Parameters
         ----------
         device_uid: str
-            The unique identity of this device. Depending on the device this
-            will be a serial number or similar.
+            The serial number of the device. If None, will use the first
+            camera in the Spinnaker device list.
 
         resolution: tuple, len 2
             Desired horizontal and vertical camera resolution.
 
         fps: int
             Desired camera refresh rate.
-
-        start: bool, default True
-            If True, initialize the underlying capture upon construction.
-            Set to False for multi-threaded recording.
         """
         # TODO specify additional keyword arguments
         super(VideoDeviceFLIR, self).__init__(
@@ -135,41 +138,51 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
     @classmethod
     def _get_capture(
-        cls, uid, resolution, fps, exposure_value=31000.0, gain=18
+        cls, serial_number, resolution, fps, exposure_value=31000.0, gain=18
     ):
         """ Get a capture instance for a device by name. """
         import PySpin
 
         system = PySpin.System.GetInstance()
 
-        # Retrieve list of cameras from the system
+        # Get camera by serial number
         cam_list = system.GetCameras()
-        logger.debug(f"List of Cameras: {cam_list}")
-        num_cameras = cam_list.GetSize()
-        logger.debug(f"Number of cameras detected: {num_cameras}")
+        logger.debug(f"Number of cameras detected: {cam_list.GetSize()}")
 
-        # Finish if there are no cameras
-        if num_cameras == 0:
+        for camera in cam_list:
+            device_nodemap = camera.GetTLDeviceNodeMap()
+            node_device_serial_number = PySpin.CStringPtr(
+                device_nodemap.GetNode("DeviceSerialNumber")
+            )
+            if PySpin.IsAvailable(
+                node_device_serial_number
+            ) and PySpin.IsReadable(node_device_serial_number):
+                # return camera instance if serial number matches
+                if (
+                    serial_number is None
+                    or node_device_serial_number.GetValue() == serial_number
+                ):
+                    break
+            else:
+                logger.warning(
+                    f"Could not get serial number for camera {camera}"
+                )
+        else:
             cam_list.Clear()
-            system.ReleaseInstance()
-            raise ValueError("Not enough cameras!")
+            raise DeviceNotConnected(
+                f"Camera with serial number {serial_number} not connected"
+            )
 
-        # TODO: Use uid to identify camera
-        camera = cam_list[0]
         logger.debug(f"FLIR Camera : {camera}")
+        cls._log_device_info(device_nodemap)
 
         # Initialize camera
         camera.Init()
-
-        # Retrieve TL device nodemap and print device information
-        nodemap_tldevice = camera.GetTLDeviceNodeMap()
-        cls._log_device_info(nodemap_tldevice)
 
         camera.TriggerMode.SetValue(PySpin.TriggerMode_Off)
 
         # Retrieve GenICam nodemap
         nodemap = camera.GetNodeMap()
-
         device_model = PySpin.CStringPtr(
             nodemap.GetNode("DeviceModelName")
         ).GetValue()
@@ -233,26 +246,43 @@ class VideoDeviceFLIR(BaseVideoDevice):
         elif camera_type == "BlackFly":
             logger.debug("Initializing BlackFly ...")
             camera.AcquisitionFrameRateEnable.SetValue(True)
-            camera.AcquisitionFrameRate.SetValue(fps)
-        else:
-            raise ValueError(f"Invalid camera type: {camera_type}")
+            camera.AcquisitionFrameRate.SetValue(float(fps))
 
         logger.debug(f"Set FLIR fps to: {fps}")
 
-        # TODO figure out why this throws an error
-        #  nodemap_tlstream = camera.GetTLStreamNodeMap()
-        #  buffer_handling_node = PySpin.CEnumerationPtr(
-        #     nodemap_tlstream.GetNode("buffer_handling_node")
-        #  )
-        #  buffer_handling_node_entry = buffer_handling_node.GetEntryByName(
-        #     "NewestOnly"
-        #  )
-        #  buffer_handling_node.SetIntValue(
-        #  buffer_handling_node_entry.GetValue())
-        #  logger.debug(
-        #     f"Set FLIR buffer handling to: NewestOnly: "
-        #     f"{buffer_handling_node_entry.GetValue()}",
-        #  )
+        # Set Pixel Format to RGB8
+        node_pixel_format = PySpin.CEnumerationPtr(
+            nodemap.GetNode("PixelFormat")
+        )
+        if not PySpin.IsAvailable(node_pixel_format) or not PySpin.IsWritable(
+            node_pixel_format
+        ):
+            logger.warning(
+                "Unable to set Pixel Format to RGB8 (enum retrieval)"
+            )
+
+        node_pixel_format_RGB8 = node_pixel_format.GetEntryByName("RGB8")
+        if not PySpin.IsAvailable(
+            node_pixel_format_RGB8
+        ) or not PySpin.IsReadable(node_pixel_format_RGB8):
+            logger.warning(
+                "Unable to set Pixel Format to RGB8 (entry retrieval)"
+            )
+
+        pixel_format_RGB8 = node_pixel_format_RGB8.GetValue()
+        node_pixel_format.SetIntValue(pixel_format_RGB8)
+
+        # get only last image from buffer to avoid delay
+        stream_nodemap = camera.GetTLStreamNodeMap()
+        handling_mode = PySpin.CEnumerationPtr(
+            stream_nodemap.GetNode("StreamBufferHandlingMode")
+        )
+        handling_mode_entry = handling_mode.GetEntryByName("NewestOnly")
+        handling_mode.SetIntValue(handling_mode_entry.GetValue())
+        logger.debug(
+            f"Set FLIR buffer handling to: NewestOnly: "
+            f"{handling_mode_entry.GetValue()}",
+        )
 
         # TODO: Find a way of reading the actual frame rate for Chameleon
         #  Chameleon doesn't have this register or anything similar to this
@@ -274,6 +304,11 @@ class VideoDeviceFLIR(BaseVideoDevice):
         return FLIRCapture(
             camera_type, camera, nodemap, system, timestamp_offset
         )
+
+    def stop(self):
+        """ Stop the device. """
+        self.capture.camera.AcquisitionStop()
+        logger.debug("Stopped FLIR camera")
 
     def _get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
