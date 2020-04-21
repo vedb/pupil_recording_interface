@@ -1,5 +1,6 @@
 import abc
 import os
+from collections import deque
 
 import numpy as np
 
@@ -52,6 +53,7 @@ class VideoRecorder(BaseRecorder):
         color_format="bgr24",
         codec="libx264",
         encoder_kwargs=None,
+        source_timestamps=True,
         **kwargs,
     ):
         """ Constructor.
@@ -85,10 +87,12 @@ class VideoRecorder(BaseRecorder):
         self.color_format = color_format
         self.codec = codec
         self.encoder_kwargs = encoder_kwargs
+        self.source_timestamps = source_timestamps
 
         super().__init__(folder, name=name, **kwargs)
 
         self.encoder = None
+        self.writer = None
 
         self.timestamp_file = os.path.join(
             self.folder, f"{self.name}_timestamps.npy"
@@ -96,7 +100,7 @@ class VideoRecorder(BaseRecorder):
         if os.path.exists(self.timestamp_file):
             raise IOError(f"{self.timestamp_file} exists, will not overwrite")
 
-        self._timestamps = []
+        self._timestamps = deque()
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -125,9 +129,21 @@ class VideoRecorder(BaseRecorder):
             **(self.encoder_kwargs or {}),
         )
 
+        if self.source_timestamps:
+            self.writer = PLData_Writer(self.folder, self.name)
+
     def write(self, packet):
         """ Write data to disk. """
         self.encoder.write(packet["frame"])
+
+        if self.writer is not None:
+            self.writer.append(
+                {
+                    "topic": self.name,
+                    "timestamp": packet.timestamp,
+                    "source_timestamp": packet.source_timestamp,
+                }
+            )
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
@@ -140,8 +156,12 @@ class VideoRecorder(BaseRecorder):
     def stop(self):
         """ Stop the recorder. """
         self.encoder.stop()
-        # TODO additionally save timestamps continuously if paranoid=True
+        self.encoder = None
         np.save(self.timestamp_file, np.array(self._timestamps))
+
+        if self.writer is not None:
+            self.writer.file_handle.close()
+            self.writer = None
 
 
 @process("motion_recorder", optional=("folder", "motion_type"))

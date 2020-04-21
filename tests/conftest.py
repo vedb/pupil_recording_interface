@@ -108,14 +108,16 @@ def statuses():
             "name": "world",
             "device_uid": "Pupil Cam1 ID2",
             "timestamp": 1.0,
-            "last_timestamp": 0.0,
+            "source_timestamp": 1.0,
+            "last_source_timestamp": 0.0,
             "fps": 30.0,
         },
         "eye0": {
             "name": "eye0",
             "device_uid": "Pupil Cam1 ID0",
             "timestamp": 1.0,
-            "last_timestamp": 0.0,
+            "source_timestamp": 1.0,
+            "last_source_timestamp": 0.0,
             "fps": 120.0,
             "pupil": {
                 "ellipse": {

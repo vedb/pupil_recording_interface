@@ -159,7 +159,11 @@ class VideoDeviceUVC(BaseVideoDevice):
             self.restart()
             return self._get_frame_and_timestamp(mode=mode)
 
-        return getattr(uvc_frame, mode), uvc_frame.timestamp
+        return (
+            getattr(uvc_frame, mode),
+            uvc_frame.timestamp,
+            uvc_frame.timestamp,
+        )
 
     @property
     def uvc_device_uid(self):
@@ -263,5 +267,7 @@ class VideoFileDevice(BaseVideoDevice):
                 sleep(diff)
             self._last_file_timestamp = file_timestamp
             self._last_playback_timestamp = playback_timestamp
+        else:
+            playback_timestamp = file_timestamp
 
-        return frame, file_timestamp
+        return frame, file_timestamp, playback_timestamp

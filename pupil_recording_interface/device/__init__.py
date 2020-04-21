@@ -12,6 +12,8 @@ class BaseDevice(BaseConfigurable):
         """ Constructor. """
         self.device_uid = device_uid
 
+        self.timebase = "monotonic"
+
     @classmethod
     def from_config(cls, config, **kwargs):
         """ Create a device from a StreamConfig. """

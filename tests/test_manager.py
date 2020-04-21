@@ -21,7 +21,8 @@ class TestManager:
                     "name": "mock_stream",
                     "device_uid": "mock_device",
                     "timestamp": float("nan"),
-                    "last_timestamp": float("nan"),
+                    "source_timestamp": float("nan"),
+                    "last_source_timestamp": float("nan"),
                     "running": False,
                     "fps": float("nan"),
                 }
@@ -38,7 +39,8 @@ class TestManager:
                     "name": "mock_stream",
                     "device_uid": "mock_device",
                     "timestamp": 0.0,
-                    "last_timestamp": float("nan"),
+                    "source_timestamp": 0.0,
+                    "last_source_timestamp": float("nan"),
                     "running": True,
                     "fps": float("nan"),
                 }

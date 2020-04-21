@@ -6,6 +6,7 @@ import numpy as np
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
+from pupil_recording_interface.utils import monotonic
 
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,8 @@ class RealSenseDeviceT265(BaseDevice):
         self.odometry = odometry
         self.accel = accel
         self.gyro = gyro
+
+        self.timebase = "epoch"
 
         self.pipeline = None
         self.video_queue = mp.Queue(maxsize=queue_size) if self.video else None
@@ -163,9 +166,10 @@ class RealSenseDeviceT265(BaseDevice):
     @classmethod
     def _get_odometry(cls, rs_frame):
         """ Get odometry data from realsense pose frame. """
-        pose = rs_frame.as_pose_frame()
+        t = monotonic()
 
-        t = rs_frame.get_timestamp() / 1e3
+        pose = rs_frame.as_pose_frame()
+        t_src = rs_frame.get_timestamp() / 1e3
         c = pose.pose_data.tracker_confidence
         p = pose.pose_data.translation
         q = pose.pose_data.rotation
@@ -175,6 +179,7 @@ class RealSenseDeviceT265(BaseDevice):
         return {
             "topic": "odometry",
             "timestamp": t,
+            "source_timestamp": t_src,
             "tracker_confidence": c,
             "position": (p.x, p.y, p.z),
             "orientation": (q.w, q.x, q.y, q.z),
@@ -185,36 +190,42 @@ class RealSenseDeviceT265(BaseDevice):
     @classmethod
     def _get_accel(cls, rs_frame):
         """ Get accelerometer data from realsense motion frame. """
-        motion = rs_frame.as_motion_frame()
+        t = monotonic()
 
-        t = rs_frame.get_timestamp() / 1e3
+        motion = rs_frame.as_motion_frame()
+        t_src = rs_frame.get_timestamp() / 1e3
         a = motion.motion_data
 
         return {
             "topic": "accel",
             "timestamp": t,
+            "source_timestamp": t_src,
             "linear_acceleration": (a.x, a.y, a.z),
         }
 
     @classmethod
     def _get_gyro(cls, rs_frame):
         """ Get gyroscope data from realsense motion frame. """
-        motion = rs_frame.as_motion_frame()
+        t = monotonic()
 
-        t = rs_frame.get_timestamp() / 1e3
+        motion = rs_frame.as_motion_frame()
+        t_src = rs_frame.get_timestamp() / 1e3
         w = motion.motion_data
 
         return {
             "topic": "gyro",
             "timestamp": t,
+            "source_timestamp": t_src,
             "angular_velocity": (w.x, w.y, w.z),
         }
 
     @classmethod
     def _get_video_frame(cls, rs_frame, side="both"):
         """ Extract video frame and timestamp from a RealSense frame. """
+        t = monotonic()
+
         frameset = rs_frame.as_frameset()
-        t = frameset.get_timestamp() / 1e3
+        t_src = frameset.get_timestamp() / 1e3
 
         if side == "left":
             video_frame = np.asanyarray(
@@ -242,7 +253,7 @@ class RealSenseDeviceT265(BaseDevice):
         else:
             raise ValueError(f"Unsupported mode: {side}")
 
-        return video_frame, t
+        return video_frame, t, t_src
 
     @classmethod
     def _get_pipeline_config(
@@ -301,21 +312,21 @@ class RealSenseDeviceT265(BaseDevice):
         odometry = self.odometry_queue.get()
         # TODO timestamp = uvc.get_time_monotonic()?
         # TODO timeout
-        return odometry, odometry["timestamp"]
+        return odometry, odometry["timestamp"], odometry["source_timestamp"]
 
     def _get_accel_and_timestamp(self):
         """ Get a frame and its associated timestamp. """
         accel = self.accel_queue.get()
         # TODO timestamp = uvc.get_time_monotonic()?
         # TODO timeout
-        return accel, accel["timestamp"]
+        return accel, accel["timestamp"], accel["source_timestamp"]
 
     def _get_gyro_and_timestamp(self):
         """ Get a frame and its associated timestamp. """
         gyro = self.gyro_queue.get()
         # TODO timestamp = uvc.get_time_monotonic()?
         # TODO timeout
-        return gyro, gyro["timestamp"]
+        return gyro, gyro["timestamp"], gyro["source_timestamp"]
 
     def run_pre_thread_hooks(self):
         """ Run hook(s) before dispatching the recording thread. """

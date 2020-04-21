@@ -10,7 +10,7 @@ from pupil_recording_interface.errors import DeviceNotConnected
 logger = logging.getLogger(__name__)
 
 
-class FLIRCapture(object):
+class FLIRCapture:
     """ Capture wrapper for FLIR camera.
 
     This class is mostly required because of the questionable implementation
@@ -59,6 +59,8 @@ class VideoDeviceFLIR(BaseVideoDevice):
             exposure_value=exposure_value,
             gain=gain,
         )
+
+        self.timebase = "epoch"
 
     @classmethod
     def _compute_timestamp_offset(cls, cam, number_of_iterations, camera_type):
@@ -319,24 +321,24 @@ class VideoDeviceFLIR(BaseVideoDevice):
             #  Retrieve next received image
             image_result = self.capture.camera.GetNextImage()
 
-            pupil_timestamp = monotonic()
+            timestamp = monotonic()
 
             # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
             #  timestamp = float(image_result.GetTimestamp()) / 1e9
             # TODO: Temporary solution to fix the FLIR timestamp issue
             self.capture.camera.TimestampLatch.Execute()
             if self.capture.camera_type == "BlackFly":
-                timestamp = (  # noqa
+                source_timestamp = (
                     self.capture.timestamp_offset
                     + self.capture.camera.TimestampLatchValue.GetValue() / 1e9
                 )
             elif self.capture.camera_type == "Chameleon":
-                timestamp = (  # noqa
+                source_timestamp = (
                     self.capture.timestamp_offset
                     + self.capture.camera.Timestamp.GetValue() / 1e9
                 )
             else:
-                raise ValueError(
+                raise RuntimeError(
                     f"Invalid camera type: {self.capture.camera_type}"
                 )
 
@@ -360,4 +362,4 @@ class VideoDeviceFLIR(BaseVideoDevice):
             raise ValueError(ex)
 
         # TODO: return both pupil and FLIR timestamp
-        return frame.GetNDArray(), pupil_timestamp
+        return frame.GetNDArray(), timestamp, source_timestamp

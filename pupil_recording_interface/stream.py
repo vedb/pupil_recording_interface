@@ -63,7 +63,7 @@ class BaseStream(BaseConfigurable):
         self.pipeline = pipeline
         self.name = name or device.device_uid
 
-        self._last_timestamp = float("nan")
+        self._last_source_timestamp = float("nan")
         self._fps_buffer = deque(maxlen=20)
 
     @classmethod
@@ -111,28 +111,30 @@ class BaseStream(BaseConfigurable):
             "name": self.name,
             "device_uid": self.device.device_uid,
             "timestamp": float("nan"),
-            "last_timestamp": self._last_timestamp,
+            "source_timestamp": float("nan"),
+            "last_source_timestamp": self._last_source_timestamp,
             "running": False,
             "fps": self.current_fps,
         }
 
         if packet is not None:
             status["timestamp"] = packet.timestamp
+            status["source_timestamp"] = packet.source_timestamp
             status["running"] = True
             for key, value in packet.get_broadcasts().items():
                 status[key] = value
 
         return status
 
-    def _process_timestamp(self, timestamp):
+    def _process_timestamp(self, source_timestamp):
         """ Process a new timestamp. """
-        if timestamp != self._last_timestamp:
-            fps = 1.0 / (timestamp - self._last_timestamp)
+        if source_timestamp != self._last_source_timestamp:
+            fps = 1.0 / (source_timestamp - self._last_source_timestamp)
         else:
             fps = np.nan
 
         self._fps_buffer.append(fps)
-        self._last_timestamp = timestamp
+        self._last_source_timestamp = source_timestamp
 
     def run_pre_thread_hooks(self):
         """ Run hook(s) before dispatching processing thread(s). """
@@ -226,8 +228,7 @@ class BaseStream(BaseConfigurable):
                     if self.pipeline is not None:
                         packet = self.pipeline.flush(packet, notifications)
 
-                    # save timestamp and fps
-                    self._process_timestamp(packet.timestamp)
+                    self._process_timestamp(packet.source_timestamp)
 
                     # TODO yield self.get_status()?
                     if status_queue is not None:
@@ -294,12 +295,17 @@ class VideoStream(BaseStream):
         """ Get the last data packet from the stream. """
         # TODO get only jpeg buffer when not showing video
         if self.color_format == "gray":
-            frame, timestamp = self.device._get_frame_and_timestamp("gray")
+            frame, ts, src_ts = self.device._get_frame_and_timestamp("gray")
         else:
-            frame, timestamp = self.device._get_frame_and_timestamp()
+            frame, ts, src_ts = self.device._get_frame_and_timestamp()
 
         return Packet(
-            self.name, self.device.device_uid, timestamp, frame=frame
+            self.name,
+            self.device.device_uid,
+            timestamp=ts,
+            source_timestamp=src_ts,
+            source_timebase=self.device.timebase,
+            frame=frame,
         )
 
 
@@ -346,17 +352,19 @@ class MotionStream(BaseStream):
     def get_packet(self):
         """ Get the last data packet from the stream. """
         if self.motion_type == "odometry":
-            motion, timestamp = self.device._get_odometry_and_timestamp()
+            motion, ts, src_ts = self.device._get_odometry_and_timestamp()
         elif self.motion_type == "accel":
-            motion, timestamp = self.device._get_accel_and_timestamp()
+            motion, ts, src_ts = self.device._get_accel_and_timestamp()
         elif self.motion_type == "gyro":
-            motion, timestamp = self.device._get_gyro_and_timestamp()
+            motion, ts, src_ts = self.device._get_gyro_and_timestamp()
         else:
             raise RuntimeError(f"Unsupported motion type: {self.motion_type}")
 
         return Packet(
             self.name,
             self.device.device_uid,
-            timestamp,
+            timestamp=ts,
+            source_timestamp=src_ts,
+            source_timebase=self.device.timebase,
             **{self.motion_type: motion},
         )
