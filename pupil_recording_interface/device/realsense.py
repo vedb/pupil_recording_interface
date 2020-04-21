@@ -86,12 +86,13 @@ class RealSenseDeviceT265(BaseDevice):
         if config.stream_type == "video":
             # TODO this is a little hacky, maybe rename the parameter to "side"
             cls_kwargs["video"] = config.side
-        elif config.stream_type == "odometry":
-            cls_kwargs["odometry"] = True
-        elif config.stream_type == "accel":
-            cls_kwargs["accel"] = True
-        elif config.stream_type == "gyro":
-            cls_kwargs["gyro"] = True
+        elif config.stream_type == "motion":
+            if config.motion_type == "odometry":
+                cls_kwargs["odometry"] = True
+            elif config.motion_type == "accel":
+                cls_kwargs["accel"] = True
+            elif config.motion_type == "gyro":
+                cls_kwargs["gyro"] = True
 
         return cls(**cls_kwargs)
 
