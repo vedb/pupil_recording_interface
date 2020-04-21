@@ -3,14 +3,13 @@ name: build
 on: [push]
 
 jobs:
-  build:
 
+  build:
     runs-on: ubuntu-18.04
     strategy:
-      max-parallel: 4
+      max-parallel: 3
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7]
-
+        python-version: [3.6, 3.7, 3.8]
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
@@ -24,19 +23,29 @@ jobs:
     - name: Lint with flake8
       run: |
         pip install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --statistics
+        flake8 --ignore=E203,W503,W504 --exclude=docs,**/externals
+    - name: Install package
+      run: python setup.py install
     - name: Test with pytest
       run: |
         pip install pytest
         pytest
 
-  docs:
-
+  black:
     runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Check black code style
+      run: |
+        pip install black
+        black --check .
 
+  docs:
+    runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
     - name: Install Python

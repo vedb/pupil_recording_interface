@@ -1,15 +1,12 @@
 """"""
-from __future__ import division
-
 import os
 
+import cv2
 import numpy as np
 import pandas as pd
 import xarray as xr
-import cv2
 
-from pupil_recording_interface.base import BaseInterface
-from pupil_recording_interface.errors import FileNotFoundError
+from pupil_recording_interface import BaseReader
 
 
 def _iter_wrapper(it, **kwargs):
@@ -17,12 +14,20 @@ def _iter_wrapper(it, **kwargs):
     return it
 
 
-class VideoInterface(BaseInterface):
-    """ Interface for video data. """
+class VideoReader(BaseReader):
+    """ Reader for video data. """
 
-    def __init__(self, folder, source='world', color_format=None,
-                 norm_pos=None, roi_size=None, interpolation_method='linear',
-                 video_offset=0., subsampling=None):
+    def __init__(
+        self,
+        folder,
+        source="world",
+        color_format=None,
+        norm_pos=None,
+        roi_size=None,
+        interpolation_method="linear",
+        video_offset=0.0,
+        subsampling=None,
+    ):
         """ Constructor.
 
         Parameters
@@ -60,26 +65,30 @@ class VideoInterface(BaseInterface):
             If specified, sub-sample each frame by this factor. Sub-sampling
             is applied before ROI extraction.
         """
-        super(VideoInterface, self).__init__(folder, source=source)
+        super(VideoReader, self).__init__(folder, source=source)
         self.color_format = color_format
         self.roi_size = roi_size
         self.subsampling = subsampling
 
         self.timestamps = self._load_timestamps_as_datetimeindex(
-            self.folder, self.source, self.info, video_offset)
+            self.folder, self.source, self.info, video_offset
+        )
 
         # resample norm pos to video timestamps
         if norm_pos is not None:
             if self.roi_size is None:
                 raise ValueError(
-                    'roi_size must be specified when norm_pos is specified')
+                    "roi_size must be specified when norm_pos is specified"
+                )
             self.norm_pos = norm_pos.interp(
-                {'time': self.timestamps}, method=interpolation_method)
+                {"time": self.timestamps}, method=interpolation_method
+            )
         else:
             self.norm_pos = None
 
         self.camera_matrix, self.distortion_coefs = self._load_intrinsics(
-            self.folder)
+            self.folder
+        )
 
         self.capture = self._get_capture(self.folder, source)
         self.resolution = self._get_resolution(self.capture)
@@ -96,15 +105,15 @@ class VideoInterface(BaseInterface):
     def video_info(self):
         """ Video metadata. """
         return {
-            'resolution': self.resolution,
-            'frame_count': self.frame_count,
-            'fps': np.round(self.fps, 3)
+            "resolution": self.resolution,
+            "frame_count": self.frame_count,
+            "fps": np.round(self.fps, 3),
         }
 
     @staticmethod
     def _load_intrinsics(folder):
         """ Load world camera intrinsics. """
-        filepath = os.path.join(folder, 'world.intrinsics')
+        filepath = os.path.join(folder, "world.intrinsics")
         if not os.path.exists(filepath):
             return None, None
         else:
@@ -114,18 +123,21 @@ class VideoInterface(BaseInterface):
     @staticmethod
     def _get_capture(folder, topic):
         """ Get a cv2.VideoCapture for the video file. """
-        filepath = os.path.join(folder, topic + '.mp4')
+        filepath = os.path.join(folder, topic + ".mp4")
         if not os.path.exists(filepath):
             raise FileNotFoundError(
-                'File {}.mp4 not found in folder {}'.format(topic, folder))
+                f"File {topic}.mp4 not found in folder {folder}"
+            )
 
         return cv2.VideoCapture(filepath)
 
     @staticmethod
     def _get_resolution(capture):
         """ Get the resolution of the video file. """
-        return (int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        return (
+            int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
 
     @staticmethod
     def _get_frame_count(capture):
@@ -138,21 +150,21 @@ class VideoInterface(BaseInterface):
         return capture.get(cv2.CAP_PROP_FPS)
 
     @staticmethod
-    def _get_encoding(data_vars, dtype='int32'):
+    def _get_encoding(data_vars, dtype="int32"):
         """ Get encoding for each data var in the netCDF export. """
         comp = {
-            'zlib': True,
-            'dtype': dtype,
-            'scale_factor': 0.0001,
-            '_FillValue': np.iinfo(dtype).min
+            "zlib": True,
+            "dtype": dtype,
+            "scale_factor": 0.0001,
+            "_FillValue": np.iinfo(dtype).min,
         }
 
         comp_f = {
-            'zlib': True,
-            'dtype': 'uint8',
+            "zlib": True,
+            "dtype": "uint8",
         }
 
-        return {v: (comp if v != 'frames' else comp_f) for v in data_vars}
+        return {v: (comp if v != "frames" else comp_f) for v in data_vars}
 
     @staticmethod
     def _get_valid_idx(norm_pos, frame_shape, roi_size):
@@ -164,8 +176,9 @@ class VideoInterface(BaseInterface):
         left_lower = norm_pos - roi_size // 2
         right_upper = norm_pos + roi_size // 2
 
-        idx = np.all(left_lower > 0, axis=1) \
-            & np.all(right_upper <= frame_shape, axis=1)
+        idx = np.all(left_lower > 0, axis=1) & np.all(
+            right_upper <= frame_shape, axis=1
+        )
 
         return idx
 
@@ -198,9 +211,9 @@ class VideoInterface(BaseInterface):
             The converted frame.
         """
         # TODO rename to convert_range or similar?
-        frame *= 255.
-        frame[np.isnan(frame)] = 0.
-        return frame.astype('uint8')
+        frame *= 255.0
+        frame[np.isnan(frame)] = 0.0
+        return frame.astype("uint8")
 
     def convert_color(self, frame):
         """ Convert color format of a video frame.
@@ -215,11 +228,10 @@ class VideoInterface(BaseInterface):
         numpy.ndarray
             The converted frame.
         """
-        if self.color_format == 'gray':
+        if self.color_format == "gray":
             return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
-            raise ValueError(
-                'Unsupported color format: {}'.format(self.color_format))
+            raise ValueError(f"Unsupported color format: {self.color_format}")
 
     def get_roi(self, frame, norm_pos):
         """ Extract the ROI from a video frame.
@@ -244,15 +256,15 @@ class VideoInterface(BaseInterface):
         x, y = norm_pos
 
         if not np.isnan(x) and not np.isnan(y):
-            (x0_roi, x1_roi), (x0_frame, x1_frame) = \
-                VideoInterface._get_bounds(
-                    int(x * frame.shape[1]), frame.shape[1], self.roi_size)
-            (y0_roi, y1_roi), (y0_frame, y1_frame) = \
-                VideoInterface._get_bounds(
-                    int((1 - y) * frame.shape[0]), frame.shape[0],
-                    self.roi_size)
-            roi[y0_roi:y1_roi, x0_roi:x1_roi, ...] = \
-                frame[y0_frame:y1_frame, x0_frame:x1_frame, ...]
+            (x0_roi, x1_roi), (x0_frame, x1_frame) = VideoReader._get_bounds(
+                int(x * frame.shape[1]), frame.shape[1], self.roi_size
+            )
+            (y0_roi, y1_roi), (y0_frame, y1_frame) = VideoReader._get_bounds(
+                int((1 - y) * frame.shape[0]), frame.shape[0], self.roi_size
+            )
+            roi[y0_roi:y1_roi, x0_roi:x1_roi, ...] = frame[
+                y0_frame:y1_frame, x0_frame:x1_frame, ...
+            ]
 
         return roi
 
@@ -274,9 +286,13 @@ class VideoInterface(BaseInterface):
         u = point[0] * frame_size[1]
         v = (1 - point[1]) * frame_size[0]
 
-        up, vp = np.squeeze(cv2.undistortPoints(
-            np.array((u, v))[np.newaxis, np.newaxis, :],
-            self.camera_matrix, self.distortion_coefs))
+        up, vp = np.squeeze(
+            cv2.undistortPoints(
+                np.array((u, v))[np.newaxis, np.newaxis, :],
+                self.camera_matrix,
+                self.distortion_coefs,
+            )
+        )
 
         x = (up + 1) / 2
         y = 1 - ((vp + 1) / 2)
@@ -299,13 +315,19 @@ class VideoInterface(BaseInterface):
         # TODO test
         h, w = frame.shape[:2]
         new_camera_matrix, (rx, ry, rw, rh) = cv2.getOptimalNewCameraMatrix(
-            self.camera_matrix, self.distortion_coefs, (w, h), 0, (w, h))
+            self.camera_matrix, self.distortion_coefs, (w, h), 0, (w, h)
+        )
         frame = cv2.undistort(
-            frame, self.camera_matrix, self.distortion_coefs,
-            newCameraMatrix=new_camera_matrix)
+            frame,
+            self.camera_matrix,
+            self.distortion_coefs,
+            newCameraMatrix=new_camera_matrix,
+        )
 
         frame_roi = np.nan * np.ones((h, w))
-        frame_roi[ry:ry + rh, rx:rx + rw] = frame[ry:ry + rh, rx:rx + rw]
+        frame_roi[ry : ry + rh, rx : rx + rw] = frame[
+            ry : ry + rh, rx : rx + rw
+        ]
 
         return frame_roi
 
@@ -323,8 +345,12 @@ class VideoInterface(BaseInterface):
             The sub-sampled frame.
         """
         frame = cv2.resize(
-            frame, None, fx=1. / self.subsampling,
-            fy=1. / self.subsampling, interpolation=cv2.INTER_AREA)
+            frame,
+            None,
+            fx=1.0 / self.subsampling,
+            fy=1.0 / self.subsampling,
+            interpolation=cv2.INTER_AREA,
+        )
 
         return frame
 
@@ -337,7 +363,8 @@ class VideoInterface(BaseInterface):
             The timestamps for each frame.
         """
         return self._load_timestamps_as_datetimeindex(
-            self.folder, self.source, self.info)
+            self.folder, self.source, self.info
+        )
 
     def process_frame(self, frame, norm_pos=None):
         """ Process a video frame.
@@ -372,7 +399,7 @@ class VideoInterface(BaseInterface):
         if norm_pos is not None:
             frame = self.get_roi(frame, norm_pos)
 
-        return frame.astype(float) / 255.
+        return frame.astype(float) / 255.0
 
     def load_raw_frame(self, idx):
         """ Load a single un-processed video frame.
@@ -388,8 +415,9 @@ class VideoInterface(BaseInterface):
             The loaded frame.
         """
         if idx < 0 or idx >= self.frame_count:
-            raise ValueError('Frame index out of range')
+            raise ValueError("Frame index out of range")
 
+        # TODO this is very inefficient for consecutive frames
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
         _, frame = self.capture.read()
 
@@ -422,8 +450,10 @@ class VideoInterface(BaseInterface):
             norm_pos = None
 
         if return_timestamp:
-            return (self.timestamps[idx],
-                    self.process_frame(frame, norm_pos=norm_pos))
+            return (
+                self.timestamps[idx],
+                self.process_frame(frame, norm_pos=norm_pos),
+            )
         else:
             return self.process_frame(frame, norm_pos=norm_pos)
 
@@ -453,7 +483,8 @@ class VideoInterface(BaseInterface):
             _, frame = self.capture.read()
             if self.norm_pos is not None:
                 yield self.process_frame(
-                    frame, self.norm_pos.values[idx - start])
+                    frame, self.norm_pos.values[idx - start]
+                )
             else:
                 yield self.process_frame(frame)
 
@@ -481,18 +512,21 @@ class VideoInterface(BaseInterface):
         t = self.timestamps
 
         if start is not None:
-            start = t.get_loc(start, method='nearest')
+            start = t.get_loc(start, method="nearest")
 
         if end is not None:
-            end = t.get_loc(end, method='nearest')
+            end = t.get_loc(end, method="nearest")
 
         t = t[start:end]
 
         if dropna:
             t_gen, flow_gen = zip(
-                *((t, f)
-                  for t, f in zip(t, self.read_frames(start, end))
-                  if not np.any(np.isnan(f))))
+                *(
+                    (t, f)
+                    for t, f in zip(t, self.read_frames(start, end))
+                    if not np.any(np.isnan(f))
+                )
+            )
             t = pd.DatetimeIndex(t_gen)
             frames = np.array(flow_gen)
         else:
@@ -502,29 +536,27 @@ class VideoInterface(BaseInterface):
 
         frames = self.convert_to_uint8(frames)
 
-        dims = ['time', 'frame_y', 'frame_x']
+        dims = ["time", "frame_y", "frame_x"]
 
         coords = {
-            'time': t.values,
-            'frame_x': np.arange(frames.shape[2]),
-            'frame_y': np.arange(frames.shape[1]),
+            "time": t.values,
+            "frame_x": np.arange(frames.shape[2]),
+            "frame_y": np.arange(frames.shape[1]),
         }
 
         if frames.ndim == 4:
-            coords['color'] = ['B', 'G', 'R']
-            dims += ['color']
+            coords["color"] = ["B", "G", "R"]
+            dims += ["color"]
 
-        data_vars = {
-            'frames': (dims, frames)
-        }
+        data_vars = {"frames": (dims, frames)}
 
         return xr.Dataset(data_vars, coords)
 
 
-class OpticalFlowInterface(VideoInterface):
-    """ Interface for extracting optical flow from video data. """
+class OpticalFlowReader(VideoReader):
+    """ Reader for extracting optical flow from video data. """
 
-    def __init__(self, folder, source='world', **kwargs):
+    def __init__(self, folder, source="world", **kwargs):
         """ Constructor.
 
         Parameters
@@ -537,26 +569,27 @@ class OpticalFlowInterface(VideoInterface):
             be used.
 
         **kwargs : optional
-            Additional parameters passed to the ``VideoInterface`` constructor.
+            Additional parameters passed to the ``VideoReader`` constructor.
 
         See Also
         --------
-        VideoInterface
+        VideoReader
         """
-        super(OpticalFlowInterface, self).__init__(
-            folder, source=source, color_format='gray', **kwargs)
+        super(OpticalFlowReader, self).__init__(
+            folder, source=source, color_format="gray", **kwargs
+        )
 
         self.flow_shape = self.load_optical_flow(0).shape
 
     @property
     def _nc_name(self):
         """ Name of exported netCDF file. """
-        return 'optical_flow'
+        return "optical_flow"
 
     @staticmethod
     def _get_valid_idx(norm_pos, frame_shape, roi_size):
         """ Get idx of norm_pos where all ROI pixels are inside the frame. """
-        idx = VideoInterface._get_valid_idx(norm_pos, frame_shape, roi_size)
+        idx = VideoReader._get_valid_idx(norm_pos, frame_shape, roi_size)
         return np.hstack((False, idx[1:] & idx[:-1]))
 
     @staticmethod
@@ -580,8 +613,17 @@ class OpticalFlowInterface(VideoInterface):
         if last_frame is not None:
             # TODO make configurable
             return -cv2.calcOpticalFlowFarneback(
-                last_frame, frame, None, pyr_scale=0.5, levels=3, winsize=20,
-                iterations=3, poly_n=7, poly_sigma=1.5, flags=0)
+                last_frame,
+                frame,
+                None,
+                pyr_scale=0.5,
+                levels=3,
+                winsize=20,
+                iterations=3,
+                poly_n=7,
+                poly_sigma=1.5,
+                flags=0,
+            )
         else:
             return np.nan * np.ones(frame.shape + (2,))
 
@@ -602,7 +644,7 @@ class OpticalFlowInterface(VideoInterface):
             The loaded optical flow frame.
         """
         if idx < 0 or idx >= self.frame_count:
-            raise ValueError('Frame index out of range')
+            raise ValueError("Frame index out of range")
 
         if idx == 0:
             last_frame = None
@@ -637,8 +679,9 @@ class OpticalFlowInterface(VideoInterface):
             yield self.calculate_optical_flow(frame, last_frame)
             last_frame = frame
 
-    def load_dataset(self, dropna=False, start=None, end=None,
-                     iter_wrapper=_iter_wrapper):
+    def load_dataset(
+        self, dropna=False, start=None, end=None, iter_wrapper=_iter_wrapper
+    ):
         """ Load optical flow data as an xarray Dataset
 
         Parameters
@@ -664,13 +707,13 @@ class OpticalFlowInterface(VideoInterface):
             The optical flow data as a dataset.
         """
         t = self.timestamps
-        ss = self.subsampling or 1.
+        ss = self.subsampling or 1.0
 
         if start is not None:
-            start = t.get_loc(start, method='nearest')
+            start = t.get_loc(start, method="nearest")
 
         if end is not None:
-            end = t.get_loc(end, method='nearest')
+            end = t.get_loc(end, method="nearest")
 
         t = t[start:end]
 
@@ -680,7 +723,8 @@ class OpticalFlowInterface(VideoInterface):
             valid_idx = np.zeros(t.size, dtype=bool)
             idx = 0
             for f in iter_wrapper(
-                    self.read_optical_flow(start, end), total=t.size):
+                self.read_optical_flow(start, end), total=t.size
+            ):
                 if not np.any(np.isnan(f)):
                     flow[idx] = f
                     valid_idx[idx] = True
@@ -689,23 +733,27 @@ class OpticalFlowInterface(VideoInterface):
             t = t[valid_idx]
         else:
             flow = np.empty((t.size,) + self.flow_shape)
-            for idx, f in iter_wrapper(enumerate(
-                    self.read_optical_flow(start, end)), total=t.size):
+            for idx, f in iter_wrapper(
+                enumerate(self.read_optical_flow(start, end)), total=t.size
+            ):
                 flow[idx] = f
 
         # ROI coordinate system is centered and y-axis points upwards
         coords = {
-            'time': t.values,
-            'pixel_axis': ['x', 'y'],
-            'roi_x': np.arange(
-                -flow.shape[2] / 2 + 0.5, flow.shape[2] / 2 + 0.5) * ss,
-            'roi_y': -np.arange(
-                -flow.shape[1] / 2 + 0.5, flow.shape[1] / 2 + 0.5) * ss
+            "time": t.values,
+            "pixel_axis": ["x", "y"],
+            "roi_x": np.arange(
+                -flow.shape[2] / 2 + 0.5, flow.shape[2] / 2 + 0.5
+            )
+            * ss,
+            "roi_y": -np.arange(
+                -flow.shape[1] / 2 + 0.5, flow.shape[1] / 2 + 0.5
+            )
+            * ss,
         }
 
         data_vars = {
-            'optical_flow':
-                (['time', 'roi_y', 'roi_x', 'pixel_axis'], flow)
+            "optical_flow": (["time", "roi_y", "roi_x", "pixel_axis"], flow)
         }
 
         return xr.Dataset(data_vars, coords)

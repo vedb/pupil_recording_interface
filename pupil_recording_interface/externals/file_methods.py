@@ -21,36 +21,11 @@ from glob import iglob
 import msgpack
 import numpy as np
 
-assert (
-    msgpack.version[1] >= 5
-), "msgpack out of date, please upgrade to version (0, 5, 6 ) or later."
-
 
 logger = logging.getLogger(__name__)
 UnpicklingError = pickle.UnpicklingError
 
 PLData = collections.namedtuple("PLData", ["data", "timestamps", "topics"])
-
-
-class DictWrapper(collections.Mapping):
-
-    def __init__(self, data):
-        self._data = data
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __str__(self):
-        return self._data.__str__()
-
-    def __repr__(self):
-        return self._data.__repr__()
 
 
 class Persistent_Dict(dict):
@@ -69,7 +44,8 @@ class Persistent_Dict(dict):
         except (KeyError, EOFError):  # KeyError, EOFError
             logger.warning(
                 "Session settings file '{}'could not be read. "
-                "Will overwrite on exit.".format(self.file_path))
+                "Will overwrite on exit.".format(self.file_path)
+            )
             logger.debug(tb.format_exc())
 
     def save(self):
@@ -102,7 +78,8 @@ def load_object(file_path, allow_legacy=True):
             else:
                 logger.info(
                     "{} has a deprecated format: "
-                    "Will be updated on save".format(file_path))
+                    "Will be updated on save".format(file_path)
+                )
                 data = _load_object_legacy(file_path)
         finally:
             gc.enable()
@@ -135,7 +112,8 @@ class Incremental_Legacy_Pupil_Data_Loader(object):
     def __enter__(self):
         self.file_handle = open(self.file_loc, "rb")
         self.unpacker = msgpack.Unpacker(
-            self.file_handle, raw=False, use_list=False)
+            self.file_handle, raw=False, use_list=False
+        )
         self.num_key_value_pairs = self.unpacker.read_map_header()
         self._skipped = True
         return self
@@ -160,8 +138,9 @@ def load_pldata_file(directory, topic):
         topics = collections.deque()
         data_ts = np.load(ts_file)
         with open(msgpack_file, "rb") as fh:
-            for topic, payload in \
-                    msgpack.Unpacker(fh, raw=False, use_list=False):
+            for topic, payload in msgpack.Unpacker(
+                fh, raw=False, use_list=False
+            ):
                 data.append(Serialized_Dict(msgpack_bytes=payload))
                 topics.append(topic)
     except IOError:
@@ -186,7 +165,8 @@ class PLData_Writer(object):
     def append(self, datum):
         datum_serialized = msgpack.packb(datum, use_bin_type=True)
         self.append_serialized(
-            datum["timestamp"], datum["topic"], datum_serialized)
+            datum["timestamp"], datum["topic"], datum_serialized
+        )
 
     def append_serialized(self, timestamp, topic, datum_serialized):
         self.ts_queue.append(timestamp)
@@ -272,8 +252,7 @@ class Serialized_Dict(object):
     @classmethod
     def unpacking_object_hook(self, obj):
         if type(obj) is dict:
-            return DictWrapper(obj)
-            # return obj
+            return obj
 
     @classmethod
     def packing_hook(self, obj):
@@ -364,3 +343,32 @@ class Serialized_Dict(object):
     def __iter__(self):
         self._deser()
         return iter(self._data)
+
+
+def save_intrinsics(directory, cam_name, resolution, intrinsics):
+    """
+    Saves camera intrinsics calibration to a file. For each unique camera name we maintain a single file containing all calibrations associated with this camera name.
+    :param directory: Directory to which the intrinsics file will be written
+    :param cam_name: Name of the camera, e.g. 'Pupil Cam 1 ID2'
+    :param resolution: Camera resolution given as a tuple. This needs to match the resolution the calibration has been computed with.
+    :param intrinsics: The camera intrinsics dictionary.
+    :return:
+    """
+    # Try to load previous camera calibrations
+    save_path = os.path.join(
+        directory, "{}.intrinsics".format(cam_name.replace(" ", "_"))
+    )
+    try:
+        calib_dict = load_object(save_path, allow_legacy=False)
+    except Exception:
+        calib_dict = {}
+
+    calib_dict["version"] = 1
+    calib_dict[str(resolution)] = intrinsics
+
+    save_object(calib_dict, save_path)
+    logger.info(
+        "Calibration for camera {} at resolution {} saved to {}".format(
+            cam_name, resolution, save_path
+        )
+    )

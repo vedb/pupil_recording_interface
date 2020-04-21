@@ -1,5 +1,5 @@
-Usage
-=====
+Reading data
+============
 
 .. currentmodule:: pupil_recording_interface
 
@@ -92,22 +92,22 @@ Loading videos
 
 Since video data is rather large, we rarely bulk-load entire video
 recordings (although it is possible, see `Other video functionality`_).
-Rather, this library provides a :py:class:`VideoInterface` class with which
+Rather, this library provides a :py:class:`VideoReader` class with which
 we can go through videos frame by frame. You can get information about the
 world camera video with:
 
 .. doctest::
 
-    >>> interface = pri.VideoInterface(pri.TEST_RECORDING)
+    >>> interface = pri.VideoReader(pri.TEST_RECORDING)
     >>> interface.video_info
     {'resolution': (1280, 720), 'frame_count': 504, 'fps': 23.987}
 
-With :py:func:`VideoInterface.load_raw_frame` you can retrieve a raw video
+With :py:func:`VideoReader.load_raw_frame` you can retrieve a raw video
 frame by index:
 
 .. doctest::
 
-    >>> interface = pri.VideoInterface(pri.TEST_RECORDING)
+    >>> interface = pri.VideoReader(pri.TEST_RECORDING)
     >>> frame = interface.load_raw_frame(100)
     >>> frame.shape
     (720, 1280, 3)
@@ -124,7 +124,7 @@ is loaded as a BGR image but imshow expects RGB:
 .. plot::
 
     import pupil_recording_interface as pri
-    interface = pri.VideoInterface(pri.TEST_RECORDING)
+    interface = pri.VideoReader(pri.TEST_RECORDING)
     frame = interface.load_raw_frame(100)
 
     import matplotlib.pyplot as plt
@@ -139,12 +139,12 @@ ROI extraction
 
 You can easily extract an ROI around the current gaze point in the image by
 specifying the ``norm_pos`` and ``roi_size`` parameters and using the
-:py:func:`VideoInterface.load_frame` method:
+:py:func:`VideoReader.load_frame` method:
 
 .. doctest::
 
     >>> gaze = pri.load_dataset(pri.TEST_RECORDING, gaze='2d Gaze Mapper ')
-    >>> interface = pri.VideoInterface(
+    >>> interface = pri.VideoReader(
     ...     pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64)
     >>> frame = interface.load_frame(100)
     >>> frame.shape
@@ -155,7 +155,7 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
 
     import pupil_recording_interface as pri
     gaze = pri.load_dataset(pri.TEST_RECORDING, gaze='2d Gaze Mapper ')
-    interface = pri.VideoInterface(
+    interface = pri.VideoReader(
         pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64)
     frame = interface.load_frame(100)
 
@@ -174,20 +174,20 @@ Video frames can also be sub-sampled and converted to grayscale with the
 
 .. doctest::
 
-    >>> interface = pri.VideoInterface(
+    >>> interface = pri.VideoReader(
     ...     pri.TEST_RECORDING, color_format='gray', subsampling=4.)
     >>> frame = interface.load_frame(100)
     >>> frame.shape
     (180, 320)
 
-:py:func:`VideoInterface.read_frames` provides a generator for frames that
+:py:func:`VideoReader.read_frames` provides a generator for frames that
 can be restricted to an index range with the ``start`` and ``end`` parameters:
 
 .. doctest::
 
-    >>> interface = pri.VideoInterface(pri.TEST_RECORDING)
+    >>> interface = pri.VideoReader(pri.TEST_RECORDING)
     >>> interface.read_frames(start=100, end=200) # doctest:+ELLIPSIS
-    <generator object VideoInterface.read_frames at ...>
+    <generator object VideoReader.read_frames at ...>
 
 
 Other video functionality
@@ -197,19 +197,19 @@ Eye videos can be loaded by specifying the ``source`` parameter:
 
 .. doctest::
 
-    >>> interface = pri.VideoInterface(pri.TEST_RECORDING, source='eye0')
+    >>> interface = pri.VideoReader(pri.TEST_RECORDING, source='eye0')
     >>> frame = interface.load_raw_frame(100)
     >>> frame.shape
     (192, 192, 3)
 
-The video interface also provides a :py:func:`VideoInterface.load_dataset`
+The video interface also provides a :py:func:`VideoReader.load_dataset`
 method. The method is rather slow as it has to load each frame individually.
 You can provide ``start`` and ``end`` timestamps to specify the time frame
 of the loaded data:
 
 .. doctest::
 
-    >>> interface = pri.VideoInterface(pri.TEST_RECORDING, subsampling=8.)
+    >>> interface = pri.VideoReader(pri.TEST_RECORDING, subsampling=8.)
     >>> interface.load_dataset(
     ...     start=interface.user_info['experiment_start'],
     ...     end=interface.user_info['experiment_end'])

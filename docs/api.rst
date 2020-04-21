@@ -22,34 +22,50 @@ I/O functions
     get_gaze_mappers
 
 
-Interface classes
-.................
+Reader classes
+..............
 
 .. autosummary::
     :nosignatures:
     :toctree: _generated
 
-    GazeInterface
-    OdometryInterface
-    VideoInterface
-    OpticalFlowInterface
+    GazeReader
+    OdometryReader
+    VideoReader
+    OpticalFlowReader
 
 
-Recorder classes
-................
+Device classes
+..............
 
 .. autosummary::
     :nosignatures:
     :toctree: _generated
 
-    OdometryRecorder
+    VideoDeviceUVC
+    VideoDeviceFLIR
+    RealSenseDeviceT265
 
+
+Stream classes
+..............
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    VideoStream
+    OdometryStream
+    StreamManager
+
+
+.. TODO process, pipeline
 
 
 Class member details
 --------------------
 
-GazeInterface
+GazeReader
 .............
 
 I/O functions
@@ -59,24 +75,10 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    GazeInterface.load_dataset
-    GazeInterface.write_netcdf
+    GazeReader.load_dataset
+    GazeReader.write_netcdf
 
-OdometryInterface
-.................
-
-I/O functions
-~~~~~~~~~~~~~
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    OdometryInterface.load_dataset
-    OdometryInterface.write_netcdf
-
-
-VideoInterface
+OdometryReader
 ..............
 
 I/O functions
@@ -86,32 +88,12 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    VideoInterface.load_frame
-    VideoInterface.load_raw_frame
-    VideoInterface.read_frames
-    VideoInterface.load_timestamps
-    VideoInterface.load_dataset
-    VideoInterface.write_netcdf
-
-Frame processing
-~~~~~~~~~~~~~~~~
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    VideoInterface.convert_to_uint8
-    VideoInterface.convert_color
-    VideoInterface.get_roi
-    VideoInterface.undistort_frame
-    VideoInterface.subsample_frame
-    VideoInterface.process_frame
+    OdometryReader.load_dataset
+    OdometryReader.write_netcdf
 
 
-OpticalFlowInterface
-....................
-
-See the parent `VideoInterface`_ class for additional methods.
+VideoReader
+............
 
 I/O functions
 ~~~~~~~~~~~~~
@@ -120,10 +102,44 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    OpticalFlowInterface.load_dataset
-    OpticalFlowInterface.write_netcdf
-    OpticalFlowInterface.load_optical_flow
-    OpticalFlowInterface.read_optical_flow
+    VideoReader.load_frame
+    VideoReader.load_raw_frame
+    VideoReader.read_frames
+    VideoReader.load_timestamps
+    VideoReader.load_dataset
+    VideoReader.write_netcdf
+
+Frame processing
+~~~~~~~~~~~~~~~~
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    VideoReader.convert_to_uint8
+    VideoReader.convert_color
+    VideoReader.get_roi
+    VideoReader.undistort_frame
+    VideoReader.subsample_frame
+    VideoReader.process_frame
+
+
+OpticalFlowReader
+.................
+
+See the parent `VideoReader`_ class for additional methods.
+
+I/O functions
+~~~~~~~~~~~~~
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    OpticalFlowReader.load_dataset
+    OpticalFlowReader.write_netcdf
+    OpticalFlowReader.load_optical_flow
+    OpticalFlowReader.read_optical_flow
 
 Optical flow calculation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,15 +148,7 @@ Optical flow calculation
     :nosignatures:
     :toctree: _generated
 
-    OpticalFlowInterface.calculate_optical_flow
+    OpticalFlowReader.calculate_optical_flow
 
 
-
-OdometryRecorder
-................
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    OdometryRecorder.run
+.. TODO streams, processes, pipelines

@@ -1,34 +1,73 @@
 """"""
 import os
-import sys
 
-from .base import BaseInterface
-from .odometry import OdometryInterface, OdometryRecorder
-from .gaze import GazeInterface
-from .video import VideoInterface, OpticalFlowInterface
-from .cli import CLI
+from .reader import BaseReader
+from .reader.odometry import OdometryReader
+from .reader.gaze import GazeReader
+from .reader.video import VideoReader, OpticalFlowReader
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-TEST_RECORDING = os.path.join(DATA_DIR, 'test_recording')
+from .device.video import VideoDeviceUVC, VideoFileDevice
+from .device.flir import VideoDeviceFLIR
+from .device.realsense import RealSenseDeviceT265
+
+from .stream import VideoStream, MotionStream
+from .manager import StreamManager
+
+from .pipeline import Pipeline
+
+from .process.recorder import VideoRecorder, MotionRecorder
+from .process.display import VideoDisplay
+from .process.pupil_detector import PupilDetector
+from .process.gaze_mapper import GazeMapper
+from .process.circle_detector import CircleDetector
+from .process.calibration import Calibration
+from .process.cam_params import CircleGridDetector, CamParamEstimator
+
+from .decorators import device, stream, process
+
+from ._version import __version__  # noqa
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+TEST_RECORDING = os.path.join(DATA_DIR, "test_recording")
 
 
 __all__ = [
-    'load_dataset',
-    'load_info',
-    'load_user_info',
-    'write_netcdf',
-    'get_gaze_mappers',
-    'GazeInterface',
-    'OdometryInterface',
-    'VideoInterface',
-    'OpticalFlowInterface',
-    'OdometryRecorder'
+    # Functions
+    "load_dataset",
+    "load_info",
+    "load_user_info",
+    "write_netcdf",
+    "get_gaze_mappers",
+    # Readers
+    "GazeReader",
+    "OdometryReader",
+    "VideoReader",
+    "OpticalFlowReader",
+    # Devices
+    "VideoDeviceUVC",
+    "VideoFileDevice",
+    "VideoDeviceFLIR",
+    "RealSenseDeviceT265",
+    # Streams
+    "VideoStream",
+    "MotionStream",
+    "StreamManager",
+    # Pipeline & processes
+    "Pipeline",
+    "VideoRecorder",
+    "MotionRecorder",
+    "VideoDisplay",
+    "PupilDetector",
+    "CircleDetector",
+    "GazeMapper",
+    "Calibration",
+    "CircleGridDetector",
+    "CamParamEstimator",
+    # Decorators
+    "device",
+    "stream",
+    "process",
 ]
-
-
-def _run_cli():
-    """ CLI entry point. """
-    CLI().run(sys.argv)
 
 
 def load_dataset(folder, gaze=None, odometry=None):
@@ -57,11 +96,11 @@ def load_dataset(folder, gaze=None, odometry=None):
     """
     return_vals = tuple()
     if gaze is not None:
-        return_vals += (
-            GazeInterface(folder, source=gaze).load_dataset(),)
+        return_vals += (GazeReader(folder, source=gaze).load_dataset(),)
     if odometry is not None:
         return_vals += (
-            OdometryInterface(folder, source=odometry).load_dataset(),)
+            OdometryReader(folder, source=odometry).load_dataset(),
+        )
 
     if len(return_vals) == 1:
         return_vals = return_vals[0]
@@ -82,9 +121,9 @@ def get_gaze_mappers(folder):
     set
         The set of available mappers.
     """
-    mappers = set(GazeInterface._get_offline_gaze_mappers(folder).keys())
-    if os.path.exists(os.path.join(folder, 'gaze.pldata')):
-        mappers = mappers.union({'recording'})
+    mappers = set(GazeReader._get_offline_gaze_mappers(folder).keys())
+    if os.path.exists(os.path.join(folder, "gaze.pldata")):
+        mappers = mappers.union({"recording"})
 
     return mappers
 
@@ -113,18 +152,16 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
     """
     if gaze is not None:
         if output_folder is not None:
-            filename = os.path.join(output_folder, 'gaze.nc')
+            filename = os.path.join(output_folder, "gaze.nc")
         else:
             filename = None
-        GazeInterface(
-            folder, source=gaze).write_netcdf(filename=filename)
+        GazeReader(folder, source=gaze).write_netcdf(filename=filename)
     if odometry is not None:
         if output_folder is not None:
-            filename = os.path.join(output_folder, 'odometry.nc')
+            filename = os.path.join(output_folder, "odometry.nc")
         else:
             filename = None
-        OdometryInterface(
-            folder, source=odometry).write_netcdf(filename=filename)
+        OdometryReader(folder, source=odometry).write_netcdf(filename=filename)
 
 
 def load_info(folder):
@@ -140,7 +177,7 @@ def load_info(folder):
     dict:
         The recording info.
     """
-    return BaseInterface(folder).info
+    return BaseReader(folder).info
 
 
 def load_user_info(folder):
@@ -156,4 +193,4 @@ def load_user_info(folder):
     dict:
         The user info.
     """
-    return BaseInterface(folder).user_info
+    return BaseReader(folder).user_info

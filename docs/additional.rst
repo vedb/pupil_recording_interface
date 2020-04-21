@@ -4,26 +4,10 @@ Additional features
 Head tracking (Odometry)
 ------------------------
 
-The package also includes a mechanism for recording and loading head
+The package also includes a mechanism for loading head
 tracking data from an Intel RealSense T265 tracking camera attached to the
 Pupil Core system. Head tracking data is referred to as odometry throughout
 the package as it includes positions and velocities.
-
-Recording
-.........
-
-.. note::
-
-    Make sure you have installed the necessary dependencies for odometry
-    recording (see :ref:`optional_dependencies`).
-
-The :py:class:`OdometryRecorder` can record data from a connected T265
-tracking camera by calling :py:func:`OdometryRecorder.run`:
-
-.. doctest::
-
-    >>> import pupil_recording_interface as pri
-    >>> pri.OdometryRecorder('/path/to/recording/folder').run() # doctest:+SKIP
 
 Loading
 .......
@@ -32,6 +16,7 @@ Recorded odometry data can be loaded the same way as gaze data:
 
 .. doctest::
 
+    >>> import pupil_recording_interface as pri
     >>> pri.load_dataset(pri.TEST_RECORDING, odometry='recording')
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, quaternion_axis: 4, time: 4220)
@@ -53,12 +38,12 @@ velocity as well as the confidence of the tracking.
 Optical flow
 ------------
 
-:py:class:`OpticalFlowInterface` is a subclass of :py:class:`VideoInterface`
+:py:class:`OpticalFlowReader` is a subclass of :py:class:`VideoReader`
 that provides methods for calculating optical flow between consecutive frames:
 
 .. doctest::
 
-    >>> interface = pri.OpticalFlowInterface(pri.TEST_RECORDING, subsampling=8.)
+    >>> interface = pri.OpticalFlowReader(pri.TEST_RECORDING, subsampling=8.)
     >>> interface.load_dataset(
     ...     start=interface.user_info['experiment_start'],
     ...     end=interface.user_info['experiment_end'])
@@ -76,43 +61,3 @@ that provides methods for calculating optical flow between consecutive frames:
 
     For more details on this class please refer to the :ref:`api-reference`
     section.
-
-
-Command line interface
-----------------------
-
-The package provides a command line interface with commands for recording
-and exporting data.
-
-.. code-block:: console
-
-    pri record [-h] [-q] topic folder
-
-    positional arguments:
-      topic        Topic to record.
-      folder       Path to the recording folder.
-
-    optional arguments:
-      -h, --help   show this help message and exit
-      -q, --quiet  Set this flag to suppress output
-
-.. note::
-
-    Currently only odometry data can be recorded.
-
-.. code-block:: console
-
-    pri export [-h] [-s SOURCE] [-f FORMAT] [-o OUTPUT_FILE] topic folder
-
-    positional arguments:
-      topic                 Topic to export.
-      folder                Path to the recording folder.
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -s SOURCE, --source SOURCE
-                            Data source.
-      -f FORMAT, --format FORMAT
-                            Export format.
-      -o OUTPUT_FILE, --output_file OUTPUT_FILE
-                            Output file.

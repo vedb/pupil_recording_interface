@@ -1,199 +1,150 @@
 """"""
-import os
 import abc
-import csv
-import json
-
-import numpy as np
-import pandas as pd
-
-from pupil_recording_interface.externals.file_methods import load_pldata_file
-from pupil_recording_interface.errors import FileNotFoundError
+import inspect
 
 
-class BaseInterface(object):
-    """ Base class for all interfaces. """
+class BaseConfig:
+    """ Base class for all configurations. """
 
-    def __init__(self, folder, source='recording'):
-        """ Constructor.
+    def __init__(self, **kwargs):
+        """ Constructor. """
+        # TODO Replace with self.kwargs = kwargs?
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
-        Parameters
-        ----------
-        folder : str
-            Path to the recording folder.
 
-        source : str, default 'recording'
-            The source of the data. If 'recording', the recorded data will
-            be used.
-        """
-        if not os.path.exists(folder):
-            raise FileNotFoundError('No such folder: {}'.format(folder))
+def config_factory(name, config_args, config_kwargs, config_attrs):
+    """ Create a new config type with arguments and attributes. """
 
-        self.folder = folder
-        self.source = source
+    def __init__(self, *args, **kwargs):
+        """ Constructor. """
+        # check if positional arguments are in kwargs
+        args = list(args)
+        for idx, arg_name in enumerate(config_args):
+            if arg_name in kwargs:
+                args.insert(idx, kwargs.pop(arg_name))
 
-        if os.path.exists(os.path.join(self.folder, 'info.csv')):
-            self.info = self._load_info(self.folder, 'info.csv')
-        else:
-            self.info = self._load_info(self.folder)
+        # check that all positional arguments are specified
+        if len(args) != len(config_args):
+            raise TypeError(
+                f"{self.__class__.__name__} expected {len(config_args)} "
+                f"positional arguments {config_args}, got {len(args)}"
+            )
 
-        self.user_info = self._load_user_info(
-            self.folder, self.info['start_time_system_s'])
+        # set positional arguments
+        for arg_name, value in zip(config_args, args):
+            setattr(self, arg_name, value)
 
-    @property
-    def _nc_name(self):
-        """ Name of exported netCDF file. """
-        return 'base'
+        # set keyword arguments
+        for arg_name, value in config_kwargs.items():
+            if not hasattr(self, arg_name):
+                setattr(self, arg_name, value)
 
-    @staticmethod
-    def _load_legacy_info(file_handle):
-        """ Load recording info from legacy file as dict. """
-        reader = csv.reader(file_handle)
-        info = {rows[0]: rows[1] for rows in reader}
+        BaseConfig.__init__(self, **kwargs)
 
-        info = {
-            "duration_s":
-                sum(float(x) * 60 ** i for i, x in
-                    enumerate(reversed(info['Duration Time'].split(":")))),
-            "meta_version": "2.0",
-            "min_player_version": info['Data Format Version'],
-            "recording_name": info['Recording Name'],
-            "recording_software_name": "Pupil Capture",
-            "recording_software_version": info['Capture Software Version'],
-            "recording_uuid": info['Recording UUID'],
-            "start_time_synced_s": float(info['Start Time (Synced)']),
-            "start_time_system_s": float(info['Start Time (System)']),
-            "system_info": info['System Info']
+    attrs = {"__init__": __init__}
+    attrs.update(config_attrs)
+
+    return type(name, (BaseConfig,), attrs)
+
+
+class BaseConfigurable:
+    """ Base class for all configurables. """
+
+    _config_attrs = {}
+    _ignore_args = tuple()  # ignore these positional constructor args
+    _additional_args = tuple()  # add these positional constructor args
+    _additional_kwargs = {}
+    _optional_args = tuple()  # make these positional constructor args optional
+
+    @classmethod
+    def get_params(cls):
+        """ Get constructor parameters for a class. """
+        signature = inspect.signature(cls.__init__)
+
+        args = [
+            name
+            for name, param in signature.parameters.items()
+            if param.kind is param.POSITIONAL_OR_KEYWORD
+            and param.default is inspect._empty
+        ]
+
+        # remove instance parameter
+        args = args[1:]
+
+        kwargs = {
+            name: param.default
+            for name, param in signature.parameters.items()
+            if param.kind is param.POSITIONAL_OR_KEYWORD
+            and param.default is not inspect._empty
         }
 
-        return info
+        return args, kwargs
 
-    @staticmethod
-    def _load_info(folder, filename='info.player.json'):
-        """ Load recording info file as dict. """
-        if not os.path.exists(os.path.join(folder, filename)):
-            raise FileNotFoundError(
-                'File {} not found in folder {}'.format(filename, folder))
+    @classmethod
+    def get_constructor_args(cls, config, **kwargs):
+        """ Construct and instance of a class from a Config. """
+        # get constructor signature
+        cls_args, cls_kwargs = cls.get_params()
 
-        with open(os.path.join(folder, filename)) as f:
-            if filename.endswith('.json'):
-                info = json.load(f)
-            elif filename.endswith('.csv'):
-                info = BaseInterface._load_legacy_info(f)
-            else:
-                raise ValueError('Unsupported info file type.')
+        # update from _additional_kwargs
+        # TODO we probably should merge this with the Config method
+        for name, value in cls._additional_kwargs.items():
+            if name not in cls_kwargs:
+                cls_kwargs[name] = value
 
-        return info
+        # update matching keyword arguments
+        for name, param in cls_kwargs.items():
+            try:
+                cls_kwargs[name] = getattr(config, name)
+            except AttributeError:
+                cls_kwargs[name] = param
 
-    @staticmethod
-    def _load_user_info(folder, start_time, filename='user_info.csv'):
-        """ Load data from user_info.csv file as dict. """
-        if not os.path.exists(os.path.join(folder, filename)):
-            raise FileNotFoundError(
-                'File {} not found in folder {}'.format(filename, folder))
+        # update matching positional arguments
+        for name in cls_args:
+            if name not in cls_kwargs:
+                try:
+                    cls_kwargs[name] = getattr(config, name)
+                except AttributeError:
+                    # TODO the missing arguments can be supplied by
+                    #  kwargs. We should still check if all positional
+                    #  arguments are set at the end.
+                    pass
 
-        with open(os.path.join(folder, filename)) as f:
-            reader = csv.reader(f)
-            info = {rows[0]: rows[1] for rows in reader if rows[0] != 'key'}
+        # update from kwargs
+        for name in cls_kwargs:
+            if name in kwargs:
+                cls_kwargs[name] = kwargs[name]
 
-        for k, v in info.items():
-            if k.endswith(('start', 'end')):
-                info[k] = \
-                    pd.to_timedelta(v) + pd.to_datetime(start_time, unit='s')
-            elif k == 'height':
-                info[k] = float(v) / 100.
+        return cls_kwargs
 
-        return info
+    @classmethod
+    def Config(cls, *args, **kwargs):
+        """ Configuration for this class. """
+        # TODO also get superclass kwargs?
+        cls_args, cls_kwargs = cls.get_params()
 
-    @staticmethod
-    def _load_pldata_as_dataframe(folder, topic):
-        """ Load data from a .pldata file into a pandas.DataFrame. """
-        if not os.path.exists(os.path.join(folder, topic + '.pldata')):
-            raise FileNotFoundError(
-                'File {}.pldata not found in folder {}'.format(topic, folder))
+        for arg in cls._ignore_args:
+            cls_args.remove(arg)
 
-        pldata = load_pldata_file(folder, topic)
-        return pd.DataFrame([dict(d) for d in pldata.data])
+        for arg in cls._additional_args:
+            cls_args.append(arg)
 
-    @staticmethod
-    def _timestamps_to_datetimeindex(timestamps, info):
-        """ Convert timestamps from float to pandas.DatetimeIndex. """
-        return pd.to_datetime(timestamps
-                              - info['start_time_synced_s']
-                              + info['start_time_system_s'],
-                              unit='s')
+        for arg, val in cls._additional_kwargs.items():
+            if arg not in cls_kwargs:
+                cls_kwargs[arg] = val
 
-    @staticmethod
-    def _load_timestamps_as_datetimeindex(folder, topic, info, offset=0.):
-        """ Load timestamps as pandas.DatetimeIndex. """
-        filepath = os.path.join(folder, topic + '_timestamps.npy')
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(
-                'File {}_timestamps.npy not found in folder {}'.format(
-                    topic, folder))
+        for arg in cls._optional_args:
+            if arg not in kwargs:
+                kwargs[arg] = None
 
-        timestamps = np.load(filepath)
-        idx = BaseInterface._timestamps_to_datetimeindex(timestamps, info)
-        return idx + pd.to_timedelta(offset, unit='s')
+        config_type = config_factory(
+            cls.__name__ + "Config", cls_args, cls_kwargs, cls._config_attrs
+        )
 
-    @staticmethod
-    def _get_encoding(data_vars, dtype='int32'):
-        """ Get encoding for each data var in the netCDF export. """
-        comp = {
-            'zlib': True,
-            'dtype': dtype,
-            'scale_factor': 0.0001,
-            '_FillValue': np.iinfo(dtype).min,
-        }
+        return config_type(*args, **kwargs)
 
-        return {v: comp for v in data_vars}
-
-    @staticmethod
-    def _create_export_folder(filename):
-        """ Create the export folder. """
-        folder = os.path.dirname(filename)
-        try:
-            os.makedirs(folder)
-        except OSError:
-            pass
-
+    @classmethod
     @abc.abstractmethod
-    def load_dataset(self):
-        """ Load data as an xarray Dataset. """
-
-    def write_netcdf(self, filename=None):
-        """ Export data to netCDF.
-
-        Parameters
-        ----------
-        filename : str, optional
-            The name of the exported file. Defaults to
-            `<recording_folder>/exports/<datatype>.nc` where `<datatype>` is
-            `gaze`, `odometry` etc.
-        """
-        ds = self.load_dataset()
-        encoding = self._get_encoding(ds.data_vars)
-
-        if filename is None:
-            filename = os.path.join(
-                self.folder, 'exports', self._nc_name + '.nc')
-
-        self._create_export_folder(filename)
-        ds.to_netcdf(filename, encoding=encoding)
-
-
-class BaseRecorder(object):
-    """ Base class for all recorders. """
-
-    def __init__(self, folder):
-        """ Constructor.
-
-        Parameters
-        ----------
-        folder : str
-            Path to the recording folder.
-        """
-        if not os.path.exists(folder):
-            raise FileNotFoundError('No such folder: {}'.format(folder))
-
-        self.folder = folder
+    def from_config(cls, config, *args, **kwargs):
+        """ Create an instance from a Config. """
