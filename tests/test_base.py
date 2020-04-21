@@ -32,17 +32,17 @@ class TestBaseConfigurable:
             {},
         )
 
-    def test_get_constructor_args(self, video_config):
+    def test_get_constructor_args(self, video_stream_config):
         """"""
-        assert BaseVideoDevice.get_constructor_args(video_config) == {
+        assert BaseVideoDevice.get_constructor_args(video_stream_config) == {
             "device_uid": "test_cam",
             "resolution": (1280, 720),
             "fps": 30,
         }
 
         # regression test for overriding parameters with "False"
-        video_config.fps = False
-        assert BaseVideoDevice.get_constructor_args(video_config) == {
+        video_stream_config.fps = False
+        assert BaseVideoDevice.get_constructor_args(video_stream_config) == {
             "device_uid": "test_cam",
             "resolution": (1280, 720),
             "fps": False,

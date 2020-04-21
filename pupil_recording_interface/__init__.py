@@ -10,12 +10,12 @@ from .device.video import VideoDeviceUVC, VideoFileDevice
 from .device.flir import VideoDeviceFLIR
 from .device.realsense import RealSenseDeviceT265
 
-from .stream import VideoStream, OdometryStream
+from .stream import VideoStream, MotionStream
 from .manager import StreamManager
 
 from .pipeline import Pipeline
 
-from .process.recorder import VideoRecorder, OdometryRecorder
+from .process.recorder import VideoRecorder, MotionRecorder
 from .process.display import VideoDisplay
 from .process.pupil_detector import PupilDetector
 from .process.gaze_mapper import GazeMapper
@@ -50,12 +50,12 @@ __all__ = [
     "RealSenseDeviceT265",
     # Streams
     "VideoStream",
-    "OdometryStream",
+    "MotionStream",
     "StreamManager",
     # Pipeline & processes
     "Pipeline",
     "VideoRecorder",
-    "OdometryRecorder",
+    "MotionRecorder",
     "VideoDisplay",
     "PupilDetector",
     "CircleDetector",

@@ -43,17 +43,28 @@ if __name__ == "__main__":
         pri.VideoStream.Config(
             device_type="t265",
             device_uid="t265",
-            name="t265_video",
             resolution=(1696, 800),
             fps=30,
             color_format="gray",
             pipeline=[pri.VideoRecorder.Config(), pri.VideoDisplay.Config()],
         ),
-        pri.OdometryStream.Config(
+        pri.MotionStream.Config(
             device_type="t265",
             device_uid="t265",
-            name="odometry",
-            pipeline=[pri.OdometryRecorder.Config()],
+            motion_type="odometry",
+            pipeline=[pri.MotionRecorder.Config()],
+        ),
+        pri.MotionStream.Config(
+            device_type="t265",
+            device_uid="t265",
+            motion_type="accel",
+            pipeline=[pri.MotionRecorder.Config()],
+        ),
+        pri.MotionStream.Config(
+            device_type="t265",
+            device_uid="t265",
+            motion_type="gyro",
+            pipeline=[pri.MotionRecorder.Config()],
         ),
     ]
 

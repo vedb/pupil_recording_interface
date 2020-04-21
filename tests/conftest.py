@@ -9,7 +9,11 @@ import numpy as np
 from pupil_recording_interface import DATA_DIR
 from pupil_recording_interface.decorators import device, stream, process
 from pupil_recording_interface.device import BaseDevice
-from pupil_recording_interface.stream import BaseStream, VideoStream
+from pupil_recording_interface.stream import (
+    BaseStream,
+    VideoStream,
+    MotionStream,
+)
 from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process.display import VideoDisplay
@@ -862,7 +866,7 @@ def mock_stream_config():
 
 
 @pytest.fixture()
-def video_config():
+def video_stream_config():
     """"""
     return VideoStream.Config(
         "uvc", "test_cam", resolution=(1280, 720), fps=30
@@ -870,11 +874,17 @@ def video_config():
 
 
 @pytest.fixture()
+def motion_stream_config():
+    """"""
+    return MotionStream.Config("t265", "t265", motion_type="odometry")
+
+
+@pytest.fixture()
 def process_configs(temp_folder):
     """ Mapping from process type to working test config for each process. """
     process_kwargs = {
         "video_recorder": {"folder": temp_folder},
-        "odometry_recorder": {"folder": temp_folder},
+        "motion_recorder": {"folder": temp_folder},
         "cam_param_estimator": {"streams": ["world"], "folder": temp_folder},
     }
 

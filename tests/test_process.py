@@ -18,7 +18,12 @@ from pupil_recording_interface.decorators import process
 class TestAllProcesses:
     @pytest.mark.parametrize("process_type", process.registry.keys())
     def test_pause_resume(
-        self, process_type, process_configs, video_config, mock_video_device
+        self,
+        process_type,
+        process_configs,
+        video_stream_config,
+        motion_stream_config,
+        mock_video_device,
     ):
         """"""
         config = process_configs[process_type]
@@ -26,8 +31,12 @@ class TestAllProcesses:
 
         # construct paused
         config.paused = True
+        if process_type == "motion_recorder":
+            stream_config = motion_stream_config
+        else:
+            stream_config = video_stream_config
         process = BaseProcess.from_config(
-            config, video_config, mock_video_device,
+            config, stream_config, mock_video_device,
         )
         assert process.paused
 

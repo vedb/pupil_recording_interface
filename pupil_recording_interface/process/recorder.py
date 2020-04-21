@@ -144,24 +144,29 @@ class VideoRecorder(BaseRecorder):
         np.save(self.timestamp_file, np.array(self._timestamps))
 
 
-@process("odometry_recorder", optional=("folder",))
-class OdometryRecorder(BaseRecorder):
-    """ Recorder for an odometry stream. """
+@process("motion_recorder", optional=("folder", "motion_type"))
+class MotionRecorder(BaseRecorder):
+    """ Recorder for a motion stream. """
 
-    def __init__(self, folder, name=None, topic="odometry", **kwargs):
+    def __init__(self, folder, motion_type, name=None, **kwargs):
         """ Constructor. """
+        self.motion_type = motion_type
+        self.topic = name or motion_type
+
         super().__init__(folder, name=name, **kwargs)
 
-        self.filename = os.path.join(self.folder, topic + ".pldata")
+        self.filename = os.path.join(self.folder, self.topic + ".pldata")
         if os.path.exists(self.filename):
             raise IOError(f"{self.filename} exists, will not overwrite")
-        self.writer = PLData_Writer(self.folder, topic)
+        self.writer = PLData_Writer(self.folder, self.topic)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
         cls_kwargs = cls.get_constructor_args(
-            config, folder=config.folder or kwargs.get("folder", None)
+            config,
+            folder=config.folder or kwargs.get("folder", None),
+            motion_type=stream_config.motion_type,
         )
 
         return cls(**cls_kwargs)
@@ -174,7 +179,10 @@ class OdometryRecorder(BaseRecorder):
 
     def write(self, packet):
         """ Write data to disk. """
-        self.writer.append(packet["odometry"])
+        try:
+            self.writer.append(packet[self.motion_type])
+        except KeyError:
+            logger.warning(f"Packet missing expected data: {self.motion_type}")
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """

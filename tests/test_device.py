@@ -3,13 +3,15 @@ import pytest
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import VideoDeviceUVC
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
-from pupil_recording_interface.stream import VideoStream, OdometryStream
+from pupil_recording_interface.stream import VideoStream, MotionStream
 
 
 class TestBaseDevice:
-    def test_from_config(self, video_config):
+    def test_from_config(self, video_stream_config):
         """"""
-        assert isinstance(BaseDevice.from_config(video_config), VideoDeviceUVC)
+        assert isinstance(
+            BaseDevice.from_config(video_stream_config), VideoDeviceUVC
+        )
 
 
 class TestBaseVideoDevice:
@@ -29,8 +31,8 @@ class TestRealSenseDeviceT265:
                 fps=30,
                 color_format="gray",
             ),
-            OdometryStream.Config(
-                device_type="t265", device_uid="t265", name="odometry"
+            MotionStream.Config(
+                device_type="t265", device_uid="t265", motion_type="odometry"
             ),
         ]
 

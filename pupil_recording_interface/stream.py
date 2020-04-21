@@ -47,9 +47,7 @@ class StreamHandler:
 class BaseStream(BaseConfigurable):
     """ Base class for all streams. """
 
-    def __init__(
-        self, device, pipeline=None, name=None,
-    ):
+    def __init__(self, device, pipeline=None, name=None):
         """ Constructor.
 
         Parameters
@@ -62,7 +60,6 @@ class BaseStream(BaseConfigurable):
             will be used.
         """
         self.device = device
-        # TODO default value for pipeline?
         self.pipeline = pipeline
         self.name = name or device.device_uid
 
@@ -278,8 +275,9 @@ class VideoStream(BaseStream):
             For stereo cameras, which side to record. Can be 'left', 'right'
             or 'both'.
         """
-        super(VideoStream, self).__init__(device, pipeline=pipeline, name=name)
         self.color_format = color_format
+
+        super().__init__(device, pipeline=pipeline, name=name)
 
     @classmethod
     def _from_config(cls, config, device=None, folder=None):
@@ -305,14 +303,60 @@ class VideoStream(BaseStream):
         )
 
 
-@stream("odometry")
-class OdometryStream(BaseStream):
-    """ Odometry stream. """
+@stream("motion")
+class MotionStream(BaseStream):
+    """ Motion data stream. """
+
+    def __init__(self, device, motion_type, pipeline=None, name=None):
+        """ Constructor.
+
+        Parameters
+        ----------
+        device: BaseDevice
+            The device producing the stream.
+
+        motion_type: str
+            The type of motion streamed by the device. Can be "odometry",
+            "accel" or "gyro".
+
+        name: str, optional
+            The name of the stream. If not specified, `motion_type`
+            will be used.
+        """
+        if motion_type not in ("odometry", "accel", "gyro"):
+            raise ValueError(f"Unsupported motion type: {motion_type}")
+        else:
+            self.motion_type = motion_type
+
+        super().__init__(
+            device, pipeline=pipeline, name=name or self.motion_type
+        )
+
+    @classmethod
+    def _from_config(cls, config, device=None, folder=None):
+        """ Create a stream from a StreamConfig. """
+        device = device or BaseDevice.from_config(config, folder=folder)
+        return cls(
+            device,
+            config.motion_type,
+            name=config.name or config.motion_type,
+            pipeline=Pipeline.from_config(config, device, folder),
+        )
 
     def get_packet(self):
         """ Get the last data packet from the stream. """
-        odometry, timestamp = self.device._get_odometry_and_timestamp()
+        if self.motion_type == "odometry":
+            motion, timestamp = self.device._get_odometry_and_timestamp()
+        elif self.motion_type == "accel":
+            motion, timestamp = self.device._get_accel_and_timestamp()
+        elif self.motion_type == "gyro":
+            motion, timestamp = self.device._get_gyro_and_timestamp()
+        else:
+            raise RuntimeError(f"Unsupported motion type: {self.motion_type}")
 
         return Packet(
-            self.name, self.device.device_uid, timestamp, odometry=odometry
+            self.name,
+            self.device.device_uid,
+            timestamp,
+            **{self.motion_type: motion},
         )
