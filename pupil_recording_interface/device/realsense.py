@@ -67,16 +67,12 @@ class RealSenseDeviceT265(BaseDevice):
         self.odometry = odometry
         self.accel = accel
         self.gyro = gyro
+        self.queue_size = queue_size
 
         self.timebase = "epoch"
 
         self.pipeline = None
-        self.video_queue = mp.Queue(maxsize=queue_size) if self.video else None
-        self.odometry_queue = (
-            mp.Queue(maxsize=queue_size) if self.odometry else None
-        )
-        self.accel_queue = mp.Queue(maxsize=queue_size) if self.accel else None
-        self.gyro_queue = mp.Queue(maxsize=queue_size) if self.gyro else None
+        self.queues = {}
 
     @classmethod
     def _from_config(cls, config, **kwargs):
@@ -130,7 +126,7 @@ class RealSenseDeviceT265(BaseDevice):
         cls_kwargs.update(kwargs)
 
         logger.debug(
-            f"Creating T265 video device with serial number {uid} "
+            f"Creating T265 device with serial number {uid} "
             f"and parameters: {cls_kwargs}"
         )
 
@@ -144,25 +140,34 @@ class RealSenseDeviceT265(BaseDevice):
         """ Callback for new RealSense frames. """
         import pyrealsense2 as rs
 
-        if rs_frame.is_frameset() and self.video_queue is not None:
-            if not self.video_queue.full():
-                self.video_queue.put(
-                    self._get_video_frame(rs_frame, self.video)
-                )
-        elif rs_frame.is_pose_frame() and self.odometry_queue is not None:
-            self.odometry_queue.put(self._get_odometry(rs_frame))
+        if (
+            rs_frame.is_frameset()
+            and "video" in self.queues
+            and not self.queues["video"].full()
+        ):
+            self.queues["video"].put(
+                self._get_video_frame(rs_frame, self.video)
+            )
+        elif (
+            rs_frame.is_pose_frame()
+            and "odometry" in self.queues
+            and not self.queues["odometry"].full()
+        ):
+            self.queues["odometry"].put(self._get_odometry(rs_frame))
         elif (
             rs_frame.is_motion_frame()
             and rs_frame.profile.stream_type() == rs.stream.accel
-            and self.accel_queue is not None
+            and "accel" in self.queues
+            and not self.queues["accel"].full()
         ):
-            self.accel_queue.put(self._get_accel(rs_frame))
+            self.queues["accel"].put(self._get_accel(rs_frame))
         elif (
             rs_frame.is_motion_frame()
             and rs_frame.profile.stream_type() == rs.stream.gyro
-            and self.gyro_queue is not None
+            and "gyro" in self.queues
+            and not self.queues["gyro"].full()
         ):
-            self.gyro_queue.put(self._get_gyro(rs_frame))
+            self.queues["gyro"].put(self._get_gyro(rs_frame))
 
     @classmethod
     def _get_odometry(cls, rs_frame):
@@ -303,34 +308,39 @@ class RealSenseDeviceT265(BaseDevice):
         return pipeline
 
     def _get_frame_and_timestamp(self, mode="img"):
-        """ Get a frame and its associated timestamp. """
-        # TODO timestamp = uvc.get_time_monotonic()?
+        """ Get a frame and its associated timestamps. """
         # TODO timeout
-        return self.video_queue.get()
+        if "video" not in self.queues:
+            raise RuntimeError("video stream not enabled for this device")
+        else:
+            return self.queues["video"].get()
+
+    def _get_motion_and_timestamp(self, motion_type):
+        """ Get motion data for queue. """
+        # TODO timeout
+        if motion_type not in self.queues:
+            raise RuntimeError(
+                f"{motion_type} stream not enabled for this device"
+            )
+        else:
+            motion = self.queues[motion_type].get()
+            return motion, motion["timestamp"], motion["source_timestamp"]
 
     def _get_odometry_and_timestamp(self):
-        """ Get a frame and its associated timestamp. """
-        odometry = self.odometry_queue.get()
-        # TODO timestamp = uvc.get_time_monotonic()?
-        # TODO timeout
-        return odometry, odometry["timestamp"], odometry["source_timestamp"]
+        """ Get odometry data and timestamps. """
+        return self._get_motion_and_timestamp("odometry")
 
     def _get_accel_and_timestamp(self):
-        """ Get a frame and its associated timestamp. """
-        accel = self.accel_queue.get()
-        # TODO timestamp = uvc.get_time_monotonic()?
-        # TODO timeout
-        return accel, accel["timestamp"], accel["source_timestamp"]
+        """ Get accelerometer data and timestamps. """
+        return self._get_motion_and_timestamp("accel")
 
     def _get_gyro_and_timestamp(self):
-        """ Get a frame and its associated timestamp. """
-        gyro = self.gyro_queue.get()
-        # TODO timestamp = uvc.get_time_monotonic()?
-        # TODO timeout
-        return gyro, gyro["timestamp"], gyro["source_timestamp"]
+        """ Get gyroscope data and timestamps. """
+        return self._get_motion_and_timestamp("gyro")
 
     def run_pre_thread_hooks(self):
         """ Run hook(s) before dispatching the recording thread. """
+        # Init pipelines
         if self.pipeline is None:
             self.pipeline = self._init_pipeline(
                 self._frame_callback,
@@ -340,8 +350,23 @@ class RealSenseDeviceT265(BaseDevice):
                 self.gyro,
             )
 
+        # Init stream queues
+        self.queues = {
+            name: mp.Queue(maxsize=self.queue_size)
+            for name in ("video", "odometry", "accel", "gyro")
+            if getattr(self, name)
+        }
+
     def run_post_thread_hooks(self):
         """ Run hook(s) after the recording thread finishes. """
+        # Empty and close stream queues
+        for name in list(self.queues.keys()):
+            queue = self.queues.pop(name)
+            while not queue.empty():
+                queue.get()
+            queue.close()
+
+        # Stop pipeline
         if self.pipeline is not None:
             logger.debug(
                 f"Stopping T265 pipeline for device: {self.device_uid}"

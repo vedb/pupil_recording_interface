@@ -193,9 +193,7 @@ class MotionRecorder(BaseRecorder):
 
     def start(self):
         """ Start the recorder. """
-        logger.debug(
-            f"Started odometry recorder, recording to {self.filename}"
-        )
+        logger.debug(f"Started motion recorder, recording to {self.filename}")
 
     def write(self, packet):
         """ Write data to disk. """
