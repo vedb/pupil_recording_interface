@@ -21,10 +21,7 @@ if __name__ == "__main__":
             pipeline=[
                 pri.CircleGridDetector.Config(),
                 pri.CamParamEstimator.Config(
-                    folder=folder,
-                    streams=("world", "t265"),
-                    extrinsics=True,
-                    block=True,
+                    folder=folder, streams=("world", "t265"), extrinsics=True,
                 ),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
             ],

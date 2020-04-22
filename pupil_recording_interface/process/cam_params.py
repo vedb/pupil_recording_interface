@@ -383,7 +383,10 @@ class CamParamEstimator(BaseProcess):
         """ Process a packet. """
         if self._pattern_acquired:
             packet.pattern_acquired = True
-            packet.broadcasts.append("pattern_acquired")
             self._pattern_acquired = False
+        else:
+            packet.pattern_acquired = False
+
+        packet.broadcasts.append("pattern_acquired")
 
         return packet

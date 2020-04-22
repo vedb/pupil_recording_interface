@@ -219,7 +219,8 @@ class StreamManager(object):
     def _update_status(self, status):
         """ Update the status of all streams. """
         # TODO updating self.status should be made thread-safe
-        # TODO timeout for statuses that are too old
+        # TODO deal with statuses that are too old or only sent once
+        #  (e.g. "pattern_acquired")
         for stream_name, queue in self._status_queues.items():
             if stream_name not in self.status:
                 self.status[stream_name] = self.streams[
