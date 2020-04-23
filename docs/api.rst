@@ -55,7 +55,7 @@ Stream classes
     :toctree: _generated
 
     VideoStream
-    OdometryStream
+    MotionStream
     StreamManager
 
 

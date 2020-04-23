@@ -3,6 +3,7 @@ from itertools import combinations
 from queue import Queue, Full
 from threading import Lock
 import logging
+import warnings
 
 import cv2
 import numpy as np
@@ -10,7 +11,10 @@ import numpy as np
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.externals.methods import gen_pattern_grid
-from pupil_recording_interface.externals.file_methods import save_intrinsics
+from pupil_recording_interface.externals.file_methods import (
+    save_intrinsics,
+    save_extrinsics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +197,12 @@ class CamParamEstimator(BaseProcess):
         self.distortion_model = distortion_model
         self.extrinsics = extrinsics
 
+        if len(streams) > 1 and not extrinsics:
+            warnings.warn(
+                "Estimating intrinsics for multiple cameras simultaneously "
+                "will likely yield poorer results than individual estimates."
+            )
+
         super().__init__(listen_for=["circle_grid"], **kwargs)
 
         self.intrinsics = None
@@ -281,7 +291,6 @@ class CamParamEstimator(BaseProcess):
     @classmethod
     def _save_intrinsics(cls, folder, intrinsics):
         """ Save estimated intrinsics. """
-        # TODO get device_uid
         for (
             device,
             (resolution, dist_mode, cam_mtx, dist_coefs),
@@ -295,6 +304,37 @@ class CamParamEstimator(BaseProcess):
                     "dist_coefs": dist_coefs.tolist(),
                     "cam_type": dist_mode,
                     "resolution": list(resolution),
+                },
+            )
+
+    @classmethod
+    def _save_extrinsics(cls, folder, extrinsics):
+        """ Save estimated intrinsics. """
+        for ((first, second), (resolution, R, T)) in extrinsics.items():
+            save_extrinsics(
+                folder,
+                first,
+                resolution,
+                {
+                    second: {
+                        "order": "first",
+                        "rotation": R,
+                        "translation": T,
+                        "resolution": list(resolution),
+                    }
+                },
+            )
+            save_extrinsics(
+                folder,
+                second,
+                resolution,
+                {
+                    first: {
+                        "order": "second",
+                        "rotation": R,
+                        "translation": T,
+                        "resolution": list(resolution),
+                    }
                 },
             )
 
@@ -322,25 +362,35 @@ class CamParamEstimator(BaseProcess):
             )
             return
 
-        self._save_intrinsics(self.folder, self.intrinsics)
+        # Skip saving intrinsics when estimating extrinsics because the
+        # calibration data will most likely be poorer than when estimating
+        # intrinsics for each stream individually
+        if not self.extrinsics:
+            self._save_intrinsics(self.folder, self.intrinsics)
 
         if self.extrinsics:
             try:
                 self.extrinsics = {
-                    (camera_1, camera_2): calculate_extrinsics(
-                        patterns[camera_1],
-                        patterns[camera_2],
-                        self._obj_points,
-                        self.intrinsics[camera_1][0],
-                        self.intrinsics[camera_1][1],
-                        self.intrinsics[camera_2][0],
-                        self.intrinsics[camera_2][1],
+                    (camera_1, camera_2): (
+                        resolutions[camera_1],
+                        resolutions[camera_2],
+                        *calculate_extrinsics(
+                            patterns[camera_1],
+                            patterns[camera_2],
+                            self._obj_points,
+                            self.intrinsics[camera_1][0],
+                            self.intrinsics[camera_1][1],
+                            self.intrinsics[camera_2][0],
+                            self.intrinsics[camera_2][1],
+                        ),
                     )
                     for camera_1, camera_2 in combinations(patterns, 2)
                 }
             except cv2.error as e:
                 logger.warning(f"Extrinsics estimation failed. Reason: {e}")
                 return
+
+            self._save_extrinsics(self.folder, self.extrinsics)
 
         logger.info("Successfully estimated camera parameters")
 

@@ -372,3 +372,35 @@ def save_intrinsics(directory, cam_name, resolution, intrinsics):
             cam_name, resolution, save_path
         )
     )
+
+
+def save_extrinsics(directory, cam_name, resolution, extrinsics):
+    """
+    Saves camera intrinsics calibration to a file. For each unique camera name we maintain a single file containing all calibrations associated with this camera name.
+    :param directory: Directory to which the intrinsics file will be written
+    :param cam_name: Name of the camera, e.g. 'Pupil Cam 1 ID2'
+    :param resolution: Camera resolution given as a tuple. This needs to match the resolution the calibration has been computed with.
+    :param extrinsics: The camera extrinsics dictionary.
+    :return:
+    """
+    # Try to load previous camera calibrations
+    save_path = os.path.join(
+        directory, "{}.extrinsics".format(cam_name.replace(" ", "_"))
+    )
+    try:
+        calib_dict = load_object(save_path, allow_legacy=False)
+    except Exception:
+        calib_dict = {}
+
+    calib_dict["version"] = 1
+    if str(resolution) in calib_dict:
+        calib_dict[str(resolution)].update(extrinsics)
+    else:
+        calib_dict[str(resolution)] = extrinsics
+
+    save_object(calib_dict, save_path)
+    logger.info(
+        "Extrinsics for camera {} at resolution {} saved to {}".format(
+            cam_name, resolution, save_path
+        )
+    )

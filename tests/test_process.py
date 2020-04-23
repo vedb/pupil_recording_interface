@@ -297,3 +297,39 @@ class TestCamParamEstimator:
             "cam_type": "radial",
             "resolution": [1280, 720],
         }
+
+    def test_save_extrinsics(self, cam_param_estimator, extrinsics):
+        """"""
+        cam_param_estimator._save_extrinsics(
+            cam_param_estimator.folder, extrinsics
+        )
+        first = load_object(
+            os.path.join(cam_param_estimator.folder, "t265_left.extrinsics")
+        )
+        second = load_object(
+            os.path.join(cam_param_estimator.folder, "t265_right.extrinsics")
+        )
+        assert first["(848, 800)"] == {
+            "t265_right": {
+                "order": "first",
+                "rotation": [
+                    [0.99999411, 0.00115959, 0.0032307],
+                    [-0.00120395, 0.9999046, 0.01375999],
+                    [-0.00321443, -0.0137638, 0.99990011],
+                ],
+                "translation": [[-2.87012494], [0.0349811], [-0.03503141]],
+                "resolution": [848, 800],
+            }
+        }
+        assert second["(848, 800)"] == {
+            "t265_left": {
+                "order": "second",
+                "rotation": [
+                    [0.99999411, 0.00115959, 0.0032307],
+                    [-0.00120395, 0.9999046, 0.01375999],
+                    [-0.00321443, -0.0137638, 0.99990011],
+                ],
+                "translation": [[-2.87012494], [0.0349811], [-0.03503141]],
+                "resolution": [848, 800],
+            }
+        }
