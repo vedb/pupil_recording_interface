@@ -1,4 +1,4 @@
-name: pupil-recording-interface
+name: pri
 channels:
   - conda-forge
   - phausamann
