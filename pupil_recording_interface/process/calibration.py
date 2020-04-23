@@ -217,11 +217,12 @@ class Calibration(BaseProcess):
                     f"Frame has resolution {packet['frame'].shape[1::-1]} "
                     f"but calibration was calculated for {self.resolution}"
                 )
-
             packet.calibration_calculated = True
             packet.calibration_result = self.result
-            packet.broadcasts.append("calibration_calculated")
-
             self._calculated = False
+        else:
+            packet.calibration_calculated = False
+
+        packet.broadcasts.append("calibration_calculated")
 
         return packet

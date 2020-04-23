@@ -129,18 +129,15 @@ class TestPupilDetector:
 
 
 class TestGazeMapper:
-    def test_map_gaze(self, gaze_mapper, gaze_2d):
+    def test_mapper(self, gaze_mapper, gaze_2d):
         """"""
         for g in gaze_2d:
             if len(g["base_data"]) == 2:
-                mapped = gaze_mapper.map_gaze(
+                mapped = gaze_mapper.mapper._map_binocular(
                     g["base_data"][0], g["base_data"][1],
                 )
-            elif g["base_data"][0]["id"] == 0:
-                mapped = gaze_mapper.map_gaze(g["base_data"][0], None)
             else:
-                mapped = gaze_mapper.map_gaze(None, g["base_data"][0])
-
+                mapped = gaze_mapper.mapper._map_monocular(g["base_data"][0])
             np.testing.assert_equal(mapped, g)
 
     def test_record_data(self, gaze_mapper, gaze_packet):

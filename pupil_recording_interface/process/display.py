@@ -1,5 +1,6 @@
 """"""
 import logging
+from collections import deque
 
 import cv2
 import numpy as np
@@ -38,7 +39,11 @@ class VideoDisplay(BaseProcess):
 
         super().__init__(block=block, **kwargs)
 
-        self._last_gaze_point = None
+        # gaze overlay
+        _queue_len = 5  # TODO constructor argument?
+        self._eye0_gaze_deque = deque(maxlen=_queue_len)
+        self._eye1_gaze_deque = deque(maxlen=_queue_len)
+        self._binocular_gaze_deque = deque(maxlen=_queue_len)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -96,15 +101,23 @@ class VideoDisplay(BaseProcess):
             denormalize(g["norm_pos"], frame.shape[1::-1]) for g in gaze
         ]
 
-        # TODO smoothed + timeout or similar
-        if len(gaze_points) == 0:
-            gaze_point = self._last_gaze_point
-        elif len(gaze_points) == 1:
-            gaze_point = int(gaze_points[0][0]), int(gaze_points[0][1])
-        else:
-            gaze_point = np.mean(gaze_points, axis=0)
-            gaze_point = tuple(gaze_point.astype(int))
-        self._last_gaze_point = gaze_point
+        for idx, gaze_point in enumerate(gaze_points):
+            if len(gaze[idx]["base_data"]) == 2:
+                self._binocular_gaze_deque.append(gaze_point)
+                self._eye0_gaze_deque.append((np.nan, np.nan))
+                self._eye1_gaze_deque.append((np.nan, np.nan))
+            elif gaze[idx]["base_data"][0]["id"] == 0:
+                self._binocular_gaze_deque.append((np.nan, np.nan))
+                self._eye0_gaze_deque.append(gaze_point)
+                self._eye1_gaze_deque.append((np.nan, np.nan))
+            elif gaze[idx]["base_data"][0]["id"] == 1:
+                self._binocular_gaze_deque.append((np.nan, np.nan))
+                self._eye0_gaze_deque.append((np.nan, np.nan))
+                self._eye1_gaze_deque.append(gaze_point)
+
+        binocular_gaze_point = np.nanmean(self._binocular_gaze_deque, axis=0)
+        eye0_gaze_point = np.nanmean(self._eye0_gaze_deque, axis=0)
+        eye1_gaze_point = np.nanmean(self._eye1_gaze_deque, axis=0)
 
         if frame.ndim == 2:
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
@@ -114,7 +127,22 @@ class VideoDisplay(BaseProcess):
         radius = 10
 
         try:
-            cv2.circle(frame, gaze_point, radius, color, thickness=-1)
+            if not np.isnan(binocular_gaze_point).any():
+                cv2.circle(
+                    frame,
+                    tuple(binocular_gaze_point.astype(int)),
+                    radius,
+                    color,
+                    thickness=-1,
+                )
+            if not np.isnan(eye0_gaze_point).any():
+                cv2.circle(
+                    frame, tuple(eye0_gaze_point.astype(int)), radius, color,
+                )
+            if not np.isnan(eye1_gaze_point).any():
+                cv2.circle(
+                    frame, tuple(eye1_gaze_point.astype(int)), radius, color,
+                )
         except OverflowError as e:
             logger.debug(e)
 
