@@ -3,6 +3,7 @@ import pytest
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import VideoDeviceUVC
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
+from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 
 
 class TestBaseDevice:
@@ -17,6 +18,29 @@ class TestBaseVideoDevice:
     @pytest.mark.skip("Not yet implemented")
     def test_start(self):
         """"""
+
+
+class TestVideoDeviceUVC:
+    @pytest.fixture(autouse=True)
+    def uvc(self):
+        """"""
+        return pytest.importorskip("uvc")
+
+    @pytest.mark.xfail(raises=DeviceNotConnected)
+    @pytest.mark.parametrize(
+        "device_uid", ["Pupil Cam1 ID2", "Pupil Cam2 ID2", "Pupil Cam3 ID2"]
+    )
+    def test_get_capture(self, device_uid):
+        """"""
+        capture = VideoDeviceUVC._get_capture(
+            device_uid, (1280, 720), 30, {"Auto Exposure Mode": 1}
+        )
+        controls = {c.display_name: c.value for c in capture.controls}
+        assert controls["Auto Exposure Mode"] == 1
+        del capture
+
+        with pytest.raises(IllegalSetting):
+            VideoDeviceUVC._get_capture(device_uid, (1280, 720), 200)
 
 
 class TestRealSenseDeviceT265:

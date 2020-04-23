@@ -9,7 +9,15 @@ import cv2
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.reader.video import VideoReader
-from pupil_recording_interface.errors import DeviceNotConnected
+from pupil_recording_interface.errors import (
+    DeviceNotConnected,
+    IllegalSetting,
+)
+from pupil_recording_interface.externals.uvc_utils import (
+    Check_Frame_Stripes,
+    pre_configure_capture,
+    maybe_init_exposure_handler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +39,6 @@ class BaseVideoDevice(BaseDevice):
 
         fps: int
             Desired camera refresh rate.
-
-        start: bool, default True
-            If True, initialize the underlying capture upon construction.
-            Set to False for multi-threaded recording.
         """
         super(BaseVideoDevice, self).__init__(device_uid)
 
@@ -76,6 +80,42 @@ class BaseVideoDevice(BaseDevice):
 class VideoDeviceUVC(BaseVideoDevice):
     """ UVC video device. """
 
+    def __init__(
+        self,
+        device_uid,
+        resolution,
+        fps,
+        exposure_mode="manual",
+        check_stripes=False,
+        controls=None,
+    ):
+        """ Constructor.
+
+        Parameters
+        ----------
+        device_uid: str
+            The unique identity of this device. Depending on the device this
+            will be a serial number or similar.
+
+        resolution: tuple, len 2
+            Desired horizontal and vertical camera resolution.
+
+        fps: int
+            Desired camera refresh rate.
+
+        exposure_mode: str, default "auto".
+            Exposure mode. Can be "manual" or "auto".
+
+        controls: dict, optional
+            Mapping from UVC control display names to values.
+        """
+        super().__init__(device_uid, resolution, fps)
+        self.exposure_mode = exposure_mode
+        self.initial_controls = controls or {}
+
+        self.exposure_handler = None
+        self.stripe_detector = Check_Frame_Stripes if check_stripes else None
+
     @classmethod
     def _get_connected_device_uids(cls):
         """ Get a mapping from devices names to UIDs. """
@@ -110,31 +150,53 @@ class VideoDeviceUVC(BaseVideoDevice):
         }
 
     @classmethod
-    def _get_capture(cls, uid, resolution, fps, **kwargs):
+    def _get_capture(cls, uid, resolution, fps, initial_controls=None):
         """ Get a capture instance for a device by name. """
         import uvc
 
         device_uid = cls._get_uvc_device_uid(uid)
 
-        # verify selected mode
+        # check frame mode
         if resolution + (fps,) not in cls._get_available_modes(device_uid):
-            raise ValueError(
+            raise IllegalSetting(
                 f"Unsupported frame mode: "
                 f"{resolution[0]}x{resolution[1]}@{fps}fps."
             )
 
+        # init capture
         capture = uvc.Capture(device_uid)
         capture.frame_mode = resolution + (fps,)
 
+        # set controls
+        capture = pre_configure_capture(capture)
+        for control in capture.controls:
+            if control.display_name in (initial_controls or {}):
+                control.value = initial_controls[control.display_name]
+
         return capture
+
+    def start(self):
+        """ Start this device. """
+        if not self.is_started:
+            self.capture = self._get_capture(
+                self.device_uid,
+                self.resolution,
+                self.fps,
+                initial_controls=self.initial_controls,
+            )
+            self.exposure_handler = maybe_init_exposure_handler(
+                self.capture, self.exposure_mode, self.fps
+            )
 
     def restart(self):
         """ Try restarting this device. """
+        import uvc
+
         self.stop()
         while not self.is_started:
             try:
                 self.start()
-            except DeviceNotConnected:
+            except (DeviceNotConnected, uvc.InitError, uvc.OpenError):
                 logger.debug("Device is not connected, waiting for 1 second")
                 time.sleep(1)
 
@@ -159,8 +221,24 @@ class VideoDeviceUVC(BaseVideoDevice):
             self.restart()
             return self._get_frame_and_timestamp(mode=mode)
 
+        frame = getattr(uvc_frame, mode)
+
+        if self.exposure_handler:
+            target = self.exposure_handler.calculate_based_on_frame(frame)
+            if target is not None:
+                self.controls["Absolute Exposure Time"].value = target
+
+        if self.stripe_detector and self.stripe_detector.require_restart(
+            frame
+        ):
+            logger.warning(
+                f"Stripes detected, restarting device {self.device_uid}"
+            )
+            self.restart()
+            return self._get_frame_and_timestamp(mode=mode)
+
         return (
-            getattr(uvc_frame, mode),
+            frame,
             uvc_frame.timestamp,
             uvc_frame.timestamp,
         )
@@ -194,7 +272,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         uvc.Frame:
             The captured frame.
         """
-        return self.capture.get_frame()
+        return self.capture.get_frame(0.05)
 
 
 @device("video_file", optional=("topic",))
