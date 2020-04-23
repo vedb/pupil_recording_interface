@@ -1,4 +1,5 @@
 """"""
+import warnings
 import logging
 from collections import deque
 
@@ -115,9 +116,13 @@ class VideoDisplay(BaseProcess):
                 self._eye0_gaze_deque.append((np.nan, np.nan))
                 self._eye1_gaze_deque.append(gaze_point)
 
-        binocular_gaze_point = np.nanmean(self._binocular_gaze_deque, axis=0)
-        eye0_gaze_point = np.nanmean(self._eye0_gaze_deque, axis=0)
-        eye1_gaze_point = np.nanmean(self._eye1_gaze_deque, axis=0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            binocular_gaze_point = np.nanmean(
+                self._binocular_gaze_deque, axis=0
+            )
+            eye0_gaze_point = np.nanmean(self._eye0_gaze_deque, axis=0)
+            eye1_gaze_point = np.nanmean(self._eye1_gaze_deque, axis=0)
 
         if frame.ndim == 2:
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
