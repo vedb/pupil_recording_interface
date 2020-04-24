@@ -14,9 +14,11 @@ python3 -m venv "${VENV_DIR}"
 
 ### Install python dependencies and package
 source "${VENV_DIR}/bin/activate"
+pip install wheel
 pip install -r "${SCRIPT_DIR}/requirements_build.txt"
 pip install -r "${SCRIPT_DIR}/requirements_run.txt"
 pip install -e "${SCRIPT_DIR}/.."
 
 ### Success!
 echo "Setup successful!"
+echo "Run 'source ${VENV_DIR}/bin/activate' to activate the environment"
