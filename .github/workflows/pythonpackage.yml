@@ -44,6 +44,8 @@ jobs:
         run: |
           wget http://mirrors.kernel.org/ubuntu/pool/main/u/udev/libudev0_175-0ubuntu9_amd64.deb
           sudo dpkg -i libudev0_175-0ubuntu9_amd64.deb
+          sudo apt-get update
+          sudo apt-get install libopencv-dev libgoogle-glog-dev libeigen3-dev libceres-dev
       - name: Create environment
         run: conda env create
 
