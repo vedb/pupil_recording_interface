@@ -219,7 +219,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             self.video_writer.stdin.write(img.tostring())
         except BrokenPipeError:
             # TODO figure out why this is happening in the first place
-            logger.error(
+            logger.debug(
                 f"Broken pipe while writing a frame to {self.video_file}"
             )
 

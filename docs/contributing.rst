@@ -23,7 +23,7 @@ Environment setup
 
 .. code-block:: console
 
-    $ conda activate pupil-recording-interface
+    $ conda activate pri
 
 #. Install the package:
 
