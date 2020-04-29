@@ -66,12 +66,19 @@ class VideoDisplay(BaseProcess):
 
     def start(self):
         """ Start the process. """
-        cv2.namedWindow(
-            self.name,
-            cv2.WINDOW_NORMAL + cv2.WINDOW_KEEPRATIO + cv2.WINDOW_GUI_NORMAL,
-        )
-        if self.resolution is not None:
-            cv2.resizeWindow(self.name, self.resolution[0], self.resolution[1])
+        try:
+            cv2.namedWindow(
+                self.name,
+                cv2.WINDOW_NORMAL
+                + cv2.WINDOW_KEEPRATIO
+                + cv2.WINDOW_GUI_NORMAL,
+            )
+            if self.resolution is not None:
+                cv2.resizeWindow(
+                    self.name, self.resolution[0], self.resolution[1]
+                )
+        except cv2.error:
+            pass
 
     def stop(self):
         """ Stop the process. """
