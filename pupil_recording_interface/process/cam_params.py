@@ -3,7 +3,6 @@ from itertools import combinations
 from queue import Queue, Full
 from threading import Lock
 import logging
-import warnings
 
 import cv2
 import numpy as np
@@ -198,7 +197,7 @@ class CamParamEstimator(BaseProcess):
         self.extrinsics = extrinsics
 
         if len(streams) > 1 and not extrinsics:
-            warnings.warn(
+            logger.warning(
                 "Estimating intrinsics for multiple cameras simultaneously "
                 "will likely yield poorer results than individual estimates."
             )
