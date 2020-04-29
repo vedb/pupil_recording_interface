@@ -54,6 +54,13 @@ class VideoDisplay(BaseProcess):
             name=stream_config.name or device.device_uid,
             resolution=getattr(stream_config, "resolution", None),
         )
+        if stream_config.name is not None:
+            cls_kwargs["process_name"] = ".".join(
+                (
+                    stream_config.name,
+                    cls_kwargs["process_name"] or cls.__name__,
+                )
+            )
 
         return cls(**cls_kwargs)
 
@@ -65,6 +72,30 @@ class VideoDisplay(BaseProcess):
         )
         if self.resolution is not None:
             cv2.resizeWindow(self.name, self.resolution[0], self.resolution[1])
+
+    def stop(self):
+        """ Stop the process. """
+        try:
+            cv2.destroyWindow(self.name)
+        except cv2.error:
+            pass
+
+    def process_notifications(self, notifications):
+        """ Process new notifications. """
+        # TODO avoid this duplication
+        for notification in notifications:
+            if (
+                "pause_process" in notification
+                and notification["pause_process"] == self.process_name
+            ):
+                self.stop()
+            if (
+                "resume_process" in notification
+                and notification["resume_process"] == self.process_name
+            ):
+                self.start()
+
+        super().process_notifications(notifications)
 
     def _add_pupil_overlay(self, packet):
         """ Add pupil overlay onto frame. """

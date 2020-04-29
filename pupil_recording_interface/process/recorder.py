@@ -113,6 +113,13 @@ class VideoRecorder(BaseRecorder):
             name=stream_config.name or device.device_uid,
             color_format=config.color_format or stream_config.color_format,
         )
+        if stream_config.name is not None:
+            cls_kwargs["process_name"] = ".".join(
+                (
+                    stream_config.name,
+                    cls_kwargs["process_name"] or cls.__name__,
+                )
+            )
 
         return cls(**cls_kwargs)
 
@@ -188,6 +195,13 @@ class MotionRecorder(BaseRecorder):
             folder=config.folder or kwargs.get("folder", None),
             motion_type=stream_config.motion_type,
         )
+        if stream_config.name is not None:
+            cls_kwargs["process_name"] = ".".join(
+                (
+                    stream_config.name,
+                    cls_kwargs["process_name"] or cls.__name__,
+                )
+            )
 
         return cls(**cls_kwargs)
 

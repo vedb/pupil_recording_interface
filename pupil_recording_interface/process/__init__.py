@@ -23,6 +23,8 @@ class BaseProcess(BaseConfigurable):
         self._packet_executor = DroppingThreadPoolExecutor(maxsize=10)
         self._notification_executor = DroppingThreadPoolExecutor(maxsize=10)
 
+        logger.debug(f"Initialized process {self.process_name}")
+
     @classmethod
     def from_config(cls, config, stream_config, device, **kwargs):
         """ Create a process from a ProcessConfig. """
@@ -41,6 +43,7 @@ class BaseProcess(BaseConfigurable):
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
         cls_kwargs = cls.get_constructor_args(config)
+        # TODO this has to be duplicated if the sub-class overrides from_config
         if stream_config.name is not None:
             cls_kwargs["process_name"] = ".".join(
                 (
@@ -80,11 +83,13 @@ class BaseProcess(BaseConfigurable):
                 "pause_process" in notification
                 and notification["pause_process"] == self.process_name
             ):
+                logger.debug(f"Pausing process {self.process_name}")
                 self.paused = True
             if (
                 "resume_process" in notification
                 and notification["resume_process"] == self.process_name
             ):
+                logger.debug(f"Resuming process {self.process_name}")
                 self.paused = False
 
         if not self.paused:
