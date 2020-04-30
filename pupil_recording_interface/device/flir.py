@@ -139,7 +139,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
             logger.error(str(ex))
 
     @classmethod
-    def _get_capture(
+    def get_capture(
         cls, serial_number, resolution, fps, exposure_value=31000.0, gain=18
     ):
         """ Get a capture instance for a device by name. """
@@ -312,7 +312,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         self.capture.camera.AcquisitionStop()
         logger.debug("Stopped FLIR camera")
 
-    def _get_frame_and_timestamp(self, mode="img"):
+    def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         # TODO return grayscale frame if mode=='gray'
         import PySpin
@@ -347,7 +347,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 # TODO check if this is a valid way of handling an
                 #  incomplete image
                 logger.warning("Image Incomplete!")
-                return self._get_frame_and_timestamp(mode)
+                return self.get_frame_and_timestamp(mode)
 
             else:
                 frame = image_result.Convert(

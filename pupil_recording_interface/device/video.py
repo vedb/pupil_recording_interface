@@ -16,7 +16,7 @@ from pupil_recording_interface.errors import (
 from pupil_recording_interface.externals.uvc_utils import (
     Check_Frame_Stripes,
     pre_configure_capture,
-    maybe_init_exposure_handler,
+    init_exposure_handler,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,17 +54,17 @@ class BaseVideoDevice(BaseDevice):
 
     @classmethod
     @abc.abstractmethod
-    def _get_capture(cls, device_uid, resolution, fps, **kwargs):
+    def get_capture(cls, device_uid, resolution, fps, **kwargs):
         """ Get a capture instance for a device by name. """
 
     @abc.abstractmethod
-    def _get_frame_and_timestamp(self, mode="img"):
+    def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
 
     def start(self):
         """ Start this device. """
         if not self.is_started:
-            self.capture = self._get_capture(
+            self.capture = self.get_capture(
                 self.device_uid,
                 self.resolution,
                 self.fps,
@@ -94,8 +94,8 @@ class VideoDeviceUVC(BaseVideoDevice):
         Parameters
         ----------
         device_uid: str
-            The unique identity of this device. Depending on the device this
-            will be a serial number or similar.
+            The name of the UVC device. For Pupil cameras, this will be
+            'Pupil CamX IDY'.
 
         resolution: tuple, len 2
             Desired horizontal and vertical camera resolution.
@@ -109,11 +109,18 @@ class VideoDeviceUVC(BaseVideoDevice):
         controls: dict, optional
             Mapping from UVC control display names to values.
         """
-        super().__init__(device_uid, resolution, fps)
+        super().__init__(
+            device_uid, resolution, fps, initial_controls=controls or {}
+        )
         self.exposure_mode = exposure_mode
-        self.initial_controls = controls or {}
 
-        self.exposure_handler = None
+        if self.exposure_mode == "auto" and device_uid.startswith(
+            ("Pupil Cam ID2", "Pupil Cam ID3")
+        ):
+            self.exposure_handler = init_exposure_handler(fps)
+        else:
+            self.exposure_handler = None
+
         self.stripe_detector = Check_Frame_Stripes if check_stripes else None
 
     @classmethod
@@ -150,8 +157,24 @@ class VideoDeviceUVC(BaseVideoDevice):
         }
 
     @classmethod
-    def _get_capture(cls, uid, resolution, fps, initial_controls=None):
-        """ Get a capture instance for a device by name. """
+    def get_capture(cls, uid, resolution, fps, initial_controls=None):
+        """ Get a capture instance for a device by name.
+
+        Parameters
+        ----------
+        uid: str
+            The name of the UVC device. For Pupil cameras, this will be
+            'Pupil CamX IDY'.
+
+        resolution: tuple, len 2
+            Desired horizontal and vertical camera resolution.
+
+        fps: int
+            Desired camera refresh rate.
+
+        initial_controls: dict, optional
+            Mapping from UVC control display names to values.
+        """
         import uvc
 
         device_uid = cls._get_uvc_device_uid(uid)
@@ -175,19 +198,6 @@ class VideoDeviceUVC(BaseVideoDevice):
 
         return capture
 
-    def start(self):
-        """ Start this device. """
-        if not self.is_started:
-            self.capture = self._get_capture(
-                self.device_uid,
-                self.resolution,
-                self.fps,
-                initial_controls=self.initial_controls,
-            )
-            self.exposure_handler = maybe_init_exposure_handler(
-                self.capture, self.exposure_mode, self.fps
-            )
-
     def restart(self):
         """ Try restarting this device. """
         import uvc
@@ -201,25 +211,53 @@ class VideoDeviceUVC(BaseVideoDevice):
                 time.sleep(1)
 
     @classmethod
-    def _get_timestamp(cls):
+    def get_timestamp(cls):
         """ Get the current monotonic time from the UVC backend. """
         import uvc
 
         return uvc.get_time_monotonic()
 
-    def _get_frame_and_timestamp(self, mode="img"):
-        """ Get a frame and its associated timestamp. """
+    def get_uvc_frame(self):
+        """ Grab a uvc.Frame from the device.
+
+        Returns
+        -------
+        uvc.Frame:
+            The captured frame.
+        """
+        return self.capture.get_frame(0.05)
+
+    def get_frame_and_timestamp(self, mode="img"):
+        """ Get a frame and its associated timestamp.
+
+        Parameters
+        ----------
+        mode: str, default 'img'
+            The type of frame to retrieve from the device. Can be 'img',
+            'bgr', 'gray' or 'jpeg_buffer'.
+
+        Returns
+        -------
+        frame: numpy.ndarray
+            The retrieved video frame.
+
+        timestamp: float
+            The timestamp in of the frame.
+        """
         import uvc
 
         if mode not in ("img", "bgr", "gray", "jpeg_buffer"):
             raise ValueError(f"Unsupported mode: {mode}")
+
+        if not self.is_started:
+            raise RuntimeError("Device is not started")
 
         try:
             uvc_frame = self.capture.get_frame()
         except uvc.StreamError:
             logger.error("Stream error, attempting to re-init")
             self.restart()
-            return self._get_frame_and_timestamp(mode=mode)
+            return self.get_frame_and_timestamp(mode=mode)
 
         frame = getattr(uvc_frame, mode)
 
@@ -235,13 +273,9 @@ class VideoDeviceUVC(BaseVideoDevice):
                 f"Stripes detected, restarting device {self.device_uid}"
             )
             self.restart()
-            return self._get_frame_and_timestamp(mode=mode)
+            return self.get_frame_and_timestamp(mode=mode)
 
-        return (
-            frame,
-            uvc_frame.timestamp,
-            uvc_frame.timestamp,
-        )
+        return frame, uvc_frame.timestamp
 
     @property
     def uvc_device_uid(self):
@@ -251,7 +285,7 @@ class VideoDeviceUVC(BaseVideoDevice):
     @property
     def available_modes(self):
         """ Available frame modes for this device. """
-        if self.capture is None:
+        if not self.is_started:
             return self._get_available_modes(self.uvc_device_uid)
         else:
             return self.capture.avaible_modes  # [sic]
@@ -259,20 +293,10 @@ class VideoDeviceUVC(BaseVideoDevice):
     @property
     def controls(self):
         """ Current controls for this device. """
-        if self.capture is None:
+        if not self.is_started:
             return self._get_controls(self.uvc_device_uid)
         else:
             return {c.display_name: c.value for c in self.capture.controls}
-
-    def get_uvc_frame(self):
-        """ Grab a uvc.Frame from the device.
-
-        Returns
-        -------
-        uvc.Frame:
-            The captured frame.
-        """
-        return self.capture.get_frame(0.05)
 
 
 @device("video_file", optional=("topic",))
@@ -308,7 +332,7 @@ class VideoFileDevice(BaseVideoDevice):
     def start(self):
         """ Start this device. """
         if not self.is_started:
-            self.capture = self._get_capture(
+            self.capture = self.get_capture(
                 self.device_uid,
                 self.resolution,
                 self.fps,
@@ -318,12 +342,12 @@ class VideoFileDevice(BaseVideoDevice):
                 self.speed = self.fps / self.capture.fps
 
     @classmethod
-    def _get_capture(cls, topic, resolution, fps, folder=None):
+    def get_capture(cls, topic, resolution, fps, folder=None):
         """ Get a capture instance for a device by name. """
         # TODO get subsampling from resolution
         return VideoReader(folder, topic)
 
-    def _get_frame_and_timestamp(self, mode="img"):
+    def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         # TODO get gray image when mode="gray"
         if self.loop and self._frame_index >= self.capture.frame_count - 1:

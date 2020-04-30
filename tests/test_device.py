@@ -1,7 +1,10 @@
 import pytest
 
 from pupil_recording_interface.device import BaseDevice
-from pupil_recording_interface.device.video import VideoDeviceUVC
+from pupil_recording_interface.device.video import (
+    BaseVideoDevice,
+    VideoDeviceUVC,
+)
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 
@@ -15,9 +18,12 @@ class TestBaseDevice:
 
 
 class TestBaseVideoDevice:
-    @pytest.mark.skip("Not yet implemented")
-    def test_start(self):
+    def test_constructor(self):
         """"""
+        device = BaseVideoDevice("Pupil Cam1 ID2", (1280, 720), 30)
+        assert device.device_uid == "Pupil Cam1 ID2"
+        assert device.resolution == (1280, 720)
+        assert device.fps == 30
 
 
 class TestVideoDeviceUVC:
@@ -32,7 +38,7 @@ class TestVideoDeviceUVC:
     )
     def test_get_capture(self, device_uid):
         """"""
-        capture = VideoDeviceUVC._get_capture(
+        capture = VideoDeviceUVC.get_capture(
             device_uid, (1280, 720), 30, {"Auto Exposure Mode": 1}
         )
         controls = {c.display_name: c.value for c in capture.controls}
@@ -40,7 +46,24 @@ class TestVideoDeviceUVC:
         del capture
 
         with pytest.raises(IllegalSetting):
-            VideoDeviceUVC._get_capture(device_uid, (1280, 720), 200)
+            VideoDeviceUVC.get_capture(device_uid, (1280, 720), 200)
+
+    @pytest.mark.xfail(raises=DeviceNotConnected)
+    @pytest.mark.parametrize(
+        "device_uid", ["Pupil Cam1 ID2", "Pupil Cam2 ID2", "Pupil Cam3 ID2"]
+    )
+    def test_get_frame_and_timestamp(self, device_uid):
+        """"""
+        device = VideoDeviceUVC(device_uid, (1280, 720), 60)
+        device.start()
+        frame, ts = device.get_frame_and_timestamp()
+        assert frame.shape == (720, 1280, 3)
+        assert isinstance(ts, float)
+
+        with pytest.raises(RuntimeError):
+            VideoDeviceUVC(
+                device_uid, (1280, 720), 60
+            ).get_frame_and_timestamp()
 
 
 class TestRealSenseDeviceT265:

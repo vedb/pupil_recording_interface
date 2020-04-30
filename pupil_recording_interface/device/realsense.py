@@ -307,7 +307,7 @@ class RealSenseDeviceT265(BaseDevice):
 
         return pipeline
 
-    def _get_frame_and_timestamp(self, mode="img"):
+    def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamps. """
         # TODO timeout
         if "video" not in self.queues:
@@ -315,7 +315,7 @@ class RealSenseDeviceT265(BaseDevice):
         else:
             return self.queues["video"].get()
 
-    def _get_motion_and_timestamp(self, motion_type):
+    def get_motion_and_timestamp(self, motion_type):
         """ Get motion data for queue. """
         # TODO timeout
         if motion_type not in self.queues:
@@ -325,18 +325,6 @@ class RealSenseDeviceT265(BaseDevice):
         else:
             motion = self.queues[motion_type].get()
             return motion, motion["timestamp"], motion["source_timestamp"]
-
-    def _get_odometry_and_timestamp(self):
-        """ Get odometry data and timestamps. """
-        return self._get_motion_and_timestamp("odometry")
-
-    def _get_accel_and_timestamp(self):
-        """ Get accelerometer data and timestamps. """
-        return self._get_motion_and_timestamp("accel")
-
-    def _get_gyro_and_timestamp(self):
-        """ Get gyroscope data and timestamps. """
-        return self._get_motion_and_timestamp("gyro")
 
     def run_pre_thread_hooks(self):
         """ Run hook(s) before dispatching the recording thread. """

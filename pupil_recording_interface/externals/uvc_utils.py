@@ -238,14 +238,12 @@ def pre_configure_capture(uvc_capture):
     return uvc_capture
 
 
-def maybe_init_exposure_handler(uvc_capture, exposure_mode, frame_rate):
+def init_exposure_handler(frame_rate):
     """"""
-    if "Pupil Cam2" in uvc_capture.name or "Pupil Cam3" in uvc_capture.name:
-        if exposure_mode == "auto":
-            # special settings apply to both, Pupil Cam2 and Cam3
-            special_settings = {200: 28, 180: 31}
-            return Exposure_Time(
-                max_ET=special_settings.get(frame_rate, 32),
-                frame_rate=frame_rate,
-                mode=exposure_mode,
-            )
+    # special settings apply to both, Pupil Cam2 and Cam3
+    special_settings = {200: 28, 180: 31}
+    return Exposure_Time(
+        max_ET=special_settings.get(frame_rate, 32),
+        frame_rate=frame_rate,
+        mode="auto",
+    )
