@@ -77,8 +77,6 @@ Process classes
     CamParamEstimator
     MotionRecorder
 
-.. TODO process, pipeline
-
 
 Class member details
 --------------------

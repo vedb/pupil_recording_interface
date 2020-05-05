@@ -40,12 +40,28 @@ jobs:
         run: |
           conda --version
           which python
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install libopencv-dev libeigen3-dev libceres-dev
       - name: Create environment
         run: conda env create
+      - name: Install package
+        run: |
+          source activate pri
+          pip install --no-deps -e .
+      - name: Test with pytest
+        run: |
+          source activate pri
+          pytest
+
+  conda-minimal:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: s-weigand/setup-conda@v1
+      - name: Check versions
+        run: |
+          conda --version
+          which python
+      - name: Create environment
+        run: conda install xarray scipy opencv msgpack-python<1.0
       - name: Install package
         run: |
           source activate pri

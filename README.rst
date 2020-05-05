@@ -37,6 +37,16 @@ If you are using the conda package manager, install these dependencies first:
 
 .. code-block:: console
 
-    $ conda install xarray scipy msgpack-python opencv
+    $ conda install xarray scipy opencv msgpack-python<1.0
 
-Afterwards, install the package via ``pip`` as detailed above.
+Afterwards, install the package via ``pip``, but without dependencies:
+
+.. code-block:: console
+
+    $ pip install --no-deps git+https://github.com/vedb/pupil_recording_interface.git
+
+For features like streaming video from the Pupil Core cameras, recording data
+or pupil detection, please refer to the `installation instructions`_ in the
+documentation.
+
+.. _installation instructions: https://vedb.github.io/pupil_recording_interface/installation.html
