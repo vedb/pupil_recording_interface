@@ -69,6 +69,7 @@ jobs:
       - name: Test with pytest
         run: |
           source activate pri
+          conda install pytest
           pytest
 
   black:
@@ -101,7 +102,7 @@ jobs:
           make -C docs/ html
           make -C docs/ doctest
       - if: success() && github.ref == 'refs/heads/master'
-        uses: crazy-max/ghaction-github-pages@master
+        uses: crazy-max/ghaction-github-pages@v1.5.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
