@@ -4,14 +4,14 @@ channels:
   - phausamann
 dependencies:
   - python=3.6
-  - pip
+  - pip=20.1
   # scientific stack
   - numpy=1.18
   - pandas=1.0
   - xarray=0.15
   - scipy=1.4
   # video
-  - phausamann::opencv=4.2.0
+  - opencv=4.2.0
   - ffmpeg=3.4.2
   - x264=1!152.20180806
   # pupil
@@ -27,7 +27,7 @@ dependencies:
   - spinnaker-sdk=1.27.0.48
   - pyspin=1.27.0.48
   # other
-  - tqdm
+  - tqdm=4.46.0
   # development
   - pytest
   - coverage
@@ -40,5 +40,5 @@ dependencies:
   - matplotlib
   # pip
   - pip:
-    - netcdf4
-    - pyrealsense2
+    - netcdf4==1.5.3
+    - pyrealsense2==2.32.1.1346

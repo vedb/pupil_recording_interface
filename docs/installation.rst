@@ -14,7 +14,7 @@ If you are using the conda package manager, install these dependencies first:
 
 .. code-block:: console
 
-    $ conda install xarray scipy opencv msgpack-python<1.0
+    $ conda install xarray scipy opencv "msgpack-python<1.0"
 
 Afterwards, install the package via ``pip``, but without dependencies:
 
@@ -101,12 +101,6 @@ A conda package is available for Linux:
 
     conda install -c phausamann -c conda-forge pupil-detectors
 
-.. note::
-
-    Because of threading issues with the OpenCV package from ``conda-forge``,
-    this package depends on our own OpenCV conda package. This package might
-    have compatibility issues with some other conda packages.
-
 Windows and MacOS
 ~~~~~~~~~~~~~~~~~
 
@@ -148,6 +142,26 @@ GitHub page.
 .. _RealSense SDK: https://github.com/IntelRealSense/librealsense
 
 
+FLIR cameras
+............
+
+Linux
+~~~~~
+
+A conda package of FLIR's `PySpin` library is available for Linux:
+
+.. code-block:: console
+
+    conda install -c phausamann -c conda-forge pyspin
+
+Windows and MacOS
+~~~~~~~~~~~~~~~~~
+
+Download the latest `Spinnaker SDK`_.
+
+.. _Spinnaker SDK: https://www.flir.com/products/spinnaker-sdk
+
+
 Export
 ......
 
@@ -166,5 +180,7 @@ or with conda:
 .. note::
 
     Unfortunately, the ``netcdf4`` conda package seems to be incompatible with
-    our ``pupil-detectors`` package. If you want to use both features, we
-    recommend installing ``netcdf4`` through pip.
+    the ``pupil-detectors`` package built against our OpenCV package with
+    ffmpeg 3.4 support. However, this is only an issue if you need support for
+    FLIR cameras. In that case, we recommend installing ``netcdf4`` through
+    pip.

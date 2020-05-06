@@ -45,7 +45,7 @@ jobs:
       - name: Install package
         run: |
           source activate pri
-          pip install --no-deps -e .
+          pip install --no-deps .
       - name: Test with pytest
         run: |
           source activate pri
@@ -61,11 +61,11 @@ jobs:
           conda --version
           which python
       - name: Create environment
-        run: conda install xarray scipy opencv msgpack-python<1.0
+        run: conda create -n pri python=3.6 xarray scipy opencv "msgpack-python<1.0"
       - name: Install package
         run: |
           source activate pri
-          pip install --no-deps -e .
+          pip install --no-deps .
       - name: Test with pytest
         run: |
           source activate pri
