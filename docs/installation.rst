@@ -8,7 +8,7 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install opencv-python git+https://github.com/vedb/pupil_recording_interface.git
 
 If you are using the conda package manager, install these dependencies first:
 
@@ -148,11 +148,11 @@ FLIR cameras
 Linux
 ~~~~~
 
-A conda package of FLIR's `PySpin` library is available for Linux:
+A conda package of FLIR's ``PySpin`` library is available for Linux:
 
 .. code-block:: console
 
-    conda install -c phausamann -c conda-forge pyspin
+    $ conda install -c phausamann -c conda-forge pyspin
 
 Windows and MacOS
 ~~~~~~~~~~~~~~~~~
