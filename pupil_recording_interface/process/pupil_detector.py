@@ -1,5 +1,4 @@
 """"""
-import os
 import logging
 
 import cv2
@@ -49,7 +48,6 @@ class PupilDetector(BaseProcess):
         if self.method == "2d c++":
             from pupil_detectors import Detector2D
 
-            os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
             self.detector = Detector2D()
         else:
             raise ValueError(f"Unsupported detection method: {self.method}")

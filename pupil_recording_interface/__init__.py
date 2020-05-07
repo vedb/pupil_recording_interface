@@ -69,6 +69,9 @@ __all__ = [
     "process",
 ]
 
+# disable active threads when OpenCV is built with OpenMP support
+os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
+
 
 def load_dataset(folder, gaze=None, odometry=None):
     """ Load a recording as an xarray Dataset.
