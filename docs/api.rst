@@ -71,7 +71,7 @@ Process classes
     VideoRecorder
     PupilDetector
     GazeMapper
-    CircleMarkerDetector
+    CircleDetector
     Calibration
     CircleGridDetector
     CamParamEstimator
