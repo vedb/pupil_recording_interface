@@ -82,7 +82,7 @@ jobs:
           python-version: 3.6
       - name: Check black code style
         run: |
-          pip install black
+          pip install black==19.10b0
           black --check .
 
   docs:
