@@ -364,7 +364,8 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 logger.warning("Image incomplete")
                 return self.get_frame_and_timestamp(mode)
             else:
-                if mode == "img":
+                image.Release()
+                if mode == "bgr24":
                     frame = image.Convert(
                         PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR
                     )
@@ -372,9 +373,10 @@ class VideoDeviceFLIR(BaseVideoDevice):
                     frame = image.Convert(
                         PySpin.PixelFormat_Mono8, PySpin.HQ_LINEAR
                     )
+                elif mode == "bayer_rggb8":
+                    frame = image
                 else:
                     raise RuntimeError(f"Unsupported mode: {mode}")
-                image.Release()
 
             frame = frame.GetNDArray()
 

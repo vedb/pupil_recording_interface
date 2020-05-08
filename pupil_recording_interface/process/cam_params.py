@@ -35,6 +35,9 @@ class CircleGridDetector(BaseProcess):
         """ Detect circle grid in frame. """
         frame = packet["frame"]
 
+        if packet.color_format == "bggr8":
+            frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
+
         if self.stereo:
             status_left, grid_points_left = cv2.findCirclesGrid(
                 frame[:, : frame.shape[1] // 2],

@@ -247,6 +247,12 @@ class VideoDisplay(BaseProcess):
 
         return frame
 
+    def rggb_to_bgr(self, packet):
+        """"""
+        frame = packet["display_frame"]
+
+        return cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2BGR)
+
     def show_frame(self, packet):
         """"""
         frame = packet["display_frame"]
@@ -261,6 +267,14 @@ class VideoDisplay(BaseProcess):
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
         packet.display_frame = packet.frame
+
+        if packet.color_format == "bayer_rggb8":
+            packet.display_frame = self.call(
+                self.rggb_to_bgr,
+                packet,
+                block=block,
+                return_if_full=packet.display_frame,
+            )
 
         if self.overlay_pupil and "pupil" in packet:
             packet.display_frame = self.call(

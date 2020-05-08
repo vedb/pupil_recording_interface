@@ -294,8 +294,8 @@ class VideoStream(BaseStream):
     def get_packet(self):
         """ Get the last data packet from the stream. """
         # TODO get only jpeg buffer when not showing video
-        if self.color_format == "gray":
-            data = self.device.get_frame_and_timestamp("gray")
+        if self.color_format in ("bayer_rggb8", "gray"):
+            data = self.device.get_frame_and_timestamp(self.color_format)
         else:
             data = self.device.get_frame_and_timestamp()
 
@@ -311,6 +311,7 @@ class VideoStream(BaseStream):
             timestamp=timestamp,
             source_timestamp=source_timestamp,
             source_timebase=self.device.timebase,
+            color_format=self.color_format,
             frame=frame,
         )
 

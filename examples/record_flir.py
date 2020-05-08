@@ -16,7 +16,8 @@ if __name__ == "__main__":
             device_uid=None,
             name="world",
             resolution=(2048, 1536),
-            fps=50.0,
+            fps=55.0,
+            color_format="bayer_rggb8",
             pipeline=[pri.VideoRecorder.Config(), pri.VideoDisplay.Config()],
         ),
     ]
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     ) as manager:
         while not manager.stopped:
             if manager.all_streams_running:
-                status = manager.format_status("fps", max_cols=72)
+                status = manager.format_status("fps", max_cols=72, sleep=0.1)
                 print("\r" + status, end="")
 
     print("\nStopped")

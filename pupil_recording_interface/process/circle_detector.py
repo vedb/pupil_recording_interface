@@ -17,11 +17,13 @@ class CircleDetector(BaseProcess):
         self.circle_tracker = CircleTracker()
 
     def detect_circle(self, packet):
-        """"""
+        """ Detect circle markers. """
         frame = packet["frame"]
 
-        if frame.ndim == 3:
+        if packet.color_format == "bgr24":
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        elif packet.color_format == "bggr8":
+            frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
 
         circle_markers = self.circle_tracker.update(frame)
 
