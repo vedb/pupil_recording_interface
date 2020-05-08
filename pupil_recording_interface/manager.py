@@ -27,6 +27,7 @@ class StreamManager(object):
         folder=None,
         policy="new_folder",
         duration=None,
+        update_interval=0.1,
         max_queue_size=20,
     ):
         """ Constructor.
@@ -54,6 +55,14 @@ class StreamManager(object):
             If provided, the number of seconds after which the streams are
             stopped.
 
+        update_interval: float, default 0.1
+            Time in seconds between status and notification updates. Higher
+            values might lead to to delays in communicating with the processes
+            and dropped messages while lower values might lead to increased
+            CPU load of the main process. Set to None for maximum update rate.
+            Will be dropped in a future version with an asynchronous
+            implementation of the update mechanism.
+
         max_queue_size: int, default 20
             Maximum size of process status and notification queues. Higher
             values might lead to delays in communicating with the processes
@@ -64,6 +73,7 @@ class StreamManager(object):
         self.streams = self._init_streams(configs, self.folder)
         self.duration = duration or float("inf")
         self.max_queue_size = max_queue_size
+        self.update_interval = update_interval
 
         self.status = {}
         self.stopped = False
@@ -305,17 +315,21 @@ class StreamManager(object):
                 pass
 
     def format_status(
-        self, key, format="{:.2f}", status_dict=None, max_cols=None
+        self,
+        key,
+        format="{:.2f}",
+        status_dict=None,
+        max_cols=None,
+        sleep=None,
     ):
         """ Format status dictionary to string. """
+        status_dict = status_dict or self.status
 
         def recursive_get(d, *keys):
             try:
                 return reduce(lambda c, k: c[k], keys, d)
             except KeyError:
                 return None
-
-        status_dict = status_dict or self.status
 
         values = {
             name: recursive_get(status, *key.split("."))
@@ -333,6 +347,9 @@ class StreamManager(object):
 
         if max_cols is not None and len(status_str) > max_cols:
             status_str = status_str[: max_cols - 3] + "..."
+
+        if sleep:
+            time.sleep(sleep)
 
         return status_str
 
@@ -394,9 +411,14 @@ class StreamManager(object):
     def _spin_blocking(self):
         """ Non-generator implementation of spin. """
         while self.run_duration < self.duration and not self.stopped:
+            timestamp = time.time()
             status = self._get_status()
             self._notify_streams(status)
             self._update_status(status)
+            if self.update_interval is not None:
+                sleep_time = self.update_interval - (time.time() - timestamp)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
 
         logger.debug("Stopped spinning")
 
