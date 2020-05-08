@@ -207,7 +207,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         logger.debug(f"Number of cameras detected: {cam_list.GetSize()}")
         if serial_number is not None:
             try:
-                camera = cam_list.GetBySerial(0)
+                camera = cam_list.GetBySerial(serial_number)
             except PySpin.SpinnakerException:
                 cam_list.Clear()
                 raise DeviceNotConnected(
