@@ -87,15 +87,7 @@ class FLIRCapture:
 class VideoDeviceFLIR(BaseVideoDevice):
     """ FLIR video device. """
 
-    def __init__(
-        self,
-        device_uid,
-        resolution,
-        fps,
-        exposure_value=None,
-        gain=None,
-        settings=None,
-    ):
+    def __init__(self, device_uid, resolution, fps, settings=None):
         """ Constructor.
 
         Parameters
@@ -110,14 +102,8 @@ class VideoDeviceFLIR(BaseVideoDevice):
         fps: int
             Desired camera refresh rate.
         """
-        # TODO specify additional keyword arguments
         super(VideoDeviceFLIR, self).__init__(
-            device_uid,
-            resolution,
-            fps,
-            exposure_value=exposure_value,
-            gain=gain,
-            settings=settings,
+            device_uid, resolution, fps, settings=settings
         )
 
         self.timebase = "epoch"
@@ -223,15 +209,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
         return camera
 
     @classmethod
-    def get_capture(
-        cls,
-        serial_number,
-        resolution,
-        fps,
-        exposure_value=None,
-        gain=None,
-        settings=None,
-    ):
+    def get_capture(cls, serial_number, resolution, fps, settings=None):
         """ Get a capture instance for a device by name. """
         import PySpin
 
@@ -260,39 +238,20 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # disable trigger mode
         camera.TriggerMode.SetValue(PySpin.TriggerMode_Off)
 
+        # set frame rate
+        # TODO set auto frame rate if fps is None
+        logger.debug(f"Setting FLIR fps to: {fps}")
         if camera_type == "Chameleon":
-
-            # set gain
-            if gain is not None:
-                set_value(nodemap, "GainAuto", "Off")
-                set_value(nodemap, "Gain", float(gain))
-
-            # set exposure time
-            if exposure_value is not None:
-                camera.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
-                exposure_value = min(
-                    camera.ExposureTime.GetMax(), exposure_value
-                )
-                camera.ExposureTime.SetValue(exposure_value)
-                logger.debug(
-                    f"Exposure time: {camera.ExposureTime.GetValue()}"
-                )
-
-            # set frame rate
             set_value(nodemap, "AcquisitionMode", "Continuous")
             set_value(nodemap, "AcquisitionFrameRateAuto", "Off")
             set_value(nodemap, "AcquisitionFrameRateEnabled", True)
             set_value(nodemap, "AcquisitionFrameRate", float(fps))
-            logger.debug(f"Set FLIR fps to: {fps}")
-
         elif camera_type == "BlackFly":
-            camera.AcquisitionFrameRateEnable.SetValue(True)
+            camera.AcquisitionFrameRateEnabled.SetValue(True)
             camera.AcquisitionFrameRate.SetValue(float(fps))
-            logger.debug(f"Set FLIR fps to: {fps}")
-
-        # TODO: Find a way of reading the actual frame rate for Chameleon
-        #  Chameleon doesn't have this register or anything similar to this
-        if camera_type == "BlackFly":
+            # TODO: Find a way of reading the actual frame rate for
+            #  Chameleon which doesn't have this register or anything
+            #  similar to this
             logger.debug(
                 f"Actual frame rate: "
                 f"{camera.AcquisitionResultingFrameRate.GetValue()}",
@@ -304,10 +263,21 @@ class VideoDeviceFLIR(BaseVideoDevice):
         # get only last image from buffer to avoid delay
         set_value(stream_nodemap, "StreamBufferHandlingMode", "NewestOnly")
 
-        # set other settings from kwargs
+        # set other settings
         for setting, value in (settings or {}).items():
             logger.debug(f"Setting {setting} to {value}")
-            set_value(nodemap, setting, value)
+            try:
+                prop = getattr(camera, setting)
+                try:
+                    prop.SetValue(value)
+                except AttributeError:
+                    prop.FromString(value)
+            except (
+                AttributeError,
+                NotImplementedError,
+                PySpin.SpinnakerException,
+            ):
+                set_value(nodemap, setting, value)
 
         # compute timestamp offset
         timestamp_offset = cls._compute_timestamp_offset(

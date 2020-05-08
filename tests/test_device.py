@@ -5,7 +5,11 @@ from pupil_recording_interface.device.video import (
     BaseVideoDevice,
     VideoDeviceUVC,
 )
-from pupil_recording_interface.device.flir import VideoDeviceFLIR, get_value
+from pupil_recording_interface.device.flir import (
+    VideoDeviceFLIR,
+    FLIRCapture,
+    get_value,
+)
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 
@@ -97,6 +101,26 @@ class TestVideoDeviceFLIR:
                 VideoDeviceFLIR.get_camera(serial_number, system),
                 PySpin.CameraPtr,
             )
+
+    @pytest.mark.xfail(raises=DeviceNotConnected)
+    def test_get_capture(self):
+        """"""
+        assert isinstance(
+            VideoDeviceFLIR.get_capture(None, (2048, 1536), 30.0), FLIRCapture
+        )
+
+        # custom settings
+        VideoDeviceFLIR.get_capture(
+            None,
+            (2048, 1536),
+            30.0,
+            settings={
+                "GainAuto": "Off",
+                "Gain": 30.0,
+                "ExposureAuto": "Off",
+                "ExposureTime": 300.0,
+            },
+        )
 
 
 class TestRealSenseDeviceT265:
