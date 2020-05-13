@@ -360,5 +360,5 @@ class RealSenseDeviceT265(BaseDevice):
                 f"Stopping T265 pipeline for device: {self.device_uid}"
             )
             self.pipeline.stop()
-            logger.debug(f"Pipeline stopped")
+            logger.debug("Pipeline stopped")
             self.pipeline = None

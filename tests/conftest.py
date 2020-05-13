@@ -195,12 +195,12 @@ def reference_locations(folder):
     locations = [
         [
             {
-                "img_pos": l[0],
-                "norm_pos": normalize(l[0], resolution),
-                "timestamp": l[2],
+                "img_pos": location[0],
+                "norm_pos": normalize(location[0], resolution),
+                "timestamp": location[2],
             }
         ]
-        for l in locations["data"]
+        for location in locations["data"]
     ]
 
     return locations

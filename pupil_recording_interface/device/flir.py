@@ -204,7 +204,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 camera = cam_list.GetByIndex(0)
             except PySpin.SpinnakerException:
                 cam_list.Clear()
-                raise DeviceNotConnected(f"No FLIR cameras connected")
+                raise DeviceNotConnected("No FLIR cameras connected")
 
         return camera
 

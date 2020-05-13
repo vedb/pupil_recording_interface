@@ -19,16 +19,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt -r requirements_dev.txt
       - name: Lint with flake8
         run: |
-          pip install flake8
-          flake8 --ignore=E203,W503,W504 --exclude=docs,**/externals
+          flake8 pupil_recording_interface tests --ignore=E203,W503,W504 --exclude=**/externals
       - name: Install package
         run: python setup.py install
       - name: Test with pytest
         run: |
-          pip install pytest
           pytest
 
   conda:
