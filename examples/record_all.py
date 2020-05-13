@@ -78,7 +78,7 @@ if __name__ == "__main__":
         while not manager.stopped:
             if manager.all_streams_running:
                 status = manager.format_status(
-                    "fps", format="{:.2f} Hz", max_cols=72
+                    "fps", format="{:.2f} Hz", max_cols=72, sleep=0.1
                 )
                 print("\r" + status, end="")
 

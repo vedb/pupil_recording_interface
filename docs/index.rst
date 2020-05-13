@@ -16,7 +16,7 @@ The code is hosted on GitHub: https://github.com/vedb/pupil_recording_interface
 
    installation
    reading
-   recording
+   streaming
    additional
    api
    contributing

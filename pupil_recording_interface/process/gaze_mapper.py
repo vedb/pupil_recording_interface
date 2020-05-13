@@ -4,7 +4,9 @@ import logging
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.externals.calibrate_2d import make_map_function
+from pupil_recording_interface.externals.gaze_mappers import (
+    Binocular_Gaze_Mapper,
+)
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 
 logger = logging.getLogger(__name__)
@@ -113,11 +115,12 @@ class GazeMapper(BaseProcess):
 
         super().__init__(block=block, listen_for=["pupil"], **kwargs)
 
-        self._left_pupil_queue = Queue()
-        self._right_pupil_queue = Queue()
-        self._map_fn = make_map_function(*self.calibration["params"])
-        self._map_fn_eye0 = make_map_function(*self.calibration["params_eye0"])
-        self._map_fn_eye1 = make_map_function(*self.calibration["params_eye1"])
+        self._gaze_queue = Queue()
+        self.mapper = Binocular_Gaze_Mapper(
+            self.calibration["params"],
+            self.calibration["params_eye0"],
+            self.calibration["params_eye1"],
+        )
 
         if self.record:
             if self.folder is None:
@@ -135,60 +138,11 @@ class GazeMapper(BaseProcess):
 
         return cls(**cls_kwargs)
 
-    def map_gaze(self, pupil_0, pupil_1):
-        """ Map gaze. """
-        if pupil_0 and pupil_1:
-            gaze_point = self._map_fn(pupil_0["norm_pos"], pupil_1["norm_pos"])
-            confidence = (pupil_0["confidence"] + pupil_1["confidence"]) / 2.0
-            timestamp = (pupil_0["timestamp"] + pupil_1["timestamp"]) / 2.0
-            topic = "gaze.2d.01."
-            base_data = [pupil_0, pupil_1]
-        elif pupil_0:
-            gaze_point = self._map_fn_eye0(pupil_0["norm_pos"])
-            confidence = pupil_0["confidence"]
-            timestamp = pupil_0["timestamp"]
-            topic = "gaze.2d.0."
-            base_data = [pupil_0]
-        elif pupil_1:
-            gaze_point = self._map_fn_eye1(pupil_1["norm_pos"])
-            confidence = pupil_1["confidence"]
-            timestamp = pupil_1["timestamp"]
-            topic = "gaze.2d.1."
-            base_data = [pupil_1]
-        else:
-            logger.debug("No valid pupil for mapping")
-            return None
-
-        return {
-            "topic": topic,
-            "norm_pos": gaze_point,
-            "confidence": confidence,
-            "timestamp": timestamp,
-            "base_data": base_data,
-        }
-
-    def map_recent_gaze(self):
-        """ Map new pupil data. """
+    def get_mapped_gaze(self):
+        """ Call the pupil gaze mapper. """
         gaze = []
-
-        # TODO merge these by timestamp
-        while (
-            not self._left_pupil_queue.empty()
-            and not self._right_pupil_queue.empty()
-        ):
-            result = self.map_gaze(
-                self._right_pupil_queue.get(), self._left_pupil_queue.get()
-            )
-            if result["confidence"] >= self.min_confidence:
-                gaze.append(result)
-        while not self._right_pupil_queue.empty():
-            result = self.map_gaze(self._right_pupil_queue.get(), None)
-            if result["confidence"] >= self.min_confidence:
-                gaze.append(result)
-        while not self._left_pupil_queue.empty():
-            result = self.map_gaze(None, self._left_pupil_queue.get())
-            if result["confidence"] >= self.min_confidence:
-                gaze.append(result)
+        while not self._gaze_queue.empty():
+            gaze.append(self._gaze_queue.get())
 
         return gaze
 
@@ -204,12 +158,18 @@ class GazeMapper(BaseProcess):
                 self.left in notification
                 and "pupil" in notification[self.left]
             ):
-                self._left_pupil_queue.put(notification[self.left]["pupil"])
+                for gaze in self.mapper.on_pupil_datum(
+                    notification[self.left]["pupil"]
+                ):
+                    self._gaze_queue.put(gaze)
             if (
                 self.right in notification
                 and "pupil" in notification[self.right]
             ):
-                self._right_pupil_queue.put(notification[self.right]["pupil"])
+                for gaze in self.mapper.on_pupil_datum(
+                    notification[self.right]["pupil"]
+                ):
+                    self._gaze_queue.put(gaze)
 
     def _process_packet(self, packet, block=None):
         """ Process new data. """
@@ -224,7 +184,7 @@ class GazeMapper(BaseProcess):
             except (KeyError, TypeError):
                 pass
 
-        packet.gaze = self.call(self.map_recent_gaze, block=block)
+        packet.gaze = self.call(self.get_mapped_gaze, block=block)
 
         if self.record:
             self.call(self.record_data, packet, block=block)

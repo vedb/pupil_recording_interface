@@ -125,6 +125,8 @@ class TestBaseReader(object):
 
     def test_write_netcdf(self, folder, export_folder):
         """"""
+        pytest.importorskip("netcdf4")
+
         GazeReader(folder).write_netcdf()
 
         ds = xr.open_dataset(os.path.join(export_folder, "gaze.nc"))
@@ -160,6 +162,8 @@ class TestFunctionalReader(object):
 
     def test_write_netcdf(self, folder):
         """"""
+        pytest.importorskip("netcdf4")
+
         write_netcdf(folder, gaze="recording", odometry="recording")
 
         assert os.path.exists(os.path.join(folder, "exports", "odometry.nc"))
@@ -260,6 +264,8 @@ class TestGazeReader(object):
 
     def test_write_netcdf(self, folder, export_folder):
         """"""
+        pytest.importorskip("netcdf4")
+
         GazeReader(folder).write_netcdf()
 
         ds = xr.open_dataset(os.path.join(export_folder, "gaze.nc"))
@@ -599,7 +605,7 @@ class TestOpticalFlowReader(object):
 
     def test_load_dataset(self, folder):
         """"""
-        import tqdm
+        tqdm = pytest.importorskip("tqdm")
 
         interface = OpticalFlowReader(folder, subsampling=8.0)
 

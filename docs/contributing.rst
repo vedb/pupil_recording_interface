@@ -23,7 +23,7 @@ Environment setup
 
 .. code-block:: console
 
-    $ conda activate pupil-recording-interface
+    $ conda activate pri
 
 #. Install the package:
 
@@ -45,7 +45,7 @@ Lint with flake8:
 
 .. code-block:: console
 
-    $ flake8 pupil_recording_interface
+    $ flake8 --ignore=E203,W503,W504 pupil_recording_interface
 
 The above steps are also run by ``pre-commit``. Run this to automatically
 reformat and lint before every commit:

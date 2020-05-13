@@ -7,7 +7,6 @@ requirements = [
     "xarray",
     "scipy",
     "msgpack<1.0",
-    "opencv-python",
 ]
 
 # parse version number

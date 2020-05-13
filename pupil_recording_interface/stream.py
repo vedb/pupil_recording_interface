@@ -52,7 +52,7 @@ class BaseStream(BaseConfigurable):
 
         Parameters
         ----------
-        device: BaseDevice
+        device
             The device producing the stream.
 
         name: str, optional
@@ -262,7 +262,7 @@ class VideoStream(BaseStream):
 
         Parameters
         ----------
-        device: BaseDevice
+        device: BaseVideoDevice
             The device producing the stream.
 
         name: str, optional
@@ -294,17 +294,24 @@ class VideoStream(BaseStream):
     def get_packet(self):
         """ Get the last data packet from the stream. """
         # TODO get only jpeg buffer when not showing video
-        if self.color_format == "gray":
-            frame, ts, src_ts = self.device._get_frame_and_timestamp("gray")
+        if self.color_format in ("bayer_rggb8", "gray"):
+            data = self.device.get_frame_and_timestamp(self.color_format)
         else:
-            frame, ts, src_ts = self.device._get_frame_and_timestamp()
+            data = self.device.get_frame_and_timestamp()
+
+        if len(data) == 3:
+            frame, timestamp, source_timestamp = data
+        else:
+            frame, timestamp = data
+            source_timestamp = None
 
         return Packet(
             self.name,
             self.device.device_uid,
-            timestamp=ts,
-            source_timestamp=src_ts,
+            timestamp=timestamp,
+            source_timestamp=source_timestamp,
             source_timebase=self.device.timebase,
+            color_format=self.color_format,
             frame=frame,
         )
 
@@ -351,20 +358,17 @@ class MotionStream(BaseStream):
 
     def get_packet(self):
         """ Get the last data packet from the stream. """
-        if self.motion_type == "odometry":
-            motion, ts, src_ts = self.device._get_odometry_and_timestamp()
-        elif self.motion_type == "accel":
-            motion, ts, src_ts = self.device._get_accel_and_timestamp()
-        elif self.motion_type == "gyro":
-            motion, ts, src_ts = self.device._get_gyro_and_timestamp()
-        else:
-            raise RuntimeError(f"Unsupported motion type: {self.motion_type}")
+        (
+            motion,
+            timestamp,
+            source_timestamp,
+        ) = self.device.get_motion_and_timestamp(self.motion_type)
 
         return Packet(
             self.name,
             self.device.device_uid,
-            timestamp=ts,
-            source_timestamp=src_ts,
+            timestamp=timestamp,
+            source_timestamp=source_timestamp,
             source_timebase=self.device.timebase,
             **{self.motion_type: motion},
         )

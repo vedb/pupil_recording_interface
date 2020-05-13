@@ -1,5 +1,7 @@
 """"""
+import warnings
 import logging
+from collections import deque
 
 import cv2
 import numpy as np
@@ -38,7 +40,11 @@ class VideoDisplay(BaseProcess):
 
         super().__init__(block=block, **kwargs)
 
-        self._last_gaze_point = None
+        # gaze overlay
+        _queue_len = 5  # TODO constructor argument?
+        self._eye0_gaze_deque = deque(maxlen=_queue_len)
+        self._eye1_gaze_deque = deque(maxlen=_queue_len)
+        self._binocular_gaze_deque = deque(maxlen=_queue_len)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -48,17 +54,55 @@ class VideoDisplay(BaseProcess):
             name=stream_config.name or device.device_uid,
             resolution=getattr(stream_config, "resolution", None),
         )
+        if stream_config.name is not None:
+            cls_kwargs["process_name"] = ".".join(
+                (
+                    stream_config.name,
+                    cls_kwargs["process_name"] or cls.__name__,
+                )
+            )
 
         return cls(**cls_kwargs)
 
     def start(self):
         """ Start the process. """
-        cv2.namedWindow(
-            self.name,
-            cv2.WINDOW_NORMAL + cv2.WINDOW_KEEPRATIO + cv2.WINDOW_GUI_NORMAL,
-        )
-        if self.resolution is not None:
-            cv2.resizeWindow(self.name, self.resolution[0], self.resolution[1])
+        try:
+            cv2.namedWindow(
+                self.name,
+                cv2.WINDOW_NORMAL
+                + cv2.WINDOW_KEEPRATIO
+                + cv2.WINDOW_GUI_NORMAL,
+            )
+            if self.resolution is not None:
+                cv2.resizeWindow(
+                    self.name, self.resolution[0], self.resolution[1]
+                )
+        except cv2.error:
+            pass
+
+    def stop(self):
+        """ Stop the process. """
+        try:
+            cv2.destroyWindow(self.name)
+        except cv2.error:
+            pass
+
+    def process_notifications(self, notifications):
+        """ Process new notifications. """
+        # TODO avoid this duplication
+        for notification in notifications:
+            if (
+                "pause_process" in notification
+                and notification["pause_process"] == self.process_name
+            ):
+                self.stop()
+            if (
+                "resume_process" in notification
+                and notification["resume_process"] == self.process_name
+            ):
+                self.start()
+
+        super().process_notifications(notifications)
 
     def _add_pupil_overlay(self, packet):
         """ Add pupil overlay onto frame. """
@@ -96,15 +140,27 @@ class VideoDisplay(BaseProcess):
             denormalize(g["norm_pos"], frame.shape[1::-1]) for g in gaze
         ]
 
-        # TODO smoothed + timeout or similar
-        if len(gaze_points) == 0:
-            gaze_point = self._last_gaze_point
-        elif len(gaze_points) == 1:
-            gaze_point = int(gaze_points[0][0]), int(gaze_points[0][1])
-        else:
-            gaze_point = np.mean(gaze_points, axis=0)
-            gaze_point = tuple(gaze_point.astype(int))
-        self._last_gaze_point = gaze_point
+        for idx, gaze_point in enumerate(gaze_points):
+            if len(gaze[idx]["base_data"]) == 2:
+                self._binocular_gaze_deque.append(gaze_point)
+                self._eye0_gaze_deque.append((np.nan, np.nan))
+                self._eye1_gaze_deque.append((np.nan, np.nan))
+            elif gaze[idx]["base_data"][0]["id"] == 0:
+                self._binocular_gaze_deque.append((np.nan, np.nan))
+                self._eye0_gaze_deque.append(gaze_point)
+                self._eye1_gaze_deque.append((np.nan, np.nan))
+            elif gaze[idx]["base_data"][0]["id"] == 1:
+                self._binocular_gaze_deque.append((np.nan, np.nan))
+                self._eye0_gaze_deque.append((np.nan, np.nan))
+                self._eye1_gaze_deque.append(gaze_point)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            binocular_gaze_point = np.nanmean(
+                self._binocular_gaze_deque, axis=0
+            )
+            eye0_gaze_point = np.nanmean(self._eye0_gaze_deque, axis=0)
+            eye1_gaze_point = np.nanmean(self._eye1_gaze_deque, axis=0)
 
         if frame.ndim == 2:
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
@@ -114,7 +170,22 @@ class VideoDisplay(BaseProcess):
         radius = 10
 
         try:
-            cv2.circle(frame, gaze_point, radius, color, thickness=-1)
+            if not np.isnan(binocular_gaze_point).any():
+                cv2.circle(
+                    frame,
+                    tuple(binocular_gaze_point.astype(int)),
+                    radius,
+                    color,
+                    thickness=-1,
+                )
+            if not np.isnan(eye0_gaze_point).any():
+                cv2.circle(
+                    frame, tuple(eye0_gaze_point.astype(int)), radius, color,
+                )
+            if not np.isnan(eye1_gaze_point).any():
+                cv2.circle(
+                    frame, tuple(eye1_gaze_point.astype(int)), radius, color,
+                )
         except OverflowError as e:
             logger.debug(e)
 
@@ -176,6 +247,12 @@ class VideoDisplay(BaseProcess):
 
         return frame
 
+    def rggb_to_bgr(self, packet):
+        """"""
+        frame = packet["display_frame"]
+
+        return cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2BGR)
+
     def show_frame(self, packet):
         """"""
         frame = packet["display_frame"]
@@ -190,6 +267,14 @@ class VideoDisplay(BaseProcess):
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
         packet.display_frame = packet.frame
+
+        if packet.color_format == "bayer_rggb8":
+            packet.display_frame = self.call(
+                self.rggb_to_bgr,
+                packet,
+                block=block,
+                return_if_full=packet.display_frame,
+            )
 
         if self.overlay_pupil and "pupil" in packet:
             packet.display_frame = self.call(

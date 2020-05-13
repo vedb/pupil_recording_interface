@@ -775,6 +775,24 @@ def intrinsics():
 
 
 @pytest.fixture()
+def extrinsics():
+    """"""
+    return {
+        ("t265_left", "t265_right"): (
+            (848, 800),
+            np.array(
+                [
+                    [0.99999411, 0.00115959, 0.0032307],
+                    [-0.00120395, 0.9999046, 0.01375999],
+                    [-0.00321443, -0.0137638, 0.99990011],
+                ]
+            ),
+            np.array([[-2.87012494], [0.0349811], [-0.03503141]]),
+        )
+    }
+
+
+@pytest.fixture()
 def calibration_result():
     """"""
     return {

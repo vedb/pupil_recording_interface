@@ -1,38 +1,38 @@
-name: pupil-recording-interface
+name: pri
 channels:
   - conda-forge
   - phausamann
 dependencies:
-  - python=3.7
-  - pip
+  - python=3.6
+  - pip=20.1
   # scientific stack
   - numpy=1.18
   - pandas=1.0
   - xarray=0.15
   - scipy=1.4
-  - netcdf4=1.5
   # video
-  - ffmpeg=4.1.3
+  - opencv=4.2.0
+  - ffmpeg=3.4.2
   - x264=1!152.20180806
-  - opencv=4.1.2
   # pupil
   - libusb=1.0.23
   - libuvc=0.0.7
   - libjpeg-turbo=2.0.3
   - pyuvc=0.13
   - msgpack-python=0.6.2
-  - pupil_detectors=1.0.4
+  - pupil-detectors=1.0.5
   # realsense
   - librealsense2=2.32.1
   # flir
+  - spinnaker-sdk=1.27.0.48
   - pyspin=1.27.0.48
   # other
-  - tqdm
+  - tqdm=4.46.0
   # development
   - pytest
   - coverage
   - flake8
-  - black
+  - black=19.10b0
   - pre_commit
   - sphinx=1.8.5
   - sphinx_rtd_theme
@@ -40,4 +40,5 @@ dependencies:
   - matplotlib
   # pip
   - pip:
-    - pyrealsense2
+    - netcdf4==1.5.3
+    - pyrealsense2==2.32.1.1346

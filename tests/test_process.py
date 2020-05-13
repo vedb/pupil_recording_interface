@@ -25,7 +25,7 @@ class TestAllProcesses:
         motion_stream_config,
         mock_video_device,
     ):
-        """"""
+
         config = process_configs[process_type]
         config.process_name = "test"
 
@@ -46,9 +46,12 @@ class TestAllProcesses:
         assert process.paused
 
         # resume via notification
-        process.paused = True
-        process.process_notifications([{"resume_process": "test"}])
-        assert not process.paused
+        # cv2.namedWindow crashes the process during CI tests, so we need to
+        # skip the test for video_display
+        if process_type != "video_display":
+            process.paused = True
+            process.process_notifications([{"resume_process": "test"}])
+            assert not process.paused
 
 
 class TestVideoRecorder:
@@ -129,18 +132,15 @@ class TestPupilDetector:
 
 
 class TestGazeMapper:
-    def test_map_gaze(self, gaze_mapper, gaze_2d):
+    def test_mapper(self, gaze_mapper, gaze_2d):
         """"""
         for g in gaze_2d:
             if len(g["base_data"]) == 2:
-                mapped = gaze_mapper.map_gaze(
+                mapped = gaze_mapper.mapper._map_binocular(
                     g["base_data"][0], g["base_data"][1],
                 )
-            elif g["base_data"][0]["id"] == 0:
-                mapped = gaze_mapper.map_gaze(g["base_data"][0], None)
             else:
-                mapped = gaze_mapper.map_gaze(None, g["base_data"][0])
-
+                mapped = gaze_mapper.mapper._map_monocular(g["base_data"][0])
             np.testing.assert_equal(mapped, g)
 
     def test_record_data(self, gaze_mapper, gaze_packet):
@@ -299,4 +299,40 @@ class TestCamParamEstimator:
             ],
             "cam_type": "radial",
             "resolution": [1280, 720],
+        }
+
+    def test_save_extrinsics(self, cam_param_estimator, extrinsics):
+        """"""
+        cam_param_estimator._save_extrinsics(
+            cam_param_estimator.folder, extrinsics
+        )
+        first = load_object(
+            os.path.join(cam_param_estimator.folder, "t265_left.extrinsics")
+        )
+        second = load_object(
+            os.path.join(cam_param_estimator.folder, "t265_right.extrinsics")
+        )
+        assert first["(848, 800)"] == {
+            "t265_right": {
+                "order": "first",
+                "rotation": [
+                    [0.99999411, 0.00115959, 0.0032307],
+                    [-0.00120395, 0.9999046, 0.01375999],
+                    [-0.00321443, -0.0137638, 0.99990011],
+                ],
+                "translation": [[-2.87012494], [0.0349811], [-0.03503141]],
+                "resolution": [848, 800],
+            }
+        }
+        assert second["(848, 800)"] == {
+            "t265_left": {
+                "order": "second",
+                "rotation": [
+                    [0.99999411, 0.00115959, 0.0032307],
+                    [-0.00120395, 0.9999046, 0.01375999],
+                    [-0.00321443, -0.0137638, 0.99990011],
+                ],
+                "translation": [[-2.87012494], [0.0349811], [-0.03503141]],
+                "resolution": [848, 800],
+            }
         }
