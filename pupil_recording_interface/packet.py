@@ -40,6 +40,17 @@ class Packet:
     def __getitem__(self, item):
         return self.get(item)
 
+    def __str__(self):
+        return (
+            f"pupil_recording_interface.Packet with data:\n"
+            f"* stream_name: {self.stream_name}\n"
+            f"* device_uid: {self.device_uid}\n"
+            f"* timestamp: {self.timestamp}"
+        )
+
+    def __repr__(self):
+        return self.__str__()
+
     def get(self, attr, timeout=None):
         """
 
