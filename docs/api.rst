@@ -78,6 +78,16 @@ Process classes
     MotionRecorder
 
 
+Other
+.....
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    Session
+
+
 Class member details
 --------------------
 

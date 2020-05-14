@@ -29,7 +29,7 @@ Environment setup
 
 .. code-block:: console
 
-    $ pip install -e --no-deps .
+    $ pip install --no-deps -e .
 
 
 Reformatting / linting

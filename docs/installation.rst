@@ -40,6 +40,8 @@ dependencies that aren't already available through conda. At the moment, only
 packages for Linux x64 and Python versions 3.6 and 3.7 are available.
 
 
+.. _streaming_dependencies:
+
 Streaming
 .........
 
@@ -71,6 +73,8 @@ page.
 .. _PyUVC: https://github.com/pupil-labs/pyuvc
 
 
+.. _recording_dependencies:
+
 Recording
 .........
 
@@ -83,6 +87,8 @@ all operating systems:
 
 .. _ffmpeg: https://www.ffmpeg.org
 
+
+.. _pupil_detection_dependencies:
 
 Pupil detection
 ...............
@@ -99,7 +105,7 @@ A conda package is available for Linux:
 
 .. code-block:: console
 
-    conda install -c phausamann -c conda-forge pupil-detectors
+    $ conda install -c phausamann -c conda-forge pupil-detectors
 
 Windows and MacOS
 ~~~~~~~~~~~~~~~~~
@@ -108,17 +114,19 @@ Install via pip:
 
 .. code-block:: console
 
-    pip install pupil-detectors
+    $ pip install pupil-detectors
 
 On MacOS, you will probably need to install some build dependencies. Please
 refer to the `pupil-detectors`_ GitHub pages for details.
 
 
+.. _realsense_dependencies:
+
 RealSense T265
 ..............
 
 Motion and video data from an Intel RealSense T265 tracking camera can be
-streamed by installing the `RealSense SDK`_ and ``pyrealsense``:
+streamed by installing the `RealSense SDK`_ and ``pyrealsense2``:
 
 .. code-block:: console
 
@@ -142,6 +150,8 @@ GitHub page.
 .. _RealSense SDK: https://github.com/IntelRealSense/librealsense
 
 
+.. _flir_dependencies:
+
 FLIR cameras
 ............
 
@@ -161,6 +171,8 @@ Download the latest `Spinnaker SDK`_.
 
 .. _Spinnaker SDK: https://www.flir.com/products/spinnaker-sdk
 
+
+.. _export_dependencies:
 
 Export
 ......
