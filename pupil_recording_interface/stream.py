@@ -225,6 +225,10 @@ class BaseStream(BaseConfigurable):
                     )
                     packet = self.get_packet()
 
+                    # TODO check if it makes sense to stop streams like this
+                    if packet is None:
+                        break
+
                     if self.pipeline is not None:
                         packet = self.pipeline.flush(packet, notifications)
 
@@ -299,11 +303,18 @@ class VideoStream(BaseStream):
         else:
             data = self.device.get_frame_and_timestamp()
 
-        if len(data) == 3:
-            frame, timestamp, source_timestamp = data
-        else:
+        if data is None:
+            return None
+        elif len(data) == 2:
             frame, timestamp = data
             source_timestamp = None
+        elif len(data) == 3:
+            frame, timestamp, source_timestamp = data
+        else:
+            raise RuntimeError(
+                f"Got {len(data)} return values from get_frame_and_timestamp, "
+                f"expected no more than 3"
+            )
 
         return Packet(
             self.name,
