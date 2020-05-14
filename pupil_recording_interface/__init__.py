@@ -25,6 +25,8 @@ from .process.cam_params import CircleGridDetector, CamParamEstimator
 
 from .decorators import device, stream, process
 
+from .session import Session
+
 from ._version import __version__  # noqa
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -67,6 +69,8 @@ __all__ = [
     "device",
     "stream",
     "process",
+    # other
+    "Session",
 ]
 
 # disable active threads when OpenCV is built with OpenMP support
