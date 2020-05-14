@@ -420,6 +420,9 @@ class StreamManager(object):
                 if sleep_time > 0:
                     time.sleep(sleep_time)
 
+        # Set stopped to True so that all_streams_running returns False
+        self.stopped = True
+
         logger.debug("Stopped spinning")
 
     def spin_generator(self):
