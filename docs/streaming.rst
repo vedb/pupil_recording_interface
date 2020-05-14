@@ -7,21 +7,37 @@ Streaming data
 
     Make sure that you have installed the necessary
     :ref:`dependencies for streaming<streaming_dependencies>`. If not, you can
-    still go through large parts of this tutorial by streaming from a recording
+    still go through large parts of this guide by streaming from a recording
     included in the package instead of an actual Pupil Core device.
 
 
 Video devices
 -------------
 
+The Pupil Core cameras can be accessed via the :py:class:`VideoDeviceUVC`
+class:
+
 .. doctest::
 
     >>> import pupil_recording_interface as pri
     >>> world_cam = pri.VideoDeviceUVC("Pupil Cam2 ID2", (1280, 720), 60)
+    >>> world_cam # doctest:+ELLIPSIS
+    <pupil_recording_interface.device.video.VideoDeviceUVC object at ...>
+
+If you don't have a Pupil Core device or are missing the necessary
+dependencies, you can use a dummy device that streams from a recording instead:
 
 .. doctest::
 
     >>> world_cam = pri.VideoFileDevice(pri.TEST_RECORDING, "world", timestamps="file")
+
+A device needs to be started before streaming any data and stopped afterwards
+in order to release the resource. To facilitate this, the :py:class:`Session`
+context manager automatically calls the ``start`` and ``stop`` methods of
+devices passed to it.
+
+You can grab a video frame and its timestamp from the device with the
+:py:meth:`get_frame_and_timestamp` method:
 
 .. doctest::
 
@@ -32,8 +48,8 @@ Video devices
     >>> timestamp
     1570725800.2383718
 
-Video streaming
----------------
+Video streams
+-------------
 
 .. doctest::
 
@@ -78,9 +94,6 @@ Multiple streams
     ...     pri.VideoStream.Config(
     ...         device_type="video_file",
     ...         device_uid="world",
-    ...         name="world",
-    ...         resolution=(1280, 720),
-    ...         fps=60,
     ...         loop=False,
     ...         pipeline=[pri.VideoDisplay.Config()],
     ...     ),

@@ -9,8 +9,8 @@ class Session:
 
         Parameters
         ----------
-        instances: any
-            Any object with a start and a stop method. The objects' start
+        instances: iterable of any
+            Any object(s) with a start and a stop method. The objects' start
             methods will be called on entry in the specified order, the stop
             methods will be called on exit in opposite order.
         """
