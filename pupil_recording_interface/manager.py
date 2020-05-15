@@ -408,17 +408,23 @@ class StreamManager(object):
         logger.debug(f"Run start time: {self._start_time}")
         logger.debug(f"Run start time monotonic: {self._start_time_monotonic}")
 
+    def _update(self):
+        """ Update status and notify streams. """
+        timestamp = time.time()
+        status = self._get_status()
+        self._notify_streams(status)
+        self._update_status(status)
+        if self.update_interval is not None:
+            sleep_time = self.update_interval - (time.time() - timestamp)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
+        return status
+
     def _spin_blocking(self):
         """ Non-generator implementation of spin. """
         while self.run_duration < self.duration and not self.stopped:
-            timestamp = time.time()
-            status = self._get_status()
-            self._notify_streams(status)
-            self._update_status(status)
-            if self.update_interval is not None:
-                sleep_time = self.update_interval - (time.time() - timestamp)
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
+            self._update()
 
         # Set stopped to True so that all_streams_running returns False
         self.stopped = True
@@ -434,9 +440,7 @@ class StreamManager(object):
             A mapping from stream names to their current status.
         """
         while self.run_duration < self.duration and not self.stopped:
-            status = self._get_status()
-            self._notify_streams(status)
-            self._update_status(status)
+            status = self._update()
             yield status
 
     def spin(self, block=True):
