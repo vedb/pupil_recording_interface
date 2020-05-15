@@ -45,6 +45,36 @@ Pupil detection
     So far, only the standard 2D pupil detector is available. We are working
     on supporting more pupil detection methods.
 
+
+Pipelines
+---------
+
+.. doctest::
+
+    >>> configs = [
+    ...     pri.VideoStream.Config(
+    ...         device_type="video_file",
+    ...         device_uid="eye0",
+    ...         loop=False,
+    ...         pipeline=[
+    ...             pri.PupilDetector.Config(),
+    ...             pri.VideoDisplay.Config(overlay_pupil=True),
+    ...         ],
+    ...     ),
+    ... ]
+    >>> manager = pri.StreamManager(
+    ...     configs, duration=10, folder=pri.TEST_RECORDING, policy="read"
+    ... )
+
+.. testcode::
+    :hide:
+
+    manager.streams["eye0"].pipeline = None
+
+.. doctest::
+
+    >>> manager.run()
+
 Calibration
 -----------
 

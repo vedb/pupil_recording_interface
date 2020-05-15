@@ -167,9 +167,20 @@ Alternatively, use this dummy configuration:
     manager.streams["eye0"].pipeline = None
     manager.streams["eye1"].pipeline = None
 
-Now we can run the manager to start streaming and simultaneously print out
-the current frame rates for each stream to the command line. You should see
-three windows opening with the eye and world video streams.
+Now we can run the manager to start streaming. You should see three windows
+opening with the eye and world video streams.
+
+.. doctest::
+
+    >>> manager.run()
+
+The manager will automatically stop after the specified duration and can also
+be stopped with a keyboard interrupt. When no duration is set, the manager
+will run indefinitely.
+
+It is also possible to run the manager in a non-blocking fashion
+by using it as a context manager. This allows us for example to print the
+current frame rates for each stream to the command line:
 
 .. doctest::
 
@@ -178,7 +189,3 @@ three windows opening with the eye and world video streams.
     ...         if manager.all_streams_running:
     ...             print("\r" + manager.format_status("fps", sleep=0.1), end="") # doctest:+ELLIPSIS,+NORMALIZE_WHITESPACE
     eye0: ..., eye1: ..., world: ...
-
-The manager will automatically stop after the specified duration and can also
-be stopped with a keyboard interrupt. When no duration is set, the manager
-will run indefinitely.
