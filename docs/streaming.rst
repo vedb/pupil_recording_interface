@@ -24,6 +24,9 @@ class:
     >>> world_cam # doctest:+ELLIPSIS
     <pupil_recording_interface.device.video.VideoDeviceUVC object at ...>
 
+The first argument is the name of the video device (``"Cam1"``, ``"Cam2"`` or
+``"Cam3"`` for different generations of the Pupil hardware; ``"ID0"``,
+``"ID1"`` and ``"ID2"`` for left and right eye or world camera, respectively).
 If you don't have a Pupil Core device or are missing the necessary
 dependencies, you can use a dummy device that streams from a recording instead:
 
@@ -51,9 +54,19 @@ You can grab a video frame and its timestamp from the device with the
 Video streams
 -------------
 
+The :py:class:`VideoStream` class is a wrapper for video devices that handles
+functionality such as polling for new video frames and processing (pupil
+detection, recording, ...):
+
 .. doctest::
 
     >>> stream = pri.VideoStream(world_cam, name="world")
+    >>> stream # doctest:+ELLIPSIS
+    <pupil_recording_interface.stream.VideoStream object at ...>
+
+The :py:meth:`get_packet` returns a :py:class:`Packet` that bundles the data
+retrieved from the device. We use :py:class:`Session` again to handle starting
+and stopping of the stream:
 
 .. doctest::
 
@@ -64,10 +77,17 @@ Video streams
     * stream_name: world
     * device_uid: world
     * timestamp: 1570725800.2718818
-
+    >>> packet.frame.shape
+    (720, 1280, 3)
 
 Multiple streams
 ----------------
+
+For simultaneous streaming from multiple devices, the :py:class:`StreamManager`
+is used. The manager dispatches each stream to a separate process and handles
+communication between those processes. Instead of constructing
+:py:class:`VideoStream` instances, we use a list of
+:py:class:`VideoStream.Config` instances:
 
 .. doctest::
 
@@ -80,13 +100,39 @@ Multiple streams
     ...         fps=60,
     ...         pipeline=[pri.VideoDisplay.Config()],
     ...     ),
+    ...     pri.VideoStream.Config(
+    ...         device_type="uvc",
+    ...         device_uid="Pupil Cam2 ID0",
+    ...         name="eye0",
+    ...         resolution=(192, 192),
+    ...         fps=120,
+    ...         pipeline=[pri.VideoDisplay.Config()],
+    ...     ),
+    ...     pri.VideoStream.Config(
+    ...         device_type="uvc",
+    ...         device_uid="Pupil Cam2 ID1",
+    ...         name="eye1",
+    ...         resolution=(192, 192),
+    ...         fps=120,
+    ...         pipeline=[pri.VideoDisplay.Config()],
+    ...     ),
     ... ]
+
+The manager then constructs the proper streams and devices from this list.
+With ``duration=30``, the manager will stop streaming after 30 seconds.
+
+.. note::
+
+    The concept of pipelines and processes such as :py:class:`VideoDisplay`
+    is explained in detail in :ref:`processing`.
 
 .. doctest::
 
     >>> manager = pri.StreamManager(configs, duration=30)
     >>> manager.streams # doctest:+ELLIPSIS
-    {'world': <...>}
+    {'eye0': <...>, 'eye1': <...>, 'world': <...>}
+
+Alternatively, use this dummy configuration:
 
 .. doctest::
 
@@ -94,6 +140,18 @@ Multiple streams
     ...     pri.VideoStream.Config(
     ...         device_type="video_file",
     ...         device_uid="world",
+    ...         loop=False,
+    ...         pipeline=[pri.VideoDisplay.Config()],
+    ...     ),
+    ...     pri.VideoStream.Config(
+    ...         device_type="video_file",
+    ...         device_uid="eye0",
+    ...         loop=False,
+    ...         pipeline=[pri.VideoDisplay.Config()],
+    ...     ),
+    ...     pri.VideoStream.Config(
+    ...         device_type="video_file",
+    ...         device_uid="eye1",
     ...         loop=False,
     ...         pipeline=[pri.VideoDisplay.Config()],
     ...     ),
@@ -106,6 +164,12 @@ Multiple streams
     :hide:
 
     manager.streams["world"].pipeline = None
+    manager.streams["eye0"].pipeline = None
+    manager.streams["eye1"].pipeline = None
+
+Now we can run the manager to start streaming and simultaneously print out
+the current frame rates for each stream to the command line. You should see
+three windows opening with the eye and world video streams.
 
 .. doctest::
 
@@ -113,4 +177,8 @@ Multiple streams
     ...     while not manager.stopped:
     ...         if manager.all_streams_running:
     ...             print("\r" + manager.format_status("fps", sleep=0.1), end="") # doctest:+ELLIPSIS,+NORMALIZE_WHITESPACE
-    world: ...
+    eye0: ..., eye1: ..., world: ...
+
+The manager will automatically stop after the specified duration and can also
+be stopped with a keyboard interrupt. When no duration is set, the manager
+will run indefinitely.

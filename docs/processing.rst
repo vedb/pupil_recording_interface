@@ -1,3 +1,5 @@
+.. _processing:
+
 Processing and recording data
 =============================
 
@@ -54,7 +56,6 @@ Calibration
 
 Gaze mapping
 ------------
-
 
 .. note::
 

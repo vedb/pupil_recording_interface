@@ -18,8 +18,9 @@ The code is hosted on GitHub: https://github.com/vedb/pupil_recording_interface
    reading
    streaming
    processing
-   additional
+   advanced
    custom
+   additional
    api
    contributing
 
