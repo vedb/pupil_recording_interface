@@ -70,6 +70,34 @@ jobs:
           conda install pytest
           pytest
 
+  docs:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: s-weigand/setup-conda@v1
+      - name: Check versions
+        run: |
+          conda --version
+          which python
+      - name: Create environment
+        run: conda env create
+      - name: Install package
+        run: |
+          source activate pri
+          pip install --no-deps .
+      - name: Build Sphinx docs and run doctests
+        run: |
+          source activate pri
+          make -C docs/ html
+          make -C docs/ doctest
+      - if: success() && github.ref == 'refs/heads/master'
+        uses: crazy-max/ghaction-github-pages@v1.5.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          target_branch: gh-pages
+          build_dir: docs/_build/html/
+
   black:
     runs-on: ubuntu-18.04
     steps:
@@ -82,27 +110,3 @@ jobs:
         run: |
           pip install black==19.10b0
           black --check .
-
-  docs:
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.6
-      - name: Install dependencies and package
-        run: |
-          pip install -r requirements.txt -r requirements_dev.txt
-          pip install .
-      - name: Build Sphinx docs and run doctests
-        run: |
-          make -C docs/ html
-          make -C docs/ doctest
-      - if: success() && github.ref == 'refs/heads/master'
-        uses: crazy-max/ghaction-github-pages@v1.5.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          target_branch: gh-pages
-          build_dir: docs/_build/html/
