@@ -104,7 +104,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Fetch branches and tags
-        run: git fetch --prune --unshallow
+        run: |
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+          git checkout master
+          git checkout devel
+          git checkout ${GITHUB_REF##*/}
       - uses: s-weigand/setup-conda@v1
       - name: Check versions
         run: |
