@@ -2,8 +2,7 @@ pytest
 coverage
 flake8==3.7.9
 
-# pin sphinx to 1.8.5 to fix missing space between parameter name and type
-sphinx==1.8.5
+sphinx==2.4.4
 sphinx_rtd_theme
 numpydoc
 

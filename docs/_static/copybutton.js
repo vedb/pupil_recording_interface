@@ -7,7 +7,8 @@ $(document).ready(function() {
      * copyable. */
     var div = $('.highlight-python .highlight,' +
                 '.highlight-python3 .highlight,' +
-		        '.highlight-pycon .highlight')
+		        '.highlight-pycon .highlight,' +
+		        '.highlight-pycon3 .highlight')
     var pre = div.find('pre');
 
     // get the styles from the current theme
