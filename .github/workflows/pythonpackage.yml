@@ -103,8 +103,9 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-      - run: |
+      - name: Fetch branches and tags
+        run: |
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
           git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
       - uses: s-weigand/setup-conda@v1
       - name: Check versions
@@ -120,7 +121,7 @@ jobs:
       - name: Build Sphinx multiversion docs
         run: |
           source activate pri
-          sphinx-multiversion docs html
+          sphinx-multiversion docs docs/_build/html
           cp docs/index.html docs/_build/html
       - if: success() && github.ref # == 'refs/heads/master'
         name: push
