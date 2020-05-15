@@ -131,7 +131,7 @@ class StreamManager(object):
     def _init_streams(cls, configs, folder=None):
         """ Init stream instances for all configs. """
         # mapping from uids to configs
-        uids = {c.device_uid for c in configs}
+        uids = sorted({c.device_uid for c in configs})
         configs_by_uid = {
             uid: [c for c in configs if c.device_uid == uid] for uid in uids
         }
@@ -333,7 +333,7 @@ class StreamManager(object):
 
         values = {
             name: recursive_get(status, *key.split("."))
-            for name, status in status_dict.items()
+            for name, status in sorted(status_dict.items())
         }
 
         if len(values) > 0:
