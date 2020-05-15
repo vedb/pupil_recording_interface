@@ -123,6 +123,7 @@ jobs:
           source activate pri
           sphinx-multiversion docs docs/_build/html
           cp docs/index.html docs/_build/html
+          touch docs/_build/html/.nojekyll
       - if: success() && github.ref # == 'refs/heads/master'
         name: push
         uses: crazy-max/ghaction-github-pages@v1.5.1
