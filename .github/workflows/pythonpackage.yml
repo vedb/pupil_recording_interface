@@ -90,28 +90,28 @@ jobs:
           source activate pri
           make -C docs/ html
           make -C docs/ doctest
-
-  docs-multiversion:
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: s-weigand/setup-conda@v1
-      - name: Check versions
-        run: |
-          conda --version
-          which python
-      - name: Create environment
-        run: conda env create
-      - name: Install package
-        run: |
-          source activate pri
-          pip install --no-deps .
-      - name: Build Sphinx multiversion docs
-        run: |
-          source activate pri
-          sphinx-multiversion docs docs/_build/html
-          cp docs/index.html docs/_build/html
-      - if: success() && github.ref == 'refs/heads/master'
+#
+#  docs-multiversion:
+#    runs-on: ubuntu-18.04
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: s-weigand/setup-conda@v1
+#      - name: Check versions
+#        run: |
+#          conda --version
+#          which python
+#      - name: Create environment
+#        run: conda env create
+#      - name: Install package
+#        run: |
+#          source activate pri
+#          pip install --no-deps .
+#      - name: Build Sphinx multiversion docs
+#        run: |
+#          source activate pri
+#          sphinx-multiversion docs html
+#          cp docs/index.html docs/_build/html
+      - if: success() && github.ref # == 'refs/heads/master'
         name: push
         uses: crazy-max/ghaction-github-pages@v1.5.1
         env:
@@ -119,6 +119,7 @@ jobs:
         with:
           target_branch: gh-pages
           build_dir: docs/_build/html/
+          keep_history: true
 
   black:
     runs-on: ubuntu-18.04
