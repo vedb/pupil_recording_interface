@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "pupil_recording_interface"
-copyright = "2019, Peter Hausamann"
+copyright = "2020, Peter Hausamann / The Visual Experience Database"
 author = "Peter Hausamann"
 
 # The short X.Y version
@@ -46,6 +46,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "numpydoc",
     "matplotlib.sphinxext.plot_directive",
+    "sphinx_multiversion",
 ]
 
 autosummary_generate = True
@@ -79,6 +80,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
+# sphinx-multiversion config
+smv_branch_whitelist = r"^(master|devel)$"
+smv_tag_whitelist = r"^v\d+\.\d+.\d+(-.*)?$"
 
 # -- Options for HTML output -------------------------------------------------
 
