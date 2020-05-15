@@ -100,16 +100,18 @@ jobs:
           build_dir: docs/_build/html/
 
   docs-multiversion:
+    # runs on pushes to master and devel but is always built against the
+    # package from the master branch to avoid broken docs for master
     runs-on: ubuntu-18.04
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel'
     steps:
       - uses: actions/checkout@v2
       - name: Fetch branches and tags
         run: |
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
           git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
-          git checkout master
           git checkout devel
-          git checkout ${GITHUB_REF##*/}
+          git checkout master
       - uses: s-weigand/setup-conda@v1
       - name: Check versions
         run: |
@@ -127,7 +129,7 @@ jobs:
           sphinx-multiversion docs docs/_build/html
           cp docs/index.html docs/_build/html
           touch docs/_build/html/.nojekyll
-      - if: success() && github.ref # == 'refs/heads/master'
+      - if: success()
         name: push
         uses: crazy-max/ghaction-github-pages@v1.5.1
         env:
@@ -135,7 +137,7 @@ jobs:
         with:
           target_branch: gh-pages
           build_dir: docs/_build/html/
-  #          keep_history: true
+          # keep_history: true
 
   black:
     runs-on: ubuntu-18.04
