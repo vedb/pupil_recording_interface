@@ -131,7 +131,7 @@ class StreamManager(object):
     def _init_streams(cls, configs, folder=None):
         """ Init stream instances for all configs. """
         # mapping from uids to configs
-        uids = {c.device_uid for c in configs}
+        uids = sorted({c.device_uid for c in configs})
         configs_by_uid = {
             uid: [c for c in configs if c.device_uid == uid] for uid in uids
         }
@@ -333,7 +333,7 @@ class StreamManager(object):
 
         values = {
             name: recursive_get(status, *key.split("."))
-            for name, status in status_dict.items()
+            for name, status in sorted(status_dict.items())
         }
 
         if len(values) > 0:
@@ -408,17 +408,26 @@ class StreamManager(object):
         logger.debug(f"Run start time: {self._start_time}")
         logger.debug(f"Run start time monotonic: {self._start_time_monotonic}")
 
+    def _update(self):
+        """ Update status and notify streams. """
+        timestamp = time.time()
+        status = self._get_status()
+        self._notify_streams(status)
+        self._update_status(status)
+        if self.update_interval is not None:
+            sleep_time = self.update_interval - (time.time() - timestamp)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
+        return status
+
     def _spin_blocking(self):
         """ Non-generator implementation of spin. """
         while self.run_duration < self.duration and not self.stopped:
-            timestamp = time.time()
-            status = self._get_status()
-            self._notify_streams(status)
-            self._update_status(status)
-            if self.update_interval is not None:
-                sleep_time = self.update_interval - (time.time() - timestamp)
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
+            self._update()
+
+        # Set stopped to True so that all_streams_running returns False
+        self.stopped = True
 
         logger.debug("Stopped spinning")
 
@@ -431,9 +440,7 @@ class StreamManager(object):
             A mapping from stream names to their current status.
         """
         while self.run_duration < self.duration and not self.stopped:
-            status = self._get_status()
-            self._notify_streams(status)
-            self._update_status(status)
+            status = self._update()
             yield status
 
     def spin(self, block=True):

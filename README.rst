@@ -37,7 +37,7 @@ If you are using the conda package manager, install these dependencies first:
 
 .. code-block:: console
 
-    $ conda install xarray scipy opencv msgpack-python<1.0
+    $ conda install xarray scipy opencv "msgpack-python<1.0"
 
 Afterwards, install the package via ``pip``, but without dependencies:
 

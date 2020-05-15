@@ -261,8 +261,8 @@ Data export
 
 .. note::
 
-    Make sure you have installed the necessary dependencies for data export
-    (see :ref:`optional_dependencies`).
+    Make sure you have installed the necessary
+    :ref:`dependencies for data export<optional_dependencies>`.
 
 Recorded data can also directly be written to disk:
 

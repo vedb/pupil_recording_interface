@@ -34,7 +34,7 @@ dependencies:
   - flake8=3.7.9
   - black=19.10b0
   - pre_commit
-  - sphinx=1.8.5
+  - sphinx=2.4.4
   - sphinx_rtd_theme
   - numpydoc
   - matplotlib
@@ -42,3 +42,4 @@ dependencies:
   - pip:
     - netcdf4==1.5.3
     - pyrealsense2==2.32.1.1346
+    - sphinx-multiversion

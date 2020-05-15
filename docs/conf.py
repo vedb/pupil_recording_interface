@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "pupil_recording_interface"
-copyright = "2019, Peter Hausamann"
+copyright = "2020, Peter Hausamann / The Visual Experience Database"
 author = "Peter Hausamann"
 
 # The short X.Y version
@@ -46,6 +46,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "numpydoc",
     "matplotlib.sphinxext.plot_directive",
+    "sphinx_multiversion",
 ]
 
 autosummary_generate = True
@@ -79,6 +80,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
+# sphinx-multiversion config
+smv_branch_whitelist = r"^(master|devel)$"
+smv_tag_whitelist = r"^v\d+\.\d+.\d+(-.*)?$"
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -97,6 +101,7 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

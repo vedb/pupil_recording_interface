@@ -304,12 +304,19 @@ class VideoFileDevice(BaseVideoDevice):
     """ Video device that reads a video file. """
 
     def __init__(
-        self, folder, topic, resolution=None, fps=None, loop=True,
+        self,
+        folder,
+        topic,
+        resolution=None,
+        fps=None,
+        loop=True,
+        timestamps="both",
     ):
         """ Constructor. """
         BaseVideoDevice.__init__(self, topic, resolution, fps, folder=folder)
 
         self.loop = loop
+        self.timestamps = timestamps
 
         self.speed = 1.0
         self._frame_index = 0
@@ -350,9 +357,12 @@ class VideoFileDevice(BaseVideoDevice):
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         # TODO get gray image when mode="gray"
-        if self.loop and self._frame_index >= self.capture.frame_count - 1:
-            self._frame_index = 0
-            self.capture.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        if self._frame_index >= self.capture.frame_count - 1:
+            if self.loop:
+                self._frame_index = 0
+                self.capture.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            else:
+                return None
 
         _, frame = self.capture.capture.read()
         file_timestamp = (
@@ -372,4 +382,9 @@ class VideoFileDevice(BaseVideoDevice):
         else:
             playback_timestamp = file_timestamp
 
-        return frame, file_timestamp, playback_timestamp
+        if self.timestamps == "file":
+            return frame, file_timestamp
+        if self.timestamps == "playback":
+            return frame, playback_timestamp
+        else:
+            return frame, file_timestamp, playback_timestamp
