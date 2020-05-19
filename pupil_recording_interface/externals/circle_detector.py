@@ -20,7 +20,7 @@ from pupil_recording_interface.externals.methods import (
 
 
 class CircleTracker(object):
-    def __init__(self, wait_interval=30, roi_wait_interval=120):
+    def __init__(self, wait_interval=30, roi_wait_interval=120, scale=0.5):
         self.wait_interval = wait_interval
         self.roi_wait_interval = roi_wait_interval
         self._previous_markers = []
@@ -30,6 +30,7 @@ class CircleTracker(object):
         self._flag_check = False
         self._flag_check_roi = False
         self._world_size = None
+        self.scale = scale
 
     def update(self, img):
         """
@@ -43,6 +44,7 @@ class CircleTracker(object):
         :rtype: a list containing dictionary with keys: 'ellipses', 'img_pos', 'norm_pos', 'marker_type'
         """
         img_size = img.shape[::-1]
+
         if self._world_size is None:
             self._world_size = img_size
         elif self._world_size != img_size:
@@ -95,12 +97,10 @@ class CircleTracker(object):
         :rtype: a list containing dictionary with keys: 'ellipses', 'img_pos', 'norm_pos', 'marker_type'
         """
         img_size = img.shape[::-1]
-        scale = 0.5 if img_size[0] >= 1280 else 640 / img_size[0]
-
         marker_list = []
         # Check whole frame
         if not self._flag_check_roi:
-            ellipses_list = find_pupil_circle_marker(img, scale)
+            ellipses_list = find_pupil_circle_marker(img, self.scale)
 
             # Save the markers in dictionaries
             for ellipses_ in ellipses_list:
@@ -162,7 +162,7 @@ class CircleTracker(object):
                 row_slice = b2, b3
 
                 ellipses_list = find_pupil_circle_marker(
-                    img[slice(*row_slice), slice(*col_slice)], scale
+                    img[slice(*row_slice), slice(*col_slice)], self.scale
                 )
 
                 # Track the marker which was detected last frame;

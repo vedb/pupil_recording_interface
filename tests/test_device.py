@@ -116,7 +116,7 @@ class TestVideoDeviceFLIR:
             30.0,
             settings={
                 "GainAuto": "Off",
-                "Gain": 30.0,
+                "Gain": 15.0,
                 "ExposureAuto": "Off",
                 "ExposureTime": 300.0,
             },
