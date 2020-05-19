@@ -87,6 +87,3 @@ Optical flow calculation
     :toctree: _generated
 
     OpticalFlowReader.calculate_optical_flow
-
-
-.. TODO streams, processes, pipelines

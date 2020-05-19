@@ -11,23 +11,14 @@ function cleanup {
 }
 trap cleanup ERR
 
-# Set OS version correctly for mint, ubuntu
-if [ -f /etc/os-release ]; then
-	source /etc/os-release
-	export UBUNTU_VERSION=$UBUNTU_CODENAME
-	echo $UBUNTU_VERSION
-	export EXTRA=''
-else
-	export UBUNTU_VERSION=$(lsb_release -sc)
-	export EXTRA=' -u'
-fi
+export UBUNTU_VERSION=$(lsb_release -sc)
 
 ### install SDK
 sudo apt-key adv --keyserver keys.gnupg.net --recv-key C8B3A55A6F3EFCDE || \
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key C8B3A55A6F3EFCDE
 
 sudo add-apt-repository \
-"deb http://realsense-hw-public.s3.amazonaws.com/Debian/apt-repo ${UBUNTU_VERSION} main {$EXTRA}"
+"deb http://realsense-hw-public.s3.amazonaws.com/Debian/apt-repo ${UBUNTU_VERSION} main" -u
 
 sudo apt-get update
 

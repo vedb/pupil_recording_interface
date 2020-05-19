@@ -7,6 +7,7 @@ import numpy as np
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.utils import monotonic
+from pupil_recording_interface.errors import DeviceNotConnected
 
 
 logger = logging.getLogger(__name__)
@@ -71,7 +72,9 @@ class RealSenseDeviceT265(BaseDevice):
 
         self.timebase = "epoch"
 
+        self.context = None
         self.pipeline = None
+        self.rs_device = None
         self.queues = {}
 
     @classmethod
@@ -132,9 +135,118 @@ class RealSenseDeviceT265(BaseDevice):
 
         return cls(uid, **cls_kwargs)
 
+    @classmethod
+    def get_serial_numbers(cls, suffix="T265"):
+        """ Return serial numbers of connected devices.
+
+        based on https://github.com/IntelRealSense/librealsense/issues/2332
+        """
+        import pyrealsense2 as rs
+
+        serials = []
+        context = rs.context()
+        for d in context.devices:
+            if suffix and not d.get_info(rs.camera_info.name).endswith(suffix):
+                continue
+            serial = d.get_info(rs.camera_info.serial_number)
+            serial = serial[4:] if len(serial) == 16 else serial
+            serials.append(serial)
+
+        return serials
+
+    @classmethod
+    def _get_pipeline_config(
+        cls, uid, video=False, odometry=False, accel=False, gyro=False
+    ):
+        """ Get the pipeline config. """
+        import pyrealsense2 as rs
+
+        config = rs.config()
+
+        devices = cls.get_serial_numbers()
+        if len(devices) > 1:
+            # TODO not working with librealsense 2.32.1 but is necessary for
+            #  simultaneously operating multiple devices:
+            #  config.enable_device(uid)
+            raise RuntimeError(
+                "Multiple T265 devices not supported, "
+                "please connect only one device"
+            )
+        elif len(devices) == 0:
+            raise DeviceNotConnected("No T265 devices connected")
+        else:
+            if uid is not None and uid != devices[0]:
+                raise DeviceNotConnected(
+                    f"T265 device with serial number {uid} not connected"
+                )
+
+        if video:
+            config.enable_stream(rs.stream.fisheye, 1)
+            config.enable_stream(rs.stream.fisheye, 2)
+
+        if odometry:
+            config.enable_stream(rs.stream.pose)
+
+        if accel:
+            config.enable_stream(rs.stream.accel)
+
+        if gyro:
+            config.enable_stream(rs.stream.gyro)
+
+        return config
+
+    @classmethod
+    def _init_pipeline(
+        cls,
+        uid,
+        callback,
+        video=False,
+        odometry=False,
+        accel=False,
+        gyro=False,
+    ):
+        """ Init the pipeline. """
+        import pyrealsense2 as rs
+
+        pipeline = rs.pipeline()
+        config = cls._get_pipeline_config(uid, video, odometry, accel, gyro)
+
+        if callback is not None:
+            pipeline.start(config, callback)
+        else:
+            pipeline.start(config)
+
+        logger.debug(
+            f"T265 pipeline started with video={video}, odometry={odometry}, "
+            f"accel={accel}, gyro={gyro}"
+        )
+
+        return pipeline
+
     @property
     def is_started(self):
         return self.pipeline is not None
+
+    def _devices_changed_callback(self, event):
+        """ Callback when connected devices change. """
+        if event.was_removed(self.rs_device) and self.pipeline is not None:
+            logger.warning(
+                f"T265 device with serial number {self.device_uid} removed"
+            )
+            self.pipeline.stop()
+            self.pipeline = None
+        elif event.was_added(self.rs_device) and self.pipeline is None:
+            logger.info(
+                f"T265 device with serial number {self.device_uid} reconnected"
+            )
+            self.pipeline = self._init_pipeline(
+                self.device_uid,
+                self._frame_callback,
+                self.video,
+                self.odometry,
+                self.accel,
+                self.gyro,
+            )
 
     def _frame_callback(self, rs_frame):
         """ Callback for new RealSense frames. """
@@ -261,52 +373,6 @@ class RealSenseDeviceT265(BaseDevice):
 
         return video_frame, t, t_src
 
-    @classmethod
-    def _get_pipeline_config(
-        cls, video=False, odometry=False, accel=False, gyro=False
-    ):
-        """ Get the pipeline config. """
-        import pyrealsense2 as rs
-
-        config = rs.config()
-
-        if video:
-            config.enable_stream(rs.stream.fisheye, 1)
-            config.enable_stream(rs.stream.fisheye, 2)
-
-        if odometry:
-            config.enable_stream(rs.stream.pose)
-
-        if accel:
-            config.enable_stream(rs.stream.accel)
-
-        if gyro:
-            config.enable_stream(rs.stream.gyro)
-
-        return config
-
-    @classmethod
-    def _init_pipeline(
-        cls, callback, video=False, odometry=False, accel=False, gyro=False
-    ):
-        """ Init the pipeline. """
-        import pyrealsense2 as rs
-
-        pipeline = rs.pipeline()
-        config = cls._get_pipeline_config(video, odometry, accel, gyro)
-
-        if callback is not None:
-            pipeline.start(config, callback)
-        else:
-            pipeline.start(config)
-
-        logger.debug(
-            f"T265 pipeline started with video={video}, odometry={odometry},"
-            f"accel={accel}, gyro={gyro}"
-        )
-
-        return pipeline
-
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamps. """
         # TODO timeout
@@ -328,15 +394,27 @@ class RealSenseDeviceT265(BaseDevice):
 
     def run_pre_thread_hooks(self):
         """ Run hook(s) before dispatching the recording thread. """
+        import pyrealsense2 as rs
+
+        # init context
+        self.context = rs.context()
+
         # Init pipelines
         if self.pipeline is None:
             self.pipeline = self._init_pipeline(
+                self.device_uid,
                 self._frame_callback,
                 self.video,
                 self.odometry,
                 self.accel,
                 self.gyro,
             )
+            self.rs_device = self.pipeline.get_active_profile().get_device()
+
+        # set callback to handle lost connection
+        self.context.set_devices_changed_callback(
+            self._devices_changed_callback
+        )
 
         # Init stream queues
         self.queues = {
