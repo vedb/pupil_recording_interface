@@ -202,6 +202,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         """ Try restarting this device. """
         import uvc
 
+        time.sleep(0.02)  # from pupil source code
         self.stop()
         while not self.is_started:
             try:
@@ -225,7 +226,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         uvc.Frame:
             The captured frame.
         """
-        return self.capture.get_frame(0.05)
+        return self.capture.get_frame()
 
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp.
@@ -250,12 +251,14 @@ class VideoDeviceUVC(BaseVideoDevice):
             raise ValueError(f"Unsupported mode: {mode}")
 
         if not self.is_started:
-            raise RuntimeError("Device is not started")
+            raise RuntimeError(f"{self.device_uid}: Device is not started")
 
         try:
-            uvc_frame = self.capture.get_frame()
-        except uvc.StreamError:
-            logger.error("Stream error, attempting to re-init")
+            uvc_frame = self.capture.get_frame(0.1)
+        except (uvc.StreamError, uvc.InitError, AttributeError):
+            logger.error(
+                f"{self.device_uid}: Stream error, attempting to re-init"
+            )
             self.restart()
             return self.get_frame_and_timestamp(mode=mode)
 

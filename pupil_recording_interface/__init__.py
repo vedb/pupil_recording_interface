@@ -179,7 +179,6 @@ def write_netcdf(
     gyro : str, optional
         The source of the gyro data. Can be 'recording'.
     """
-
     if output_folder is None:
         output_folder = os.path.join(folder, "exports")
         counter = 0
