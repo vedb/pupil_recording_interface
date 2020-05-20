@@ -293,6 +293,8 @@ class RealSenseDeviceT265(BaseDevice):
         q = pose.pose_data.rotation
         v = pose.pose_data.velocity
         w = pose.pose_data.angular_velocity
+        alin = pose.pose_data.acceleration
+        aang = pose.pose_data.angular_acceleration
 
         return {
             "topic": "odometry",
@@ -303,6 +305,8 @@ class RealSenseDeviceT265(BaseDevice):
             "orientation": (q.w, q.x, q.y, q.z),
             "linear_velocity": (v.x, v.y, v.z),
             "angular_velocity": (w.x, w.y, w.z),
+            "linear_acceleration": (alin.x, alin.y, alin.z),
+            "angular_acceleration": (aang.y, aang.y, aang.z),
         }
 
     @classmethod

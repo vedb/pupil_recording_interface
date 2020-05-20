@@ -11,12 +11,12 @@ I/O functions
 
 .. autosummary::
     :nosignatures:
-    :toctree: _generated
+    :toctree: ../_generated
 
     GazeReader.load_dataset
     GazeReader.write_netcdf
 
-OdometryReader
+MotionReader
 ..............
 
 I/O functions
@@ -24,10 +24,10 @@ I/O functions
 
 .. autosummary::
     :nosignatures:
-    :toctree: _generated
+    :toctree: ../_generated
 
-    OdometryReader.load_dataset
-    OdometryReader.write_netcdf
+    MotionReader.load_dataset
+    MotionReader.write_netcdf
 
 
 VideoReader
@@ -38,7 +38,7 @@ I/O functions
 
 .. autosummary::
     :nosignatures:
-    :toctree: _generated
+    :toctree: ../_generated
 
     VideoReader.load_frame
     VideoReader.load_raw_frame
@@ -52,7 +52,7 @@ Frame processing
 
 .. autosummary::
     :nosignatures:
-    :toctree: _generated
+    :toctree: ../_generated
 
     VideoReader.convert_to_uint8
     VideoReader.convert_color
@@ -72,7 +72,7 @@ I/O functions
 
 .. autosummary::
     :nosignatures:
-    :toctree: _generated
+    :toctree: ../_generated
 
     OpticalFlowReader.load_dataset
     OpticalFlowReader.write_netcdf
@@ -84,6 +84,6 @@ Optical flow calculation
 
 .. autosummary::
     :nosignatures:
-    :toctree: _generated
+    :toctree: ../_generated
 
     OpticalFlowReader.calculate_optical_flow

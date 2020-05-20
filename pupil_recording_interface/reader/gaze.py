@@ -26,12 +26,14 @@ class GazeReader(BaseReader):
             which case the norm pos from the 2d mapper and the gaze point
             from the 3d mapper will be used.
         """
-        super(GazeReader, self).__init__(folder, source=source)
+        super().__init__(folder)
+
+        self.source = source
         self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
 
     @property
-    def _nc_name(self):
-        """ Name of exported netCDF file. """
+    def export_name(self):
+        """ Name of exported files. """
         return "gaze"
 
     @staticmethod

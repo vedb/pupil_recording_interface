@@ -2,7 +2,7 @@
 import os
 
 from .reader import BaseReader
-from .reader.odometry import OdometryReader
+from .reader.motion import MotionReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
 
@@ -42,7 +42,7 @@ __all__ = [
     "get_gaze_mappers",
     # Readers
     "GazeReader",
-    "OdometryReader",
+    "MotionReader",
     "VideoReader",
     "OpticalFlowReader",
     # Devices
@@ -77,7 +77,7 @@ __all__ = [
 os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
 
-def load_dataset(folder, gaze=None, odometry=None):
+def load_dataset(folder, gaze=None, odometry=None, accel=None, gyro=None):
     """ Load a recording as an xarray Dataset.
 
     Parameters
@@ -95,6 +95,12 @@ def load_dataset(folder, gaze=None, odometry=None):
     odometry : str, optional
         The source of the odometry data. Can be 'recording'.
 
+    accel : str, optional
+        The source of the accel data. Can be 'recording'.
+
+    gyro : str, optional
+        The source of the gyro data. Can be 'recording'.
+
     Returns
     -------
     xarray.Dataset or tuple thereof
@@ -106,7 +112,15 @@ def load_dataset(folder, gaze=None, odometry=None):
         return_vals += (GazeReader(folder, source=gaze).load_dataset(),)
     if odometry is not None:
         return_vals += (
-            OdometryReader(folder, source=odometry).load_dataset(),
+            MotionReader(folder, "odometry", source=odometry).load_dataset(),
+        )
+    if accel is not None:
+        return_vals += (
+            MotionReader(folder, "accel", source=accel).load_dataset(),
+        )
+    if gyro is not None:
+        return_vals += (
+            MotionReader(folder, "gyro", source=gyro).load_dataset(),
         )
 
     if len(return_vals) == 1:
@@ -135,7 +149,9 @@ def get_gaze_mappers(folder):
     return mappers
 
 
-def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
+def write_netcdf(
+    folder, output_folder=None, gaze=None, odometry=None, accel=None, gyro=None
+):
     """ Export a recording in the netCDF format.
 
     Parameters
@@ -156,6 +172,12 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
 
     odometry : str, optional
         The source of the odometry data. Can be 'recording'.
+
+    accel : str, optional
+        The source of the accel data. Can be 'recording'.
+
+    gyro : str, optional
+        The source of the gyro data. Can be 'recording'.
     """
     if gaze is not None:
         if output_folder is not None:
@@ -168,7 +190,25 @@ def write_netcdf(folder, output_folder=None, gaze=None, odometry=None):
             filename = os.path.join(output_folder, "odometry.nc")
         else:
             filename = None
-        OdometryReader(folder, source=odometry).write_netcdf(filename=filename)
+        MotionReader(folder, "odometry", source=odometry).write_netcdf(
+            filename=filename
+        )
+    if accel is not None:
+        if output_folder is not None:
+            filename = os.path.join(output_folder, "accel.nc")
+        else:
+            filename = None
+        MotionReader(folder, "accel", source=accel).write_netcdf(
+            filename=filename
+        )
+    if gyro is not None:
+        if output_folder is not None:
+            filename = os.path.join(output_folder, "gyro.nc")
+        else:
+            filename = None
+        MotionReader(folder, "gyro", source=gyro).write_netcdf(
+            filename=filename
+        )
 
 
 def load_info(folder):

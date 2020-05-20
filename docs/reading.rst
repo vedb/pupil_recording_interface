@@ -193,11 +193,11 @@ can be restricted to an index range with the ``start`` and ``end`` parameters:
 Other video functionality
 .........................
 
-Eye videos can be loaded by specifying the ``source`` parameter:
+Eye videos can be loaded by specifying the ``stream`` parameter:
 
 .. doctest::
 
-    >>> interface = pri.VideoReader(pri.TEST_RECORDING, source='eye0')
+    >>> interface = pri.VideoReader(pri.TEST_RECORDING, stream='eye0')
     >>> frame = interface.load_raw_frame(100)
     >>> frame.shape
     (192, 192, 3)

@@ -1,0 +1,12 @@
+{
+    "duration_s": 31.832472562789917,
+    "meta_version": "2.1",
+    "min_player_version": "1.16",
+    "recording_name": "/home/peter/recordings/t265_pri",
+    "recording_software_name": "pupil_recording_interface",
+    "recording_software_version": "0.0.2",
+    "recording_uuid": "1e2b1855-ba93-43d3-bb96-ca1c738ae9b6",
+    "start_time_synced_s": 6869.891208312,
+    "start_time_system_s": 1589968082.2171583,
+    "system_info": "User: peter, Platform: Linux, Machine: ubd, Release: 5.3.0-51-generic, Version: #44~18.04.2-Ubuntu SMP Thu Apr 23 14:27:18 UTC 2020"
+}

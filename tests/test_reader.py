@@ -14,7 +14,7 @@ from pupil_recording_interface import (
     write_netcdf,
     get_gaze_mappers,
     BaseReader,
-    OdometryReader,
+    MotionReader,
     VideoReader,
     OpticalFlowReader,
 )
@@ -153,11 +153,11 @@ class TestFunctionalReader(object):
             "gaze_norm_pos",
         }
         assert set(odometry.data_vars) == {
-            "tracker_confidence",
+            "confidence",
             "linear_velocity",
             "angular_velocity",
-            "linear_position",
-            "angular_position",
+            "position",
+            "orientation",
         }
 
     def test_write_netcdf(self, folder):
@@ -279,46 +279,102 @@ class TestGazeReader(object):
         ds.close()
 
 
-class TestOdometryReader(object):
+class TestMotionReader(object):
     @pytest.fixture(autouse=True)
     def set_up(self):
         """"""
-        self.n_odometry = 4220
+        self.n_odometry_legacy = 4220
+        self.n_odometry = 5850
+        self.n_accel = 1939
+        self.n_gyro = 5991
 
-    def test_load_odometry(self, folder):
+    @pytest.fixture()
+    def t265_folder(self):
         """"""
-        t, c, p, q, v, w = OdometryReader._load_odometry(folder)
+        return os.path.join(
+            os.path.dirname(__file__), "test_data", "t265_test_recording"
+        )
 
-        assert t.shape == (self.n_odometry,)
-        assert c.shape == (self.n_odometry,)
-        assert c.dtype == int
-        assert p.shape == (self.n_odometry, 3)
-        assert q.shape == (self.n_odometry, 4)
-        assert v.shape == (self.n_odometry, 3)
-        assert w.shape == (self.n_odometry, 3)
-
-    def test_load_dataset(self, folder):
+    def test_load_data(self, folder, t265_folder):
         """"""
-        # from recording
-        ds = OdometryReader(folder).load_dataset()
+        # legacy odometry
+        data = MotionReader._load_data(folder)
+        assert data["timestamp"].shape == (self.n_odometry_legacy,)
+        assert data["confidence"].shape == (self.n_odometry_legacy,)
+        assert data["confidence"].dtype == int
+        assert data["position"].shape == (self.n_odometry_legacy, 3)
+        assert data["orientation"].shape == (self.n_odometry_legacy, 4)
+        assert data["linear_velocity"].shape == (self.n_odometry_legacy, 3)
+        assert data["angular_velocity"].shape == (self.n_odometry_legacy, 3)
 
+        # odometry
+        data = MotionReader._load_data(t265_folder)
+        assert data["timestamp"].shape == (self.n_odometry,)
+        assert data["confidence"].shape == (self.n_odometry,)
+        assert data["position"].shape == (self.n_odometry, 3)
+        assert data["orientation"].shape == (self.n_odometry, 4)
+        assert data["linear_velocity"].shape == (self.n_odometry, 3)
+        assert data["angular_velocity"].shape == (self.n_odometry, 3)
+        assert data["linear_acceleration"].shape == (self.n_odometry, 3)
+        assert data["angular_acceleration"].shape == (self.n_odometry, 3)
+
+        # accel
+        data = MotionReader._load_data(t265_folder, "accel")
+        assert data["timestamp"].shape == (self.n_accel,)
+        assert data["linear_acceleration"].shape == (self.n_accel, 3)
+
+        # gyro
+        data = MotionReader._load_data(t265_folder, "gyro")
+        assert data["timestamp"].shape == (self.n_gyro,)
+        assert data["angular_velocity"].shape == (self.n_gyro, 3)
+
+    def test_load_dataset(self, folder, t265_folder):
+        """"""
+        # legacy odometry
+        ds = MotionReader(folder).load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_odometry_legacy,
+            "cartesian_axis": 3,
+            "quaternion_axis": 4,
+        }
+        assert set(ds.data_vars) == {
+            "confidence",
+            "linear_velocity",
+            "angular_velocity",
+            "position",
+            "orientation",
+        }
+
+        # odometry
+        ds = MotionReader(t265_folder).load_dataset()
         assert dict(ds.sizes) == {
             "time": self.n_odometry,
             "cartesian_axis": 3,
             "quaternion_axis": 4,
         }
-
         assert set(ds.data_vars) == {
-            "tracker_confidence",
+            "confidence",
+            "linear_acceleration",
+            "angular_acceleration",
             "linear_velocity",
             "angular_velocity",
-            "linear_position",
-            "angular_position",
+            "position",
+            "orientation",
         }
 
-        # bad odometry argument
+        # accel
+        ds = MotionReader(t265_folder, "accel").load_dataset()
+        assert dict(ds.sizes) == {"time": self.n_accel, "cartesian_axis": 3}
+        assert set(ds.data_vars) == {"linear_acceleration"}
+
+        # gyro
+        ds = MotionReader(t265_folder, "gyro").load_dataset()
+        assert dict(ds.sizes) == {"time": self.n_gyro, "cartesian_axis": 3}
+        assert set(ds.data_vars) == {"angular_velocity"}
+
+        # bad source argument
         with pytest.raises(ValueError):
-            OdometryReader(folder, source="not_supported").load_dataset()
+            MotionReader(folder, source="not_supported").load_dataset()
 
 
 class TestVideoReader(object):
