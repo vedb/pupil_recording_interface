@@ -29,7 +29,10 @@ class GazeReader(BaseReader):
         super().__init__(folder)
 
         self.source = source
-        self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
+        try:
+            self.gaze_mappers = self._get_offline_gaze_mappers(self.folder)
+        except FileNotFoundError:
+            self.gaze_mappers = {}
 
     @property
     def export_name(self):

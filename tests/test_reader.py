@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 import cv2
 import numpy as np
@@ -18,6 +19,22 @@ from pupil_recording_interface import (
     VideoReader,
     OpticalFlowReader,
 )
+
+
+@pytest.fixture()
+def t265_folder():
+    """"""
+    return os.path.join(
+        os.path.dirname(__file__), "test_data", "t265_test_recording"
+    )
+
+
+@pytest.fixture()
+def t265_export_folder(t265_folder):
+    """"""
+    export_folder = os.path.join(t265_folder, "exports")
+    yield export_folder
+    shutil.rmtree(export_folder, ignore_errors=True)
 
 
 class TestBaseReader(object):
@@ -160,16 +177,35 @@ class TestFunctionalReader(object):
             "orientation",
         }
 
-    def test_write_netcdf(self, folder, export_folder):
+    def test_write_netcdf(
+        self, folder, t265_folder, export_folder, t265_export_folder
+    ):
         """"""
         pytest.importorskip("netCDF4")
 
+        # packaged recording
         write_netcdf(folder, gaze="recording", odometry="recording")
-
         assert os.path.exists(
             os.path.join(export_folder, "000", "odometry.nc")
         )
         assert os.path.exists(os.path.join(export_folder, "000", "gaze.nc"))
+
+        # test data recording
+        write_netcdf(
+            t265_folder,
+            odometry="recording",
+            accel="recording",
+            gyro="recording",
+        )
+        assert os.path.exists(
+            os.path.join(t265_export_folder, "000", "odometry.nc")
+        )
+        assert os.path.exists(
+            os.path.join(t265_export_folder, "000", "accel.nc")
+        )
+        assert os.path.exists(
+            os.path.join(t265_export_folder, "000", "gyro.nc")
+        )
 
     def test_get_gaze_mappers(self, folder):
         """"""
@@ -186,7 +222,19 @@ class TestGazeReader(object):
         self.n_gaze_offline = 5134
         self.gaze_mappers = {"2d": "2d Gaze Mapper ", "3d": "3d Gaze Mapper"}
 
-    def test_load_gaze(self, folder):
+    def test_constructor(self, folder, t265_folder):
+        """"""
+        reader = GazeReader(folder)
+        assert set(reader.gaze_mappers.keys()) == {
+            "3d Gaze Mapper",
+            "2d Gaze Mapper ",
+        }
+
+        # no offline mappers
+        reader = GazeReader(t265_folder)
+        assert reader.gaze_mappers == {}
+
+    def test_load_gaze(self, folder, t265_folder):
         """"""
         t, c, n, p = GazeReader._load_gaze(folder)
 
@@ -194,6 +242,10 @@ class TestGazeReader(object):
         assert c.shape == (self.n_gaze,)
         assert n.shape == (self.n_gaze, 2)
         assert p.shape == (self.n_gaze, 3)
+
+        # no gaze
+        with pytest.raises(FileNotFoundError):
+            GazeReader._load_gaze(t265_folder)
 
     def test_load_merged_gaze(self, folder):
         """"""
@@ -289,13 +341,6 @@ class TestMotionReader(object):
         self.n_odometry = 5850
         self.n_accel = 1939
         self.n_gyro = 5991
-
-    @pytest.fixture()
-    def t265_folder(self):
-        """"""
-        return os.path.join(
-            os.path.dirname(__file__), "test_data", "t265_test_recording"
-        )
 
     def test_load_data(self, folder, t265_folder):
         """"""
