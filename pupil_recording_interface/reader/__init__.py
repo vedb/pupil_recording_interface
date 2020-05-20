@@ -175,16 +175,19 @@ class BaseReader(object):
         ----------
         filename : str, optional
             The name of the exported file. Defaults to
-            `<recording_folder>/exports/<datatype>.nc` where `<datatype>` is
-            `gaze`, `odometry` etc.
+            ``<recording_folder>/exports/<no>/<datatype>.nc`` where
+            ``<datatype>`` is `gaze`, `odometry` etc.
         """
         ds = self.load_dataset()
         encoding = self._get_encoding(ds.data_vars)
 
         if filename is None:
-            filename = os.path.join(
-                self.folder, "exports", self.export_name + ".nc"
-            )
+            folder = os.path.join(self.folder, "exports")
+            counter = 0
+            while os.path.exists(os.path.join(folder, f"{counter:03d}")):
+                counter += 1
+            folder = os.path.join(folder, f"{counter:03d}")
+            filename = os.path.join(folder, self.export_name + ".nc")
 
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)

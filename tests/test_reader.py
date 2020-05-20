@@ -160,14 +160,16 @@ class TestFunctionalReader(object):
             "orientation",
         }
 
-    def test_write_netcdf(self, folder):
+    def test_write_netcdf(self, folder, export_folder):
         """"""
-        pytest.importorskip("netcdf4")
+        pytest.importorskip("netCDF4")
 
         write_netcdf(folder, gaze="recording", odometry="recording")
 
-        assert os.path.exists(os.path.join(folder, "exports", "odometry.nc"))
-        assert os.path.exists(os.path.join(folder, "exports", "gaze.nc"))
+        assert os.path.exists(
+            os.path.join(export_folder, "000", "odometry.nc")
+        )
+        assert os.path.exists(os.path.join(export_folder, "000", "gaze.nc"))
 
     def test_get_gaze_mappers(self, folder):
         """"""

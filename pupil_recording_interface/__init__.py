@@ -179,35 +179,29 @@ def write_netcdf(
     gyro : str, optional
         The source of the gyro data. Can be 'recording'.
     """
+
+    if output_folder is None:
+        output_folder = os.path.join(folder, "exports")
+        counter = 0
+        while os.path.exists(os.path.join(output_folder, f"{counter:03d}")):
+            counter += 1
+        output_folder = os.path.join(output_folder, f"{counter:03d}")
+
     if gaze is not None:
-        if output_folder is not None:
-            filename = os.path.join(output_folder, "gaze.nc")
-        else:
-            filename = None
-        GazeReader(folder, source=gaze).write_netcdf(filename=filename)
+        GazeReader(folder, source=gaze).write_netcdf(
+            filename=os.path.join(output_folder, "gaze.nc")
+        )
     if odometry is not None:
-        if output_folder is not None:
-            filename = os.path.join(output_folder, "odometry.nc")
-        else:
-            filename = None
         MotionReader(folder, "odometry", source=odometry).write_netcdf(
-            filename=filename
+            filename=os.path.join(output_folder, "odometry.nc")
         )
     if accel is not None:
-        if output_folder is not None:
-            filename = os.path.join(output_folder, "accel.nc")
-        else:
-            filename = None
         MotionReader(folder, "accel", source=accel).write_netcdf(
-            filename=filename
+            filename=os.path.join(output_folder, "accel.nc")
         )
     if gyro is not None:
-        if output_folder is not None:
-            filename = os.path.join(output_folder, "gyro.nc")
-        else:
-            filename = None
         MotionReader(folder, "gyro", source=gyro).write_netcdf(
-            filename=filename
+            filename=os.path.join(output_folder, "gyro.nc")
         )
 
 
