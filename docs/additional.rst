@@ -19,17 +19,18 @@ Recorded odometry data can be loaded the same way as gaze data:
     >>> import pupil_recording_interface as pri
     >>> pri.load_dataset(pri.TEST_RECORDING, odometry='recording')
     <xarray.Dataset>
-    Dimensions:             (cartesian_axis: 3, quaternion_axis: 4, time: 4220)
+    Dimensions:           (cartesian_axis: 3, quaternion_axis: 4, time: 4220)
     Coordinates:
-      * time                (time) datetime64[ns] 2019-10-10T16:43:20.287212849 ... 2019-10-10T16:43:41.390241861
-      * cartesian_axis      (cartesian_axis) <U1 'x' 'y' 'z'
-      * quaternion_axis     (quaternion_axis) <U1 'w' 'x' 'y' 'z'
+      * time              (time) datetime64[ns] 2019-10-10T16:43:20.287212849 ... 2019-10-10T16:43:41.390241861
+      * cartesian_axis    (cartesian_axis) <U1 'x' 'y' 'z'
+      * quaternion_axis   (quaternion_axis) <U1 'w' 'x' 'y' 'z'
     Data variables:
-        tracker_confidence  (time) int64 3 3 3 3 3 3 3 3 3 3 ... 3 3 3 3 3 3 3 3 3 3
-        linear_velocity     (time, cartesian_axis) float64 0.001013 ... 0.004487
-        angular_velocity    (time, cartesian_axis) float64 -0.01463 ... -0.008532
-        linear_position     (time, cartesian_axis) float64 -0.1463 ... 0.001237
-        angular_position    (time, quaternion_axis) float64 0.004093 ... 0.06829
+        position          (time, cartesian_axis) float64 -0.1463 0.2765 ... 0.001237
+        linear_velocity   (time, cartesian_axis) float64 0.001013 ... 0.004487
+        angular_velocity  (time, cartesian_axis) float64 -0.01463 ... -0.008532
+        confidence        (time) int64 3 3 3 3 3 3 3 3 3 3 3 ... 3 3 3 3 3 3 3 3 3 3
+        orientation       (time, quaternion_axis) float64 0.004093 ... 0.06829
+
 
 The dataset contains linear and angular position, linear and angular
 velocity as well as the confidence of the tracking.

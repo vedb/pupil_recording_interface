@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 import cv2
 import numpy as np
@@ -14,10 +15,26 @@ from pupil_recording_interface import (
     write_netcdf,
     get_gaze_mappers,
     BaseReader,
-    OdometryReader,
+    MotionReader,
     VideoReader,
     OpticalFlowReader,
 )
+
+
+@pytest.fixture()
+def t265_folder():
+    """"""
+    return os.path.join(
+        os.path.dirname(__file__), "test_data", "t265_test_recording"
+    )
+
+
+@pytest.fixture()
+def t265_export_folder(t265_folder):
+    """"""
+    export_folder = os.path.join(t265_folder, "exports")
+    yield export_folder
+    shutil.rmtree(export_folder, ignore_errors=True)
 
 
 class TestBaseReader(object):
@@ -153,21 +170,42 @@ class TestFunctionalReader(object):
             "gaze_norm_pos",
         }
         assert set(odometry.data_vars) == {
-            "tracker_confidence",
+            "confidence",
             "linear_velocity",
             "angular_velocity",
-            "linear_position",
-            "angular_position",
+            "position",
+            "orientation",
         }
 
-    def test_write_netcdf(self, folder):
+    def test_write_netcdf(
+        self, folder, t265_folder, export_folder, t265_export_folder
+    ):
         """"""
-        pytest.importorskip("netcdf4")
+        pytest.importorskip("netCDF4")
 
+        # packaged recording
         write_netcdf(folder, gaze="recording", odometry="recording")
+        assert os.path.exists(
+            os.path.join(export_folder, "000", "odometry.nc")
+        )
+        assert os.path.exists(os.path.join(export_folder, "000", "gaze.nc"))
 
-        assert os.path.exists(os.path.join(folder, "exports", "odometry.nc"))
-        assert os.path.exists(os.path.join(folder, "exports", "gaze.nc"))
+        # test data recording
+        write_netcdf(
+            t265_folder,
+            odometry="recording",
+            accel="recording",
+            gyro="recording",
+        )
+        assert os.path.exists(
+            os.path.join(t265_export_folder, "000", "odometry.nc")
+        )
+        assert os.path.exists(
+            os.path.join(t265_export_folder, "000", "accel.nc")
+        )
+        assert os.path.exists(
+            os.path.join(t265_export_folder, "000", "gyro.nc")
+        )
 
     def test_get_gaze_mappers(self, folder):
         """"""
@@ -184,7 +222,19 @@ class TestGazeReader(object):
         self.n_gaze_offline = 5134
         self.gaze_mappers = {"2d": "2d Gaze Mapper ", "3d": "3d Gaze Mapper"}
 
-    def test_load_gaze(self, folder):
+    def test_constructor(self, folder, t265_folder):
+        """"""
+        reader = GazeReader(folder)
+        assert set(reader.gaze_mappers.keys()) == {
+            "3d Gaze Mapper",
+            "2d Gaze Mapper ",
+        }
+
+        # no offline mappers
+        reader = GazeReader(t265_folder)
+        assert reader.gaze_mappers == {}
+
+    def test_load_gaze(self, folder, t265_folder):
         """"""
         t, c, n, p = GazeReader._load_gaze(folder)
 
@@ -192,6 +242,10 @@ class TestGazeReader(object):
         assert c.shape == (self.n_gaze,)
         assert n.shape == (self.n_gaze, 2)
         assert p.shape == (self.n_gaze, 3)
+
+        # no gaze
+        with pytest.raises(FileNotFoundError):
+            GazeReader._load_gaze(t265_folder)
 
     def test_load_merged_gaze(self, folder):
         """"""
@@ -279,46 +333,95 @@ class TestGazeReader(object):
         ds.close()
 
 
-class TestOdometryReader(object):
+class TestMotionReader(object):
     @pytest.fixture(autouse=True)
     def set_up(self):
         """"""
-        self.n_odometry = 4220
+        self.n_odometry_legacy = 4220
+        self.n_odometry = 5850
+        self.n_accel = 1939
+        self.n_gyro = 5991
 
-    def test_load_odometry(self, folder):
+    def test_load_data(self, folder, t265_folder):
         """"""
-        t, c, p, q, v, w = OdometryReader._load_odometry(folder)
+        # legacy odometry
+        data = MotionReader._load_data(folder)
+        assert data["timestamp"].shape == (self.n_odometry_legacy,)
+        assert data["confidence"].shape == (self.n_odometry_legacy,)
+        assert data["confidence"].dtype == int
+        assert data["position"].shape == (self.n_odometry_legacy, 3)
+        assert data["orientation"].shape == (self.n_odometry_legacy, 4)
+        assert data["linear_velocity"].shape == (self.n_odometry_legacy, 3)
+        assert data["angular_velocity"].shape == (self.n_odometry_legacy, 3)
 
-        assert t.shape == (self.n_odometry,)
-        assert c.shape == (self.n_odometry,)
-        assert c.dtype == int
-        assert p.shape == (self.n_odometry, 3)
-        assert q.shape == (self.n_odometry, 4)
-        assert v.shape == (self.n_odometry, 3)
-        assert w.shape == (self.n_odometry, 3)
+        # odometry
+        data = MotionReader._load_data(t265_folder)
+        assert data["timestamp"].shape == (self.n_odometry,)
+        assert data["confidence"].shape == (self.n_odometry,)
+        assert data["position"].shape == (self.n_odometry, 3)
+        assert data["orientation"].shape == (self.n_odometry, 4)
+        assert data["linear_velocity"].shape == (self.n_odometry, 3)
+        assert data["angular_velocity"].shape == (self.n_odometry, 3)
+        assert data["linear_acceleration"].shape == (self.n_odometry, 3)
+        assert data["angular_acceleration"].shape == (self.n_odometry, 3)
 
-    def test_load_dataset(self, folder):
+        # accel
+        data = MotionReader._load_data(t265_folder, "accel")
+        assert data["timestamp"].shape == (self.n_accel,)
+        assert data["linear_acceleration"].shape == (self.n_accel, 3)
+
+        # gyro
+        data = MotionReader._load_data(t265_folder, "gyro")
+        assert data["timestamp"].shape == (self.n_gyro,)
+        assert data["angular_velocity"].shape == (self.n_gyro, 3)
+
+    def test_load_dataset(self, folder, t265_folder):
         """"""
-        # from recording
-        ds = OdometryReader(folder).load_dataset()
+        # legacy odometry
+        ds = MotionReader(folder).load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_odometry_legacy,
+            "cartesian_axis": 3,
+            "quaternion_axis": 4,
+        }
+        assert set(ds.data_vars) == {
+            "confidence",
+            "linear_velocity",
+            "angular_velocity",
+            "position",
+            "orientation",
+        }
 
+        # odometry
+        ds = MotionReader(t265_folder).load_dataset()
         assert dict(ds.sizes) == {
             "time": self.n_odometry,
             "cartesian_axis": 3,
             "quaternion_axis": 4,
         }
-
         assert set(ds.data_vars) == {
-            "tracker_confidence",
+            "confidence",
+            "linear_acceleration",
+            "angular_acceleration",
             "linear_velocity",
             "angular_velocity",
-            "linear_position",
-            "angular_position",
+            "position",
+            "orientation",
         }
 
-        # bad odometry argument
+        # accel
+        ds = MotionReader(t265_folder, "accel").load_dataset()
+        assert dict(ds.sizes) == {"time": self.n_accel, "cartesian_axis": 3}
+        assert set(ds.data_vars) == {"linear_acceleration"}
+
+        # gyro
+        ds = MotionReader(t265_folder, "gyro").load_dataset()
+        assert dict(ds.sizes) == {"time": self.n_gyro, "cartesian_axis": 3}
+        assert set(ds.data_vars) == {"angular_velocity"}
+
+        # bad source argument
         with pytest.raises(ValueError):
-            OdometryReader(folder, source="not_supported").load_dataset()
+            MotionReader(folder, source="not_supported").load_dataset()
 
 
 class TestVideoReader(object):

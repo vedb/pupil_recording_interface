@@ -68,7 +68,7 @@ class TestVideoRecorder:
         """"""
 
 
-class TestOdometryRecorder:
+class TestMotionRecorder:
     @pytest.mark.skip("Not yet implemented")
     def test_from_config(self, folder):
         """"""
@@ -250,7 +250,7 @@ class TestCamParamEstimator:
         assert cam_mtx.shape == (3, 3)
         assert dist_coefs.shape == (4, 1)
 
-    # @pytest.mark.skip(reason="Hangs sometimes for no apparent reason")
+    @pytest.mark.skip(reason="Hangs sometimes for no apparent reason")
     def test_calculate_extrinsics(self, cam_param_estimator, patterns):
         """"""
         cam_mtx_a, dist_coefs_a = calculate_intrinsics(

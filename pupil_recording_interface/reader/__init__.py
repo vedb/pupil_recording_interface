@@ -13,37 +13,35 @@ from pupil_recording_interface.externals.file_methods import load_pldata_file
 class BaseReader(object):
     """ Base class for all readers. """
 
-    def __init__(self, folder, source="recording"):
+    def __init__(self, folder):
         """ Constructor.
 
         Parameters
         ----------
         folder : str
             Path to the recording folder.
-
-        source : str, default 'recording'
-            The source of the data. If 'recording', the recorded data will
-            be used.
         """
         if not os.path.exists(folder):
             raise FileNotFoundError(f"No such folder: {folder}")
 
         self.folder = folder
-        self.source = source
 
         if os.path.exists(os.path.join(self.folder, "info.csv")):
             self.info = self._load_info(self.folder, "info.csv")
         else:
             self.info = self._load_info(self.folder)
 
-        self.user_info = self._load_user_info(
-            self.folder, self.info["start_time_system_s"]
-        )
+        try:
+            self.user_info = self._load_user_info(
+                self.folder, self.info["start_time_system_s"]
+            )
+        except FileNotFoundError:
+            self.user_info = {}
 
     @property
-    def _nc_name(self):
-        """ Name of exported netCDF file. """
-        return "base"
+    @abc.abstractmethod
+    def export_name(self):
+        """ Name of exported files. """
 
     @staticmethod
     def _load_legacy_info(file_handle):
@@ -177,16 +175,19 @@ class BaseReader(object):
         ----------
         filename : str, optional
             The name of the exported file. Defaults to
-            `<recording_folder>/exports/<datatype>.nc` where `<datatype>` is
-            `gaze`, `odometry` etc.
+            ``<recording_folder>/exports/<no>/<datatype>.nc`` where
+            ``<datatype>`` is `gaze`, `odometry` etc.
         """
         ds = self.load_dataset()
         encoding = self._get_encoding(ds.data_vars)
 
         if filename is None:
-            filename = os.path.join(
-                self.folder, "exports", self._nc_name + ".nc"
-            )
+            folder = os.path.join(self.folder, "exports")
+            counter = 0
+            while os.path.exists(os.path.join(folder, f"{counter:03d}")):
+                counter += 1
+            folder = os.path.join(folder, f"{counter:03d}")
+            filename = os.path.join(folder, self.export_name + ".nc")
 
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)

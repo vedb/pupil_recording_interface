@@ -20,7 +20,7 @@ class VideoReader(BaseReader):
     def __init__(
         self,
         folder,
-        source="world",
+        stream="world",
         color_format=None,
         norm_pos=None,
         roi_size=None,
@@ -35,9 +35,8 @@ class VideoReader(BaseReader):
         folder : str
             Path to the recording folder.
 
-        source : str, default 'world'
-            The source of the data. If 'recording', the recorded data will
-            be used.
+        stream : str, default 'world'
+            The name of the video stream to read.
 
         color_format : str, optional
             If 'gray', convert video frames to grayscale.
@@ -53,7 +52,7 @@ class VideoReader(BaseReader):
 
         interpolation_method : str, default 'linear'
             Interpolation method for matching norm pos timestamps with video
-            timestamps (See `norm_pos`).
+            timestamps (see `norm_pos`).
 
         video_offset : float, default 0.
             The offset of the video frames wrt to their recorded timestamps.
@@ -65,13 +64,15 @@ class VideoReader(BaseReader):
             If specified, sub-sample each frame by this factor. Sub-sampling
             is applied before ROI extraction.
         """
-        super(VideoReader, self).__init__(folder, source=source)
+        super().__init__(folder)
+
+        self.stream = stream
         self.color_format = color_format
         self.roi_size = roi_size
         self.subsampling = subsampling
 
         self.timestamps = self._load_timestamps_as_datetimeindex(
-            self.folder, self.source, self.info, video_offset
+            self.folder, self.stream, self.info, video_offset
         )
 
         # resample norm pos to video timestamps
@@ -90,16 +91,16 @@ class VideoReader(BaseReader):
             self.folder
         )
 
-        self.capture = self._get_capture(self.folder, source)
+        self.capture = self._get_capture(self.folder, stream)
         self.resolution = self._get_resolution(self.capture)
         self.frame_count = self._get_frame_count(self.capture)
         self.frame_shape = self.load_frame(0).shape
         self.fps = self._get_fps(self.capture)
 
     @property
-    def _nc_name(self):
-        """ Name of exported netCDF file. """
-        return self.source
+    def export_name(self):
+        """ Name of exported files. """
+        return self.stream
 
     @property
     def video_info(self):
@@ -363,7 +364,7 @@ class VideoReader(BaseReader):
             The timestamps for each frame.
         """
         return self._load_timestamps_as_datetimeindex(
-            self.folder, self.source, self.info
+            self.folder, self.stream, self.info
         )
 
     def process_frame(self, frame, norm_pos=None):
@@ -556,7 +557,7 @@ class VideoReader(BaseReader):
 class OpticalFlowReader(VideoReader):
     """ Reader for extracting optical flow from video data. """
 
-    def __init__(self, folder, source="world", **kwargs):
+    def __init__(self, folder, stream="world", **kwargs):
         """ Constructor.
 
         Parameters
@@ -564,9 +565,8 @@ class OpticalFlowReader(VideoReader):
         folder : str
             Path to the recording folder.
 
-        source : str, default 'world'
-            The source of the data. If 'recording', the recorded data will
-            be used.
+        stream : str, default 'world'
+            The name of the video stream to read.
 
         **kwargs : optional
             Additional parameters passed to the ``VideoReader`` constructor.
@@ -575,16 +575,14 @@ class OpticalFlowReader(VideoReader):
         --------
         VideoReader
         """
-        super(OpticalFlowReader, self).__init__(
-            folder, source=source, color_format="gray", **kwargs
-        )
+        super().__init__(folder, stream=stream, color_format="gray", **kwargs)
 
         self.flow_shape = self.load_optical_flow(0).shape
 
     @property
-    def _nc_name(self):
-        """ Name of exported netCDF file. """
-        return "optical_flow"
+    def export_name(self):
+        """ Name of exported files. """
+        return f"optical_flow_{self.stream}"
 
     @staticmethod
     def _get_valid_idx(norm_pos, frame_shape, roi_size):

@@ -30,7 +30,7 @@ Reader classes
     :toctree: _generated
 
     GazeReader
-    OdometryReader
+    MotionReader
     VideoReader
     OpticalFlowReader
 
