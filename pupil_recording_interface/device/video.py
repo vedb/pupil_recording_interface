@@ -41,6 +41,10 @@ class BaseVideoDevice(BaseDevice):
             Desired camera refresh rate.
         """
         super().__init__(device_uid)
+        if not hasattr(self, "device_type"):
+            # Usually set by the @device decorator, but can break things when
+            # missing
+            self.device_type = "video"
 
         self.resolution = resolution
         self.fps = fps
@@ -82,7 +86,10 @@ class BaseVideoDevice(BaseDevice):
             try:
                 self.start()
             except DeviceNotConnected:
-                logger.debug("Device is not connected, waiting for 1 second")
+                logger.debug(
+                    f"{self.device_type} device {self.device_uid} "
+                    f"is not connected, waiting for 1 second"
+                )
                 time.sleep(1)
 
 

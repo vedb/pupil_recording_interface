@@ -252,20 +252,26 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
         return camera
 
+    def start(self):
+        """ Start the device. """
+        super().start()
+        self.device_uid = self.device_uid or self.capture.nodemap.get_value(
+            "DeviceSerialNumber", "str"
+        )
+
     def stop(self):
         """ Stop the device. """
         import PySpin
 
         try:
-            self.capture.stop()
+            self.capture.cam.EndAcquisition()
         except PySpin.SpinnakerException as e:
-            logger.debug(f"Could not stop camera, might be disconnected: {e}")
-
+            logger.debug(f"Could not stop camera: {e}")
         try:
-            self.capture.running = False
-            self.capture.close()
-        except PySpin.SpinnakerException:
-            pass
+            self.capture.cam.DeInit()
+        except PySpin.SpinnakerException as e:
+            logger.debug(f"Could not de-init camera: {e}")
+        del self.capture.cam
 
         self.capture = None
         logger.debug("Stopped FLIR camera")
