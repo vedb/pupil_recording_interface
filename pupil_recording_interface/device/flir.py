@@ -321,7 +321,10 @@ class VideoDeviceFLIR(BaseVideoDevice):
             frame = frame.GetNDArray()
 
         except PySpin.SpinnakerException as e:
-            logger.error(f"FLIR device {self.device_uid} streaming error: {e}")
+            logger.error(
+                f"{self.device_type} device {self.device_uid} "
+                f"streaming error: {e}"
+            )
             self.restart()
             return self.get_frame_and_timestamp(mode)
 
