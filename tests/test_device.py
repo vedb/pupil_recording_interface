@@ -5,11 +5,7 @@ from pupil_recording_interface.device.video import (
     BaseVideoDevice,
     VideoDeviceUVC,
 )
-from pupil_recording_interface.device.flir import (
-    VideoDeviceFLIR,
-    FLIRCapture,
-    get_value,
-)
+from pupil_recording_interface.device.flir import VideoDeviceFLIR
 from pupil_recording_interface.device.realsense import RealSenseDeviceT265
 from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 
@@ -77,37 +73,17 @@ class TestVideoDeviceFLIR:
         """"""
         return pytest.importorskip("PySpin")
 
-    @pytest.fixture()
-    def system(self, PySpin):
+    @pytest.fixture(autouse=True)
+    def simple_pyspin(self):
         """"""
-        return PySpin.System.GetInstance()
-
-    @pytest.fixture()
-    def connected_cameras(self, system):
-        """"""
-        return [
-            get_value(cam.GetTLDeviceNodeMap(), "DeviceSerialNumber", "str")
-            for cam in system.GetCameras()
-        ]
+        return pytest.importorskip("simple_pyspin")
 
     @pytest.mark.xfail(raises=DeviceNotConnected)
-    def test_get_camera(self, PySpin, system, connected_cameras):
+    def test_get_capture(self, simple_pyspin):
         """"""
-        assert isinstance(
-            VideoDeviceFLIR.get_camera(None, system), PySpin.CameraPtr
-        )
-        for serial_number in connected_cameras:
-            assert isinstance(
-                VideoDeviceFLIR.get_camera(serial_number, system),
-                PySpin.CameraPtr,
-            )
-
-    @pytest.mark.xfail(raises=DeviceNotConnected)
-    def test_get_capture(self):
-        """"""
-        assert isinstance(
-            VideoDeviceFLIR.get_capture(None, (2048, 1536), 30.0), FLIRCapture
-        )
+        capture = VideoDeviceFLIR.get_capture(None, (2048, 1536), 30.0)
+        assert isinstance(capture, simple_pyspin.Camera)
+        capture.close()
 
         # custom settings
         VideoDeviceFLIR.get_capture(

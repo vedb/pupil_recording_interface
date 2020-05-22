@@ -40,7 +40,7 @@ class BaseVideoDevice(BaseDevice):
         fps: int
             Desired camera refresh rate.
         """
-        super(BaseVideoDevice, self).__init__(device_uid)
+        super().__init__(device_uid)
 
         self.resolution = resolution
         self.fps = fps
@@ -74,6 +74,16 @@ class BaseVideoDevice(BaseDevice):
     def stop(self):
         """ Stop this device. """
         self.capture = None
+
+    def restart(self):
+        """ Try restarting this device. """
+        self.stop()
+        while not self.is_started:
+            try:
+                self.start()
+            except DeviceNotConnected:
+                logger.debug("Device is not connected, waiting for 1 second")
+                time.sleep(1)
 
 
 @device("uvc")
@@ -243,7 +253,7 @@ class VideoDeviceUVC(BaseVideoDevice):
             The retrieved video frame.
 
         timestamp: float
-            The timestamp in of the frame.
+            The timestamp of the frame.
         """
         import uvc
 

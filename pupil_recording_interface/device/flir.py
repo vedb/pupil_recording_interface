@@ -1,5 +1,6 @@
 """"""
-from datetime import datetime
+import time
+import statistics
 import logging
 
 from pupil_recording_interface.decorators import device
@@ -10,77 +11,68 @@ from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 logger = logging.getLogger(__name__)
 
 
-def get_value(nodemap, node_name, value_type):
-    """ Get a value from a nodemap. """
-    import PySpin
-
-    try:
-        if value_type == "bool":
-            node = PySpin.CBooleanPtr(nodemap.GetNode(node_name))
-        elif value_type == "int":
-            node = PySpin.CIntegerPtr(nodemap.GetNode(node_name))
-        elif value_type == "float":
-            node = PySpin.CFloatPtr(nodemap.GetNode(node_name))
-        elif value_type == "str":
-            node = PySpin.CStringPtr(nodemap.GetNode(node_name))
-        else:
-            raise ValueError(f"Unrecognized value type: {value_type}")
-
-        return node.GetValue()
-
-    except PySpin.SpinnakerException as e:
-        raise ValueError(
-            f"Could not get {node_name} of type {value_type}, reason: {e}"
-        )
-
-
-def set_value(nodemap, node_name, value):
-    """ Set a value of a nodemap. """
-    import PySpin
-
-    try:
-        # TODO check if we need to set string values
-        if isinstance(value, str):
-            node = PySpin.CEnumerationPtr(nodemap.GetNode(node_name))
-            entry = node.GetEntryByName(value)
-            node.SetIntValue(entry.GetValue())
-        elif isinstance(value, bool):
-            node = PySpin.CBooleanPtr(nodemap.GetNode(node_name))
-            node.SetValue(value)
-        elif isinstance(value, int):
-            node = PySpin.CIntegerPtr(nodemap.GetNode(node_name))
-            node.SetValue(value)
-        elif isinstance(value, float):
-            node = PySpin.CFloatPtr(nodemap.GetNode(node_name))
-            node.SetValue(value)
-        else:
-            raise ValueError(f"Unsupported value type: {type(value)}")
-
-    except PySpin.SpinnakerException as e:
-        raise IllegalSetting(
-            f"Could not set {node_name} of type {type(value)} to {value}, "
-            f"reason: {e}"
-        )
-
-
-class FLIRCapture:
-    """ Capture wrapper for FLIR camera.
-
-    This class is mostly required because of the questionable implementation
-    of the Spinnaker Python wrapper, requiring the user to keep references
-    to unused objects around to avoid dereferencing of the few C++ objects
-    that are actually used.
-    """
-
-    def __init__(
-        self, camera_type, camera, nodemap, system, timestamp_offset,
-    ):
+class Nodemap:
+    def __init__(self, camera, nodemap="camera"):
         """ Constructor. """
-        self.camera_type = camera_type
-        self.camera = camera
-        self.nodemap = nodemap
-        self.system = system
-        self.timestamp_offset = timestamp_offset
+        if nodemap == "camera":
+            self._nodemap = camera.GetNodeMap()
+        elif nodemap == "device":
+            self._nodemap = camera.GetTLDeviceNodeMap()
+        elif nodemap == "stream":
+            self._nodemap = camera.GetTLStreamNodeMap()
+        else:
+            raise ValueError(f"Unknown nodemap: {nodemap}")
+
+    def get_value(self, node_name, value_type):
+        """ Get a value from a nodemap. """
+        import PySpin
+
+        try:
+            if value_type == "bool":
+                node = PySpin.CBooleanPtr(self._nodemap.GetNode(node_name))
+            elif value_type == "int":
+                node = PySpin.CIntegerPtr(self._nodemap.GetNode(node_name))
+            elif value_type == "float":
+                node = PySpin.CFloatPtr(self._nodemap.GetNode(node_name))
+            elif value_type == "str":
+                node = PySpin.CStringPtr(self._nodemap.GetNode(node_name))
+            else:
+                raise ValueError(f"Unrecognized value type: {value_type}")
+
+            return node.GetValue()
+
+        except PySpin.SpinnakerException as e:
+            raise ValueError(
+                f"Could not get {node_name} of type {value_type}, reason: {e}"
+            )
+
+    def set_value(self, node_name, value):
+        """ Set a value of a nodemap. """
+        import PySpin
+
+        try:
+            # TODO check if we need to set string values
+            if isinstance(value, str):
+                node = PySpin.CEnumerationPtr(self._nodemap.GetNode(node_name))
+                entry = node.GetEntryByName(value)
+                node.SetIntValue(entry.GetValue())
+            elif isinstance(value, bool):
+                node = PySpin.CBooleanPtr(self._nodemap.GetNode(node_name))
+                node.SetValue(value)
+            elif isinstance(value, int):
+                node = PySpin.CIntegerPtr(self._nodemap.GetNode(node_name))
+                node.SetValue(value)
+            elif isinstance(value, float):
+                node = PySpin.CFloatPtr(self._nodemap.GetNode(node_name))
+                node.SetValue(value)
+            else:
+                raise ValueError(f"Unsupported value type: {type(value)}")
+
+        except PySpin.SpinnakerException as e:
+            raise IllegalSetting(
+                f"Could not set {node_name} of type {type(value)} to {value}, "
+                f"reason: {e}"
+            )
 
 
 @device("flir")
@@ -109,39 +101,31 @@ class VideoDeviceFLIR(BaseVideoDevice):
         self.timebase = "epoch"
 
     @classmethod
-    def _compute_timestamp_offset(cls, cam, number_of_iterations, camera_type):
-        """ Gets timestamp offset in seconds from input camera """
+    def _compute_timestamp_offset(cls, cam, n_iterations):
+        """ Gets timestamp offset in seconds from input camera.
 
-        import statistics
-
-        # This method is required because the timestamp stored in the camera is
-        # relative to when it was powered on, so an offset needs to be applied
-        # to get it into epoch time; from tests I've done, this appears to be
-        # accurate to ~1e-3 seconds.
-        logger.debug("Measuring TimeStamp Offset ...")
+        This method is required because the timestamp stored in the camera is
+        relative to when it was powered on, so an offset needs to be applied
+        to get it into epoch time; from tests I've done, this appears to be
+        accurate to ~1e-3 seconds.
+        """
+        logger.debug("Measuring timestamp offset ...")
         timestamp_offsets = []
 
-        for i in range(number_of_iterations):
+        for i in range(n_iterations):
             # Latch timestamp. This basically "freezes" the current camera
             # timer into a variable that can be read with TimestampLatchValue()
             cam.TimestampLatch.Execute()
 
             # Compute timestamp offset in seconds; note that timestamp latch
             # value is in nanoseconds
-
-            if camera_type == "BlackFly":
+            try:
+                timestamp_offset = time.time() - cam.Timestamp.GetValue() / 1e9
+            except AttributeError:
                 timestamp_offset = (
-                    datetime.now().timestamp()
-                    - cam.TimestampLatchValue.GetValue() / 1e9
+                    time.time() - cam.TimestampLatchValue.GetValue() / 1e9
                 )
-            elif camera_type == "Chameleon":
-                timestamp_offset = (
-                    datetime.now().timestamp() - cam.Timestamp.GetValue() / 1e9
-                )
-            else:
-                raise ValueError(f"Invalid camera type: {camera_type}")
 
-            # Append
             timestamp_offsets.append(timestamp_offset)
 
         # Return the median value
@@ -155,8 +139,6 @@ class VideoDeviceFLIR(BaseVideoDevice):
         comments on printing device information from the nodemap.
         """
         import PySpin
-
-        logger.debug("*** DEVICE INFORMATION ***\n")
 
         try:
             node_device_information = PySpin.CCategoryPtr(
@@ -185,117 +167,107 @@ class VideoDeviceFLIR(BaseVideoDevice):
             logger.error(str(ex))
 
     @classmethod
-    def get_camera(cls, serial_number, system):
-        """ Get camera by serial number """
-        import PySpin
-
-        cam_list = system.GetCameras()
-        logger.debug(f"Number of cameras detected: {cam_list.GetSize()}")
-        if serial_number is not None:
-            try:
-                camera = cam_list.GetBySerial(serial_number)
-            except PySpin.SpinnakerException:
-                cam_list.Clear()
-                raise DeviceNotConnected(
-                    f"Camera with serial number {serial_number} not connected"
-                )
-        else:
-            try:
-                camera = cam_list.GetByIndex(0)
-            except PySpin.SpinnakerException:
-                cam_list.Clear()
-                raise DeviceNotConnected("No FLIR cameras connected")
-
-        return camera
-
-    @classmethod
     def get_capture(cls, serial_number, resolution, fps, settings=None):
         """ Get a capture instance for a device by name. """
         import PySpin
+        from simple_pyspin import Camera, CameraError
 
-        system = PySpin.System.GetInstance()
+        try:
+            camera = Camera(serial_number or 0, lock=False)
+        except CameraError as e:
+            raise DeviceNotConnected(str(e))
 
         # initialize camera
-        camera = cls.get_camera(serial_number, system)
-        camera.Init()
-        nodemap = camera.GetNodeMap()
-        device_nodemap = camera.GetTLDeviceNodeMap()
-        stream_nodemap = camera.GetTLStreamNodeMap()
+        camera.init()
+        camera.nodemap = Nodemap(camera.cam)
+        camera.stream_nodemap = Nodemap(camera.cam, "stream")
+        camera.device_nodemap = Nodemap(camera.cam, "device")
 
         # get model
-        device_model = get_value(nodemap, "DeviceModelName", "str")
+        device_model = camera.device_nodemap.get_value(
+            "DeviceModelName", "str"
+        )
         if "Chameleon" in device_model:
-            camera_type = "Chameleon"
+            camera.camera_type = "Chameleon"
         elif "Blackfly" in device_model:
-            camera_type = "BlackFly"
+            camera.camera_type = "BlackFly"
         else:
             raise ValueError(f"Invalid camera type: {device_model}")
 
         # log device info
-        logger.debug(f"FLIR camera type: {camera_type}")
-        cls._log_device_info(device_nodemap)
+        logger.debug(f"FLIR camera type: {camera.camera_type}")
+        cls._log_device_info(camera.device_nodemap._nodemap)
 
         # disable trigger mode
-        camera.TriggerMode.SetValue(PySpin.TriggerMode_Off)
+        camera.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
 
         # set frame rate
         # TODO set auto frame rate if fps is None
-        logger.debug(f"Setting FLIR fps to: {fps}")
-        if camera_type == "Chameleon":
-            set_value(nodemap, "AcquisitionMode", "Continuous")
-            set_value(nodemap, "AcquisitionFrameRateAuto", "Off")
-            set_value(nodemap, "AcquisitionFrameRateEnabled", True)
-            set_value(nodemap, "AcquisitionFrameRate", float(fps))
-        elif camera_type == "BlackFly":
-            camera.AcquisitionFrameRateEnabled.SetValue(True)
-            camera.AcquisitionFrameRate.SetValue(float(fps))
+        logger.debug(
+            f"Setting {camera.camera_type}:AcquisitionFrameRate to {fps}"
+        )
+        if camera.camera_type == "Chameleon":
+            camera.nodemap.set_value("AcquisitionMode", "Continuous")
+            camera.nodemap.set_value("AcquisitionFrameRateAuto", "Off")
+            camera.nodemap.set_value("AcquisitionFrameRateEnabled", True)
+            camera.nodemap.set_value("AcquisitionFrameRate", float(fps))
+        elif camera.camera_type == "BlackFly":
+            camera.cam.AcquisitionFrameRateEnabled.SetValue(True)
+            camera.cam.AcquisitionFrameRate.SetValue(float(fps))
             # TODO: Find a way of reading the actual frame rate for
             #  Chameleon which doesn't have this register or anything
             #  similar to this
             logger.debug(
                 f"Actual frame rate: "
-                f"{camera.AcquisitionResultingFrameRate.GetValue()}",
+                f"{camera.cam.AcquisitionResultingFrameRate}",
             )
 
         # set pixel format
-        set_value(nodemap, "PixelFormat", "BayerRG8")
+        camera.nodemap.set_value("PixelFormat", "BayerRG8")
 
         # get only last image from buffer to avoid delay
-        set_value(stream_nodemap, "StreamBufferHandlingMode", "NewestOnly")
+        camera.stream_nodemap.set_value(
+            "StreamBufferHandlingMode", "NewestOnly"
+        )
 
         # set other settings
         for setting, value in (settings or {}).items():
-            logger.debug(f"Setting {setting} to {value}")
+            logger.debug(f"Setting {camera.camera_type}:{setting} to {value}")
             try:
-                prop = getattr(camera, setting)
-                try:
-                    prop.SetValue(value)
-                except AttributeError:
-                    prop.FromString(value)
+                setattr(camera, setting, value)
             except (
                 AttributeError,
                 NotImplementedError,
                 PySpin.SpinnakerException,
             ):
-                set_value(nodemap, setting, value)
+                camera.nodemap.set_value(setting, value)
 
         # compute timestamp offset
-        timestamp_offset = cls._compute_timestamp_offset(
-            camera, 20, camera_type
-        )
-        logger.debug(f"Timestamp offset: {timestamp_offset / 1e9}")
+        camera.timestamp_offset = cls._compute_timestamp_offset(camera.cam, 20)
+        logger.debug(f"Timestamp offset: {camera.timestamp_offset / 1e9}")
 
         #  begin acquisition
-        camera.BeginAcquisition()
+        camera.start()
         logger.debug("Acquisition started")
 
-        return FLIRCapture(
-            camera_type, camera, nodemap, system, timestamp_offset
-        )
+        return camera
 
     def stop(self):
         """ Stop the device. """
-        self.capture.camera.AcquisitionStop()
+        import PySpin
+
+        try:
+            self.capture.stop()
+        except PySpin.SpinnakerException as e:
+            logger.debug(f"Could not stop camera, might be disconnected: {e}")
+
+        try:
+            self.capture.running = False
+            self.capture.close()
+        except PySpin.SpinnakerException:
+            pass
+
+        self.capture = None
         logger.debug("Stopped FLIR camera")
 
     def get_frame_and_timestamp(self, mode="img"):
@@ -303,28 +275,20 @@ class VideoDeviceFLIR(BaseVideoDevice):
         import PySpin
 
         try:
-            #  Retrieve next received image
-            image = self.capture.camera.GetNextImage()
+            # Retrieve next received image
+            image = self.capture.get_image()
+            self.capture.cam.TimestampLatch.Execute()
 
             timestamp = monotonic()
-
-            # TODO: Image Pointer doesn't have any GetTimeStamp() attribute
-            #  timestamp = float(image.GetTimestamp()) / 1e9
-            # TODO: Temporary solution to fix the FLIR timestamp issue
-            self.capture.camera.TimestampLatch.Execute()
-            if self.capture.camera_type == "BlackFly":
+            try:
                 source_timestamp = (
                     self.capture.timestamp_offset
-                    + self.capture.camera.TimestampLatchValue.GetValue() / 1e9
+                    + self.capture.Timestamp / 1e9
                 )
-            elif self.capture.camera_type == "Chameleon":
+            except AttributeError:
                 source_timestamp = (
                     self.capture.timestamp_offset
-                    + self.capture.camera.Timestamp.GetValue() / 1e9
-                )
-            else:
-                raise RuntimeError(
-                    f"Invalid camera type: {self.capture.camera_type}"
+                    + self.capture.TimestampLatchValue / 1e9
                 )
 
             #  Ensure image completion
@@ -350,8 +314,9 @@ class VideoDeviceFLIR(BaseVideoDevice):
 
             frame = frame.GetNDArray()
 
-        except PySpin.SpinnakerException as ex:
-            # TODO check correct error handling
-            raise ValueError(ex)
+        except PySpin.SpinnakerException as e:
+            logger.error(f"FLIR device {self.device_uid} streaming error: {e}")
+            self.restart()
+            return self.get_frame_and_timestamp(mode)
 
         return frame, timestamp, source_timestamp

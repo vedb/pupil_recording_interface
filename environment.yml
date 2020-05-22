@@ -42,4 +42,5 @@ dependencies:
   - pip:
     - netcdf4==1.5.3
     - pyrealsense2==2.32.1.1346
+    - simple-pyspin==0.1.1
     - sphinx-multiversion
