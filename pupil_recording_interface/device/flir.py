@@ -305,7 +305,7 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 return self.get_frame_and_timestamp(mode)
             else:
                 image.Release()
-                if mode == "bgr24":
+                if mode in ("bgr24", "img"):
                     frame = image.Convert(
                         PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR
                     )
