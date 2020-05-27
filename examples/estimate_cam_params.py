@@ -4,16 +4,20 @@ import logging
 import pupil_recording_interface as pri
 
 
-if __name__ == "__main__":
+# Generation of your pupil device (1, 2 or 3)
+pupil_gen = 1
 
-    # folder for saving parameters
-    folder = "~/recordings"
+# folder for saving parameters
+folder = "~/pupil_capture_settings"
+
+
+if __name__ == "__main__":
 
     # stream configurations
     configs = [
         pri.VideoStream.Config(
             device_type="uvc",
-            device_uid="Pupil Cam1 ID2",
+            device_uid=f"Pupil Cam{pupil_gen} ID2",
             name="world",
             resolution=(1280, 720),
             fps=30,
@@ -21,20 +25,8 @@ if __name__ == "__main__":
             pipeline=[
                 pri.CircleGridDetector.Config(),
                 pri.CamParamEstimator.Config(
-                    folder=folder, streams=("world", "t265"), extrinsics=True,
+                    folder=folder, streams=("world",)
                 ),
-                pri.VideoDisplay.Config(overlay_circle_grid=True),
-            ],
-        ),
-        pri.VideoStream.Config(
-            device_type="t265",
-            device_uid="t265",
-            name="t265",
-            resolution=(1696, 800),
-            fps=30,
-            color_format="gray",
-            pipeline=[
-                pri.CircleGridDetector.Config(stereo=True),
                 pri.VideoDisplay.Config(overlay_circle_grid=True),
             ],
         ),
@@ -42,7 +34,7 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
 
     # run manager

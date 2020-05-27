@@ -1,6 +1,7 @@
 name: pri
 channels:
   - conda-forge
+  - loopbio
   - phausamann
 dependencies:
   - python=3.6
@@ -12,8 +13,9 @@ dependencies:
   - scipy=1.4
   # video
   - opencv=4.2.0
-  - ffmpeg=3.4.2
+  - ffmpeg=3.4.2=x265_0
   - x264=1!152.20180806
+  - x265=2.8
   # pupil
   - libusb=1.0.23
   - libuvc=0.0.7
@@ -38,8 +40,10 @@ dependencies:
   - sphinx_rtd_theme
   - numpydoc
   - matplotlib
+  - bump2version
   # pip
   - pip:
     - netcdf4==1.5.3
     - pyrealsense2==2.32.1.1346
+    - simple-pyspin==0.1.1
     - sphinx-multiversion

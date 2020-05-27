@@ -40,13 +40,19 @@ class BaseVideoDevice(BaseDevice):
         fps: int
             Desired camera refresh rate.
         """
-        super(BaseVideoDevice, self).__init__(device_uid)
+        super().__init__(device_uid)
+        if not hasattr(self, "device_type"):
+            # Usually set by the @device decorator, but can break things when
+            # missing
+            self.device_type = "video"
 
         self.resolution = resolution
         self.fps = fps
 
         self.capture = None
         self.capture_kwargs = kwargs
+
+        self.restart_timeout = 1.0
 
     @property
     def is_started(self):
@@ -74,6 +80,22 @@ class BaseVideoDevice(BaseDevice):
     def stop(self):
         """ Stop this device. """
         self.capture = None
+
+    def restart(self):
+        """ Try restarting this device. """
+        self.stop()
+        while not self.is_started:
+            try:
+                self.start()
+                logger.info(
+                    f"{self.device_type} device {self.device_uid} restarted"
+                )
+            except DeviceNotConnected:
+                logger.debug(
+                    f"{self.device_type} device {self.device_uid} is not "
+                    f"connected, waiting for {self.restart_timeout} second(s)"
+                )
+                time.sleep(self.restart_timeout)
 
 
 @device("uvc")
@@ -202,13 +224,20 @@ class VideoDeviceUVC(BaseVideoDevice):
         """ Try restarting this device. """
         import uvc
 
+        time.sleep(0.02)  # from pupil source code
         self.stop()
         while not self.is_started:
             try:
                 self.start()
+                logger.info(
+                    f"{self.device_type} device {self.device_uid} restarted"
+                )
             except (DeviceNotConnected, uvc.InitError, uvc.OpenError):
-                logger.debug("Device is not connected, waiting for 1 second")
-                time.sleep(1)
+                logger.debug(
+                    f"{self.device_type} device {self.device_uid} is not "
+                    f"connected, waiting for {self.restart_timeout} second(s)"
+                )
+                time.sleep(self.restart_timeout)
 
     @classmethod
     def get_timestamp(cls):
@@ -225,7 +254,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         uvc.Frame:
             The captured frame.
         """
-        return self.capture.get_frame(0.05)
+        return self.capture.get_frame()
 
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp.
@@ -242,7 +271,7 @@ class VideoDeviceUVC(BaseVideoDevice):
             The retrieved video frame.
 
         timestamp: float
-            The timestamp in of the frame.
+            The timestamp of the frame.
         """
         import uvc
 
@@ -250,12 +279,18 @@ class VideoDeviceUVC(BaseVideoDevice):
             raise ValueError(f"Unsupported mode: {mode}")
 
         if not self.is_started:
-            raise RuntimeError("Device is not started")
+            raise RuntimeError(
+                f"{self.device_type} device {self.device_uid}: "
+                f"Device is not started"
+            )
 
         try:
-            uvc_frame = self.capture.get_frame()
-        except uvc.StreamError:
-            logger.error("Stream error, attempting to re-init")
+            uvc_frame = self.capture.get_frame(0.1)
+        except (uvc.StreamError, uvc.InitError, AttributeError):
+            logger.error(
+                f"{self.device_type} device {self.device_uid}: "
+                f"Stream error, attempting to re-init"
+            )
             self.restart()
             return self.get_frame_and_timestamp(mode=mode)
 

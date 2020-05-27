@@ -31,6 +31,7 @@ class _base_decorator:
         else:
             self.registry[self.type_name] = decorated_class
 
+        setattr(decorated_class, self.config_attr, self.type_name)
         decorated_class._config_attrs = {self.config_attr: self.type_name}
         decorated_class._ignore_args = self.ignore
         decorated_class._additional_args = self.add

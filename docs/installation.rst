@@ -88,6 +88,25 @@ all operating systems:
 .. _ffmpeg: https://www.ffmpeg.org
 
 
+H.265 encoding (Linux)
+~~~~~~~~~~~~~~~~~~~~~~
+
+On Linux it is also possible to record videos using the H.265/HEVC standard.
+The ``x265`` implementation of the codec can be installed via conda along
+with an ``ffmpeg`` package build with support for the library:
+
+.. code-block:: console
+
+    $ conda install -c loopbio ffmpeg x265
+
+If you also need support for FLIR cameras (see :ref:`flir_dependencies`), you
+will need to install our own ``ffmpeg`` package instead:
+
+.. code-block:: console
+
+    $ conda install -c loopbio -c phausamann ffmpeg=3.4.2 x265
+
+
 .. _pupil_detection_dependencies:
 
 Pupil detection

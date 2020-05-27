@@ -4,20 +4,26 @@ import logging
 import pupil_recording_interface as pri
 
 
+# Generation of your pupil device (1, 2 or 3)
+pupil_gen = 1
+
+# folder for saving calibration
+folder = "~/pupil_capture_settings"
+
+
 if __name__ == "__main__":
 
     # stream configurations
     configs = [
         pri.VideoStream.Config(
             device_type="uvc",
-            device_uid="Pupil Cam1 ID2",
+            device_uid=f"Pupil Cam{pupil_gen} ID2",
             name="world",
             resolution=(1280, 720),
-            fps=60,
-            color_format="gray",
+            fps=30,
             pipeline=[
                 pri.CircleDetector.Config(paused=True),
-                pri.Calibration.Config(save=True, folder="~/recordings"),
+                pri.Calibration.Config(save=True, folder=folder),
                 pri.GazeMapper.Config(),
                 pri.VideoDisplay.Config(
                     overlay_circle_marker=True, overlay_gaze=True
@@ -26,9 +32,9 @@ if __name__ == "__main__":
         ),
         pri.VideoStream.Config(
             device_type="uvc",
-            device_uid="Pupil Cam1 ID0",
+            device_uid=f"Pupil Cam{pupil_gen} ID0",
             name="eye0",
-            resolution=(320, 240),
+            resolution=(320, 240) if pupil_gen == 1 else (192, 192),
             fps=120,
             color_format="gray",
             pipeline=[
@@ -38,9 +44,9 @@ if __name__ == "__main__":
         ),
         pri.VideoStream.Config(
             device_type="uvc",
-            device_uid="Pupil Cam1 ID1",
+            device_uid=f"Pupil Cam{pupil_gen} ID1",
             name="eye1",
-            resolution=(320, 240),
+            resolution=(320, 240) if pupil_gen == 1 else (192, 192),
             fps=120,
             color_format="gray",
             pipeline=[
@@ -52,7 +58,7 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
 
     # run manager
