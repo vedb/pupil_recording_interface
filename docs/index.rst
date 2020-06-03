@@ -14,6 +14,7 @@ The code is hosted on GitHub: https://github.com/vedb/pupil_recording_interface
    :maxdepth: 1
    :caption: Contents:
 
+   whatsnew
    installation
    reading
    streaming

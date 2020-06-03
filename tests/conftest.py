@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from time import monotonic
 from collections import deque
 
@@ -63,7 +64,7 @@ def mock_mp_deque():
 @pytest.fixture()
 def folder():
     """"""
-    return os.path.join(DATA_DIR, "test_recording")
+    return Path(DATA_DIR) / "test_recording"
 
 
 @pytest.fixture()
@@ -78,7 +79,7 @@ def temp_folder():
 @pytest.fixture()
 def export_folder(folder):
     """"""
-    export_folder = os.path.join(folder, "exports")
+    export_folder = Path(folder) / "exports"
     yield export_folder
     shutil.rmtree(export_folder, ignore_errors=True)
 
@@ -148,7 +149,7 @@ def pupil(folder):
 def gaze_2d(folder):
     """"""
     pldata = load_pldata_file(
-        os.path.join(folder, "offline_data", "gaze-mappings"),
+        Path(folder) / "offline_data" / "gaze-mappings",
         "2d_Gaze_Mapper_-28b2161b-24dd-4265-b12f-7d09c380bf4f",
     )
 
@@ -163,11 +164,9 @@ def gaze_2d(folder):
 def calibration_2d(folder):
     """"""
     return load_object(
-        os.path.join(
-            folder,
-            "calibrations",
-            "2d_Calibration-4fb6bf62-0ae8-42d2-a16c-913e68a5f3c3.plcal",
-        )
+        Path(folder)
+        / "calibrations"
+        / "2d_Calibration-4fb6bf62-0ae8-42d2-a16c-913e68a5f3c3.plcal"
     )
 
 
@@ -175,11 +174,9 @@ def calibration_2d(folder):
 def calibration_recorded(folder):
     """"""
     return load_object(
-        os.path.join(
-            folder,
-            "calibrations",
-            "Recorded_Calibration-85f75cc5-e2b2-5a46-b083-0a2054bbc810.plcal",
-        )
+        Path(folder)
+        / "calibrations"
+        / "Recorded_Calibration-85f75cc5-e2b2-5a46-b083-0a2054bbc810.plcal"
     )
 
 
@@ -189,7 +186,7 @@ def reference_locations(folder):
     resolution = (1280, 720)
 
     locations = load_object(
-        os.path.join(folder, "offline_data", "reference_locations.msgpack")
+        Path(folder) / "offline_data" / "reference_locations.msgpack"
     )
 
     locations = [

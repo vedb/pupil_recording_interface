@@ -1,7 +1,8 @@
 """"""
 import os
+from pathlib import Path
 
-from .reader import BaseReader
+from .reader import BaseReader, _load_dataset
 from .reader.motion import MotionReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
@@ -29,8 +30,8 @@ from .session import Session
 
 from ._version import __version__  # noqa
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-TEST_RECORDING = os.path.join(DATA_DIR, "test_recording")
+DATA_DIR = Path(__file__).parent / "data"
+TEST_RECORDING = Path(DATA_DIR) / "test_recording"
 
 
 __all__ = [
@@ -77,7 +78,9 @@ __all__ = [
 os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
 
-def load_dataset(folder, gaze=None, odometry=None, accel=None, gyro=None):
+def load_dataset(
+    folder, gaze=None, odometry=None, accel=None, gyro=None, cache=False
+):
     """ Load a recording as an xarray Dataset.
 
     Parameters
@@ -101,27 +104,30 @@ def load_dataset(folder, gaze=None, odometry=None, accel=None, gyro=None):
     gyro : str, optional
         The source of the gyro data. Can be 'recording'.
 
+    cache : bool, default False
+        If True, cache datasets as netCDF files in the recording folder.
+
     Returns
     -------
     xarray.Dataset or tuple thereof
         The recording data as a dataset or tuple thereof if both `gaze` and
         `odometry` are specified.
     """
+
+    folder = Path(folder)
     return_vals = tuple()
-    if gaze is not None:
-        return_vals += (GazeReader(folder, source=gaze).load_dataset(),)
-    if odometry is not None:
-        return_vals += (
-            MotionReader(folder, "odometry", source=odometry).load_dataset(),
-        )
-    if accel is not None:
-        return_vals += (
-            MotionReader(folder, "accel", source=accel).load_dataset(),
-        )
-    if gyro is not None:
-        return_vals += (
-            MotionReader(folder, "gyro", source=gyro).load_dataset(),
-        )
+
+    if gaze:
+        return_vals += (_load_dataset(folder, "gaze", gaze, cache),)
+
+    if odometry:
+        return_vals += (_load_dataset(folder, "odometry", odometry, cache),)
+
+    if accel:
+        return_vals += (_load_dataset(folder, "accel", accel, cache),)
+
+    if gyro:
+        return_vals += (_load_dataset(folder, "gyro", gyro, cache),)
 
     if len(return_vals) == 1:
         return_vals = return_vals[0]
@@ -161,7 +167,7 @@ def write_netcdf(
 
     output_folder : str, optional
         Path to the folder where the recording will be exported to. Defaults
-        to ``<folder>/exports``.
+        to ``<folder>/exports/<export_number>``.
 
     gaze : str, optional
         The source of the gaze data. If 'recording', the recorded data will
@@ -180,27 +186,32 @@ def write_netcdf(
         The source of the gyro data. Can be 'recording'.
     """
     if output_folder is None:
-        output_folder = os.path.join(folder, "exports")
+        output_folder = Path(folder) / "exports"
         counter = 0
-        while os.path.exists(os.path.join(output_folder, f"{counter:03d}")):
+        while (output_folder / f"{counter:03d}").exists():
             counter += 1
-        output_folder = os.path.join(output_folder, f"{counter:03d}")
+        output_folder = output_folder / f"{counter:03d}"
+    else:
+        output_folder = Path(output_folder)
 
     if gaze is not None:
         GazeReader(folder, source=gaze).write_netcdf(
-            filename=os.path.join(output_folder, "gaze.nc")
+            filename=output_folder / "gaze.nc"
         )
+
     if odometry is not None:
         MotionReader(folder, "odometry", source=odometry).write_netcdf(
-            filename=os.path.join(output_folder, "odometry.nc")
+            filename=output_folder / "odometry.nc"
         )
+
     if accel is not None:
         MotionReader(folder, "accel", source=accel).write_netcdf(
-            filename=os.path.join(output_folder, "accel.nc")
+            filename=output_folder / "accel.nc"
         )
+
     if gyro is not None:
         MotionReader(folder, "gyro", source=gyro).write_netcdf(
-            filename=os.path.join(output_folder, "gyro.nc")
+            filename=output_folder / "gyro.nc"
         )
 
 

@@ -1,6 +1,6 @@
-import os
 import sys
 import shutil
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -24,15 +24,13 @@ from pupil_recording_interface import (
 @pytest.fixture()
 def t265_folder():
     """"""
-    return os.path.join(
-        os.path.dirname(__file__), "test_data", "t265_test_recording"
-    )
+    return Path(__file__).parent / "test_data" / "t265_test_recording"
 
 
 @pytest.fixture()
 def t265_export_folder(t265_folder):
     """"""
-    export_folder = os.path.join(t265_folder, "exports")
+    export_folder = t265_folder / "exports"
     yield export_folder
     shutil.rmtree(export_folder, ignore_errors=True)
 
@@ -132,21 +130,13 @@ class TestBaseReader(object):
             "_FillValue": np.iinfo("int32").min,
         }
 
-    def test_create_export_folder(self, export_folder):
-        """"""
-        BaseReader._create_export_folder(
-            os.path.join(export_folder, "test.nc")
-        )
-
-        assert os.path.exists(export_folder)
-
     def test_write_netcdf(self, folder, export_folder):
         """"""
         pytest.importorskip("netcdf4")
 
         GazeReader(folder).write_netcdf()
 
-        ds = xr.open_dataset(os.path.join(export_folder, "gaze.nc"))
+        ds = xr.open_dataset(export_folder / "gaze.nc")
 
         assert set(ds.data_vars) == {
             "gaze_confidence_3d",
@@ -177,6 +167,23 @@ class TestFunctionalReader(object):
             "orientation",
         }
 
+    def test_load_dataset_cached(self, folder):
+        """"""
+        pytest.importorskip("netCDF4")
+
+        load_dataset(folder, gaze="recording", cache=True)
+        assert (
+            folder
+            / "cache"
+            / "gaze-18a8baba7367c3ed0086a0c345f3c67bc2ca8b39.nc"
+        ).exists()
+
+        gaze = load_dataset(folder, gaze="recording", cache=False)
+        gaze_nc = load_dataset(folder, gaze="recording", cache=True)
+        assert gaze_nc == gaze
+
+        shutil.rmtree(folder / "cache")
+
     def test_write_netcdf(
         self, folder, t265_folder, export_folder, t265_export_folder
     ):
@@ -185,10 +192,8 @@ class TestFunctionalReader(object):
 
         # packaged recording
         write_netcdf(folder, gaze="recording", odometry="recording")
-        assert os.path.exists(
-            os.path.join(export_folder, "000", "odometry.nc")
-        )
-        assert os.path.exists(os.path.join(export_folder, "000", "gaze.nc"))
+        assert (export_folder / "000" / "odometry.nc").exists()
+        assert (export_folder / "000" / "gaze.nc").exists()
 
         # test data recording
         write_netcdf(
@@ -197,15 +202,9 @@ class TestFunctionalReader(object):
             accel="recording",
             gyro="recording",
         )
-        assert os.path.exists(
-            os.path.join(t265_export_folder, "000", "odometry.nc")
-        )
-        assert os.path.exists(
-            os.path.join(t265_export_folder, "000", "accel.nc")
-        )
-        assert os.path.exists(
-            os.path.join(t265_export_folder, "000", "gyro.nc")
-        )
+        assert (t265_export_folder / "000" / "odometry.nc").exists()
+        assert (t265_export_folder / "000" / "accel.nc").exists()
+        assert (t265_export_folder / "000" / "gyro.nc").exists()
 
     def test_get_gaze_mappers(self, folder):
         """"""
@@ -263,14 +262,12 @@ class TestGazeReader(object):
 
         assert set(mappers.keys()) == {"3d Gaze Mapper", "2d Gaze Mapper "}
         for v in mappers.values():
-            assert os.path.exists(
-                os.path.join(
-                    folder, "offline_data", "gaze-mappings", v + ".pldata"
-                )
-            )
+            assert (
+                folder / "offline_data" / "gaze-mappings" / f"{v}.pldata"
+            ).exists()
 
         with pytest.raises(FileNotFoundError):
-            GazeReader._get_offline_gaze_mappers("not_a_folder")
+            GazeReader._get_offline_gaze_mappers(folder / "not_a_folder")
 
     def test_load_dataset(self, folder):
         """"""
@@ -322,7 +319,7 @@ class TestGazeReader(object):
 
         GazeReader(folder).write_netcdf()
 
-        ds = xr.open_dataset(os.path.join(export_folder, "gaze.nc"))
+        ds = xr.open_dataset(export_folder / "gaze.nc")
 
         assert set(ds.data_vars) == {
             "gaze_confidence_3d",

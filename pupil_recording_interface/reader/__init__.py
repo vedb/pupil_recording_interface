@@ -1,8 +1,9 @@
 """"""
 import abc
 import csv
+import hashlib
 import json
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -18,15 +19,16 @@ class BaseReader(object):
 
         Parameters
         ----------
-        folder : str
+        folder : str or pathlib.Path
             Path to the recording folder.
         """
-        if not os.path.exists(folder):
+        folder = Path(folder)
+        if not folder.exists():
             raise FileNotFoundError(f"No such folder: {folder}")
 
         self.folder = folder
 
-        if os.path.exists(os.path.join(self.folder, "info.csv")):
+        if (self.folder / "info.csv").exists():
             self.info = self._load_info(self.folder, "info.csv")
         else:
             self.info = self._load_info(self.folder)
@@ -72,12 +74,12 @@ class BaseReader(object):
     @staticmethod
     def _load_info(folder, filename="info.player.json"):
         """ Load recording info file as dict. """
-        if not os.path.exists(os.path.join(folder, filename)):
+        if not (folder / filename).exists():
             raise FileNotFoundError(
                 f"File {filename} not found in folder {folder}"
             )
 
-        with open(os.path.join(folder, filename)) as f:
+        with open(folder / filename) as f:
             if filename.endswith(".json"):
                 info = json.load(f)
             elif filename.endswith(".csv"):
@@ -90,14 +92,18 @@ class BaseReader(object):
     @staticmethod
     def _load_user_info(folder, start_time, filename="user_info.csv"):
         """ Load data from user_info.csv file as dict. """
-        if not os.path.exists(os.path.join(folder, filename)):
+        if not (folder / filename).exists():
             raise FileNotFoundError(
                 f"File {filename} not found in folder {folder}"
             )
 
-        with open(os.path.join(folder, filename)) as f:
+        with open(folder / filename) as f:
             reader = csv.reader(f)
-            info = {rows[0]: rows[1] for rows in reader if rows[0] != "key"}
+            info = {
+                rows[0]: rows[1]
+                for rows in reader
+                if len(rows) >= 2 and rows[0] != "key"
+            }
 
         for k, v in info.items():
             if k.endswith(("start", "end")):
@@ -112,7 +118,7 @@ class BaseReader(object):
     @staticmethod
     def _load_pldata_as_dataframe(folder, topic):
         """ Load data from a .pldata file into a pandas.DataFrame. """
-        if not os.path.exists(os.path.join(folder, topic + ".pldata")):
+        if not (folder / f"{topic}.pldata").exists():
             raise FileNotFoundError(
                 f"File {topic}.pldata not found in folder {folder}"
             )
@@ -133,8 +139,8 @@ class BaseReader(object):
     @staticmethod
     def _load_timestamps_as_datetimeindex(folder, topic, info, offset=0.0):
         """ Load timestamps as pandas.DatetimeIndex. """
-        filepath = os.path.join(folder, topic + "_timestamps.npy")
-        if not os.path.exists(filepath):
+        filepath = folder / f"{topic}_timestamps.npy"
+        if not filepath.exists():
             raise FileNotFoundError(
                 f"File {topic}_timestamps.npy not found in folder {folder}"
             )
@@ -155,15 +161,6 @@ class BaseReader(object):
 
         return {v: comp for v in data_vars}
 
-    @staticmethod
-    def _create_export_folder(filename):
-        """ Create the export folder. """
-        folder = os.path.dirname(filename)
-        try:
-            os.makedirs(folder)
-        except OSError:
-            pass
-
     @abc.abstractmethod
     def load_dataset(self):
         """ Load data as an xarray Dataset. """
@@ -182,12 +179,37 @@ class BaseReader(object):
         encoding = self._get_encoding(ds.data_vars)
 
         if filename is None:
-            folder = os.path.join(self.folder, "exports")
+            folder = self.folder / "exports"
             counter = 0
-            while os.path.exists(os.path.join(folder, f"{counter:03d}")):
+            while (folder / f"{counter:03d}").exists():
                 counter += 1
-            folder = os.path.join(folder, f"{counter:03d}")
-            filename = os.path.join(folder, self.export_name + ".nc")
+            folder = folder / f"{counter:03d}"
+            filename = folder / f"{self.export_name}.nc"
 
-        self._create_export_folder(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
         ds.to_netcdf(filename, encoding=encoding)
+
+
+def _compute_hash(*args):
+    """ Compute hash from an argument list. """
+    m = hashlib.new("ripemd160")
+    m.update(str(args).encode("utf-8"))
+
+    return m.hexdigest()
+
+
+def _load_dataset(folder, topic, source, cache):
+    """ Load a single (cached) dataset. """
+    import xarray as xr
+    from .gaze import GazeReader
+    from .motion import MotionReader
+
+    reader_type = GazeReader if topic == "gaze" else MotionReader
+    reader = reader_type(folder, source=source)
+    if cache:
+        filepath = folder / "cache" / f"{topic}-{_compute_hash(source)}.nc"
+        if not filepath.exists():
+            reader.write_netcdf(filename=filepath)
+        return xr.open_dataset(filepath)
+    else:
+        return reader.load_dataset()

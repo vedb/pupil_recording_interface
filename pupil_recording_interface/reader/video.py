@@ -1,6 +1,4 @@
 """"""
-import os
-
 import cv2
 import numpy as np
 import pandas as pd
@@ -32,7 +30,7 @@ class VideoReader(BaseReader):
 
         Parameters
         ----------
-        folder : str
+        folder : str or pathlib.Path
             Path to the recording folder.
 
         stream : str, default 'world'
@@ -114,8 +112,8 @@ class VideoReader(BaseReader):
     @staticmethod
     def _load_intrinsics(folder):
         """ Load world camera intrinsics. """
-        filepath = os.path.join(folder, "world.intrinsics")
-        if not os.path.exists(filepath):
+        filepath = folder / "world.intrinsics"
+        if not filepath.exists():
             return None, None
         else:
             # TODO read intrinsics
@@ -124,13 +122,13 @@ class VideoReader(BaseReader):
     @staticmethod
     def _get_capture(folder, topic):
         """ Get a cv2.VideoCapture for the video file. """
-        filepath = os.path.join(folder, topic + ".mp4")
-        if not os.path.exists(filepath):
+        filepath = folder / f"{topic}.mp4"
+        if not filepath.exists():
             raise FileNotFoundError(
                 f"File {topic}.mp4 not found in folder {folder}"
             )
 
-        return cv2.VideoCapture(filepath)
+        return cv2.VideoCapture(str(filepath))
 
     @staticmethod
     def _get_resolution(capture):
@@ -562,7 +560,7 @@ class OpticalFlowReader(VideoReader):
 
         Parameters
         ----------
-        folder : str
+        folder : str or pathlib.Path
             Path to the recording folder.
 
         stream : str, default 'world'
