@@ -198,19 +198,22 @@ def write_netcdf(
 
     if gaze is not None:
         GazeReader(folder, source=gaze).write_netcdf(
-            filename=os.path.join(output_folder, "gaze.nc")
+            filename=output_folder / "gaze.nc"
         )
+
     if odometry is not None:
         MotionReader(folder, "odometry", source=odometry).write_netcdf(
-            filename=os.path.join(output_folder, "odometry.nc")
+            filename=output_folder / "odometry.nc"
         )
+
     if accel is not None:
         MotionReader(folder, "accel", source=accel).write_netcdf(
-            filename=os.path.join(output_folder, "accel.nc")
+            filename=output_folder / "accel.nc"
         )
+
     if gyro is not None:
         MotionReader(folder, "gyro", source=gyro).write_netcdf(
-            filename=os.path.join(output_folder, "gyro.nc")
+            filename=output_folder / "gyro.nc"
         )
 
 
