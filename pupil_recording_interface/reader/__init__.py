@@ -202,7 +202,7 @@ def _compute_hash(*args):
     return m.hexdigest()
 
 
-def load_one_dataset(folder, topic, source, netcdf_cache):
+def _load_dataset(folder, topic, source, cache):
     """ Load a single (cached) dataset. """
     import xarray as xr
     from .gaze import GazeReader
@@ -210,7 +210,7 @@ def load_one_dataset(folder, topic, source, netcdf_cache):
 
     reader_type = GazeReader if topic == "gaze" else MotionReader
     reader = reader_type(folder, source=source)
-    if netcdf_cache:
+    if cache:
         filepath = folder / "cache" / f"{topic}-{_compute_hash(source)}.nc"
         if not filepath.exists():
             reader.write_netcdf(filename=filepath)

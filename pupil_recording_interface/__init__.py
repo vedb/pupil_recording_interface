@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 
-from .reader import BaseReader, load_one_dataset
+from .reader import BaseReader, _load_dataset
 from .reader.motion import MotionReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
@@ -79,7 +79,7 @@ os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
 
 def load_dataset(
-    folder, gaze=None, odometry=None, accel=None, gyro=None, netcdf_cache=False
+    folder, gaze=None, odometry=None, accel=None, gyro=None, cache=False
 ):
     """ Load a recording as an xarray Dataset.
 
@@ -104,7 +104,7 @@ def load_dataset(
     gyro : str, optional
         The source of the gyro data. Can be 'recording'.
 
-    netcdf_cache : bool, default False
+    cache : bool, default False
         If True, cache datasets as netCDF files in the recording folder.
 
     Returns
@@ -118,20 +118,16 @@ def load_dataset(
     return_vals = tuple()
 
     if gaze:
-        return_vals += (load_one_dataset(folder, "gaze", gaze, netcdf_cache),)
+        return_vals += (_load_dataset(folder, "gaze", gaze, cache),)
 
     if odometry:
-        return_vals += (
-            load_one_dataset(folder, "odometry", odometry, netcdf_cache),
-        )
+        return_vals += (_load_dataset(folder, "odometry", odometry, cache),)
 
     if accel:
-        return_vals += (
-            load_one_dataset(folder, "accel", accel, netcdf_cache),
-        )
+        return_vals += (_load_dataset(folder, "accel", accel, cache),)
 
     if gyro:
-        return_vals += (load_one_dataset(folder, "gyro", gyro, netcdf_cache),)
+        return_vals += (_load_dataset(folder, "gyro", gyro, cache),)
 
     if len(return_vals) == 1:
         return_vals = return_vals[0]
@@ -195,6 +191,8 @@ def write_netcdf(
         while (output_folder / f"{counter:03d}").exists():
             counter += 1
         output_folder = output_folder / f"{counter:03d}"
+    else:
+        output_folder = Path(output_folder)
 
     if gaze is not None:
         GazeReader(folder, source=gaze).write_netcdf(

@@ -173,15 +173,19 @@ class TestFunctionalReader(object):
             "orientation",
         }
 
-        # netcdf cache
-        load_dataset(folder, gaze="recording", netcdf_cache=True)
+    def test_load_dataset_cached(self, folder):
+        """"""
+        pytest.importorskip("netCDF4")
+
+        load_dataset(folder, gaze="recording", cache=True)
         assert (
             folder
             / "cache"
             / "gaze-18a8baba7367c3ed0086a0c345f3c67bc2ca8b39.nc"
         ).exists()
 
-        gaze_nc = load_dataset(folder, gaze="recording", netcdf_cache=True)
+        gaze = load_dataset(folder, gaze="recording", cache=False)
+        gaze_nc = load_dataset(folder, gaze="recording", cache=True)
         assert gaze_nc == gaze
 
         shutil.rmtree(folder / "cache")
