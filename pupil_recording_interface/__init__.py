@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 
-from .reader import BaseReader
+from .reader import BaseReader, load_one_dataset
 from .reader.motion import MotionReader
 from .reader.gaze import GazeReader
 from .reader.video import VideoReader, OpticalFlowReader
@@ -105,7 +105,7 @@ def load_dataset(
         The source of the gyro data. Can be 'recording'.
 
     netcdf_cache : bool, default False
-        If True, cache loaded datasets as netCDF files in the recording folder
+        If True, cache datasets as netCDF files in the recording folder.
 
     Returns
     -------
@@ -113,25 +113,25 @@ def load_dataset(
         The recording data as a dataset or tuple thereof if both `gaze` and
         `odometry` are specified.
     """
+
+    folder = Path(folder)
     return_vals = tuple()
 
     if gaze:
-        return_vals += (GazeReader(folder, source=gaze).load_dataset(),)
+        return_vals += (load_one_dataset(folder, "gaze", gaze, netcdf_cache),)
 
     if odometry:
         return_vals += (
-            MotionReader(folder, "odometry", source=odometry).load_dataset(),
+            load_one_dataset(folder, "odometry", odometry, netcdf_cache),
         )
 
     if accel:
         return_vals += (
-            MotionReader(folder, "accel", source=accel).load_dataset(),
+            load_one_dataset(folder, "accel", accel, netcdf_cache),
         )
 
     if gyro:
-        return_vals += (
-            MotionReader(folder, "gyro", source=gyro).load_dataset(),
-        )
+        return_vals += (load_one_dataset(folder, "gyro", gyro, netcdf_cache),)
 
     if len(return_vals) == 1:
         return_vals = return_vals[0]
@@ -171,7 +171,7 @@ def write_netcdf(
 
     output_folder : str, optional
         Path to the folder where the recording will be exported to. Defaults
-        to ``<folder>/exports``.
+        to ``<folder>/exports/<export_number>``.
 
     gaze : str, optional
         The source of the gaze data. If 'recording', the recorded data will

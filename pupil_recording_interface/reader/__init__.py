@@ -1,6 +1,7 @@
 """"""
 import abc
 import csv
+import hashlib
 import json
 import os
 
@@ -191,3 +192,28 @@ class BaseReader(object):
 
         self._create_export_folder(filename)
         ds.to_netcdf(filename, encoding=encoding)
+
+
+def _compute_hash(*args):
+    """ Compute hash from an argument list. """
+    m = hashlib.new("ripemd160")
+    m.update(str(args).encode("utf-8"))
+
+    return m.hexdigest()
+
+
+def load_one_dataset(folder, topic, source, netcdf_cache):
+    """ Load a single (cached) dataset. """
+    import xarray as xr
+    from .gaze import GazeReader
+    from .motion import MotionReader
+
+    reader_type = GazeReader if topic == "gaze" else MotionReader
+    reader = reader_type(folder, source=source)
+    if netcdf_cache:
+        filepath = folder / "cache" / f"{topic}-{_compute_hash(source)}.nc"
+        if not filepath.exists():
+            reader.write_netcdf(filename=filepath)
+        return xr.open_dataset(filepath)
+    else:
+        return reader.load_dataset()

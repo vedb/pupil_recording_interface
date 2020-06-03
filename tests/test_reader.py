@@ -174,6 +174,17 @@ class TestFunctionalReader(object):
         }
 
         # netcdf cache
+        load_dataset(folder, gaze="recording", netcdf_cache=True)
+        assert (
+            folder
+            / "cache"
+            / "gaze-18a8baba7367c3ed0086a0c345f3c67bc2ca8b39.nc"
+        ).exists()
+
+        gaze_nc = load_dataset(folder, gaze="recording", netcdf_cache=True)
+        assert gaze_nc == gaze
+
+        shutil.rmtree(folder / "cache")
 
     def test_write_netcdf(
         self, folder, t265_folder, export_folder, t265_export_folder
