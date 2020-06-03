@@ -43,6 +43,9 @@ class MotionReader(BaseReader):
         if hasattr(df, "source_timestamp"):
             data["timestamp"] = df.source_timestamp
             data["timebase"] = "epoch"
+        elif hasattr(df, "rs_timestamp"):
+            data["timestamp"] = df.rs_timestamp
+            data["timebase"] = "epoch"
         else:
             data["timestamp"] = df.timestamp
             data["timebase"] = "monotonic"
