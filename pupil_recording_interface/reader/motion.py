@@ -14,7 +14,7 @@ class MotionReader(BaseReader):
 
         Parameters
         ----------
-        folder : str
+        folder : str or pathlib.Path
             Path to the recording folder.
 
         source : str or dict, default 'recording'

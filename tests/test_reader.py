@@ -130,12 +130,6 @@ class TestBaseReader(object):
             "_FillValue": np.iinfo("int32").min,
         }
 
-    def test_create_export_folder(self, export_folder):
-        """"""
-        BaseReader._create_export_folder(export_folder / "test.nc")
-
-        assert export_folder.exists()
-
     def test_write_netcdf(self, folder, export_folder):
         """"""
         pytest.importorskip("netcdf4")
@@ -273,7 +267,7 @@ class TestGazeReader(object):
             ).exists()
 
         with pytest.raises(FileNotFoundError):
-            GazeReader._get_offline_gaze_mappers("not_a_folder")
+            GazeReader._get_offline_gaze_mappers(folder / "not_a_folder")
 
     def test_load_dataset(self, folder):
         """"""

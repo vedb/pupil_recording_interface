@@ -1,6 +1,4 @@
 """"""
-import os
-
 import numpy as np
 import xarray as xr
 from msgpack import Unpacker
@@ -16,7 +14,7 @@ class GazeReader(BaseReader):
 
         Parameters
         ----------
-        folder : str
+        folder : str or pathlib.Path
             Path to the recording folder.
 
         source : str or dict, default 'recording'
@@ -45,9 +43,7 @@ class GazeReader(BaseReader):
         df = BaseReader._load_pldata_as_dataframe(folder, topic)
 
         if df.size == 0:
-            raise ValueError(
-                f"No gaze data in {os.path.join(folder, topic + '.pldata')}"
-            )
+            raise ValueError(f"No gaze data in {folder / (topic + '.pldata')}")
 
         t = df.timestamp
         c = df.confidence
@@ -80,9 +76,9 @@ class GazeReader(BaseReader):
     @staticmethod
     def _get_offline_gaze_mappers(folder):
         """ Get the topic names of all offline gaze mappers. """
-        filepath = os.path.join(folder, "offline_data", "gaze_mappers.msgpack")
+        filepath = folder / "offline_data" / "gaze_mappers.msgpack"
 
-        if not os.path.exists(filepath):
+        if not filepath.exists():
             raise FileNotFoundError("No offline gaze mappers found")
 
         with open(filepath, "rb") as f:
@@ -98,7 +94,7 @@ class GazeReader(BaseReader):
         """ Load and merge gaze from different mappers (2d and 3d). """
         offline_mappers = GazeReader._get_offline_gaze_mappers(folder)
 
-        mapper_folder = os.path.join(folder, "offline_data", "gaze-mappings")
+        mapper_folder = folder / "offline_data" / "gaze-mappings"
         gaze_2d = GazeReader._load_gaze(
             mapper_folder, offline_mappers[gaze_mapper["2d"]]
         )
@@ -120,7 +116,7 @@ class GazeReader(BaseReader):
             t, c, n, p = self._load_gaze(self.folder)
         elif isinstance(self.source, str) and self.source in self.gaze_mappers:
             t, c, n, p = self._load_gaze(
-                os.path.join(self.folder, "offline_data", "gaze-mappings"),
+                self.folder / "offline_data" / "gaze-mappings",
                 self.gaze_mappers[self.source],
             )
         elif isinstance(self.source, dict) and set(self.source.keys()) == {
