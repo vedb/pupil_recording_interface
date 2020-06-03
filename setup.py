@@ -10,7 +10,7 @@ requirements = [
 
 setup(
     name="pupil_recording_interface",
-    version="0.0.3",
+    version="0.1.0",
     packages=find_packages(),
     long_description=open("README.rst").read(),
     install_requires=requirements,
