@@ -208,7 +208,7 @@ class TestFunctionalReader(object):
 
     def test_get_gaze_mappers(self, folder):
         """"""
-        mappers = get_gaze_mappers(folder)
+        mappers = get_gaze_mappers(str(folder))
 
         assert mappers == {"recording", "2d Gaze Mapper ", "3d Gaze Mapper"}
 

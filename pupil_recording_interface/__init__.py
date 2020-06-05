@@ -85,7 +85,7 @@ def load_dataset(
 
     Parameters
     ----------
-    folder : str
+    folder : str or pathlib.Path
         Path to the recording folder.
 
     gaze : str, optional
@@ -113,7 +113,6 @@ def load_dataset(
         The recording data as a dataset or tuple thereof if both `gaze` and
         `odometry` are specified.
     """
-
     folder = Path(folder)
     return_vals = tuple()
 
@@ -140,7 +139,7 @@ def get_gaze_mappers(folder):
 
     Parameters
     ----------
-    folder : str
+    folder : str or pathlib.Path
         Path to the recording folder.
 
     Returns
@@ -148,8 +147,10 @@ def get_gaze_mappers(folder):
     set
         The set of available mappers.
     """
+    folder = Path(folder)
+
     mappers = set(GazeReader._get_offline_gaze_mappers(folder).keys())
-    if os.path.exists(os.path.join(folder, "gaze.pldata")):
+    if (folder / "gaze.pldata").exists():
         mappers = mappers.union({"recording"})
 
     return mappers
@@ -162,7 +163,7 @@ def write_netcdf(
 
     Parameters
     ----------
-    folder : str
+    folder : str or pathlib.Path
         Path to the recording folder.
 
     output_folder : str, optional
@@ -220,7 +221,7 @@ def load_info(folder):
 
     Parameters
     ----------
-    folder : str
+    folder : str or pathlib.Path
         Path to the recording folder.
 
     Returns
@@ -236,7 +237,7 @@ def load_user_info(folder):
 
     Parameters
     ----------
-    folder : str
+    folder : str or pathlib.Path
         Path to the recording folder.
 
     Returns
