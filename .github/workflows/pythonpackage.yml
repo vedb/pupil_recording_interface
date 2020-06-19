@@ -90,14 +90,6 @@ jobs:
           source activate pri
           make -C docs/ html
           make -C docs/ doctest
-      - if: success() && github.ref == 'refs/heads/master'
-        name: push
-        uses: crazy-max/ghaction-github-pages@v1.5.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          target_branch: gh-pages
-          build_dir: docs/_build/html/
 
   docs-multiversion:
     # runs on pushes to master and devel but is always built against the
