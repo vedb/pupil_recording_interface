@@ -98,8 +98,8 @@ world camera video with:
 
 .. doctest::
 
-    >>> interface = pri.VideoReader(pri.TEST_RECORDING)
-    >>> interface.video_info
+    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> reader.video_info
     {'resolution': (1280, 720), 'frame_count': 504, 'fps': 23.987}
 
 With :py:func:`VideoReader.load_raw_frame` you can retrieve a raw video
@@ -107,10 +107,22 @@ frame by index:
 
 .. doctest::
 
-    >>> interface = pri.VideoReader(pri.TEST_RECORDING)
-    >>> frame = interface.load_raw_frame(100)
+    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> frame = reader.load_raw_frame(100)
     >>> frame.shape
     (720, 1280, 3)
+
+or by timestamp:
+
+.. doctest::
+
+    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> frame = reader.load_raw_frame(reader.timestamps[100])
+    >>> frame.shape
+    (720, 1280, 3)
+
+Here, we used the ``timestamps`` attribute of the reader which contains the
+timestamps for each frame to get the timestamp of the frame with index 100.
 
 If you have the ``matplotlib`` library installed, you can show the frame
 with ``imshow()``. Note that you have to reverse the last axis as the frame
@@ -124,8 +136,8 @@ is loaded as a BGR image but imshow expects RGB:
 .. plot::
 
     import pupil_recording_interface as pri
-    interface = pri.VideoReader(pri.TEST_RECORDING)
-    frame = interface.load_raw_frame(100)
+    reader = pri.VideoReader(pri.TEST_RECORDING)
+    frame = reader.load_raw_frame(100)
 
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize=(12.8, 7.2))
@@ -133,6 +145,29 @@ is loaded as a BGR image but imshow expects RGB:
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     ax.imshow(frame[:, :, ::-1])
+
+Eye videos can be loaded by specifying the ``stream`` parameter:
+
+.. doctest::
+
+    >>> eye_reader = pri.VideoReader(pri.TEST_RECORDING, stream='eye0')
+
+With ``return_timestamp=True`` you can get the corresponding timestamp for a
+frame:
+
+.. doctest::
+
+    >>> timestamp, frame = eye_reader.load_frame(100, return_timestamp=True)
+    >>> timestamp
+    Timestamp('2019-10-10 16:43:21.087194920')
+
+This timestamp can now be used to get the closest world video frame:
+
+.. doctest::
+
+    >>> frame = reader.load_frame(timestamp)
+    >>> frame.shape
+    (720, 1280, 3)
 
 ROI extraction
 ..............
@@ -144,9 +179,10 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
 .. doctest::
 
     >>> gaze = pri.load_dataset(pri.TEST_RECORDING, gaze='2d Gaze Mapper ')
-    >>> interface = pri.VideoReader(
-    ...     pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64)
-    >>> frame = interface.load_frame(100)
+    >>> reader = pri.VideoReader(
+    ...     pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64
+    ... )
+    >>> frame = reader.load_frame(100)
     >>> frame.shape
     (64, 64, 3)
     >>> plt.imshow(frame[:, :, ::-1]) # doctest:+SKIP
@@ -155,9 +191,10 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
 
     import pupil_recording_interface as pri
     gaze = pri.load_dataset(pri.TEST_RECORDING, gaze='2d Gaze Mapper ')
-    interface = pri.VideoReader(
-        pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64)
-    frame = interface.load_frame(100)
+    reader = pri.VideoReader(
+        pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64
+    )
+    frame = reader.load_frame(100)
 
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize=(3.2, 3.2))
@@ -166,53 +203,44 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
     ax.get_yaxis().set_visible(False)
     ax.imshow(frame[:, :, ::-1])
 
-Other frame processing
-......................
+
+Other video functionality
+.........................
 
 Video frames can also be sub-sampled and converted to grayscale with the
 ``subsampling`` and ``color_format`` parameters:
 
 .. doctest::
 
-    >>> interface = pri.VideoReader(
-    ...     pri.TEST_RECORDING, color_format='gray', subsampling=4.)
-    >>> frame = interface.load_frame(100)
+    >>> reader = pri.VideoReader(
+    ...     pri.TEST_RECORDING, color_format='gray', subsampling=4.
+    ... )
+    >>> frame = reader.load_frame(100)
     >>> frame.shape
     (180, 320)
 
 :py:func:`VideoReader.read_frames` provides a generator for frames that
-can be restricted to an index range with the ``start`` and ``end`` parameters:
+can be restricted to an index or timestamp range with the ``start`` and ``end``
+parameters:
 
 .. doctest::
 
-    >>> interface = pri.VideoReader(pri.TEST_RECORDING)
-    >>> interface.read_frames(start=100, end=200) # doctest:+ELLIPSIS
+    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> reader.read_frames(start=100, end=200) # doctest:+ELLIPSIS
     <generator object VideoReader.read_frames at ...>
 
-
-Other video functionality
-.........................
-
-Eye videos can be loaded by specifying the ``stream`` parameter:
-
-.. doctest::
-
-    >>> interface = pri.VideoReader(pri.TEST_RECORDING, stream='eye0')
-    >>> frame = interface.load_raw_frame(100)
-    >>> frame.shape
-    (192, 192, 3)
-
-The video interface also provides a :py:func:`VideoReader.load_dataset`
+The video reader also provides a :py:func:`VideoReader.load_dataset`
 method. The method is rather slow as it has to load each frame individually.
 You can provide ``start`` and ``end`` timestamps to specify the time frame
 of the loaded data:
 
 .. doctest::
 
-    >>> interface = pri.VideoReader(pri.TEST_RECORDING, subsampling=8.)
-    >>> interface.load_dataset(
-    ...     start=interface.user_info['experiment_start'],
-    ...     end=interface.user_info['experiment_end'])
+    >>> reader = pri.VideoReader(pri.TEST_RECORDING, subsampling=8.)
+    >>> reader.load_dataset(
+    ...     start=reader.user_info['experiment_start'],
+    ...     end=reader.user_info['experiment_end'],
+    ... )
     <xarray.Dataset>
     Dimensions:  (color: 3, frame_x: 160, frame_y: 90, time: 22)
     Coordinates:
@@ -269,7 +297,8 @@ Recorded data can also directly be written to disk:
 .. doctest::
 
     >>> pri.write_netcdf(
-    ...    pri.TEST_RECORDING, gaze='recording', output_folder='.')
+    ...    pri.TEST_RECORDING, gaze='recording', output_folder='.'
+    ... )
 
 This will create a ``gaze.nc`` file in the current folder. This file type can
 directly be loaded by xarray which is a lot faster than the

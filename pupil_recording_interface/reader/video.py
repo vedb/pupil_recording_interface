@@ -92,7 +92,7 @@ class VideoReader(BaseReader):
         self.capture = self._get_capture(self.folder, stream)
         self.resolution = self._get_resolution(self.capture)
         self.frame_count = self._get_frame_count(self.capture)
-        self.frame_shape = self.load_frame(0).shape
+        self.frame_shape = self._get_frame_shape(self.capture)
         self.fps = self._get_fps(self.capture)
 
     @property
@@ -108,6 +108,11 @@ class VideoReader(BaseReader):
             "frame_count": self.frame_count,
             "fps": np.round(self.fps, 3),
         }
+
+    @property
+    def current_frame_index(self):
+        """ Index of current video frame. """
+        return int(self.capture.get(cv2.CAP_PROP_POS_FRAMES))
 
     @staticmethod
     def _load_intrinsics(folder):
@@ -137,6 +142,14 @@ class VideoReader(BaseReader):
             int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
+
+    def _get_frame_shape(self, capture):
+        """ Get shape of a frame. """
+        idx = self.current_frame_index
+        shape = self.load_frame().shape
+        self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
+
+        return shape
 
     @staticmethod
     def _get_frame_count(capture):
@@ -194,6 +207,18 @@ class VideoReader(BaseReader):
         p1_roi = np.clip(p1_roi, 0, roi_size)
 
         return (p0_roi, p1_roi), (p0_frame, p1_frame)
+
+    def _get_frame_index(self, idx_or_ts, default=None):
+        """ Get frame index from index or timestamp or None. """
+        if idx_or_ts is None:
+            if default is None:
+                return self.current_frame_index
+            else:
+                return default
+        elif isinstance(idx_or_ts, pd.Timestamp):
+            return self.timestamps.get_loc(idx_or_ts, method="nearest")
+        else:
+            return idx_or_ts
 
     @staticmethod
     def convert_to_uint8(frame):
@@ -400,35 +425,38 @@ class VideoReader(BaseReader):
 
         return frame.astype(float) / 255.0
 
-    def load_raw_frame(self, idx):
+    def load_raw_frame(self, idx=None):
         """ Load a single un-processed video frame.
 
         Parameters
         ----------
-        idx : int
-            The index of the frame
+        idx : int or Timestamp, optional
+            The index of the frame. If not specified, will load the next frame.
+            If Timestamp, will load the frame with the closest timestamp.
 
         Returns
         -------
         numpy.ndarray
             The loaded frame.
         """
-        if idx < 0 or idx >= self.frame_count:
-            raise ValueError("Frame index out of range")
+        if idx is not None:
+            idx = self._get_frame_index(idx)
+            if idx < 0 or idx >= self.frame_count:
+                raise ValueError("Frame index out of range")
+            self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
 
-        # TODO this is very inefficient for consecutive frames
-        self.capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
         _, frame = self.capture.read()
 
         return frame
 
-    def load_frame(self, idx, return_timestamp=False):
-        """ Load a single processed video frame,
+    def load_frame(self, idx=None, return_timestamp=False):
+        """ Load a single processed video frame.
 
         Parameters
         ----------
-        idx : int
-            The index of the frame
+        idx : int or Timestamp, optional
+            The index of the frame. If not specified, will load the next frame.
+            If Timestamp, will load the frame with the closest timestamp.
 
         return_timestamp : bool, default False
             If True, also return the timestamp of the frame.
@@ -442,6 +470,7 @@ class VideoReader(BaseReader):
             The timestamp of the frame.
         """
         frame = self.load_raw_frame(idx)
+        idx = self._get_frame_index(idx)
 
         if self.norm_pos is not None:
             norm_pos = self.norm_pos.values[idx]
@@ -461,20 +490,19 @@ class VideoReader(BaseReader):
 
         Parameters
         ----------
-        start : int, optional
-            If specified, start the generator at this frame index.
+        start : int or Timestamp, optional
+            If specified, start the generator at this frame index or timestamp.
 
-        end : int, optional
-            If specified, stop the generator at this frame index.
+        end : int or timestamp, optional
+            If specified, stop the generator at this frame index or timestamp.
 
         Yields
         -------
         numpy.ndarray
             The loaded frame.
         """
-        # TODO accept timestamps for start and end
-        start = start or 0
-        end = end or self.frame_count
+        start = self._get_frame_index(start, default=0)
+        end = self._get_frame_index(end, default=self.frame_count)
 
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, start)
 
@@ -497,11 +525,12 @@ class VideoReader(BaseReader):
             with ROI extraction when the ROI is (partially) outside of the
             frame.
 
-        start : Timestamp, optional
-            If specified, load the dataset starting at this video timestamp.
+        start : int or Timestamp, optional
+            If specified, load the dataset starting at this frame index or
+            timestamp.
 
-        end : Timestamp, optional
-            If specified, load the dataset until this video timestamp.
+        end : int or Timestamp, optional
+            If specified, load the dataset until this frame index or timestamp.
 
         Returns
         -------
@@ -510,11 +539,8 @@ class VideoReader(BaseReader):
         """
         t = self.timestamps
 
-        if start is not None:
-            start = t.get_loc(start, method="nearest")
-
-        if end is not None:
-            end = t.get_loc(end, method="nearest")
+        start = self._get_frame_index(start, default=0)
+        end = self._get_frame_index(end, default=self.frame_count)
 
         t = t[start:end]
 
@@ -623,13 +649,14 @@ class OpticalFlowReader(VideoReader):
         else:
             return np.nan * np.ones(frame.shape + (2,))
 
-    def load_optical_flow(self, idx, return_timestamp=False):
+    def load_optical_flow(self, idx=None, return_timestamp=False):
         """ Load a single optical flow frame.
 
         Parameters
         ----------
-        idx : int
-            The index of the frame
+        idx : int or Timestamp, optional
+            The index of the frame. If not specified, will load the next frame.
+            If Timestamp, will load the frame with the closest timestamp.
 
         return_timestamp : bool, default False
             If True, also return the timestamp of the frame.
@@ -639,15 +666,15 @@ class OpticalFlowReader(VideoReader):
         numpy.ndarray
             The loaded optical flow frame.
         """
-        if idx < 0 or idx >= self.frame_count:
-            raise ValueError("Frame index out of range")
-
         if idx == 0:
             last_frame = None
-        else:
+        elif idx is not None:
             last_frame = self.load_frame(idx - 1)
+        else:
+            last_frame = self.load_frame()
 
         flow = self.calculate_optical_flow(self.load_frame(idx), last_frame)
+        idx = self._get_frame_index(idx)
 
         if return_timestamp:
             return self.timestamps[idx], flow
@@ -659,11 +686,11 @@ class OpticalFlowReader(VideoReader):
 
         Parameters
         ----------
-        start : int, optional
-            If specified, start the generator at this frame index.
+        start : int or Timestamp, optional
+            If specified, start the generator at this frame index or timestamp.
 
-        end : int, optional
-            If specified, stop the generator at this frame index.
+        end : int or Timestamp, optional
+            If specified, stop the generator at this frame index or timestamp.
 
         Yields
         -------
@@ -687,11 +714,12 @@ class OpticalFlowReader(VideoReader):
             with ROI extraction when the ROI is (partially) outside of the
             frame.
 
-        start : Timestamp, optional
-            If specified, load the dataset starting at this video timestamp.
+        start : int or Timestamp, optional
+            If specified, load the dataset starting at this frame index or
+            timestamp.
 
-        end : Timestamp, optional
-            If specified, load the dataset until this video timestamp.
+        end : int or Timestamp, optional
+            If specified, load the dataset until this frame index or timestamp.
 
         iter_wrapper : callable, optional
             A wrapper around the optical flow generator. Works with ``tqdm``
@@ -705,11 +733,8 @@ class OpticalFlowReader(VideoReader):
         t = self.timestamps
         ss = self.subsampling or 1.0
 
-        if start is not None:
-            start = t.get_loc(start, method="nearest")
-
-        if end is not None:
-            end = t.get_loc(end, method="nearest")
+        start = self._get_frame_index(start, default=0)
+        end = self._get_frame_index(end, default=self.frame_count)
 
         t = t[start:end]
 

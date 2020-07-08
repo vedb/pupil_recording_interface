@@ -448,7 +448,7 @@ class StreamManager(object):
 
         Parameters
         ----------
-        block: bool, default False
+        block: bool, default True
             If True, this method will block until the manager is stopped,
             e.g. by a keyboard interrupt. Otherwise, the main loop is
             dispatched to a separate thread which is returned by this
