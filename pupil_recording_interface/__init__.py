@@ -148,6 +148,8 @@ def get_gaze_mappers(folder):
         The set of available mappers.
     """
     folder = Path(folder)
+    if not folder.exists():
+        raise FileNotFoundError(f"No such folder: {folder}")
 
     mappers = set(GazeReader._get_offline_gaze_mappers(folder).keys())
     if (folder / "gaze.pldata").exists():

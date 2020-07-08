@@ -44,10 +44,11 @@ that provides methods for calculating optical flow between consecutive frames:
 
 .. doctest::
 
-    >>> interface = pri.OpticalFlowReader(pri.TEST_RECORDING, subsampling=8.)
-    >>> interface.load_dataset(
-    ...     start=interface.user_info['experiment_start'],
-    ...     end=interface.user_info['experiment_end'])
+    >>> reader = pri.OpticalFlowReader(pri.TEST_RECORDING, subsampling=8.)
+    >>> reader.load_dataset(
+    ...     start=reader.user_info['experiment_start'],
+    ...     end=reader.user_info['experiment_end'],
+    ... )
     <xarray.Dataset>
     Dimensions:       (pixel_axis: 2, roi_x: 160, roi_y: 90, time: 22)
     Coordinates:

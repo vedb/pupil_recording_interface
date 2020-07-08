@@ -26,16 +26,16 @@ Pupil detection
     >>> with pri.Session(stream, detector):
     ...     packet = stream.get_packet()
     ...     packet = detector.process_packet(packet)
-    ...     packet.pupil # doctest:+NORMALIZE_WHITESPACE
+    ...     packet.pupil # doctest:+NORMALIZE_WHITESPACE +ELLIPSIS
     {'ellipse':
-        {'center': (96.12611389160156, 130.08692932128906),
-         'axes': (39.72499465942383, 44.183467864990234),
-         'angle': 77.9285202026367},
-     'diameter': 44.183467864990234,
-     'location': (96.12611389160156, 130.08692932128906),
+        {'center': (96..., 130...),
+         'axes': (39..., 44...),
+         'angle': 77...},
+     'diameter': 44...,
+     'location': (96..., 130...),
      'confidence': 0.99,
-     'norm_pos': (0.5006568431854248, 0.6775360902150472),
-     'timestamp': 1570725800.2802918,
+     'norm_pos': (0.5..., 0.6...),
+     'timestamp': 1570725800...,
      'method': '2d c++',
      'id': None,
      'topic': 'pupil'}

@@ -475,6 +475,14 @@ class TestVideoReader(object):
         fps = VideoReader(folder).fps
         assert fps == self.fps
 
+    def test_current_frame_index(self, folder):
+        """"""
+        reader = VideoReader(folder)
+        assert reader.current_frame_index == 0
+
+        reader.load_raw_frame()
+        assert reader.current_frame_index == 1
+
     def test_get_valid_idx(self):
         """"""
         norm_pos = np.array(
@@ -487,47 +495,55 @@ class TestVideoReader(object):
 
     def test_get_bounds(self, folder):
         """"""
-        interface = VideoReader(folder, roi_size=self.roi_size)
+        reader = VideoReader(folder, roi_size=self.roi_size)
 
         # completely inside
-        bounds = interface._get_bounds(256, 512, self.roi_size)
+        bounds = reader._get_bounds(256, 512, self.roi_size)
         npt.assert_equal(bounds, ((0, 128), (192, 320)))
 
         # partially inside
-        bounds = interface._get_bounds(0, 512, self.roi_size)
+        bounds = reader._get_bounds(0, 512, self.roi_size)
         npt.assert_equal(bounds, ((64, 128), (0, 64)))
-        bounds = interface._get_bounds(512, 512, self.roi_size)
+        bounds = reader._get_bounds(512, 512, self.roi_size)
         npt.assert_equal(bounds, ((0, 64), (448, 512)))
 
         # completely outside
-        bounds = interface._get_bounds(1024, 512, self.roi_size)
+        bounds = reader._get_bounds(1024, 512, self.roi_size)
         npt.assert_equal(bounds, ((0, 0), (512, 512)))
-        bounds = interface._get_bounds(-512, 512, self.roi_size)
+        bounds = reader._get_bounds(-512, 512, self.roi_size)
         npt.assert_equal(bounds, ((576, 128), (0, 0)))
+
+    def test_get_frame_index(self, folder):
+        """"""
+        reader = VideoReader(folder)
+        assert reader._get_frame_index(None) == 0
+        assert reader._get_frame_index(None, default=1) == 1
+        assert reader._get_frame_index(1) == 1
+        assert reader._get_frame_index(reader.timestamps[2]) == 2
 
     def test_get_roi(self, folder):
         """"""
         frame = np.random.rand(512, 512)
-        interface = VideoReader(folder, roi_size=self.roi_size)
+        reader = VideoReader(folder, roi_size=self.roi_size)
 
         # completely inside
-        roi = interface.get_roi(frame, (0.5, 0.5))
+        roi = reader.get_roi(frame, (0.5, 0.5))
         npt.assert_equal(roi, frame[192:320, 192:320])
 
         # partially inside
-        roi = interface.get_roi(frame, (0.0, 0.0))
+        roi = reader.get_roi(frame, (0.0, 0.0))
         npt.assert_equal(roi[:64, 64:128], frame[448:, :64])
 
         # completely outside
-        roi = interface.get_roi(frame, (2.0, 2.0))
+        roi = reader.get_roi(frame, (2.0, 2.0))
         npt.assert_equal(roi, np.nan * np.ones((128, 128)))
 
         # regression test for valid negative indexes
-        interface.get_roi(frame, (0.0, 1.3))
+        reader.get_roi(frame, (0.0, 1.3))
 
         # color frame
         frame = np.random.rand(512, 512, 3)
-        roi = interface.get_roi(frame, (0.5, 0.5))
+        roi = reader.get_roi(frame, (0.5, 0.5))
         assert roi.shape == (self.roi_size, self.roi_size, 3)
 
     def test_convert_to_uint8(self):
@@ -541,26 +557,35 @@ class TestVideoReader(object):
 
     def test_load_raw_frame(self, folder):
         """"""
-        interface = VideoReader(folder)
-        frame = interface.load_raw_frame(0)
+        reader = VideoReader(folder)
+        frame = reader.load_raw_frame()
         assert frame.shape == self.frame_shape
+
+        reader = VideoReader(folder)
+        frame_by_idx = reader.load_raw_frame(0)
+        npt.assert_equal(frame_by_idx, frame)
 
         # invalid index
         with pytest.raises(ValueError):
-            interface.load_raw_frame(self.n_frames)
+            reader.load_raw_frame(self.n_frames)
 
     def test_load_frame(self, folder):
         """"""
-        interface = VideoReader(folder)
-        frame = interface.load_frame(0)
+        reader = VideoReader(folder)
+        frame = reader.load_frame()
         assert frame.shape == self.frame_shape
+
+        frame_by_idx = reader.load_frame(0)
+        npt.assert_equal(frame_by_idx, frame)
+
+        # timestamp
+        frame_by_ts = reader.load_frame(reader.timestamps[0])
+        npt.assert_equal(frame_by_ts, frame)
 
         # ROI around norm pos
         norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        interface = VideoReader(
-            folder, norm_pos=norm_pos, roi_size=self.roi_size
-        )
-        frame = interface.load_frame(0)
+        reader = VideoReader(folder, norm_pos=norm_pos, roi_size=self.roi_size)
+        frame = reader.load_frame(0)
         assert frame.shape == (
             self.roi_size,
             self.roi_size,
@@ -568,24 +593,24 @@ class TestVideoReader(object):
         )
 
         # with timestamp
-        interface = VideoReader(folder)
-        t, frame = interface.load_frame(0, return_timestamp=True)
+        reader = VideoReader(folder)
+        t, frame = reader.load_frame(0, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2383718
 
     def test_read_frames(self, folder):
         """"""
         # TODO move this to process_frame test
         # full frame
-        interface = VideoReader(folder)
-        assert next(interface.read_frames()).shape == self.frame_shape
+        reader = VideoReader(folder)
+        assert next(reader.read_frames()).shape == self.frame_shape
 
         # grayscale
-        interface = VideoReader(folder, color_format="gray")
-        assert next(interface.read_frames()).shape == self.frame_shape[:2]
+        reader = VideoReader(folder, color_format="gray")
+        assert next(reader.read_frames()).shape == self.frame_shape[:2]
 
         # sub-sampled frame
-        interface = VideoReader(folder, subsampling=2.0)
-        assert next(interface.read_frames()).shape == (
+        reader = VideoReader(folder, subsampling=2.0)
+        assert next(reader.read_frames()).shape == (
             self.frame_shape[0] / 2,
             self.frame_shape[1] / 2,
             self.frame_shape[2],
@@ -593,10 +618,8 @@ class TestVideoReader(object):
 
         # ROI around gaze position
         norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        interface = VideoReader(
-            folder, norm_pos=norm_pos, roi_size=self.roi_size
-        )
-        assert next(interface.read_frames()).shape == (
+        reader = VideoReader(folder, norm_pos=norm_pos, roi_size=self.roi_size)
+        assert next(reader.read_frames()).shape == (
             self.roi_size,
             self.roi_size,
             self.frame_shape[2],
@@ -604,11 +627,11 @@ class TestVideoReader(object):
 
     def test_load_dataset(self, folder):
         """"""
-        interface = VideoReader(folder, subsampling=8.0, color_format="gray")
+        reader = VideoReader(folder, subsampling=8.0, color_format="gray")
 
-        ds = interface.load_dataset(
-            start=interface.user_info["experiment_start"],
-            end=interface.user_info["experiment_end"],
+        ds = reader.load_dataset(
+            start=reader.user_info["experiment_start"],
+            end=reader.user_info["experiment_end"],
         )
 
         assert dict(ds.sizes) == {"time": 22, "frame_x": 160, "frame_y": 90}
@@ -618,11 +641,9 @@ class TestVideoReader(object):
 
         # ROI around norm_pos
         norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        interface = VideoReader(
-            folder, norm_pos=norm_pos, roi_size=self.roi_size
-        )
+        reader = VideoReader(folder, norm_pos=norm_pos, roi_size=self.roi_size)
 
-        ds = interface.load_dataset(dropna=True)
+        ds = reader.load_dataset(dropna=True)
 
         assert dict(ds.sizes) == {
             "time": self.n_valid_frames,
@@ -672,32 +693,32 @@ class TestOpticalFlowReader(object):
 
     def test_load_optical_flow(self, folder):
         """"""
-        interface = OpticalFlowReader(folder)
+        reader = OpticalFlowReader(folder)
 
-        flow = interface.load_optical_flow(1)
+        flow = reader.load_optical_flow(1)
         assert flow.shape == self.frame_shape
 
         # first frame
-        flow = interface.load_optical_flow(0)
+        flow = reader.load_optical_flow(0)
         assert flow.shape == self.frame_shape
         assert np.all(np.isnan(flow))
 
         # with timestamp
-        t, flow = interface.load_optical_flow(1, return_timestamp=True)
+        t, flow = reader.load_optical_flow(1, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2718818
 
         # invalid index
         with pytest.raises(ValueError):
-            interface.load_optical_flow(self.n_frames)
+            reader.load_optical_flow(self.n_frames)
 
     def test_read_optical_flow(self, folder):
         """"""
         norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        interface = OpticalFlowReader(
+        reader = OpticalFlowReader(
             folder, norm_pos=norm_pos, roi_size=self.roi_size
         )
 
-        assert next(interface.read_optical_flow()).shape == (
+        assert next(reader.read_optical_flow()).shape == (
             self.roi_size,
             self.roi_size,
             2,
@@ -707,11 +728,11 @@ class TestOpticalFlowReader(object):
         """"""
         tqdm = pytest.importorskip("tqdm")
 
-        interface = OpticalFlowReader(folder, subsampling=8.0)
+        reader = OpticalFlowReader(folder, subsampling=8.0)
 
-        ds = interface.load_dataset(
-            start=interface.user_info["experiment_start"],
-            end=interface.user_info["experiment_end"],
+        ds = reader.load_dataset(
+            start=reader.user_info["experiment_start"],
+            end=reader.user_info["experiment_end"],
         )
 
         assert dict(ds.sizes) == {
@@ -720,17 +741,17 @@ class TestOpticalFlowReader(object):
             "roi_y": 90,
             "pixel_axis": 2,
         }
-        assert ds.indexes["time"][0] >= interface.user_info["experiment_start"]
-        assert ds.indexes["time"][-1] < interface.user_info["experiment_end"]
+        assert ds.indexes["time"][0] >= reader.user_info["experiment_start"]
+        assert ds.indexes["time"][-1] < reader.user_info["experiment_end"]
         assert set(ds.data_vars) == {"optical_flow"}
 
         # ROI around norm_pos
         norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        interface = OpticalFlowReader(
+        reader = OpticalFlowReader(
             folder, norm_pos=norm_pos, roi_size=self.roi_size
         )
 
-        ds = interface.load_dataset(dropna=True, iter_wrapper=tqdm.tqdm)
+        ds = reader.load_dataset(dropna=True, iter_wrapper=tqdm.tqdm)
 
         assert dict(ds.sizes) == {
             "time": self.n_valid_frames,
@@ -749,10 +770,10 @@ class TestOpticalFlowReader(object):
         )
 
         # start/end with dropna
-        ds = interface.load_dataset(
+        ds = reader.load_dataset(
             dropna=True,
-            start=interface.user_info["experiment_start"],
-            end=interface.user_info["experiment_end"],
+            start=reader.user_info["experiment_start"],
+            end=reader.user_info["experiment_end"],
         )
 
         assert ds.sizes["time"] == 21
