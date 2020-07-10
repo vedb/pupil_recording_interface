@@ -9,7 +9,7 @@ Loading recordings
 pupil_recording_interface provides a simple interface for loading recordings
 made with Pupil Capture into Python. Recordings are loaded as `xarray`_
 Datasets which provide an elegant way of working with multi-dimensional
-labelled data.
+labeled data.
 
 .. _xarray: https://xarray.pydata.org
 
@@ -30,17 +30,37 @@ You can easily load recorded gaze data with:
       * pixel_axis          (pixel_axis) <U1 'x' 'y'
       * cartesian_axis      (cartesian_axis) <U1 'x' 'y' 'z'
     Data variables:
+        eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
         gaze_norm_pos       (time, pixel_axis) float64 0.4082 0.3912 ... 0.1286
         gaze_point          (time, cartesian_axis) float64 nan nan ... 0.1299
+        eye0_center         (time, cartesian_axis) float64 nan nan ... -0.02006
+        eye1_center         (time, cartesian_axis) float64 nan nan ... -0.02153
+        eye0_normal         (time, cartesian_axis) float64 nan nan ... 0.267 0.9269
+        eye1_normal         (time, cartesian_axis) float64 nan nan ... 0.1646 0.9797
         gaze_confidence_3d  (time) float64 0.8787 0.8769 0.9233 ... 0.9528 0.9528
+
 
 Here, ``pri.TEST_RECORDING`` is an alias for a folder included in the
 package that includes a very short example recording. ``gaze='recording'``
 tells the function to load the recorded gaze data. The dataset contains
-three arrays, the two dimensional norm pos, the three-dimensional gaze point
-and the confidence of the mapping. All arrays behave like numpy arrays, (i.e.
-you can use functions like ``np.sum`` on them), but will preserve their
-labels (called coordinates) in most cases.
+the following arrays:
+
+* ``eye``: the eye data that produced the mapping, 0 for eye 0 (usually right),
+  1 for eye 1 (usually left), 2 for binocular mapping
+* ``gaze_norm_pos``: the two dimensional norm pos, i.e. the normalized position
+  of the gaze in the video frame where (0, 0) is the lower left and (1, 1) is
+  the upper right corner of the frame
+* ``gaze_point``: the three-dimensional gaze point represented in the world
+  camera coordinate system (x right, y down, z forward), in meters
+* ``eye{0,1}_center``: the center of each eye represented in the world
+  camera coordinate system, in meters
+* ``eye{0,1}_normal``: the normal of each eye represented in the world
+  camera coordinate system
+* ``gaze_confidence_3d``: the confidence of the mapping between 0 and 1
+
+All arrays behave like numpy arrays, (i.e. you can use functions like
+``np.sum`` on them), but will preserve their labels (called coordinates) in
+most cases.
 
 If you performed post-hoc gaze mapping, it is also possible to reference an
 offline gaze mapper by name and load its data:
@@ -55,8 +75,13 @@ offline gaze mapper by name and load its data:
       * pixel_axis          (pixel_axis) <U1 'x' 'y'
       * cartesian_axis      (cartesian_axis) <U1 'x' 'y' 'z'
     Data variables:
+        eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
         gaze_norm_pos       (time, pixel_axis) float64 0.4247 0.4144 ... 0.1215
         gaze_point          (time, cartesian_axis) float64 -0.01031 ... 0.09778
+        eye0_center         (time, cartesian_axis) float64 0.02037 0.01459 ... -0.02
+        eye1_center         (time, cartesian_axis) float64 -0.03989 ... -0.02
+        eye0_normal         (time, cartesian_axis) float64 -0.2449 ... 0.9327
+        eye1_normal         (time, cartesian_axis) float64 0.2435 ... 0.9696
         gaze_confidence_3d  (time) float64 0.8977 0.8977 0.9281 ... 0.9002 0.8536
 
 Finally, it is also possible to merge the data from a 2d and a 3d gaze
@@ -65,8 +90,9 @@ point from the 3d mapper:
 
 .. doctest::
 
-    >>> pri.load_dataset(pri.TEST_RECORDING,
-    ...                  gaze={'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'})
+    >>> pri.load_dataset(
+    ...     pri.TEST_RECORDING, gaze={'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
+    ... )
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5134)
     Coordinates:
@@ -74,8 +100,13 @@ point from the 3d mapper:
       * pixel_axis          (pixel_axis) <U1 'x' 'y'
       * cartesian_axis      (cartesian_axis) <U1 'x' 'y' 'z'
     Data variables:
+        eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
         gaze_norm_pos       (time, pixel_axis) float64 0.4586 0.5304 ... 1.072 2.01
         gaze_point          (time, cartesian_axis) float64 -0.01031 ... 0.09778
+        eye0_center         (time, cartesian_axis) float64 0.02037 0.01459 ... -0.02
+        eye1_center         (time, cartesian_axis) float64 -0.03989 ... -0.02
+        eye0_normal         (time, cartesian_axis) float64 -0.2449 ... 0.9327
+        eye1_normal         (time, cartesian_axis) float64 0.2435 ... 0.9696
         gaze_confidence_2d  (time) float64 0.9428 0.929 0.9442 ... 0.9501 0.9268
         gaze_confidence_3d  (time) float64 0.8977 0.8977 0.9281 ... 0.9002 0.8536
 
@@ -315,8 +346,13 @@ directly be loaded by xarray which is a lot faster than the
       * pixel_axis          (pixel_axis) object 'x' 'y'
       * cartesian_axis      (cartesian_axis) object 'x' 'y' 'z'
     Data variables:
+        eye                 (time) float64 ...
         gaze_norm_pos       (time, pixel_axis) float64 ...
         gaze_point          (time, cartesian_axis) float64 ...
+        eye0_center         (time, cartesian_axis) float64 ...
+        eye1_center         (time, cartesian_axis) float64 ...
+        eye0_normal         (time, cartesian_axis) float64 ...
+        eye1_normal         (time, cartesian_axis) float64 ...
         gaze_confidence_3d  (time) float64 ...
 
 .. testcleanup::

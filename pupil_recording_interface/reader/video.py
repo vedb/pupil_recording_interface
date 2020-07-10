@@ -92,7 +92,7 @@ class VideoReader(BaseReader):
         self.capture = self._get_capture(self.folder, stream)
         self.resolution = self._get_resolution(self.capture)
         self.frame_count = self._get_frame_count(self.capture)
-        self.frame_shape = self._get_frame_shape(self.capture)
+        self.frame_shape = self._get_frame_shape()
         self.fps = self._get_fps(self.capture)
 
     @property
@@ -143,7 +143,7 @@ class VideoReader(BaseReader):
             int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
 
-    def _get_frame_shape(self, capture):
+    def _get_frame_shape(self):
         """ Get shape of a frame. """
         idx = self.current_frame_index
         shape = self.load_frame().shape
