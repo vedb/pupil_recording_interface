@@ -33,8 +33,8 @@ You can easily load recorded gaze data with:
         eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
         gaze_norm_pos       (time, pixel_axis) float64 0.4082 0.3912 ... 0.1286
         gaze_point          (time, cartesian_axis) float64 nan nan ... 0.1299
-        eye0_center         (time, cartesian_axis) float64 nan nan ... 14.97 -20.06
-        eye1_center         (time, cartesian_axis) float64 nan nan ... 14.17 -21.53
+        eye0_center         (time, cartesian_axis) float64 nan nan ... -0.02006
+        eye1_center         (time, cartesian_axis) float64 nan nan ... -0.02153
         eye0_normal         (time, cartesian_axis) float64 nan nan ... 0.267 0.9269
         eye1_normal         (time, cartesian_axis) float64 nan nan ... 0.1646 0.9797
         gaze_confidence_3d  (time) float64 0.8787 0.8769 0.9233 ... 0.9528 0.9528
@@ -78,8 +78,8 @@ offline gaze mapper by name and load its data:
         eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
         gaze_norm_pos       (time, pixel_axis) float64 0.4247 0.4144 ... 0.1215
         gaze_point          (time, cartesian_axis) float64 -0.01031 ... 0.09778
-        eye0_center         (time, cartesian_axis) float64 20.37 14.59 ... -20.0
-        eye1_center         (time, cartesian_axis) float64 -39.89 16.19 ... -20.0
+        eye0_center         (time, cartesian_axis) float64 0.02037 0.01459 ... -0.02
+        eye1_center         (time, cartesian_axis) float64 -0.03989 ... -0.02
         eye0_normal         (time, cartesian_axis) float64 -0.2449 ... 0.9327
         eye1_normal         (time, cartesian_axis) float64 0.2435 ... 0.9696
         gaze_confidence_3d  (time) float64 0.8977 0.8977 0.9281 ... 0.9002 0.8536
@@ -103,8 +103,8 @@ point from the 3d mapper:
         eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
         gaze_norm_pos       (time, pixel_axis) float64 0.4586 0.5304 ... 1.072 2.01
         gaze_point          (time, cartesian_axis) float64 -0.01031 ... 0.09778
-        eye0_center         (time, cartesian_axis) float64 20.37 14.59 ... -20.0
-        eye1_center         (time, cartesian_axis) float64 -39.89 16.19 ... -20.0
+        eye0_center         (time, cartesian_axis) float64 0.02037 0.01459 ... -0.02
+        eye1_center         (time, cartesian_axis) float64 -0.03989 ... -0.02
         eye0_normal         (time, cartesian_axis) float64 -0.2449 ... 0.9327
         eye1_normal         (time, cartesian_axis) float64 0.2435 ... 0.9696
         gaze_confidence_2d  (time) float64 0.9428 0.929 0.9442 ... 0.9501 0.9268
