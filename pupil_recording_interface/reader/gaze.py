@@ -1,5 +1,6 @@
 """"""
 import numpy as np
+import pandas as pd
 import xarray as xr
 from msgpack import Unpacker
 
@@ -49,13 +50,48 @@ class GazeReader(BaseReader):
             "timestamp": df.timestamp,
             "confidence": df.confidence,
             "norm_pos": np.array(df.norm_pos.to_list()),
+            "eye": np.zeros(df.timestamp.shape, dtype=int),
         }
 
+        data["eye"][df.topic.str.endswith(".1.")] = 1
+        data["eye"][df.topic.str.endswith(".01.")] = 2
+
         if "gaze_point_3d" in df.columns:
+            # get 3d gaze point
             p = np.nan * np.ones(df.timestamp.shape + (3,))
-            idx_notnan = df.gaze_point_3d.apply(lambda x: isinstance(x, tuple))
-            p[idx_notnan, :] = np.array(df.gaze_point_3d[idx_notnan].to_list())
+            valid_idx = df.gaze_point_3d.apply(lambda x: isinstance(x, tuple))
+            p[valid_idx, :] = np.array(df.gaze_point_3d[valid_idx].to_list())
             data["gaze_point"] = p / 1000.0
+
+            # get indexes of binocular and monocular eye centers/normals
+            bin_idx = df.eye_centers_3d.apply(lambda x: isinstance(x, dict))
+            mon_idx = df.eye_center_3d.apply(lambda x: isinstance(x, tuple))
+            mon0_idx = mon_idx & (data["eye"] == 0)
+            mon1_idx = mon_idx & (data["eye"] == 1)
+            assert not (bin_idx & mon0_idx).any()
+            assert not (bin_idx & mon1_idx).any()
+
+            # merge monocular and binocular eye centers
+            df_c = pd.DataFrame(df.eye_centers_3d[bin_idx].to_list())
+            c0 = np.nan * np.ones(df.timestamp.shape + (3,))
+            c0[bin_idx, :] = np.array(df_c[0].to_list())
+            c0[mon0_idx, :] = np.array(df.eye_center_3d[mon0_idx].to_list())
+            data["eye0_center"] = c0 / 1000.0
+            c1 = np.nan * np.ones(df.timestamp.shape + (3,))
+            c1[bin_idx, :] = np.array(df_c[1].to_list())
+            c1[mon1_idx, :] = np.array(df.eye_center_3d[mon1_idx].to_list())
+            data["eye1_center"] = c1 / 1000.0
+
+            # merge monocular and binocular gaze normals
+            df_n = pd.DataFrame(df.gaze_normals_3d[bin_idx].to_list())
+            n0 = np.nan * np.ones(df.timestamp.shape + (3,))
+            n0[bin_idx, :] = np.array(df_n[0].to_list())
+            n0[mon0_idx, :] = np.array(df.gaze_normal_3d[mon0_idx].to_list())
+            data["eye0_normal"] = n0
+            n1 = np.nan * np.ones(df.timestamp.shape + (3,))
+            n1[bin_idx, :] = np.array(df_n[1].to_list())
+            n1[mon1_idx, :] = np.array(df.gaze_normal_3d[mon1_idx].to_list())
+            data["eye1_normal"] = n1
 
         return data
 
@@ -140,15 +176,24 @@ class GazeReader(BaseReader):
         }
 
         data_vars = {
+            "eye": ("time", data["eye"]),
             "gaze_norm_pos": (["time", "pixel_axis"], data["norm_pos"]),
         }
 
-        # gaze point and normals only available from 3d mapper
+        # gaze point, centers and normals only available from 3d mapper
         if "gaze_point" in data:
             coords["cartesian_axis"] = ["x", "y", "z"]
-            data_vars["gaze_point"] = (
-                ["time", "cartesian_axis"],
-                data["gaze_point"],
+            data_vars.update(
+                {
+                    key: (["time", "cartesian_axis"], data[key])
+                    for key in (
+                        "gaze_point",
+                        "eye0_center",
+                        "eye1_center",
+                        "eye0_normal",
+                        "eye1_normal",
+                    )
+                }
             )
 
         # two confidence values from merged 2d/3d gaze

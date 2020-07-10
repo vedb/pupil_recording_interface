@@ -154,8 +154,13 @@ class TestFunctionalReader(object):
         )
 
         assert set(gaze.data_vars) == {
+            "eye",
             "gaze_confidence_3d",
             "gaze_point",
+            "eye0_center",
+            "eye1_center",
+            "eye0_normal",
+            "eye1_normal",
             "gaze_norm_pos",
         }
         assert set(odometry.data_vars) == {
@@ -239,7 +244,14 @@ class TestGazeReader(object):
         assert data["timestamp"].shape == (self.n_gaze,)
         assert data["confidence"].shape == (self.n_gaze,)
         assert data["norm_pos"].shape == (self.n_gaze, 2)
+        assert data["eye"].shape == (self.n_gaze,)
         assert data["gaze_point"].shape == (self.n_gaze, 3)
+        assert data["eye0_center"].shape == (self.n_gaze, 3)
+        assert data["eye1_center"].shape == (self.n_gaze, 3)
+        assert data["eye0_normal"].shape == (self.n_gaze, 3)
+        assert data["eye1_normal"].shape == (self.n_gaze, 3)
+
+        assert set(np.unique(data["eye"])) == {0, 1, 2}
 
         # no gaze
         with pytest.raises(FileNotFoundError):
@@ -253,7 +265,12 @@ class TestGazeReader(object):
         assert data["confidence_2d"].shape == (self.n_gaze_offline,)
         assert data["confidence_3d"].shape == (self.n_gaze_offline,)
         assert data["norm_pos"].shape == (self.n_gaze_offline, 2)
+        assert data["eye"].shape == (self.n_gaze_offline,)
         assert data["gaze_point"].shape == (self.n_gaze_offline, 3)
+        assert data["eye0_center"].shape == (self.n_gaze_offline, 3)
+        assert data["eye1_center"].shape == (self.n_gaze_offline, 3)
+        assert data["eye0_normal"].shape == (self.n_gaze_offline, 3)
+        assert data["eye1_normal"].shape == (self.n_gaze_offline, 3)
 
     def test_get_offline_gaze_mapper(self, folder):
         """"""
@@ -272,39 +289,50 @@ class TestGazeReader(object):
         """"""
         # from recording
         ds = GazeReader(folder).load_dataset()
-
         assert dict(ds.sizes) == {
             "time": self.n_gaze,
             "cartesian_axis": 3,
             "pixel_axis": 2,
         }
-
         assert set(ds.data_vars) == {
+            "eye",
             "gaze_confidence_3d",
             "gaze_point",
+            "eye0_center",
+            "eye1_center",
+            "eye0_normal",
+            "eye1_normal",
             "gaze_norm_pos",
         }
 
         # offline 2d mapper
         ds = GazeReader(folder, source=self.gaze_mappers["2d"]).load_dataset()
-
-        assert dict(ds.sizes) == {"time": self.n_gaze_offline, "pixel_axis": 2}
-
-        assert set(ds.data_vars) == {"gaze_confidence_2d", "gaze_norm_pos"}
+        assert dict(ds.sizes) == {
+            "time": self.n_gaze_offline,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "eye",
+            "gaze_confidence_2d",
+            "gaze_norm_pos",
+        }
 
         # merged 2d/3d gaze
         ds = GazeReader(folder, source=self.gaze_mappers).load_dataset()
-
         assert dict(ds.sizes) == {
             "time": self.n_gaze_offline,
             "cartesian_axis": 3,
             "pixel_axis": 2,
         }
-
         assert set(ds.data_vars) == {
+            "eye",
             "gaze_confidence_2d",
             "gaze_confidence_3d",
             "gaze_point",
+            "eye0_center",
+            "eye1_center",
+            "eye0_normal",
+            "eye1_normal",
             "gaze_norm_pos",
         }
 
@@ -317,12 +345,15 @@ class TestGazeReader(object):
         pytest.importorskip("netCDF4")
 
         GazeReader(folder).write_netcdf()
-
         ds = xr.open_dataset(export_folder / "000" / "gaze.nc")
-
         assert set(ds.data_vars) == {
+            "eye",
             "gaze_confidence_3d",
             "gaze_point",
+            "eye0_center",
+            "eye1_center",
+            "eye0_normal",
+            "eye1_normal",
             "gaze_norm_pos",
         }
 
