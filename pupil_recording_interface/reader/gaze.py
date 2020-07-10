@@ -45,33 +45,38 @@ class GazeReader(BaseReader):
         if df.size == 0:
             raise ValueError(f"No gaze data in {folder / (topic + '.pldata')}")
 
-        t = df.timestamp
-        c = df.confidence
-        n = np.array(df.norm_pos.to_list())
+        data = {
+            "timestamp": df.timestamp,
+            "confidence": df.confidence,
+            "norm_pos": np.array(df.norm_pos.to_list()),
+        }
 
-        if "gaze_point_3d" not in df.columns:
-            p = None
-        else:
-            p = np.nan * np.ones(t.shape + (3,))
+        if "gaze_point_3d" in df.columns:
+            p = np.nan * np.ones(df.timestamp.shape + (3,))
             idx_notnan = df.gaze_point_3d.apply(lambda x: isinstance(x, tuple))
             p[idx_notnan, :] = np.array(df.gaze_point_3d[idx_notnan].to_list())
-            p /= 1000.0
+            data["gaze_point"] = p / 1000.0
 
-        return t, c, n, p
+        return data
 
     @staticmethod
     def _merge_2d_3d_gaze(gaze_2d, gaze_3d):
         """ Merge data from a 2d and a 3d gaze mapper. """
         t, idx_2d, idx_3d = np.intersect1d(
-            gaze_2d[0], gaze_3d[0], return_indices=True
+            gaze_2d["timestamp"], gaze_3d["timestamp"], return_indices=True
         )
 
-        return (
-            t,
-            (gaze_2d[1][idx_2d], gaze_3d[1][idx_3d]),
-            gaze_2d[2][idx_2d],
-            gaze_3d[3][idx_3d],
-        )
+        data = {
+            "timestamp": t,
+            "confidence_2d": gaze_2d["confidence"][idx_2d],
+            "confidence_3d": gaze_3d["confidence"][idx_3d],
+            "norm_pos": gaze_2d["norm_pos"][idx_2d],
+        }
+
+        for key in set(gaze_3d) - {"timestamp", "confidence", "norm_pos"}:
+            data[key] = gaze_3d[key][idx_3d]
+
+        return data
 
     @staticmethod
     def _get_offline_gaze_mappers(folder):
@@ -113,9 +118,9 @@ class GazeReader(BaseReader):
             The gaze data as a dataset.
         """
         if self.source == "recording":
-            t, c, n, p = self._load_gaze(self.folder)
+            data = self._load_gaze(self.folder)
         elif isinstance(self.source, str) and self.source in self.gaze_mappers:
-            t, c, n, p = self._load_gaze(
+            data = self._load_gaze(
                 self.folder / "offline_data" / "gaze-mappings",
                 self.gaze_mappers[self.source],
             )
@@ -123,11 +128,11 @@ class GazeReader(BaseReader):
             "2d",
             "3d",
         }:
-            t, c, n, p = self._load_merged_gaze(self.folder, self.source)
+            data = self._load_merged_gaze(self.folder, self.source)
         else:
             raise ValueError(f"Invalid gaze source: {self.source}")
 
-        t = self._timestamps_to_datetimeindex(t, self.info)
+        t = self._timestamps_to_datetimeindex(data["timestamp"], self.info)
 
         coords = {
             "time": t.values,
@@ -135,23 +140,27 @@ class GazeReader(BaseReader):
         }
 
         data_vars = {
-            "gaze_norm_pos": (["time", "pixel_axis"], n),
+            "gaze_norm_pos": (["time", "pixel_axis"], data["norm_pos"]),
         }
 
-        # gaze point only available from 3d mapper
-        if p is not None:
+        # gaze point and normals only available from 3d mapper
+        if "gaze_point" in data:
             coords["cartesian_axis"] = ["x", "y", "z"]
-            data_vars["gaze_point"] = (["time", "cartesian_axis"], p)
+            data_vars["gaze_point"] = (
+                ["time", "cartesian_axis"],
+                data["gaze_point"],
+            )
 
         # two confidence values from merged 2d/3d gaze
-        if isinstance(c, tuple):
-            assert len(c) == 2
-            data_vars["gaze_confidence_2d"] = ("time", c[0])
-            data_vars["gaze_confidence_3d"] = ("time", c[1])
-        elif p is None:
-            data_vars["gaze_confidence_2d"] = ("time", c)
-        else:
-            data_vars["gaze_confidence_3d"] = ("time", c)
+        if "confidence_2d" in data:
+            data_vars["gaze_confidence_2d"] = ("time", data["confidence_2d"])
+        if "confidence_3d" in data:
+            data_vars["gaze_confidence_3d"] = ("time", data["confidence_3d"])
+        if "confidence" in data:
+            if "gaze_point" not in data:
+                data_vars["gaze_confidence_2d"] = ("time", data["confidence"])
+            else:
+                data_vars["gaze_confidence_3d"] = ("time", data["confidence"])
 
         ds = xr.Dataset(data_vars, coords)
 

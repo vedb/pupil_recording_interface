@@ -1,4 +1,3 @@
-import sys
 import shutil
 from pathlib import Path
 
@@ -235,12 +234,12 @@ class TestGazeReader(object):
 
     def test_load_gaze(self, folder, t265_folder):
         """"""
-        t, c, n, p = GazeReader._load_gaze(folder)
+        data = GazeReader._load_gaze(folder)
 
-        assert t.shape == (self.n_gaze,)
-        assert c.shape == (self.n_gaze,)
-        assert n.shape == (self.n_gaze, 2)
-        assert p.shape == (self.n_gaze, 3)
+        assert data["timestamp"].shape == (self.n_gaze,)
+        assert data["confidence"].shape == (self.n_gaze,)
+        assert data["norm_pos"].shape == (self.n_gaze, 2)
+        assert data["gaze_point"].shape == (self.n_gaze, 3)
 
         # no gaze
         with pytest.raises(FileNotFoundError):
@@ -248,13 +247,13 @@ class TestGazeReader(object):
 
     def test_load_merged_gaze(self, folder):
         """"""
-        t, c, n, p = GazeReader._load_merged_gaze(folder, self.gaze_mappers)
+        data = GazeReader._load_merged_gaze(folder, self.gaze_mappers)
 
-        assert t.shape == (self.n_gaze_offline,)
-        assert c[0].shape == (self.n_gaze_offline,)
-        assert c[1].shape == (self.n_gaze_offline,)
-        assert n.shape == (self.n_gaze_offline, 2)
-        assert p.shape == (self.n_gaze_offline, 3)
+        assert data["timestamp"].shape == (self.n_gaze_offline,)
+        assert data["confidence_2d"].shape == (self.n_gaze_offline,)
+        assert data["confidence_3d"].shape == (self.n_gaze_offline,)
+        assert data["norm_pos"].shape == (self.n_gaze_offline, 2)
+        assert data["gaze_point"].shape == (self.n_gaze_offline, 3)
 
     def test_get_offline_gaze_mapper(self, folder):
         """"""
@@ -315,11 +314,11 @@ class TestGazeReader(object):
 
     def test_write_netcdf(self, folder, export_folder):
         """"""
-        pytest.importorskip("netcdf4")
+        pytest.importorskip("netCDF4")
 
         GazeReader(folder).write_netcdf()
 
-        ds = xr.open_dataset(export_folder / "gaze.nc")
+        ds = xr.open_dataset(export_folder / "000" / "gaze.nc")
 
         assert set(ds.data_vars) == {
             "gaze_confidence_3d",
@@ -440,9 +439,6 @@ class TestVideoReader(object):
             "dtype": "uint8",
         }
 
-    @pytest.mark.xfail(
-        sys.version_info < (3, 0), reason="isinstance check fails"
-    )
     def test_get_capture(self, folder):
         """"""
         capture = VideoReader._get_capture(folder, "world")
@@ -635,7 +631,6 @@ class TestVideoReader(object):
         )
 
         assert dict(ds.sizes) == {"time": 22, "frame_x": 160, "frame_y": 90}
-
         assert set(ds.data_vars) == {"frames"}
         assert ds.frames.dtype == "uint8"
 
