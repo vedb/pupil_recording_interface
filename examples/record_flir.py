@@ -6,6 +6,9 @@ import pupil_recording_interface as pri
 
 if __name__ == "__main__":
 
+    # recording folder
+    folder = "~/recordings/test"
+
     # stream configurations
     configs = [
         pri.VideoStream.Config(
@@ -13,18 +16,9 @@ if __name__ == "__main__":
             device_uid=None,
             name="world",
             resolution=(1280, 1024),
-            fps=30,
-            settings={
-                "GainAuto": "Off",
-                "Gain": 15.0,
-                "ExposureAuto": "Off",
-                "ExposureTime": 16000.0,
-            },
+            fps=30.0,
             color_format="bayer_rggb8",
-            pipeline=[
-                pri.CircleDetector.Config(scale=0.8),
-                pri.VideoDisplay.Config(overlay_circle_marker=True),
-            ],
+            pipeline=[pri.VideoRecorder.Config(), pri.VideoDisplay.Config()],
         ),
     ]
 
@@ -34,7 +28,9 @@ if __name__ == "__main__":
     )
 
     # run manager
-    with pri.StreamManager(configs) as manager:
+    with pri.StreamManager(
+        configs, folder=folder, policy="overwrite"
+    ) as manager:
         while not manager.stopped:
             if manager.all_streams_running:
                 status = manager.format_status(
