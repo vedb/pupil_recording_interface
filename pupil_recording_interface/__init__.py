@@ -21,6 +21,7 @@ from .process.pupil_detector import PupilDetector
 from .process.gaze_mapper import GazeMapper
 from .process.circle_detector import CircleDetector
 from .process.calibration import Calibration
+from .process.validation import Validation
 from .process.cam_params import CircleGridDetector, CamParamEstimator
 
 from .decorators import device, stream, process
@@ -61,6 +62,7 @@ __all__ = [
     "CircleDetector",
     "GazeMapper",
     "Calibration",
+    "Validation",
     "CircleGridDetector",
     "CamParamEstimator",
     # Decorators

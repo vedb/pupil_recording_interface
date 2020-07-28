@@ -22,7 +22,7 @@ if __name__ == "__main__":
             },
             color_format="bayer_rggb8",
             pipeline=[
-                pri.CircleDetector.Config(scale=0.4),
+                pri.CircleDetector.Config(scale=0.8),
                 pri.VideoDisplay.Config(overlay_circle_marker=True),
             ],
         ),
