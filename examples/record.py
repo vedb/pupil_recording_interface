@@ -17,10 +17,10 @@ if __name__ == "__main__":
     # camera configurations
     configs = [
         pri.VideoStream.Config(
-            device_type="uvc",
-            device_uid=f"Pupil Cam{pupil_gen} ID2",
+            device_type="flir",  #
+            device_uid="None",
             name="world",
-            resolution=(1280, 720),
+            resolution=(1280, 1024),
             fps=30,
             pipeline=[pri.VideoRecorder.Config(), pri.VideoDisplay.Config()],
         ),
