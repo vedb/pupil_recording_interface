@@ -29,6 +29,7 @@ class StreamManager(object):
         duration=None,
         update_interval=0.1,
         max_queue_size=20,
+        app_info=None,
     ):
         """ Constructor.
 
@@ -67,6 +68,13 @@ class StreamManager(object):
             Maximum size of process status and notification queues. Higher
             values might lead to delays in communicating with the processes
             while lower values might lead to dropped messages.
+
+        app_info: dict
+            When using pupil_recording_interface as the backend for a recording
+            app, provide a dict with the ``"name"`` and ``"version"`` of your
+            app such that the "recording_software_name" and
+            "recording_software_version" fields in `info.player.json` will
+            be set appropriately.
         """
         self.folder = self._init_folder(folder, policy)
         self.policy = policy
@@ -86,6 +94,11 @@ class StreamManager(object):
         self._priority_queues = {}
         self._stop_event = None
         self._thread = None
+
+        self._app_name = (app_info or {}).get(
+            "name", "pupil_recording_interface"
+        )
+        self._app_version = (app_info or {}).get("version", __version__)
 
     def __enter__(self):
         self.start()
@@ -360,8 +373,8 @@ class StreamManager(object):
             "meta_version": "2.1",
             "min_player_version": "1.16",
             "recording_name": self.folder,
-            "recording_software_name": "pupil_recording_interface",
-            "recording_software_version": __version__,
+            "recording_software_name": self._app_name,
+            "recording_software_version": self._app_version,
             "recording_uuid": str(uuid.uuid4()),
             "start_time_synced_s": self._start_time_monotonic,
             "start_time_system_s": self._start_time,

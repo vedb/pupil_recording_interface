@@ -391,6 +391,9 @@ class VideoFileDevice(BaseVideoDevice):
 
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
+        if not self.is_started:
+            raise RuntimeError("Device is not started")
+
         # TODO get gray image when mode="gray"
         if self._frame_index >= self.capture.frame_count - 1:
             if self.loop:

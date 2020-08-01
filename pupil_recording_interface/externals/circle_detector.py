@@ -51,7 +51,6 @@ class CircleTracker(object):
         :rtype: a list containing dictionary with keys: 'ellipses', 'img_pos', 'norm_pos', 'marker_type'
         """
         img_size = img.shape[::-1]
-
         if self._world_size is None:
             self._world_size = img_size
         elif self._world_size != img_size:

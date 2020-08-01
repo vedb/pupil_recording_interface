@@ -10,6 +10,7 @@ import numpy as np
 from pupil_recording_interface import DATA_DIR
 from pupil_recording_interface.decorators import device, stream, process
 from pupil_recording_interface.device import BaseDevice
+from pupil_recording_interface.device.video import VideoFileDevice
 from pupil_recording_interface.stream import (
     BaseStream,
     VideoStream,
@@ -20,6 +21,7 @@ from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process.display import VideoDisplay
 from pupil_recording_interface.process.pupil_detector import PupilDetector
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
+from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
 from pupil_recording_interface.process.cam_params import CamParamEstimator
 from pupil_recording_interface.manager import StreamManager
@@ -927,6 +929,15 @@ def video_stream(pipeline):
     return VideoStream(None, pipeline, "test_stream")
 
 
+@pytest.fixture()
+def world_video_stream(folder):
+    """"""
+    device = VideoFileDevice(folder, "world")
+    stream = VideoStream(device)
+
+    return stream
+
+
 # -- PROCESSES -- #
 @pytest.fixture()
 def video_display():
@@ -950,6 +961,12 @@ def gaze_mapper(temp_folder, calibration_2d):
         calibration=calibration_2d["data"][8][1],
         record=True,
     )
+
+
+@pytest.fixture()
+def circle_detector():
+    """"""
+    return CircleDetector()
 
 
 @pytest.fixture()

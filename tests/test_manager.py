@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 
+from pupil_recording_interface import __version__
 from pupil_recording_interface.manager import StreamManager
 
 
@@ -69,3 +70,34 @@ class TestManager:
                 },
             }
         }
+
+    def test_save_info(self, video_stream_config, tmpdir):
+        """"""
+        import json
+
+        manager = StreamManager(
+            [video_stream_config], folder=tmpdir, policy="here"
+        )
+
+        manager.save_info()
+        with open(tmpdir / "info.player.json") as f:
+            info = json.load(f)
+
+        assert info["recording_name"] == str(tmpdir)
+        assert info["recording_software_name"] == "pupil_recording_interface"
+        assert info["recording_software_version"] == __version__
+
+        # external app info
+        manager = StreamManager(
+            [video_stream_config],
+            folder=tmpdir,
+            policy="here",
+            app_info={"name": "parent_app", "version": "1.0.0"},
+        )
+
+        manager.save_info()
+        with open(tmpdir / "info.player.json") as f:
+            info = json.load(f)
+
+        assert info["recording_software_name"] == "parent_app"
+        assert info["recording_software_version"] == "1.0.0"

@@ -213,8 +213,8 @@ class VideoDisplay(BaseProcess):
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # TODO make constructor arguments
+        # TODO Define color, radius and thickness in config
         color = (255, 255, 0)
-        # (Kamran)
         marker_thickness = 5
         radius = 20
 
