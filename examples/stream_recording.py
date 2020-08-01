@@ -4,11 +4,10 @@ import logging
 import pupil_recording_interface as pri
 
 
-# recording folder
-folder = pri.DATA_DIR + "/test_recording"
-
-
 if __name__ == "__main__":
+
+    # recording folder
+    folder = pri.DATA_DIR + "/test_recording"
 
     # stream configurations
     configs = [
@@ -43,7 +42,7 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.INFO, format="%(message)s"
+        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
     )
 
     # run manager

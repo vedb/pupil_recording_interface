@@ -5,7 +5,7 @@ import pupil_recording_interface as pri
 
 
 # Generation of your pupil device (1, 2 or 3)
-pupil_gen = 1
+pupil_gen = 2
 
 # folder for saving calibration
 folder = "~/pupil_capture_settings"
