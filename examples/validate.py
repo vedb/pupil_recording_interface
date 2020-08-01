@@ -3,6 +3,8 @@ import logging
 
 import pupil_recording_interface as pri
 
+# Generation of your pupil device (1, 2 or 3)
+pupil_gen = 2
 
 if __name__ == "__main__":
 
@@ -10,7 +12,7 @@ if __name__ == "__main__":
     configs = [
         pri.VideoStream.Config(
             device_type="flir",
-            device_uid=None,
+            device_uid="19404167",
             name="world",
             resolution=(1280, 1024),
             fps=30,
@@ -28,6 +30,18 @@ if __name__ == "__main__":
                 ),
                 pri.Validation.Config(save=True, folder="~/recordings"),
                 # pri.GazeMapper.Config(),
+            ],
+        ),
+        pri.VideoStream.Config(
+            device_type="uvc",
+            device_uid="Pupil Cam2 ID0",  # f"Pupil Cam{pupil_gen} ID0",
+            name="eye0",
+            resolution=(320, 240) if pupil_gen == 1 else (192, 192),
+            fps=120,
+            color_format="gray",
+            pipeline=[
+                pri.PupilDetector.Config(),
+                pri.VideoDisplay.Config(flip=True, overlay_pupil=True),
             ],
         ),
     ]
