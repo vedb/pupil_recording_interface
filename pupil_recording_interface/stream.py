@@ -1,5 +1,6 @@
 """"""
 import abc
+import time
 from collections import deque
 import signal
 import logging
@@ -113,6 +114,7 @@ class BaseStream(BaseConfigurable):
             "timestamp": float("nan"),
             "source_timestamp": float("nan"),
             "last_source_timestamp": self._last_source_timestamp,
+            "status_timestamp": time.time(),
             "running": False,
             "fps": self.current_fps,
         }
