@@ -194,6 +194,7 @@ class MotionRecorder(BaseRecorder):
             config,
             folder=config.folder or kwargs.get("folder", None),
             motion_type=stream_config.motion_type,
+            name=stream_config.name or device.device_uid,
         )
         if stream_config.name is not None:
             cls_kwargs["process_name"] = ".".join(

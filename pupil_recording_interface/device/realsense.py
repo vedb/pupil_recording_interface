@@ -163,22 +163,9 @@ class RealSenseDeviceT265(BaseDevice):
 
         config = rs.config()
 
-        devices = cls.get_serial_numbers()
-        if len(devices) > 1:
-            # TODO not working with librealsense 2.32.1 but is necessary for
-            #  simultaneously operating multiple devices:
-            #  config.enable_device(uid)
-            raise RuntimeError(
-                "Multiple T265 devices not supported, "
-                "please connect only one device"
-            )
-        elif len(devices) == 0:
-            raise DeviceNotConnected("No T265 devices connected")
-        else:
-            if uid is not None and uid != devices[0]:
-                raise DeviceNotConnected(
-                    f"T265 device with serial number {uid} not connected"
-                )
+        # TODO raise error if not connected?
+        if uid is not None:
+            config.enable_device(uid)
 
         if video:
             config.enable_stream(rs.stream.fisheye, 1)
@@ -211,10 +198,13 @@ class RealSenseDeviceT265(BaseDevice):
         pipeline = rs.pipeline()
         config = cls._get_pipeline_config(uid, video, odometry, accel, gyro)
 
-        if callback is not None:
-            pipeline.start(config, callback)
-        else:
-            pipeline.start(config)
+        try:
+            if callback is not None:
+                pipeline.start(config, callback)
+            else:
+                pipeline.start(config)
+        except RuntimeError:
+            raise DeviceNotConnected(f"T265 device not connected")
 
         logger.debug(
             f"T265 pipeline started with video={video}, odometry={odometry}, "
