@@ -1,16 +1,31 @@
 import time
 
-import pytest
 import numpy as np
+import pytest
 
 from pupil_recording_interface import __version__
 from pupil_recording_interface.manager import StreamManager
 
 
 class TestManager:
-    @pytest.mark.skip("Not yet implemented")
-    def test_init_folder(self, temp_folder):
+    def test_init_folder(self, tmpdir):
         """"""
+        folder = StreamManager._init_folder(tmpdir, "here")
+        assert folder == tmpdir
+
+        folder = StreamManager._init_folder(tmpdir, "read")
+        assert folder == tmpdir
+
+        folder = StreamManager._init_folder(tmpdir, "new_folder")
+        assert folder == tmpdir / "000"
+        assert folder.exists()
+
+        folder = StreamManager._init_folder(tmpdir, "overwrite")
+        assert folder == tmpdir
+        assert not (folder / "000").exists()
+
+        with pytest.raises(ValueError):
+            StreamManager._init_folder(tmpdir, "not_a_policy")
 
     def test_get_status(self, stream_manager, packet, monkeypatch):
         """"""

@@ -1,13 +1,13 @@
 import json
 import logging
-from threading import Thread
 import multiprocessing as mp
-import os
 import shutil
 import signal
 import time
 import uuid
 from functools import reduce
+from threading import Thread
+from pathlib import Path
 
 from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
@@ -122,13 +122,13 @@ class StreamManager(object):
         if folder is None:
             return None
 
-        folder = os.path.abspath(os.path.expanduser(folder))
+        folder = Path(folder).expanduser().absolute()
 
         if policy == "new_folder":
             counter = 0
-            while os.path.exists(os.path.join(folder, f"{counter:03d}")):
+            while (folder / f"{counter:03d}").exists():
                 counter += 1
-            folder = os.path.join(folder, f"{counter:03d}")
+            folder = folder / f"{counter:03d}"
 
         elif policy == "here":
             pass
@@ -143,7 +143,7 @@ class StreamManager(object):
             raise ValueError(f"Unsupported file creation policy: {policy}")
 
         # TODO do this at the start of the recording?
-        os.makedirs(folder, exist_ok=True)
+        folder.mkdir(parents=True, exist_ok=True)
 
         return folder
 
@@ -385,7 +385,7 @@ class StreamManager(object):
             "duration_s": self.run_duration,
             "meta_version": "2.1",
             "min_player_version": "1.16",
-            "recording_name": self.folder,
+            "recording_name": str(self.folder),
             "recording_software_name": self._app_name,
             "recording_software_version": self._app_version,
             "recording_uuid": str(uuid.uuid4()),
@@ -395,9 +395,7 @@ class StreamManager(object):
         }
 
         with open(
-            os.path.join(self.folder, "info.player.json"),
-            mode="w",
-            encoding="utf-8",
+            self.folder / "info.player.json", mode="w", encoding="utf-8",
         ) as f:
             json.dump(json_file, f, ensure_ascii=False, indent=4)
 

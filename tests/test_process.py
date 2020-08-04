@@ -206,9 +206,9 @@ class TestCalibration:
         calibration.calculate_calibration()
         assert calibration.result is None
 
-    def test_save_result(self, calibration, calibration_2d, temp_folder):
+    def test_save_result(self, calibration, calibration_2d, tmpdir):
         """"""
-        calibration.folder = temp_folder
+        calibration.folder = tmpdir
         calibration.uuid = calibration_2d["data"][0]
         calibration.recording_uuid = calibration_2d["data"][2]
         calibration.frame_index_range = [0, 541]
