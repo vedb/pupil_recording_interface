@@ -1,5 +1,6 @@
 """"""
 import abc
+import sys
 import time
 import logging
 from time import monotonic, sleep
@@ -18,6 +19,7 @@ from pupil_recording_interface.externals.uvc_utils import (
     pre_configure_capture,
     init_exposure_handler,
 )
+from pupil_recording_interface.utils import SuppressStream
 
 logger = logging.getLogger(__name__)
 
@@ -285,7 +287,10 @@ class VideoDeviceUVC(BaseVideoDevice):
             )
 
         try:
-            uvc_frame = self.capture.get_frame(0.1)
+            # TODO check performance overhead of suppressing, technically it's
+            #  necessary only once after starting the stream
+            with SuppressStream(sys.stdout):
+                uvc_frame = self.capture.get_frame(0.1)
         except (uvc.StreamError, uvc.InitError, AttributeError):
             logger.error(
                 f"{self.device_type} device {self.device_uid}: "

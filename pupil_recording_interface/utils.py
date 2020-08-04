@@ -1,5 +1,7 @@
 """"""
 import logging
+import os
+import sys
 from collections import deque
 from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing.managers import SyncManager
@@ -45,3 +47,24 @@ class DroppingThreadPoolExecutor(ThreadPoolExecutor):
             return return_if_full
         else:
             return super().submit(fn, *args, **kwargs)
+
+
+class SuppressStream:
+    """ Context manager for suppressing low-level stdout/stderr writes.
+
+    From https://stackoverflow.com/a/57677370/4532781
+    """
+
+    def __init__(self, stream=sys.stderr):
+        self.orig_stream_fileno = stream.fileno()
+
+    def __enter__(self):
+        self.orig_stream_dup = os.dup(self.orig_stream_fileno)
+        self.devnull = open(os.devnull, "w")
+        os.dup2(self.devnull.fileno(), self.orig_stream_fileno)
+
+    def __exit__(self, type, value, traceback):
+        os.close(self.orig_stream_fileno)
+        os.dup2(self.orig_stream_dup, self.orig_stream_fileno)
+        os.close(self.orig_stream_dup)
+        self.devnull.close()
