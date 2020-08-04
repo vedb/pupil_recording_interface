@@ -28,7 +28,3 @@ class TestPacket:
                 1.0,
                 source_timebase="not_a_timebase",
             )
-
-    @pytest.mark.skip("Not yet implemented")
-    def test_to_dict(self):
-        """"""

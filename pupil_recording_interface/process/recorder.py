@@ -98,7 +98,9 @@ class VideoRecorder(BaseRecorder):
             self.folder, f"{self.name}_timestamps.npy"
         )
         if os.path.exists(self.timestamp_file):
-            raise IOError(f"{self.timestamp_file} exists, will not overwrite")
+            raise FileExistsError(
+                f"{self.timestamp_file} exists, will not overwrite"
+            )
 
         self._timestamps = deque()
 
@@ -184,7 +186,9 @@ class MotionRecorder(BaseRecorder):
 
         self.filename = os.path.join(self.folder, self.topic + ".pldata")
         if os.path.exists(self.filename):
-            raise IOError(f"{self.filename} exists, will not overwrite")
+            raise FileExistsError(
+                f"{self.filename} exists, will not overwrite"
+            )
         self.writer = PLData_Writer(self.folder, self.topic)
 
     @classmethod

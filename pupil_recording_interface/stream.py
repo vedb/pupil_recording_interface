@@ -154,7 +154,7 @@ class BaseStream(BaseConfigurable):
     def _get_notifications(
         cls, notification_queue, priority_queue, max_len=100
     ):
-        """"""
+        """ Get notifications from notification and priority queues. """
         notifications = []
 
         if priority_queue is not None:

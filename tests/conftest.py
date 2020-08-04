@@ -19,6 +19,7 @@ from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process.display import VideoDisplay
 from pupil_recording_interface.process.pupil_detector import PupilDetector
+from pupil_recording_interface.process.recorder import VideoRecorder
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
@@ -883,6 +884,18 @@ def video_stream_config():
 
 
 @pytest.fixture()
+def pipeline_config():
+    """"""
+    return VideoStream.Config(
+        "uvc",
+        "test_cam",
+        resolution=(1280, 720),
+        fps=30,
+        pipeline=[VideoRecorder.Config()],
+    )
+
+
+@pytest.fixture()
 def motion_stream_config():
     """"""
     return MotionStream.Config("t265", "t265", motion_type="odometry")
@@ -894,6 +907,8 @@ def process_configs(tmpdir):
     process_kwargs = {
         "video_recorder": {"folder": tmpdir},
         "motion_recorder": {"folder": tmpdir},
+        "pupil_detector": {"folder": tmpdir},
+        "calibration": {"folder": tmpdir},
         "cam_param_estimator": {"streams": ["world"], "folder": tmpdir},
     }
 
@@ -907,12 +922,24 @@ def process_configs(tmpdir):
 
 # -- DEVICES -- #
 @pytest.fixture()
+def mock_device():
+    """"""
+    return MockDevice("mock_device")
+
+
+@pytest.fixture()
 def mock_video_device():
     """"""
     return MockVideoDevice("mock_video_device")
 
 
 # -- STREAMS -- #
+@pytest.fixture()
+def mock_stream(mock_device):
+    """"""
+    return MockStream(mock_device, name="mock_stream")
+
+
 @pytest.fixture()
 def video_stream(pipeline):
     """"""
