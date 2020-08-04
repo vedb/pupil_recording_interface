@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 class RealSenseDeviceT265(BaseDevice):
     """ RealSense T265 device. """
 
+    context = None
+
     def __init__(
         self,
         device_uid,
@@ -72,7 +74,6 @@ class RealSenseDeviceT265(BaseDevice):
 
         self.timebase = "epoch"
 
-        self.context = None
         self.pipeline = None
         self.rs_device = None
         self.queues = {}
@@ -143,9 +144,11 @@ class RealSenseDeviceT265(BaseDevice):
         """
         import pyrealsense2 as rs
 
+        if cls.context is None:
+            cls.context = rs.context()
+
         serials = []
-        context = rs.context()
-        for d in context.devices:
+        for d in cls.context.devices:
             if suffix and not d.get_info(rs.camera_info.name).endswith(suffix):
                 continue
             serial = d.get_info(rs.camera_info.serial_number)
@@ -391,7 +394,8 @@ class RealSenseDeviceT265(BaseDevice):
         import pyrealsense2 as rs
 
         # init context
-        self.context = rs.context()
+        if self.context is None:
+            self.context = rs.context()
 
         # Init pipelines
         if self.pipeline is None:
