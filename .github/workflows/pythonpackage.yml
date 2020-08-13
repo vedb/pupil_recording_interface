@@ -39,7 +39,9 @@ jobs:
           conda --version
           which python
       - name: Create environment
-        run: conda env create
+        run: |
+          conda install -y -c conda-forge mamba
+          mamba env create
       - name: Install package
         run: |
           source activate pri
@@ -59,7 +61,9 @@ jobs:
           conda --version
           which python
       - name: Create environment
-        run: conda create -n pri python=3.6 xarray scipy opencv "msgpack-python<1.0"
+        run: |
+          conda install -y -c conda-forge mamba
+          mamba create -n pri python=3.6 xarray scipy opencv "msgpack-python<1.0"
       - name: Install package
         run: |
           source activate pri
@@ -80,7 +84,9 @@ jobs:
           conda --version
           which python
       - name: Create environment
-        run: conda env create
+        run: |
+          conda install -y -c conda-forge mamba
+          mamba env create
       - name: Install package
         run: |
           source activate pri
@@ -110,7 +116,9 @@ jobs:
           conda --version
           which python
       - name: Create environment
-        run: conda env create
+        run: |
+          conda install -y -c conda-forge mamba
+          mamba env create
       - name: Install package
         run: |
           source activate pri
