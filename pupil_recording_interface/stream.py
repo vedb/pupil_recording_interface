@@ -232,7 +232,7 @@ class BaseStream(BaseConfigurable):
                         break
 
                     if self.pipeline is not None:
-                        packet = self.pipeline.flush(packet, notifications)
+                        packet = self.pipeline.process(packet, notifications)
 
                     self._process_timestamp(packet.source_timestamp)
 
