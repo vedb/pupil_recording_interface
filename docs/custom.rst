@@ -1,3 +1,5 @@
+.. _custom:
+
 Custom devices, streams and processes
 =====================================
 
