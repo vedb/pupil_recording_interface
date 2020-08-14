@@ -50,6 +50,7 @@ class VideoRecorder(BaseRecorder):
         resolution,
         fps,
         name=None,
+        encode_every=1,
         color_format="bgr24",
         codec="libx264",
         encoder_kwargs=None,
@@ -73,6 +74,9 @@ class VideoRecorder(BaseRecorder):
             The name of the recorder. If not specified, `device.device_uid`
             will be used.
 
+        encode_every : int, default 1
+            Only encode every Nth frame. By default, all frames are encoded.
+
         color_format: str, default 'bgr24'
             The target color format. Set to 'gray' for eye cameras.
 
@@ -82,10 +86,11 @@ class VideoRecorder(BaseRecorder):
         encoder_kwargs: dict
             Addtional keyword arguments passed to the encoder.
         """
-        self.fps = fps
+        self.fps = fps / encode_every
         self.resolution = resolution
         self.color_format = color_format
         self.codec = codec
+        self.encode_every = encode_every
         self.encoder_kwargs = encoder_kwargs
         self.source_timestamps = source_timestamps
 
@@ -143,16 +148,17 @@ class VideoRecorder(BaseRecorder):
 
     def write(self, packet):
         """ Write data to disk. """
-        self.encoder.write(packet["frame"])
+        if len(self._timestamps) % self.encode_every == 0:
+            self.encoder.write(packet["frame"])
 
-        if self.writer is not None:
-            self.writer.append(
-                {
-                    "topic": self.name,
-                    "timestamp": packet.timestamp,
-                    "source_timestamp": packet.source_timestamp,
-                }
-            )
+            if self.writer is not None:
+                self.writer.append(
+                    {
+                        "topic": self.name,
+                        "timestamp": packet.timestamp,
+                        "source_timestamp": packet.source_timestamp,
+                    }
+                )
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
