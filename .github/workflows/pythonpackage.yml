@@ -31,6 +31,7 @@ jobs:
 
   conda:
     runs-on: ubuntu-18.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
       - uses: s-weigand/setup-conda@v1
@@ -53,6 +54,7 @@ jobs:
 
   conda-minimal:
     runs-on: ubuntu-18.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
       - uses: s-weigand/setup-conda@v1
@@ -76,6 +78,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-18.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
       - uses: s-weigand/setup-conda@v1
@@ -101,6 +104,7 @@ jobs:
     # runs on pushes to master and devel but is always built against the
     # package from the master branch to avoid broken docs for master
     runs-on: ubuntu-18.04
+    timeout-minutes: 15
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel'
     steps:
       - uses: actions/checkout@v2
