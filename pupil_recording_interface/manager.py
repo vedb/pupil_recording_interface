@@ -1,13 +1,13 @@
 import json
 import logging
-from threading import Thread
 import multiprocessing as mp
-import os
 import shutil
 import signal
 import time
 import uuid
 from functools import reduce
+from threading import Thread
+from pathlib import Path
 
 from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
@@ -28,7 +28,9 @@ class StreamManager(object):
         policy="new_folder",
         duration=None,
         update_interval=0.1,
+        status_timeout=5.0,
         max_queue_size=20,
+        app_info=None,
     ):
         """ Constructor.
 
@@ -63,17 +65,30 @@ class StreamManager(object):
             Will be dropped in a future version with an asynchronous
             implementation of the update mechanism.
 
+        status_timeout: float, default 5.0
+            Maximum time in seconds to wait for status updates from a stream.
+            After this time, the status of the stream will be reset to the
+            default.
+
         max_queue_size: int, default 20
             Maximum size of process status and notification queues. Higher
             values might lead to delays in communicating with the processes
             while lower values might lead to dropped messages.
+
+        app_info: dict
+            When using pupil_recording_interface as the backend for a recording
+            app, provide a dict with the ``"name"`` and ``"version"`` of your
+            app such that the "recording_software_name" and
+            "recording_software_version" fields in `info.player.json` will
+            be set appropriately.
         """
         self.folder = self._init_folder(folder, policy)
         self.policy = policy
         self.streams = self._init_streams(configs, self.folder)
         self.duration = duration or float("inf")
-        self.max_queue_size = max_queue_size
         self.update_interval = update_interval
+        self.status_timeout = status_timeout
+        self.max_queue_size = max_queue_size
 
         self.status = {}
         self.stopped = False
@@ -86,6 +101,11 @@ class StreamManager(object):
         self._priority_queues = {}
         self._stop_event = None
         self._thread = None
+
+        self._app_name = (app_info or {}).get(
+            "name", "pupil_recording_interface"
+        )
+        self._app_version = (app_info or {}).get("version", __version__)
 
     def __enter__(self):
         self.start()
@@ -102,13 +122,13 @@ class StreamManager(object):
         if folder is None:
             return None
 
-        folder = os.path.abspath(os.path.expanduser(folder))
+        folder = Path(folder).expanduser().absolute()
 
         if policy == "new_folder":
             counter = 0
-            while os.path.exists(os.path.join(folder, f"{counter:03d}")):
+            while (folder / f"{counter:03d}").exists():
                 counter += 1
-            folder = os.path.join(folder, f"{counter:03d}")
+            folder = folder / f"{counter:03d}"
 
         elif policy == "here":
             pass
@@ -123,7 +143,7 @@ class StreamManager(object):
             raise ValueError(f"Unsupported file creation policy: {policy}")
 
         # TODO do this at the start of the recording?
-        os.makedirs(folder, exist_ok=True)
+        folder.mkdir(parents=True, exist_ok=True)
 
         return folder
 
@@ -229,13 +249,19 @@ class StreamManager(object):
     def _update_status(self, status):
         """ Update the status of all streams. """
         # TODO updating self.status should be made thread-safe
-        # TODO deal with statuses that are too old or only sent once
+        # TODO deal with statuses that are only sent once
         #  (e.g. "pattern_acquired")
-        for stream_name, queue in self._status_queues.items():
-            if stream_name not in self.status:
+        for stream_name in self.streams.keys():
+            # get default status on startup or when last status too old
+            if (
+                stream_name not in self.status
+                or time.time() - self.status[stream_name]["status_timestamp"]
+                > self.status_timeout
+            ):
+                # TODO better proxy for default status?
                 self.status[stream_name] = self.streams[
                     stream_name
-                ].get_status()  # TODO proxy for getting "empty" status
+                ].get_status()
             if stream_name in status:
                 self.status[stream_name].update(status[stream_name])
 
@@ -359,9 +385,9 @@ class StreamManager(object):
             "duration_s": self.run_duration,
             "meta_version": "2.1",
             "min_player_version": "1.16",
-            "recording_name": self.folder,
-            "recording_software_name": "pupil_recording_interface",
-            "recording_software_version": __version__,
+            "recording_name": str(self.folder),
+            "recording_software_name": self._app_name,
+            "recording_software_version": self._app_version,
             "recording_uuid": str(uuid.uuid4()),
             "start_time_synced_s": self._start_time_monotonic,
             "start_time_system_s": self._start_time,
@@ -369,9 +395,7 @@ class StreamManager(object):
         }
 
         with open(
-            os.path.join(self.folder, "info.player.json"),
-            mode="w",
-            encoding="utf-8",
+            self.folder / "info.player.json", mode="w", encoding="utf-8",
         ) as f:
             json.dump(json_file, f, ensure_ascii=False, indent=4)
 

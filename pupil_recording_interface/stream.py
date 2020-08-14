@@ -1,5 +1,6 @@
 """"""
 import abc
+import time
 from collections import deque
 import signal
 import logging
@@ -113,6 +114,7 @@ class BaseStream(BaseConfigurable):
             "timestamp": float("nan"),
             "source_timestamp": float("nan"),
             "last_source_timestamp": self._last_source_timestamp,
+            "status_timestamp": time.time(),
             "running": False,
             "fps": self.current_fps,
         }
@@ -152,7 +154,7 @@ class BaseStream(BaseConfigurable):
     def _get_notifications(
         cls, notification_queue, priority_queue, max_len=100
     ):
-        """"""
+        """ Get notifications from notification and priority queues. """
         notifications = []
 
         if priority_queue is not None:
@@ -230,7 +232,7 @@ class BaseStream(BaseConfigurable):
                         break
 
                     if self.pipeline is not None:
-                        packet = self.pipeline.flush(packet, notifications)
+                        packet = self.pipeline.process(packet, notifications)
 
                     self._process_timestamp(packet.source_timestamp)
 

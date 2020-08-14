@@ -50,6 +50,7 @@ class VideoRecorder(BaseRecorder):
         resolution,
         fps,
         name=None,
+        encode_every=1,
         color_format="bgr24",
         codec="libx264",
         encoder_kwargs=None,
@@ -73,6 +74,9 @@ class VideoRecorder(BaseRecorder):
             The name of the recorder. If not specified, `device.device_uid`
             will be used.
 
+        encode_every : int, default 1
+            Only encode every Nth frame. By default, all frames are encoded.
+
         color_format: str, default 'bgr24'
             The target color format. Set to 'gray' for eye cameras.
 
@@ -82,10 +86,11 @@ class VideoRecorder(BaseRecorder):
         encoder_kwargs: dict
             Addtional keyword arguments passed to the encoder.
         """
-        self.fps = fps
+        self.fps = fps / encode_every
         self.resolution = resolution
         self.color_format = color_format
         self.codec = codec
+        self.encode_every = encode_every
         self.encoder_kwargs = encoder_kwargs
         self.source_timestamps = source_timestamps
 
@@ -98,7 +103,9 @@ class VideoRecorder(BaseRecorder):
             self.folder, f"{self.name}_timestamps.npy"
         )
         if os.path.exists(self.timestamp_file):
-            raise IOError(f"{self.timestamp_file} exists, will not overwrite")
+            raise FileExistsError(
+                f"{self.timestamp_file} exists, will not overwrite"
+            )
 
         self._timestamps = deque()
 
@@ -141,16 +148,17 @@ class VideoRecorder(BaseRecorder):
 
     def write(self, packet):
         """ Write data to disk. """
-        self.encoder.write(packet["frame"])
+        if len(self._timestamps) % self.encode_every == 0:
+            self.encoder.write(packet["frame"])
 
-        if self.writer is not None:
-            self.writer.append(
-                {
-                    "topic": self.name,
-                    "timestamp": packet.timestamp,
-                    "source_timestamp": packet.source_timestamp,
-                }
-            )
+            if self.writer is not None:
+                self.writer.append(
+                    {
+                        "topic": self.name,
+                        "timestamp": packet.timestamp,
+                        "source_timestamp": packet.source_timestamp,
+                    }
+                )
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
@@ -184,7 +192,9 @@ class MotionRecorder(BaseRecorder):
 
         self.filename = os.path.join(self.folder, self.topic + ".pldata")
         if os.path.exists(self.filename):
-            raise IOError(f"{self.filename} exists, will not overwrite")
+            raise FileExistsError(
+                f"{self.filename} exists, will not overwrite"
+            )
         self.writer = PLData_Writer(self.folder, self.topic)
 
     @classmethod
@@ -194,6 +204,7 @@ class MotionRecorder(BaseRecorder):
             config,
             folder=config.folder or kwargs.get("folder", None),
             motion_type=stream_config.motion_type,
+            name=stream_config.name or device.device_uid,
         )
         if stream_config.name is not None:
             cls_kwargs["process_name"] = ".".join(

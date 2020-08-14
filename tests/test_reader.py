@@ -131,16 +131,21 @@ class TestBaseReader(object):
 
     def test_write_netcdf(self, folder, export_folder):
         """"""
-        pytest.importorskip("netcdf4")
+        pytest.importorskip("netCDF4")
 
         GazeReader(folder).write_netcdf()
 
-        ds = xr.open_dataset(export_folder / "gaze.nc")
+        ds = xr.open_dataset(export_folder / "000" / "gaze.nc")
 
         assert set(ds.data_vars) == {
+            "eye",
+            "eye0_center",
+            "eye0_normal",
+            "eye1_center",
+            "eye1_normal",
             "gaze_confidence_3d",
-            "gaze_point",
             "gaze_norm_pos",
+            "gaze_point",
         }
 
         ds.close()

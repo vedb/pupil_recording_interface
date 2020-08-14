@@ -1,4 +1,3 @@
-import os
 import shutil
 from pathlib import Path
 from time import monotonic
@@ -10,6 +9,7 @@ import numpy as np
 from pupil_recording_interface import DATA_DIR
 from pupil_recording_interface.decorators import device, stream, process
 from pupil_recording_interface.device import BaseDevice
+from pupil_recording_interface.device.video import VideoFileDevice
 from pupil_recording_interface.stream import (
     BaseStream,
     VideoStream,
@@ -19,7 +19,9 @@ from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.process.display import VideoDisplay
 from pupil_recording_interface.process.pupil_detector import PupilDetector
+from pupil_recording_interface.process.recorder import VideoRecorder
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
+from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
 from pupil_recording_interface.process.cam_params import CamParamEstimator
 from pupil_recording_interface.manager import StreamManager
@@ -65,15 +67,6 @@ def mock_mp_deque():
 def folder():
     """"""
     return Path(DATA_DIR) / "test_recording"
-
-
-@pytest.fixture()
-def temp_folder():
-    """"""
-    temp_folder = ".tmp"
-    os.makedirs(temp_folder, exist_ok=True)
-    yield temp_folder
-    shutil.rmtree(temp_folder, ignore_errors=True)
 
 
 @pytest.fixture()
@@ -891,18 +884,32 @@ def video_stream_config():
 
 
 @pytest.fixture()
+def pipeline_config():
+    """"""
+    return VideoStream.Config(
+        "uvc",
+        "test_cam",
+        resolution=(1280, 720),
+        fps=30,
+        pipeline=[VideoRecorder.Config()],
+    )
+
+
+@pytest.fixture()
 def motion_stream_config():
     """"""
     return MotionStream.Config("t265", "t265", motion_type="odometry")
 
 
 @pytest.fixture()
-def process_configs(temp_folder):
+def process_configs(tmpdir):
     """ Mapping from process type to working test config for each process. """
     process_kwargs = {
-        "video_recorder": {"folder": temp_folder},
-        "motion_recorder": {"folder": temp_folder},
-        "cam_param_estimator": {"streams": ["world"], "folder": temp_folder},
+        "video_recorder": {"folder": tmpdir},
+        "motion_recorder": {"folder": tmpdir},
+        "pupil_detector": {"folder": tmpdir},
+        "calibration": {"folder": tmpdir},
+        "cam_param_estimator": {"streams": ["world"], "folder": tmpdir},
     }
 
     configs = {
@@ -915,6 +922,12 @@ def process_configs(temp_folder):
 
 # -- DEVICES -- #
 @pytest.fixture()
+def mock_device():
+    """"""
+    return MockDevice("mock_device")
+
+
+@pytest.fixture()
 def mock_video_device():
     """"""
     return MockVideoDevice("mock_video_device")
@@ -922,9 +935,24 @@ def mock_video_device():
 
 # -- STREAMS -- #
 @pytest.fixture()
+def mock_stream(mock_device):
+    """"""
+    return MockStream(mock_device, name="mock_stream")
+
+
+@pytest.fixture()
 def video_stream(pipeline):
     """"""
     return VideoStream(None, pipeline, "test_stream")
+
+
+@pytest.fixture()
+def world_video_stream(folder):
+    """"""
+    device = VideoFileDevice(folder, "world")
+    stream = VideoStream(device)
+
+    return stream
 
 
 # -- PROCESSES -- #
@@ -937,19 +965,23 @@ def video_display():
 
 
 @pytest.fixture()
-def pupil_detector(temp_folder):
+def pupil_detector(tmpdir):
     """"""
-    return PupilDetector(folder=temp_folder, record=True)
+    return PupilDetector(folder=tmpdir, record=True)
 
 
 @pytest.fixture()
-def gaze_mapper(temp_folder, calibration_2d):
+def gaze_mapper(tmpdir, calibration_2d):
     """"""
     return GazeMapper(
-        folder=temp_folder,
-        calibration=calibration_2d["data"][8][1],
-        record=True,
+        folder=tmpdir, calibration=calibration_2d["data"][8][1], record=True,
     )
+
+
+@pytest.fixture()
+def circle_detector():
+    """"""
+    return CircleDetector()
 
 
 @pytest.fixture()
@@ -959,9 +991,9 @@ def calibration():
 
 
 @pytest.fixture()
-def cam_param_estimator(temp_folder, circle_grid_packet):
+def cam_param_estimator(tmpdir, circle_grid_packet):
     """"""
-    estimator = CamParamEstimator(["world", "t265"], temp_folder)
+    estimator = CamParamEstimator(["world", "t265"], tmpdir)
 
     grid_points_right = circle_grid_packet.circle_grid["grid_points"].copy()
     grid_points_right[:, :, 0] += 848

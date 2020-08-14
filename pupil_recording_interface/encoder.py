@@ -226,5 +226,5 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
     def stop(self):
         """ Stop the encoder. """
         self.video_writer.stdin.write(b"q")
-        self.video_writer.wait()
+        # TODO self.video_writer.wait() doesn't work
         logger.debug(f"Stopped writing frames to {self.video_file}")

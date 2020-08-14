@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 class RealSenseDeviceT265(BaseDevice):
     """ RealSense T265 device. """
 
+    context = None
+
     def __init__(
         self,
         device_uid,
@@ -72,7 +74,6 @@ class RealSenseDeviceT265(BaseDevice):
 
         self.timebase = "epoch"
 
-        self.context = None
         self.pipeline = None
         self.rs_device = None
         self.queues = {}
@@ -143,9 +144,11 @@ class RealSenseDeviceT265(BaseDevice):
         """
         import pyrealsense2 as rs
 
+        if cls.context is None:
+            cls.context = rs.context()
+
         serials = []
-        context = rs.context()
-        for d in context.devices:
+        for d in cls.context.devices:
             if suffix and not d.get_info(rs.camera_info.name).endswith(suffix):
                 continue
             serial = d.get_info(rs.camera_info.serial_number)
@@ -163,22 +166,9 @@ class RealSenseDeviceT265(BaseDevice):
 
         config = rs.config()
 
-        devices = cls.get_serial_numbers()
-        if len(devices) > 1:
-            # TODO not working with librealsense 2.32.1 but is necessary for
-            #  simultaneously operating multiple devices:
-            #  config.enable_device(uid)
-            raise RuntimeError(
-                "Multiple T265 devices not supported, "
-                "please connect only one device"
-            )
-        elif len(devices) == 0:
-            raise DeviceNotConnected("No T265 devices connected")
-        else:
-            if uid is not None and uid != devices[0]:
-                raise DeviceNotConnected(
-                    f"T265 device with serial number {uid} not connected"
-                )
+        # TODO raise error if not connected?
+        if uid is not None:
+            config.enable_device(uid)
 
         if video:
             config.enable_stream(rs.stream.fisheye, 1)
@@ -211,10 +201,13 @@ class RealSenseDeviceT265(BaseDevice):
         pipeline = rs.pipeline()
         config = cls._get_pipeline_config(uid, video, odometry, accel, gyro)
 
-        if callback is not None:
-            pipeline.start(config, callback)
-        else:
-            pipeline.start(config)
+        try:
+            if callback is not None:
+                pipeline.start(config, callback)
+            else:
+                pipeline.start(config)
+        except RuntimeError:
+            raise DeviceNotConnected(f"T265 device not connected")
 
         logger.debug(
             f"T265 pipeline started with video={video}, odometry={odometry}, "
@@ -401,7 +394,8 @@ class RealSenseDeviceT265(BaseDevice):
         import pyrealsense2 as rs
 
         # init context
-        self.context = rs.context()
+        if self.context is None:
+            self.context = rs.context()
 
         # Init pipelines
         if self.pipeline is None:

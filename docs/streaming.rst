@@ -87,7 +87,7 @@ For simultaneous streaming from multiple devices, the :py:class:`StreamManager`
 is used. The manager dispatches each stream to a separate process and handles
 communication between those processes. Instead of constructing
 :py:class:`VideoStream` instances, we use a list of
-:py:class:`VideoStream.Config` instances:
+:py:meth:`VideoStream.Config` instances:
 
 .. doctest::
 
@@ -124,7 +124,8 @@ With ``duration=30``, the manager will stop streaming after 30 seconds.
 .. note::
 
     The concept of pipelines and processes such as :py:class:`VideoDisplay`
-    is explained in detail in :ref:`processing`.
+    is explained in detail in :ref:`processing` and the config mechanism
+    in :ref:`custom`.
 
 .. doctest::
 

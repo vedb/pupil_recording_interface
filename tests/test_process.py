@@ -4,15 +4,26 @@ import pytest
 import numpy as np
 
 from pupil_recording_interface.process import BaseProcess
+from pupil_recording_interface.process.display import VideoDisplay
+from pupil_recording_interface.process.recorder import (
+    VideoRecorder,
+    MotionRecorder,
+)
 from pupil_recording_interface.process.cam_params import (
     calculate_intrinsics,
     calculate_extrinsics,
+    CamParamEstimator,
 )
+from pupil_recording_interface.process.pupil_detector import PupilDetector
+from pupil_recording_interface.process.gaze_mapper import GazeMapper
+from pupil_recording_interface.process.circle_detector import CircleDetector
+from pupil_recording_interface.process.calibration import Calibration
 from pupil_recording_interface.externals.file_methods import (
     load_object,
     load_pldata_file,
 )
 from pupil_recording_interface.decorators import process
+from pupil_recording_interface.session import Session
 
 
 class TestAllProcesses:
@@ -25,7 +36,7 @@ class TestAllProcesses:
         motion_stream_config,
         mock_video_device,
     ):
-
+        """"""
         config = process_configs[process_type]
         config.process_name = "test"
 
@@ -55,26 +66,51 @@ class TestAllProcesses:
 
 
 class TestVideoRecorder:
-    @pytest.mark.skip("Not yet implemented")
-    def test_from_config(self, folder):
+    def test_from_config(
+        self, process_configs, video_stream_config, mock_video_device
+    ):
         """"""
-
-    @pytest.mark.skip("Not yet implemented")
-    def test_get_data_and_timestamp(self):
-        """"""
-
-    @pytest.mark.skip("Not yet implemented")
-    def test_stop(self):
-        """"""
+        recorder = BaseProcess.from_config(
+            process_configs["video_recorder"],
+            video_stream_config,
+            mock_video_device,
+        )
+        assert isinstance(recorder, VideoRecorder)
+        assert recorder.resolution == (1280, 720)
+        assert recorder.fps == 30
+        assert recorder.name == "mock_video_device"
+        assert recorder.color_format == "bgr24"
 
 
 class TestMotionRecorder:
-    @pytest.mark.skip("Not yet implemented")
-    def test_from_config(self, folder):
+    def test_from_config(
+        self, process_configs, motion_stream_config, mock_device
+    ):
         """"""
+        recorder = BaseProcess.from_config(
+            process_configs["motion_recorder"],
+            motion_stream_config,
+            mock_device,
+        )
+        assert isinstance(recorder, MotionRecorder)
+        assert recorder.motion_type == "odometry"
+        assert recorder.name == "mock_device"
 
 
 class TestVideoDisplay:
+    def test_from_config(
+        self, process_configs, video_stream_config, mock_video_device
+    ):
+        """"""
+        display = BaseProcess.from_config(
+            process_configs["video_display"],
+            video_stream_config,
+            mock_video_device,
+        )
+        assert isinstance(display, VideoDisplay)
+        assert display.resolution == (1280, 720)
+        assert display.name == "mock_video_device"
+
     def test_add_pupil_overlay(self, video_display, pupil_packet):
         """"""
         frame = video_display._add_pupil_overlay(pupil_packet)
@@ -117,6 +153,20 @@ class TestVideoDisplay:
 
 
 class TestPupilDetector:
+    def test_from_config(
+        self, process_configs, video_stream_config, mock_video_device
+    ):
+        """"""
+        video_stream_config.name = "eye0"
+        detector = BaseProcess.from_config(
+            process_configs["pupil_detector"],
+            video_stream_config,
+            mock_video_device,
+        )
+        assert detector.folder == process_configs["pupil_detector"].folder
+        assert isinstance(detector, PupilDetector)
+        assert detector.camera_id == 0
+
     def test_record_data(self, pupil_detector, pupil_packet):
         """"""
         pupil_packet.device_uid = "Pupil Cam1 ID0"
@@ -132,6 +182,18 @@ class TestPupilDetector:
 
 
 class TestGazeMapper:
+    def test_from_config(
+        self, process_configs, video_stream_config, mock_video_device
+    ):
+        """"""
+        mapper = BaseProcess.from_config(
+            process_configs["gaze_mapper"],
+            video_stream_config,
+            mock_video_device,
+        )
+        assert mapper.folder == process_configs["gaze_mapper"].folder
+        assert isinstance(mapper, GazeMapper)
+
     def test_mapper(self, gaze_mapper, gaze_2d):
         """"""
         for g in gaze_2d:
@@ -162,7 +224,53 @@ class TestGazeMapper:
         }
 
 
+class TestCircleDetector:
+    def test_from_config(
+        self, process_configs, video_stream_config, mock_video_device
+    ):
+        """"""
+        detector = BaseProcess.from_config(
+            process_configs["circle_detector"],
+            video_stream_config,
+            mock_video_device,
+        )
+        assert isinstance(detector, CircleDetector)
+
+    def test_detect_circle(
+        self, circle_detector, world_video_stream, reference_locations
+    ):
+        """"""
+        with Session(world_video_stream):
+            packet = world_video_stream.get_packet()
+
+        circle_markers = circle_detector.detect_circle(packet)
+        assert isinstance(circle_markers, list)
+        assert set(circle_markers[0].keys()) == {
+            "ellipses",
+            "img_pos",
+            "norm_pos",
+            "marker_type",
+            "timestamp",
+        }
+        assert circle_markers[0]["img_pos"] == tuple(
+            reference_locations[0][0]["img_pos"]
+        )
+
+
 class TestCalibration:
+    def test_from_config(
+        self, process_configs, video_stream_config, mock_video_device
+    ):
+        """"""
+        calibration = BaseProcess.from_config(
+            process_configs["calibration"],
+            video_stream_config,
+            mock_video_device,
+        )
+        assert calibration.folder == process_configs["calibration"].folder
+        assert calibration.resolution == (1280, 720)
+        assert isinstance(calibration, Calibration)
+
     def test_calculate_calibration(
         self, calibration, pupil, reference_locations, calibration_2d
     ):
@@ -183,9 +291,9 @@ class TestCalibration:
         calibration.calculate_calibration()
         assert calibration.result is None
 
-    def test_save_result(self, calibration, calibration_2d, temp_folder):
+    def test_save_result(self, calibration, calibration_2d, tmpdir):
         """"""
-        calibration.folder = temp_folder
+        calibration.folder = tmpdir
         calibration.uuid = calibration_2d["data"][0]
         calibration.recording_uuid = calibration_2d["data"][2]
         calibration.frame_index_range = [0, 541]
@@ -201,6 +309,20 @@ class TestCalibration:
 
 
 class TestCamParamEstimator:
+    def test_from_config(
+        self, process_configs, video_stream_config, mock_video_device
+    ):
+        """"""
+        estimator = BaseProcess.from_config(
+            process_configs["cam_param_estimator"],
+            video_stream_config,
+            mock_video_device,
+        )
+        assert (
+            estimator.folder == process_configs["cam_param_estimator"].folder
+        )
+        assert isinstance(estimator, CamParamEstimator)
+
     def test_get_patterns(self, cam_param_estimator, packet):
         """"""
         resolutions, patterns = cam_param_estimator._get_patterns()

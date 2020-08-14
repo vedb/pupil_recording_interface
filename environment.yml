@@ -24,7 +24,7 @@ dependencies:
   - msgpack-python=0.6.2
   - pupil-detectors=1.0.5
   # realsense
-  - librealsense2=2.32.1
+  - librealsense2=2.36.0
   # flir
   - spinnaker-sdk=1.27.0.48
   - pyspin=1.27.0.48
@@ -44,6 +44,6 @@ dependencies:
   # pip
   - pip:
     - netcdf4==1.5.3
-    - pyrealsense2==2.32.1.1346
+    - pyrealsense2==2.36.0.2038
     - simple-pyspin==0.1.1
     - sphinx-multiversion
