@@ -393,6 +393,13 @@ class RealSenseDeviceT265(BaseDevice):
         """ Run hook(s) before dispatching the recording thread. """
         import pyrealsense2 as rs
 
+        # Init stream queues
+        self.queues = {
+            name: mp.Queue(maxsize=self.queue_size)
+            for name in ("video", "odometry", "accel", "gyro")
+            if getattr(self, name)
+        }
+
         # init context
         if self.context is None:
             self.context = rs.context()
@@ -413,13 +420,6 @@ class RealSenseDeviceT265(BaseDevice):
         self.context.set_devices_changed_callback(
             self._devices_changed_callback
         )
-
-        # Init stream queues
-        self.queues = {
-            name: mp.Queue(maxsize=self.queue_size)
-            for name in ("video", "odometry", "accel", "gyro")
-            if getattr(self, name)
-        }
 
     def run_post_thread_hooks(self):
         """ Run hook(s) after the recording thread finishes. """
