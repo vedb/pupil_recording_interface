@@ -9,6 +9,8 @@ from functools import reduce
 from threading import Thread
 from pathlib import Path
 
+import numpy as np
+
 from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.externals.methods import get_system_info
@@ -18,7 +20,7 @@ from pupil_recording_interface.utils import multiprocessing_deque, monotonic
 logger = logging.getLogger(__name__)
 
 
-class StreamManager(object):
+class StreamManager:
     """ Manager for multiple streams. """
 
     def __init__(
@@ -344,6 +346,7 @@ class StreamManager(object):
         self,
         key,
         format="{:.2f}",
+        nan_format="no data",
         status_dict=None,
         max_cols=None,
         sleep=None,
@@ -363,11 +366,13 @@ class StreamManager(object):
         }
 
         if len(values) > 0:
-            status_str = ", ".join(
-                f"{name}: " + format.format(value)
-                for name, value in values.items()
-                if value is not None
-            )
+            status_list = []
+            for name, value in values.items():
+                if nan_format is not None and np.isnan(value):
+                    status_list.append(f"{name}: " + nan_format.format(value))
+                elif value is not None:
+                    status_list.append(f"{name}: " + format.format(value))
+            status_str = ", ".join(status_list)
         else:
             return None
 

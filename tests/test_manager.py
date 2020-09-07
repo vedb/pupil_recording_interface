@@ -92,6 +92,27 @@ class TestManager:
             stream_manager.status["mock_stream"]["timestamp"], float("nan")
         )
 
+    def test_format_status(self, stream_manager, statuses):
+        """"""
+        stream_manager.status = statuses
+        assert (
+            stream_manager.format_status("fps") == "eye0: 120.00, world: 30.00"
+        )
+        assert (
+            stream_manager.format_status("fps", max_cols=17)
+            == "eye0: 120.00, ..."
+        )
+
+        stream_manager.status["world"]["fps"] = np.nan
+        assert (
+            stream_manager.format_status("fps")
+            == "eye0: 120.00, world: no data"
+        )
+        assert (
+            stream_manager.format_status("fps", nan_format=None)
+            == "eye0: 120.00, world: nan"
+        )
+
     def test_get_notifications(self, statuses, video_stream):
         """"""
         video_stream.pipeline.steps[0].listen_for = ["pupil"]
