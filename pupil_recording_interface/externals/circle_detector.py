@@ -25,7 +25,7 @@ class CircleTracker(object):
         wait_interval=30,
         roi_wait_interval=120,
         scale=0.5,
-        detection_method="VEDB",
+        detection_method="vedb",
         marker_size=(12, 27),
     ):
         self.wait_interval = wait_interval
@@ -108,7 +108,7 @@ class CircleTracker(object):
         marker_list = []
         # Check whole frame
         if not self._flag_check_roi:
-            if self._detection_method == "VEDB":
+            if self._detection_method.lower() == "vedb":
                 ellipses_list = find_vedb_circle_marker(
                     img, self.scale, self._marker_size
                 )
@@ -174,7 +174,7 @@ class CircleTracker(object):
                 col_slice = b0, b1
                 row_slice = b2, b3
 
-                if self._detection_method == "VEDB":
+                if self._detection_method == "vedb":
 
                     ellipses_list = find_vedb_circle_marker(
                         img[slice(*row_slice), slice(*col_slice)],

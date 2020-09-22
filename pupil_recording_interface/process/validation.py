@@ -69,4 +69,3 @@ class Validation(Calibration):
 
         self.plot_markers(circle_marker_list)
         self.plot_pupils(pupil_list)
-        logger

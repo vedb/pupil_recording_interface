@@ -30,7 +30,7 @@ if __name__ == "__main__":
                 pri.CircleDetector.Config(
                     scale=0.8,
                     paused=True,
-                    detection_method="VEDB",
+                    detection_method="vedb",
                     marker_size=(12, 27),
                 ),
                 pri.Validation.Config(save=True, folder=folder),

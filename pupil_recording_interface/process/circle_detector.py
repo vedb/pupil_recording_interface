@@ -13,14 +13,13 @@ class CircleDetector(BaseProcess):
     def __init__(
         self,
         scale=0.5,
-        detection_method="VEDB",
+        detection_method="vedb",
         marker_size=(12, 27),
         **kwargs,
     ):
         """ Constructor. """
         super().__init__(**kwargs)
 
-        # Todo: Pass the detection method from config file
         self.circle_tracker = CircleTracker(
             scale=scale,
             detection_method=detection_method,
