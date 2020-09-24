@@ -12,9 +12,9 @@ from pupil_recording_interface.decorators import stream
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
+from pupil_recording_interface.utils import beep
 
 logger = logging.getLogger(__name__)
-
 
 class StreamHandler:
     """ Context manager for main loop. """
@@ -229,6 +229,7 @@ class BaseStream(BaseConfigurable):
 
                     # TODO check if it makes sense to stop streams like this
                     if packet is None:
+                        print("BREAKING LOOP")
                         break
 
                     if self.pipeline is not None:
@@ -238,7 +239,10 @@ class BaseStream(BaseConfigurable):
 
                     # TODO yield self.get_status()?
                     if status_queue is not None:
-                        status_queue.append(self.get_status(packet))
+                        now_status = self.get_status(packet)
+                        if not now_status["running"]:
+                            beep([440, 660, 440, 660, 440, 660], seconds=0.2)
+                        status_queue.append(now_status)
 
                 except KeyboardInterrupt:
                     logger.debug("Thread stopped via keyboard interrupt.")

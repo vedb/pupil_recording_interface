@@ -6,12 +6,15 @@ import numpy as np
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device import BaseDevice
-from pupil_recording_interface.utils import monotonic
+from pupil_recording_interface.utils import monotonic, beep
 from pupil_recording_interface.errors import DeviceNotConnected
 
 
 logger = logging.getLogger(__name__)
 
+fa, fb, fc, fd = 440, 550, 660, 770
+t265_plug_in = [fa, 0, fb, 0, fc, 0, fd]                   
+t265_unplug = [fd, 0, fc, 0, fb, 0, fa]
 
 @device("t265")
 class RealSenseDeviceT265(BaseDevice):
@@ -226,12 +229,14 @@ class RealSenseDeviceT265(BaseDevice):
             logger.warning(
                 f"T265 device with serial number {self.device_uid} removed"
             )
+            beep(t265_unplug, seconds=0.05)
             self.pipeline.stop()
             self.pipeline = None
         elif event.was_added(self.rs_device) and self.pipeline is None:
             logger.info(
                 f"T265 device with serial number {self.device_uid} reconnected"
             )
+            beep(t265_plug_in, seconds=0.05)
             self.pipeline = self._init_pipeline(
                 self.device_uid,
                 self._frame_callback,

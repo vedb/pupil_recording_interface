@@ -68,3 +68,14 @@ class SuppressStream:
         os.dup2(self.orig_stream_dup, self.orig_stream_fileno)
         os.close(self.orig_stream_dup)
         self.devnull.close()
+
+def beep(freq=440, fs=44100, seconds=0.1):
+    """ Make a beep noise to indicate recording state. """
+    import numpy as np
+    import simpleaudio
+    t = np.linspace(0, seconds, int(fs * seconds))
+    if not isinstance(freq, list):
+        freq = [freq]
+    notes = np.hstack([np.sin(f * t * 2 * np.pi) for f in freq])
+    audio = (notes * (2 ** 15 - 1) / np.max(np.abs(notes))).astype(np.int16)
+    simpleaudio.play_buffer(audio, 1, 2, fs)

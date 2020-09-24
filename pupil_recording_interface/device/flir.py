@@ -5,11 +5,15 @@ import logging
 
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.device.video import BaseVideoDevice
-from pupil_recording_interface.utils import monotonic
+from pupil_recording_interface.utils import monotonic, beep
 from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 
 logger = logging.getLogger(__name__)
 
+# Error tones
+fa, fb, fc, fd = 440, 660, 550, 330
+flir_plug_in = [fa, 0, fa, 0, fa, fb, 0, fb, 0, fb]                   
+flir_unplug = [fc, 0, fc, 0, fc, fd, 0, fd, 0, fd]
 
 class Nodemap:
     def __init__(self, camera, nodemap="camera"):
@@ -164,7 +168,10 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 logger.debug("Device control information not available.")
 
         except PySpin.SpinnakerException as ex:
+            beep(flir_unplug, seconds=0.05)
+            print("Beeped, log device info, pre-restart")
             logger.error(str(ex))
+            print("passed logging for device info")
 
     @classmethod
     def get_capture(cls, serial_number, resolution, fps, settings=None):
@@ -325,7 +332,10 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 f"{self.device_type} device {self.device_uid} "
                 f"streaming error: {e}"
             )
+            beep(flir_unplug, seconds=0.05)
+            print("Beeped, frame & ts, pre-restart")
             self.restart()
+            print("passed restart")
             return self.get_frame_and_timestamp(mode)
 
         return frame, timestamp, source_timestamp
