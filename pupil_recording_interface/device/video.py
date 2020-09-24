@@ -88,6 +88,9 @@ class BaseVideoDevice(BaseDevice):
         self.stop()
         while not self.is_started:
             try:
+                logger.info(
+                    f"{self.device_type} device {self.device_uid} restart attempted"
+                )
                 self.start()
                 logger.info(
                     f"{self.device_type} device {self.device_uid} restarted"
