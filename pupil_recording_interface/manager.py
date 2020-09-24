@@ -372,7 +372,7 @@ class StreamManager(object):
             "duration_s": self.run_duration,
             "meta_version": "2.1",
             "min_player_version": "1.16",
-            "recording_name": self.folder,
+            "recording_name": str(self.folder),
             "recording_software_name": self._app_name,
             "recording_software_version": self._app_version,
             "recording_uuid": str(uuid.uuid4()),
