@@ -226,5 +226,70 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
     def stop(self):
         """ Stop the encoder. """
         self.video_writer.stdin.write(b"q")
-        self.video_writer.wait()
+        # TODO self.video_writer.wait() doesn't work
+        logger.debug(f"Stopped writing frames to {self.video_file}")
+
+
+class VideoEncoderAV(BaseVideoEncoder):
+    """ PyAV encoder interface. """
+
+    def __init__(
+        self,
+        folder,
+        stream_name,
+        resolution,
+        fps,
+        color_format="bgr24",
+        codec="libx264",
+        overwrite=False,
+        preset="ultrafast",
+        crf="18",
+        flags=None,
+    ):
+        """ Constructor. """
+        import av
+
+        self.video_file = os.path.join(folder, f"{stream_name}.mp4")
+        if os.path.exists(self.video_file):
+            if overwrite:
+                os.remove(self.video_file)
+            else:
+                raise IOError(f"{self.video_file} exists, will not overwrite")
+
+        self.output = av.open(self.video_file, "w")
+        self.stream = self.output.add_stream("h264", fps)
+        self.color_format = color_format
+
+        # TODO move timestamp writer to BaseStreamRecorder
+        self.timestamp_file = os.path.join(
+            folder, f"{stream_name}_timestamps.npy"
+        )
+        if os.path.exists(self.timestamp_file) and not overwrite:
+            raise IOError(f"{self.timestamp_file} exists, will not overwrite")
+
+    @classmethod
+    def _init_video_writer(
+        cls, video_file, codec, color_format, fps, resolution, **kwargs
+    ):
+        """ Stub. """
+
+    def write(self, img):
+        """ Write a frame to disk.
+
+        Parameters
+        ----------
+        img : array_like
+            The input frame.
+        """
+        import av
+
+        frame = av.VideoFrame.from_ndarray(img, format=self.color_format)
+        packet = self.stream.encode(frame)
+        self.output.mux(packet)
+
+    def stop(self):
+        """ Stop the encoder. """
+        packet = self.stream.encode(None)
+        self.output.mux(packet)
+        self.output.close()
         logger.debug(f"Stopped writing frames to {self.video_file}")

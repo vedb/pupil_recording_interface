@@ -1,13 +1,15 @@
 import json
 import logging
-from threading import Thread
 import multiprocessing as mp
-import os
 import shutil
 import signal
 import time
 import uuid
 from functools import reduce
+from threading import Thread
+from pathlib import Path
+
+import numpy as np
 
 from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
@@ -18,7 +20,7 @@ from pupil_recording_interface.utils import multiprocessing_deque, monotonic
 logger = logging.getLogger(__name__)
 
 
-class StreamManager(object):
+class StreamManager:
     """ Manager for multiple streams. """
 
     def __init__(
@@ -28,6 +30,7 @@ class StreamManager(object):
         policy="new_folder",
         duration=None,
         update_interval=0.1,
+        status_timeout=5.0,
         max_queue_size=20,
         app_info=None,
     ):
@@ -64,6 +67,11 @@ class StreamManager(object):
             Will be dropped in a future version with an asynchronous
             implementation of the update mechanism.
 
+        status_timeout: float, default 5.0
+            Maximum time in seconds to wait for status updates from a stream.
+            After this time, the status of the stream will be reset to the
+            default.
+
         max_queue_size: int, default 20
             Maximum size of process status and notification queues. Higher
             values might lead to delays in communicating with the processes
@@ -80,8 +88,9 @@ class StreamManager(object):
         self.policy = policy
         self.streams = self._init_streams(configs, self.folder)
         self.duration = duration or float("inf")
-        self.max_queue_size = max_queue_size
         self.update_interval = update_interval
+        self.status_timeout = status_timeout
+        self.max_queue_size = max_queue_size
 
         self.status = {}
         self.stopped = False
@@ -115,13 +124,13 @@ class StreamManager(object):
         if folder is None:
             return None
 
-        folder = os.path.abspath(os.path.expanduser(folder))
+        folder = Path(folder).expanduser().absolute()
 
         if policy == "new_folder":
             counter = 0
-            while os.path.exists(os.path.join(folder, f"{counter:03d}")):
+            while (folder / f"{counter:03d}").exists():
                 counter += 1
-            folder = os.path.join(folder, f"{counter:03d}")
+            folder = folder / f"{counter:03d}"
 
         elif policy == "here":
             pass
@@ -136,7 +145,7 @@ class StreamManager(object):
             raise ValueError(f"Unsupported file creation policy: {policy}")
 
         # TODO do this at the start of the recording?
-        os.makedirs(folder, exist_ok=True)
+        folder.mkdir(parents=True, exist_ok=True)
 
         return folder
 
@@ -242,13 +251,19 @@ class StreamManager(object):
     def _update_status(self, status):
         """ Update the status of all streams. """
         # TODO updating self.status should be made thread-safe
-        # TODO deal with statuses that are too old or only sent once
+        # TODO deal with statuses that are only sent once
         #  (e.g. "pattern_acquired")
-        for stream_name, queue in self._status_queues.items():
-            if stream_name not in self.status:
+        for stream_name in self.streams.keys():
+            # get default status on startup or when last status too old
+            if (
+                stream_name not in self.status
+                or time.time() - self.status[stream_name]["status_timestamp"]
+                > self.status_timeout
+            ):
+                # TODO better proxy for default status?
                 self.status[stream_name] = self.streams[
                     stream_name
-                ].get_status()  # TODO proxy for getting "empty" status
+                ].get_status()
             if stream_name in status:
                 self.status[stream_name].update(status[stream_name])
 
@@ -331,6 +346,7 @@ class StreamManager(object):
         self,
         key,
         format="{:.2f}",
+        nan_format="no data",
         status_dict=None,
         max_cols=None,
         sleep=None,
@@ -350,11 +366,13 @@ class StreamManager(object):
         }
 
         if len(values) > 0:
-            status_str = ", ".join(
-                f"{name}: " + format.format(value)
-                for name, value in values.items()
-                if value is not None
-            )
+            status_list = []
+            for name, value in values.items():
+                if nan_format is not None and np.isnan(value):
+                    status_list.append(f"{name}: " + nan_format.format(value))
+                elif value is not None:
+                    status_list.append(f"{name}: " + format.format(value))
+            status_str = ", ".join(status_list)
         else:
             return None
 
@@ -382,9 +400,7 @@ class StreamManager(object):
         }
 
         with open(
-            os.path.join(self.folder, "info.player.json"),
-            mode="w",
-            encoding="utf-8",
+            self.folder / "info.player.json", mode="w", encoding="utf-8",
         ) as f:
             json.dump(json_file, f, ensure_ascii=False, indent=4)
 

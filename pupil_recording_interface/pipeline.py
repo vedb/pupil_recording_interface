@@ -7,12 +7,12 @@ from pupil_recording_interface.process import BaseProcess
 logger = logging.getLogger(__name__)
 
 
-class Pipeline(object):
+class Pipeline:
     """ Pipeline for different processing steps. """
 
     def __init__(self, steps):
         """ Constructor. """
-        self.steps = steps
+        self.steps = list(steps)
 
     @property
     def listen_for(self):
@@ -43,10 +43,10 @@ class Pipeline(object):
         for step in self.steps:
             step.start()
 
-    def flush(self, packet, notifications):
-        """ Flush the pipeline with new data. """
+    def process(self, packet, notifications=None):
+        """ Process new data. """
         for step in self.steps:
-            packet = step.process(packet, notifications)
+            packet = step.process(packet, notifications or [])
 
         if isinstance(packet, Future):
             packet = packet.result()
