@@ -13,7 +13,7 @@ class CircleDetector(BaseProcess):
     def __init__(
         self,
         scale=0.5,
-        detection_method="vedb",
+        detection_method="pupil",
         marker_size=(12, 27),
         **kwargs,
     ):
