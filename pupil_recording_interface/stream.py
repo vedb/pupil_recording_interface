@@ -4,6 +4,7 @@ import time
 from collections import deque
 import signal
 import logging
+from time import monotonic
 
 import numpy as np
 
@@ -227,9 +228,13 @@ class BaseStream(BaseConfigurable):
                     )
                     packet = self.get_packet()
 
-                    # TODO check if it makes sense to stop streams like this
-                    if packet is None:
-                        break
+                    if hasattr(packet, "event") and isinstance(
+                        packet.event, dict
+                    ):
+                        if packet.event["name"] == "stream_stop":
+                            break
+                        elif packet.event["name"] == "device_disconnect":
+                            continue
 
                     if self.pipeline is not None:
                         packet = self.pipeline.process(packet, notifications)
@@ -305,8 +310,13 @@ class VideoStream(BaseStream):
         else:
             data = self.device.get_frame_and_timestamp()
 
-        if data is None:
-            return None
+        if len(data) == 1:
+            return Packet(
+                self.name,
+                self.device.device_uid,
+                timestamp=monotonic(),
+                event=data,
+            )
         elif len(data) == 2:
             frame, timestamp = data
             source_timestamp = None
@@ -371,17 +381,22 @@ class MotionStream(BaseStream):
 
     def get_packet(self):
         """ Get the last data packet from the stream. """
-        (
-            motion,
-            timestamp,
-            source_timestamp,
-        ) = self.device.get_motion_and_timestamp(self.motion_type)
+        data = self.device.get_motion_and_timestamp(self.motion_type)
 
-        return Packet(
-            self.name,
-            self.device.device_uid,
-            timestamp=timestamp,
-            source_timestamp=source_timestamp,
-            source_timebase=self.device.timebase,
-            **{self.motion_type: motion},
-        )
+        if len(data) == 1:
+            return Packet(
+                self.name,
+                self.device.device_uid,
+                timestamp=monotonic(),
+                event=data,
+            )
+        else:
+            motion, timestamp, source_timestamp = data
+            return Packet(
+                self.name,
+                self.device.device_uid,
+                timestamp=timestamp,
+                source_timestamp=source_timestamp,
+                source_timebase=self.device.timebase,
+                **{self.motion_type: motion},
+            )

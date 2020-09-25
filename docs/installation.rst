@@ -174,6 +174,14 @@ GitHub page.
 FLIR cameras
 ............
 
+``PySpin`` and ``simple-pyspin`` are required for FLIR camera support.
+
+``simple-pyspin`` can be installed via ``pip``:
+
+.. code-block:: console
+
+    $ pip install simple-pyspin
+
 Linux
 ~~~~~
 

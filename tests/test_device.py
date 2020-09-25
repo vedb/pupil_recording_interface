@@ -61,11 +61,6 @@ class TestVideoDeviceUVC:
         assert frame.shape == (720, 1280, 3)
         assert isinstance(ts, float)
 
-        with pytest.raises(RuntimeError):
-            VideoDeviceUVC(
-                device_uid, (1280, 720), 60
-            ).get_frame_and_timestamp()
-
 
 class TestVideoDeviceFLIR:
     @pytest.fixture(autouse=True)

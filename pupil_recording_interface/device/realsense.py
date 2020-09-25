@@ -1,6 +1,7 @@
 """"""
 import multiprocessing as mp
 import logging
+from queue import Empty
 
 import numpy as np
 
@@ -73,6 +74,7 @@ class RealSenseDeviceT265(BaseDevice):
         self.queue_size = queue_size
 
         self.timebase = "epoch"
+        self.queue_timeout = 1.0
 
         self.pipeline = None
         self.rs_device = None
@@ -372,21 +374,27 @@ class RealSenseDeviceT265(BaseDevice):
 
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamps. """
-        # TODO timeout
         if "video" not in self.queues:
             raise RuntimeError("video stream not enabled for this device")
         else:
-            return self.queues["video"].get()
+            try:
+                return self.queues["video"].get(timeout=self.queue_timeout)
+            except Empty:
+                return {"name": "device_disconnect"}
 
     def get_motion_and_timestamp(self, motion_type):
         """ Get motion data for queue. """
-        # TODO timeout
         if motion_type not in self.queues:
             raise RuntimeError(
                 f"{motion_type} stream not enabled for this device"
             )
         else:
-            motion = self.queues[motion_type].get()
+            try:
+                motion = self.queues[motion_type].get(
+                    timeout=self.queue_timeout
+                )
+            except Empty:
+                return {"name": "device_disconnect"}
             return motion, motion["timestamp"], motion["source_timestamp"]
 
     def run_pre_thread_hooks(self):

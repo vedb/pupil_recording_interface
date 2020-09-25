@@ -263,22 +263,27 @@ class VideoDeviceFLIR(BaseVideoDevice):
         """ Stop the device. """
         import PySpin
 
-        try:
-            self.capture.cam.EndAcquisition()
-        except PySpin.SpinnakerException as e:
-            logger.debug(f"Could not stop camera: {e}")
-        try:
-            self.capture.cam.DeInit()
-        except PySpin.SpinnakerException as e:
-            logger.debug(f"Could not de-init camera: {e}")
-        del self.capture.cam
+        if self.capture is not None:
+            try:
+                self.capture.cam.EndAcquisition()
+            except PySpin.SpinnakerException as e:
+                logger.debug(f"Could not stop camera: {e}")
+            try:
+                self.capture.cam.DeInit()
+            except PySpin.SpinnakerException as e:
+                logger.debug(f"Could not de-init camera: {e}")
+            del self.capture.cam
 
-        self.capture = None
-        logger.debug("Stopped FLIR camera")
+            self.capture = None
+            logger.debug("Stopped FLIR camera")
 
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         import PySpin
+
+        if not self.is_started:
+            if not self.restart():
+                return {"name": "device_disconnect"}
 
         try:
             # Retrieve next received image
@@ -325,7 +330,9 @@ class VideoDeviceFLIR(BaseVideoDevice):
                 f"{self.device_type} device {self.device_uid} "
                 f"streaming error: {e}"
             )
-            self.restart()
-            return self.get_frame_and_timestamp(mode)
+            if self.restart():
+                return self.get_frame_and_timestamp(mode)
+            else:
+                return {"name": "device_disconnect"}
 
         return frame, timestamp, source_timestamp
