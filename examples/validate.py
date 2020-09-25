@@ -1,11 +1,13 @@
 import sys
 import logging
-
-import pupil_recording_interface as pri
 import datetime
 
+import pupil_recording_interface as pri
+
+
 # Generation of your pupil device (1, 2 or 3)
-pupil_gen = 2
+pupil_gen = 1
+
 # recording folder
 folder = f"~/recordings/{datetime.datetime.today():%Y_%m_%d}"
 
@@ -14,18 +16,11 @@ if __name__ == "__main__":
     # stream configurations
     configs = [
         pri.VideoStream.Config(
-            device_type="flir",
-            device_uid="19404167",  # "19208347",  #
+            device_type="uvc",
+            device_uid=f"Pupil Cam{pupil_gen} ID2",
             name="world",
-            resolution=(1280, 1024),  # ,(2048, 1536)
+            resolution=(1280, 720),
             fps=30,
-            settings={
-                "GainAuto": "Off",
-                "Gain": 15.0,
-                "ExposureAuto": "Off",
-                "ExposureTime": 16000.0,
-            },
-            color_format="bayer_rggb8",
             pipeline=[
                 pri.CircleDetector.Config(
                     scale=0.8,
@@ -41,7 +36,7 @@ if __name__ == "__main__":
         ),
         pri.VideoStream.Config(
             device_type="uvc",
-            device_uid="Pupil Cam2 ID0",  # f"Pupil Cam{pupil_gen} ID0",
+            device_uid=f"Pupil Cam{pupil_gen} ID0",
             name="eye0",
             resolution=(320, 240) if pupil_gen == 1 else (192, 192),
             fps=120,
@@ -53,7 +48,7 @@ if __name__ == "__main__":
         ),
         pri.VideoStream.Config(
             device_type="uvc",
-            device_uid="Pupil Cam2 ID1",  # f"Pupil Cam{pupil_gen} ID1",
+            device_uid=f"Pupil Cam{pupil_gen} ID1",
             name="eye1",
             resolution=(320, 240) if pupil_gen == 1 else (192, 192),
             fps=120,
@@ -67,7 +62,7 @@ if __name__ == "__main__":
 
     # set up logger
     logging.basicConfig(
-        stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
+        stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
 
     validation_counter = 0
@@ -86,9 +81,8 @@ if __name__ == "__main__":
                 else:
                     while validation_counter < 10:
                         print(
-                            "\nCollecting calibration data{:d}...".format(
-                                validation_counter
-                            )
+                            f"\nCollecting calibration data "
+                            f"{validation_counter}..."
                         )
                         manager.send_notification(
                             {"resume_process": "world.CircleDetector"},

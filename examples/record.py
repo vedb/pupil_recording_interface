@@ -20,7 +20,7 @@ if __name__ == "__main__":
             device_type="uvc",
             device_uid=f"Pupil Cam{pupil_gen} ID2",
             name="world",
-            resolution=(1280, 1024),
+            resolution=(1280, 720),
             fps=30,
             pipeline=[pri.VideoRecorder.Config(), pri.VideoDisplay.Config()],
         ),
