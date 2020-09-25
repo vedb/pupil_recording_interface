@@ -173,6 +173,7 @@ class Calibration(BaseProcess):
 
             if self.save:
                 self.save_result()
+        return circle_marker_list, pupil_list
 
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """

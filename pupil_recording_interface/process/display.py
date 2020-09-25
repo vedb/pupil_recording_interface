@@ -213,10 +213,14 @@ class VideoDisplay(BaseProcess):
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # TODO make constructor arguments
-        color = (255, 0, 0)
+        # TODO Define color, radius and thickness in config
+        color = (255, 255, 0)
+        marker_thickness = 5
         radius = 20
 
-        cv2.circle(frame, marker_position, radius, color)
+        cv2.circle(
+            frame, marker_position, radius, color, thickness=marker_thickness
+        )
 
         return frame
 
