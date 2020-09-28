@@ -2,6 +2,7 @@ import abc
 import logging
 import os
 import subprocess
+import time
 
 import cv2
 
@@ -121,6 +122,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
         preset="ultrafast",
         crf="18",
         flags=None,
+        stop_delay=3.0,
     ):
         """ Constructor. """
         super(VideoEncoderFFMPEG, self).__init__(
@@ -135,6 +137,7 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
             crf=crf,
             flags=flags,
         )
+        self.stop_delay = stop_delay
 
     @classmethod
     def _init_video_writer(
@@ -226,7 +229,8 @@ class VideoEncoderFFMPEG(BaseVideoEncoder):
     def stop(self):
         """ Stop the encoder. """
         self.video_writer.stdin.write(b"q")
-        # TODO self.video_writer.wait() doesn't work
+        time.sleep(self.stop_delay)
+        self.video_writer.terminate()
         logger.debug(f"Stopped writing frames to {self.video_file}")
 
 

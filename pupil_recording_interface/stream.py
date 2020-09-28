@@ -234,6 +234,8 @@ class BaseStream(BaseConfigurable):
                         if packet.event["name"] == "stream_stop":
                             break
                         elif packet.event["name"] == "device_disconnect":
+                            # TODO send status update without manager assuming
+                            #  that stream is still running
                             continue
 
                     if self.pipeline is not None:
@@ -316,6 +318,7 @@ class VideoStream(BaseStream):
                 self.device.device_uid,
                 timestamp=monotonic(),
                 event=data,
+                broadcasts=["event"],
             )
         elif len(data) == 2:
             frame, timestamp = data
@@ -389,8 +392,9 @@ class MotionStream(BaseStream):
                 self.device.device_uid,
                 timestamp=monotonic(),
                 event=data,
+                broadcasts=["event"],
             )
-        else:
+        elif len(data) == 3:
             motion, timestamp, source_timestamp = data
             return Packet(
                 self.name,
@@ -399,4 +403,9 @@ class MotionStream(BaseStream):
                 source_timestamp=source_timestamp,
                 source_timebase=self.device.timebase,
                 **{self.motion_type: motion},
+            )
+        else:
+            raise RuntimeError(
+                f"Got {len(data)} return values from "
+                f"get_motion_and_timestamp, expected 1 or 3"
             )

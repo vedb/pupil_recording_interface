@@ -30,7 +30,7 @@ class StreamManager:
         policy="new_folder",
         duration=None,
         update_interval=0.1,
-        status_timeout=5.0,
+        status_timeout=1.0,
         max_queue_size=20,
         app_info=None,
     ):
