@@ -109,10 +109,6 @@ class BaseVideoDevice(BaseDevice):
 class VideoDeviceUVC(BaseVideoDevice):
     """ UVC video device. """
 
-    import uvc
-
-    _restart_errors = (DeviceNotConnected, uvc.InitError, uvc.OpenError)
-
     def __init__(
         self,
         device_uid,
@@ -142,6 +138,14 @@ class VideoDeviceUVC(BaseVideoDevice):
         controls: dict, optional
             Mapping from UVC control display names to values.
         """
+        import uvc
+
+        self._restart_errors = (
+            DeviceNotConnected,
+            uvc.InitError,
+            uvc.OpenError,
+        )
+
         super().__init__(
             device_uid, resolution, fps, initial_controls=controls or {}
         )
