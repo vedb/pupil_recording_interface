@@ -11,10 +11,10 @@ from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 
 
 class TestBaseDevice:
-    def test_from_config(self, video_stream_config):
+    def test_from_config(self, mock_stream_config, mock_device):
         """"""
         assert isinstance(
-            BaseDevice.from_config(video_stream_config), VideoDeviceUVC
+            BaseDevice.from_config(mock_stream_config), type(mock_device)
         )
 
 

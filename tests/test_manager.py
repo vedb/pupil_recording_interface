@@ -134,12 +134,12 @@ class TestManager:
             }
         }
 
-    def test_save_info(self, video_stream_config, tmpdir):
+    def test_save_info(self, mock_stream_config, tmpdir):
         """"""
         import json
 
         manager = StreamManager(
-            [video_stream_config], folder=tmpdir, policy="here"
+            [mock_stream_config], folder=tmpdir, policy="here"
         )
 
         manager.save_info()
@@ -152,7 +152,7 @@ class TestManager:
 
         # external app info
         manager = StreamManager(
-            [video_stream_config],
+            [mock_stream_config],
             folder=tmpdir,
             policy="here",
             app_info={"name": "parent_app", "version": "1.0.0"},
