@@ -12,6 +12,7 @@ class Validation(Calibration):
     """ Validation during runtime class. """
 
     def plot_markers(self, circle_marker_list):
+        """ Plot marker coverage. """
         import matplotlib.pyplot as plt
 
         x = [c["img_pos"][0] for c in circle_marker_list]
@@ -29,12 +30,11 @@ class Validation(Calibration):
         plt.savefig("covered_marker.png", dpi=200)
         plt.show()
 
-        return True
-
     def plot_pupils(self, pupil_list):
+        """ Plot pupil coverage. """
         import matplotlib.pyplot as plt
 
-        # TODO: get eye video resolution from the config
+        # TODO: get eye video resolution from eye stream or constructor arg
         resolution = 192.0
         x = [p["norm_pos"][0] * resolution for p in pupil_list if p["id"] == 0]
         y = [p["norm_pos"][1] * resolution for p in pupil_list if p["id"] == 0]
@@ -55,13 +55,6 @@ class Validation(Calibration):
         # TODO: Save to recording folder
         plt.savefig("covered_pupil.png", dpi=200)
         plt.show()
-
-        return True
-
-    # Todo: This is just for demo purposes
-    def clear_flag_dummy(self, packet):
-        packet.calibration_calculated = True
-        packet.broadcasts.append("calibration_calculated")
 
     def calculate_calibration(self):
         """ Calculate calibration from collected data. """
