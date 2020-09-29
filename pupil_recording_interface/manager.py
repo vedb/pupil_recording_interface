@@ -205,6 +205,7 @@ class StreamManager:
                     notification_queues[stream_name],
                     priority_queues[stream_name],
                 ),
+                name=stream_name,
             )
             for stream_name, stream in streams.items()
         }

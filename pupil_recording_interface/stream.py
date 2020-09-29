@@ -1,5 +1,6 @@
 """"""
 import abc
+import os
 import time
 from collections import deque
 import signal
@@ -214,6 +215,7 @@ class BaseStream(BaseConfigurable):
         # TODO make this a little prettier to avoid the try/except block
         if stop_event is not None:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
+            logger.debug(f"Process ID for stream {self.name}: {os.getpid()}")
 
         with StreamHandler(self, status_queue):
             while True:
