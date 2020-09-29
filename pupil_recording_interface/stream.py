@@ -1,6 +1,5 @@
 """"""
 import abc
-import os
 import time
 from collections import deque
 import signal
@@ -14,6 +13,7 @@ from pupil_recording_interface.decorators import stream
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
+from pupil_recording_interface.utils import identify_process
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +152,8 @@ class BaseStream(BaseConfigurable):
         if self.pipeline is not None:
             self.pipeline.start()
 
+        identify_process("stream", self.name)
+
     @classmethod
     def _get_notifications(
         cls, notification_queue, priority_queue, max_len=100
@@ -215,7 +217,6 @@ class BaseStream(BaseConfigurable):
         # TODO make this a little prettier to avoid the try/except block
         if stop_event is not None:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
-            logger.debug(f"Process ID for stream {self.name}: {os.getpid()}")
 
         with StreamHandler(self, status_queue):
             while True:

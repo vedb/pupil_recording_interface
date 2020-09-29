@@ -15,7 +15,11 @@ from pupil_recording_interface._version import __version__
 from pupil_recording_interface.decorators import device
 from pupil_recording_interface.externals.methods import get_system_info
 from pupil_recording_interface.stream import BaseStream
-from pupil_recording_interface.utils import multiprocessing_deque, monotonic
+from pupil_recording_interface.utils import (
+    multiprocessing_deque,
+    monotonic,
+    identify_process,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -437,6 +441,8 @@ class StreamManager:
             logger.debug(f"Streaming for {self.duration} seconds")
         logger.debug(f"Run start time: {self._start_time}")
         logger.debug(f"Run start time monotonic: {self._start_time_monotonic}")
+
+        identify_process("manager")
 
     def _update(self):
         """ Update status and notify streams. """

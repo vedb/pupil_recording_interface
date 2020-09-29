@@ -6,6 +6,7 @@ from collections import deque
 from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing.managers import SyncManager
 from queue import Queue
+import multiprocessing as mp
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +15,21 @@ SyncManager.register("deque", deque)
 try:
     from uvc import get_time_monotonic as monotonic  # noqa
 except ImportError:
-    logger.warning("Could not import uvc, falling back to time.monotonic")
+    logger.debug("Could not import uvc, falling back to time.monotonic")
     from time import monotonic  # noqa
+
+try:
+    from setproctitle import setproctitle
+except ImportError:
+    setproctitle = None
+
+
+def identify_process(process_type, name=None):
+    """"""
+    name = name or mp.current_process().name
+    logger.debug(f"Process ID for {process_type} {name}: {os.getpid()}")
+    if setproctitle is not None:
+        setproctitle(name)
 
 
 def multiprocessing_deque(maxlen=None):
