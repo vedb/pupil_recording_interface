@@ -133,32 +133,10 @@ jobs:
           sphinx-multiversion docs docs/_build/html
           cp docs/index.html docs/_build/html
           touch docs/_build/html/.nojekyll
-      - name: Upload docs artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: docs
-          path: docs/_build/html/*
-
-  deploy-docs:
-    runs-on: ubuntu-latest
-    container:
-      image: crystallang/crystal:latest-alpine
-    needs: [docs-multiversion]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Download docs artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: docs
-          path: docs
-      - name: Install Dependencies
+      - name: Deploy docs
         run: |
-          shards init
-          shards install
-      - name: Build
-        run: crystal docs -o /docs
-      - name: Deploy
-        run: |
+          mkdir /docs
+          mv docs/_build/html/* /docs
           git config user.name CI
           git config user.email ""
           git checkout -f --orphan privpage
