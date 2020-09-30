@@ -135,7 +135,7 @@ jobs:
           touch docs/_build/html/.nojekyll
       - name: Deploy docs
         run: |
-          mkdir /docs
+          sudo mkdir /docs -m 777
           mv docs/_build/html/* /docs
           git config user.name CI
           git config user.email ""
