@@ -152,7 +152,9 @@ jobs:
           name: docs
           path: docs
       - name: Install Dependencies
-        run: shards install
+        run: |
+          shards init
+          shards install
       - name: Build
         run: crystal docs -o /docs
       - name: Deploy
