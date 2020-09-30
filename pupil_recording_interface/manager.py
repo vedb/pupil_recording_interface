@@ -71,7 +71,7 @@ class StreamManager:
             Will be dropped in a future version with an asynchronous
             implementation of the update mechanism.
 
-        status_timeout: float, default 5.0
+        status_timeout: float, default 1.0
             Maximum time in seconds to wait for status updates from a stream.
             After this time, the status of the stream will be reset to the
             default.
