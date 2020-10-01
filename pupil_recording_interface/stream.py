@@ -14,6 +14,7 @@ from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
 from pupil_recording_interface.utils import identify_process
+from pupil_recording_interface.errors import DeviceNotConnected
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class StreamHandler:
         self.status_queue = status_queue
 
     def __enter__(self):
-        self.stream.start()
+        self.stream.start(allow_failure=True)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stream.stop()
@@ -45,6 +46,14 @@ class StreamHandler:
             if exc_type:
                 status["exception"] = f"{exc_type.__name__}: {exc_val}"
             self.status_queue.append(status)
+
+        if exc_type:
+            logger.error(
+                f"Stream {self.stream.name} has crashed with exception: "
+                f"{exc_val}"
+            )
+
+        return True
 
 
 class BaseStream(BaseConfigurable):
@@ -144,11 +153,21 @@ class BaseStream(BaseConfigurable):
         """ Run hook(s) before dispatching processing thread(s). """
         self.device.run_pre_thread_hooks()
 
-    def start(self):
+    def start(self, allow_failure=False):
         """ Start the stream. """
         logger.debug(f"Starting stream: {self.name}")
-        if not self.device.is_started:
+
+        try:
             self.device.start()
+        except DeviceNotConnected:
+            if allow_failure:
+                logger.error(
+                    f"Could not start device {self.device.device_uid} for "
+                    f"stream {self.name}, will keep trying"
+                )
+            else:
+                raise
+
         if self.pipeline is not None:
             self.pipeline.start()
 

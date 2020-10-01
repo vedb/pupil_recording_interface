@@ -225,7 +225,7 @@ class RealSenseDeviceT265(BaseDevice):
     def _devices_changed_callback(self, event):
         """ Callback when connected devices change. """
         if event.was_removed(self.rs_device) and self.pipeline is not None:
-            logger.warning(
+            logger.error(
                 f"T265 device with serial number {self.device_uid} removed"
             )
             self.pipeline.stop()
