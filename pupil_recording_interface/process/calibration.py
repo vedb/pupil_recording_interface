@@ -1,7 +1,7 @@
 """"""
-import os
 from queue import Queue
 from uuid import uuid4
+from pathlib import Path
 import logging
 
 from pupil_recording_interface.decorators import process
@@ -104,11 +104,9 @@ class Calibration(BaseProcess):
 
     def save_result(self):
         """ Save result of calibration. """
-        folder = os.path.join(os.path.expanduser(self.folder), "calibrations")
-        os.makedirs(folder, exist_ok=True)
-        filename = os.path.join(
-            folder, f"{self.name.replace(' ', '_')}-{self.uuid}.plcal",
-        )
+        folder = Path(self.folder).expanduser() / "calibrations"
+        folder.mkdir(parents=True, exist_ok=True)
+        filename = folder / f"{self.name.replace(' ', '_')}-{self.uuid}.plcal"
 
         data = {
             "version": self.version,
@@ -163,6 +161,7 @@ class Calibration(BaseProcess):
         # process result
         if result["subject"] == "calibration.failed":
             self.result = None
+            filename = None
             logger.error("Calibration failed")
         else:
             self.result = self._fix_result(method, result)
@@ -172,8 +171,11 @@ class Calibration(BaseProcess):
             self.uuid = str(uuid4())
 
             if self.save:
-                self.save_result()
-        return circle_marker_list, pupil_list
+                filename = self.save_result()
+            else:
+                filename = None
+
+        return circle_marker_list, pupil_list, filename
 
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """
