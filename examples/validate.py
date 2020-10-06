@@ -1,6 +1,5 @@
 import sys
 import logging
-import datetime
 
 import pupil_recording_interface as pri
 
@@ -8,8 +7,9 @@ import pupil_recording_interface as pri
 # Generation of your pupil device (1, 2 or 3)
 pupil_gen = 1
 
-# recording folder
-folder = f"~/recordings/{datetime.datetime.today():%Y_%m_%d}"
+# folder for saving calibration
+folder = "~/pupil_capture_settings"
+
 
 if __name__ == "__main__":
 
