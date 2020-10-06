@@ -64,8 +64,8 @@ class VideoDisplay(BaseProcess):
 
         return cls(**cls_kwargs)
 
-    def start(self):
-        """ Start the process. """
+    def create_window(self):
+        """ Create a cv2.namedWindow. """
         try:
             cv2.namedWindow(
                 self.name,
@@ -80,12 +80,21 @@ class VideoDisplay(BaseProcess):
         except cv2.error:
             pass
 
-    def stop(self):
-        """ Stop the process. """
+    def close_window(self):
+        """ Close the window for this process. """
         try:
             cv2.destroyWindow(self.name)
         except cv2.error:
             pass
+
+    def start(self):
+        """ Start the process. """
+        if not self.paused:
+            self.create_window()
+
+    def stop(self):
+        """ Stop the process. """
+        self.close_window()
 
     def process_notifications(self, notifications):
         """ Process new notifications. """
@@ -95,12 +104,12 @@ class VideoDisplay(BaseProcess):
                 "pause_process" in notification
                 and notification["pause_process"] == self.process_name
             ):
-                self.stop()
+                self.close_window()
             if (
                 "resume_process" in notification
                 and notification["resume_process"] == self.process_name
             ):
-                self.start()
+                self.create_window()
 
         super().process_notifications(notifications)
 
@@ -213,10 +222,14 @@ class VideoDisplay(BaseProcess):
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # TODO make constructor arguments
-        color = (255, 0, 0)
+        # TODO Define color, radius and thickness in config
+        color = (255, 255, 0)
+        marker_thickness = 5
         radius = 20
 
-        cv2.circle(frame, marker_position, radius, color)
+        cv2.circle(
+            frame, marker_position, radius, color, thickness=marker_thickness
+        )
 
         return frame
 

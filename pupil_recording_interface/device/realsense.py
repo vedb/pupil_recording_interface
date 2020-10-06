@@ -1,6 +1,7 @@
 """"""
 import multiprocessing as mp
 import logging
+from queue import Empty
 
 import numpy as np
 
@@ -73,6 +74,7 @@ class RealSenseDeviceT265(BaseDevice):
         self.queue_size = queue_size
 
         self.timebase = "epoch"
+        self.queue_timeout = 1.0
 
         self.pipeline = None
         self.rs_device = None
@@ -223,7 +225,7 @@ class RealSenseDeviceT265(BaseDevice):
     def _devices_changed_callback(self, event):
         """ Callback when connected devices change. """
         if event.was_removed(self.rs_device) and self.pipeline is not None:
-            logger.warning(
+            logger.error(
                 f"T265 device with serial number {self.device_uid} removed"
             )
             self.pipeline.stop()
@@ -372,26 +374,39 @@ class RealSenseDeviceT265(BaseDevice):
 
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamps. """
-        # TODO timeout
         if "video" not in self.queues:
             raise RuntimeError("video stream not enabled for this device")
         else:
-            return self.queues["video"].get()
+            try:
+                return self.queues["video"].get(timeout=self.queue_timeout)
+            except Empty:
+                return {"name": "device_disconnect"}
 
     def get_motion_and_timestamp(self, motion_type):
         """ Get motion data for queue. """
-        # TODO timeout
         if motion_type not in self.queues:
             raise RuntimeError(
                 f"{motion_type} stream not enabled for this device"
             )
         else:
-            motion = self.queues[motion_type].get()
+            try:
+                motion = self.queues[motion_type].get(
+                    timeout=self.queue_timeout
+                )
+            except Empty:
+                return {"name": "device_disconnect"}
             return motion, motion["timestamp"], motion["source_timestamp"]
 
     def run_pre_thread_hooks(self):
         """ Run hook(s) before dispatching the recording thread. """
         import pyrealsense2 as rs
+
+        # Init stream queues
+        self.queues = {
+            name: mp.Queue(maxsize=self.queue_size)
+            for name in ("video", "odometry", "accel", "gyro")
+            if getattr(self, name)
+        }
 
         # init context
         if self.context is None:
@@ -413,13 +428,6 @@ class RealSenseDeviceT265(BaseDevice):
         self.context.set_devices_changed_callback(
             self._devices_changed_callback
         )
-
-        # Init stream queues
-        self.queues = {
-            name: mp.Queue(maxsize=self.queue_size)
-            for name in ("video", "odometry", "accel", "gyro")
-            if getattr(self, name)
-        }
 
     def run_post_thread_hooks(self):
         """ Run hook(s) after the recording thread finishes. """

@@ -20,7 +20,14 @@ from pupil_recording_interface.externals.methods import (
 
 
 class CircleTracker(object):
-    def __init__(self, wait_interval=30, roi_wait_interval=120):
+    def __init__(
+        self,
+        wait_interval=30,
+        roi_wait_interval=120,
+        scale=0.5,
+        detection_method="vedb",
+        marker_size=(12, 27),
+    ):
         self.wait_interval = wait_interval
         self.roi_wait_interval = roi_wait_interval
         self._previous_markers = []
@@ -30,6 +37,9 @@ class CircleTracker(object):
         self._flag_check = False
         self._flag_check_roi = False
         self._world_size = None
+        self.scale = scale
+        self._detection_method = detection_method
+        self._marker_size = marker_size
 
     def update(self, img):
         """
@@ -95,12 +105,15 @@ class CircleTracker(object):
         :rtype: a list containing dictionary with keys: 'ellipses', 'img_pos', 'norm_pos', 'marker_type'
         """
         img_size = img.shape[::-1]
-        scale = 0.5 if img_size[0] >= 1280 else 640 / img_size[0]
-
         marker_list = []
         # Check whole frame
         if not self._flag_check_roi:
-            ellipses_list = find_pupil_circle_marker(img, scale)
+            if self._detection_method.lower() == "vedb":
+                ellipses_list = find_vedb_circle_marker(
+                    img, self.scale, self._marker_size
+                )
+            else:
+                ellipses_list = find_pupil_circle_marker(img, self.scale)
 
             # Save the markers in dictionaries
             for ellipses_ in ellipses_list:
@@ -161,9 +174,17 @@ class CircleTracker(object):
                 col_slice = b0, b1
                 row_slice = b2, b3
 
-                ellipses_list = find_pupil_circle_marker(
-                    img[slice(*row_slice), slice(*col_slice)], scale
-                )
+                if self._detection_method == "vedb":
+
+                    ellipses_list = find_vedb_circle_marker(
+                        img[slice(*row_slice), slice(*col_slice)],
+                        self.scale,
+                        self._marker_size,
+                    )
+                else:
+                    ellipses_list = find_pupil_circle_marker(
+                        img[slice(*row_slice), slice(*col_slice)], self.scale
+                    )
 
                 # Track the marker which was detected last frame;
                 # To avoid more than one markers are detected in one ROI
@@ -201,6 +222,97 @@ class CircleTracker(object):
                     )
 
         return marker_list
+
+
+def threshold_frame(frame, window_size):
+    return cv2.adaptiveThreshold(
+        frame,
+        255,
+        cv2.ADAPTIVE_THRESH_MEAN_C,
+        cv2.THRESH_BINARY,
+        window_size,
+        2,
+    )
+
+
+def erode_frame(frame, window_size):
+    kernel = np.ones((window_size, window_size), int)
+    return cv2.erode(frame, kernel, iterations=1)
+
+
+def define_blob_detector():
+    # Todo: Make sure these parameters are passed through yaml or config files
+
+    # Set our filtering parameters
+    # Initialize parameter settiing using cv2.SimpleBlobDetector
+    params = cv2.SimpleBlobDetector_Params()
+
+    # Set Area filtering parameters
+    params.filterByArea = True
+    params.minArea = 100
+    params.maxArea = 1800
+
+    # Set Circularity filtering parameters
+    params.filterByCircularity = True
+    params.minCircularity = 0.4
+    # params.minCircularity = 0.7
+    # Set Convexity filtering parameters
+    params.filterByConvexity = True
+    params.minConvexity = 0.7
+    # params.minConvexity = 0.7
+    # Set inertia filtering parameters
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.4
+    # params.minInertiaRatio = 0.6
+
+    # Create a detector with the parameters
+    return cv2.SimpleBlobDetector_create(params)
+
+
+def find_vedb_circle_marker(frame, scale, marker_size):
+    img_size = frame.shape[::-1]
+
+    # Resize the image
+    image = cv2.resize(frame, dsize=(0, 0), fx=scale, fy=scale)
+    ellipses_list = []
+
+    # Here we set up our opencv blob detecter code
+    detector = define_blob_detector()
+
+    # Perform image thresholding using an adaptive threshold window
+    window_size = 25
+    image = threshold_frame(image, window_size)
+
+    # Perform image erosion in order to remove the possible bright points inside the marker
+    window_size = 3
+    image = erode_frame(image, window_size)
+
+    # Detect blobs using opencv blob detector that we setup earlier in the code
+    keypoints = detector.detect(image)
+
+    # Check if there is any blobs detected or not, if yes then draw it using a red color
+    if len(keypoints) > 0:
+
+        for keypoint in keypoints:
+            # Todo: Define acceptable range through yaml file
+            if marker_size[0] < keypoint.size < marker_size[1]:  # 15 and 42
+                # Todo: Make sure the fields in ellipse are the same as in pupil code
+                ellipses_list.append(
+                    {
+                        "ellipses": [
+                            (
+                                (
+                                    keypoint.pt[0] * (1 / scale),
+                                    keypoint.pt[1] * (1 / scale),
+                                ),
+                                (keypoint.size, keypoint.size),
+                                keypoint.angle,
+                            ),
+                        ],
+                        "marker_type": "Ref",
+                    }
+                )
+    return ellipses_list
 
 
 def find_pupil_circle_marker(img, scale):
@@ -728,7 +840,6 @@ def getEllipsePts(e, num_pts=10):
 
 
 def marker_3d_pose(marker, cam_model, marker_diameter=7.6):
-
     target_circle = [[0, 0], [marker_diameter, marker_diameter], 0]
     target_pts = getEllipsePts(target_circle)
     target_pts3D = np.zeros(

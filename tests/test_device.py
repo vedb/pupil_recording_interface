@@ -11,10 +11,10 @@ from pupil_recording_interface.errors import DeviceNotConnected, IllegalSetting
 
 
 class TestBaseDevice:
-    def test_from_config(self, video_stream_config):
+    def test_from_config(self, mock_stream_config, mock_device):
         """"""
         assert isinstance(
-            BaseDevice.from_config(video_stream_config), VideoDeviceUVC
+            BaseDevice.from_config(mock_stream_config), type(mock_device)
         )
 
 
@@ -61,11 +61,6 @@ class TestVideoDeviceUVC:
         assert frame.shape == (720, 1280, 3)
         assert isinstance(ts, float)
 
-        with pytest.raises(RuntimeError):
-            VideoDeviceUVC(
-                device_uid, (1280, 720), 60
-            ).get_frame_and_timestamp()
-
 
 class TestVideoDeviceFLIR:
     @pytest.fixture(autouse=True)
@@ -92,7 +87,7 @@ class TestVideoDeviceFLIR:
             30.0,
             settings={
                 "GainAuto": "Off",
-                "Gain": 30.0,
+                "Gain": 15.0,
                 "ExposureAuto": "Off",
                 "ExposureTime": 300.0,
             },

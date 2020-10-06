@@ -133,15 +133,19 @@ jobs:
           sphinx-multiversion docs docs/_build/html
           cp docs/index.html docs/_build/html
           touch docs/_build/html/.nojekyll
-      - if: success()
-        name: push
-        uses: crazy-max/ghaction-github-pages@v1.5.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          target_branch: gh-pages
-          build_dir: docs/_build/html/
-          # keep_history: true
+      - name: Deploy docs
+        run: |
+          sudo mkdir /docs -m 777
+          mv docs/_build/html/* /docs
+          git config user.name CI
+          git config user.email ""
+          git checkout -f --orphan privpage
+          git rm --cached -rfq .
+          git clean -fxdq
+          mv /docs/* .
+          git add .
+          git commit -qm "Update docs"
+          git push -f --set-upstream origin privpage
 
   black:
     runs-on: ubuntu-18.04

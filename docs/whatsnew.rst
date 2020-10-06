@@ -1,14 +1,38 @@
 What's New
 ==========
 
-master branch
--------------
+v0.2.0 (October 6th, 2020)
+--------------------------
+
+New features
+~~~~~~~~~~~~
 
 * Loaded gaze now contains the eye data that produced the mapping (left, right,
   both eyes) as well as the 3D eye centers and gaze normals.
 * The ``load_raw_frame``, ``load_frame``, ``read_frames`` and ``load_dataset``
   methods of ``VideoReader`` and ``OpticalFlowReader`` now accept both
   timestamps and indexes as parameters.
+* Streams can be started even when the underlying devices aren't connected
+  with ``allow_failure=True``.
+* Added ``scale``, ``detection_method`` and ``marker_size`` parameters to
+  ``CircleDetector`` to allow more fine-grained control over detection.
+  ``detection_method="vedb"`` is a new detection method that is less stable
+  but significantly faster than the default.
+* Added a ``Validation`` process that extends ``Calibration``, adding plots
+  showing the coverage of the world camera FOV by the calibration marker and
+  of the eye camera FOV by the pupils.
+* Added a new example ``validate.py`` that demonstrates usage of the new
+  circle detection method and the validation.
+* Added experimental support for a ``PyAV``-based video encoder
+  (``VideoEncoderAV``).
+* Added ``nan_format`` parameter to ``StreamManager.format_status``.
+
+Bug fixes
+~~~~~~~~~
+
+* Fixed devices not being able to shut down when in restart loop.
+* Fixed blank window opening when starting a ``VideoDisplay`` process with
+  ``paused=True``.
 
 
 v0.1.0 (June 3rd, 2020)

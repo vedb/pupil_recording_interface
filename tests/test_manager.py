@@ -92,6 +92,27 @@ class TestManager:
             stream_manager.status["mock_stream"]["timestamp"], float("nan")
         )
 
+    def test_format_status(self, stream_manager, statuses):
+        """"""
+        stream_manager.status = statuses
+        assert (
+            stream_manager.format_status("fps") == "eye0: 120.00, world: 30.00"
+        )
+        assert (
+            stream_manager.format_status("fps", max_cols=17)
+            == "eye0: 120.00, ..."
+        )
+
+        stream_manager.status["world"]["fps"] = np.nan
+        assert (
+            stream_manager.format_status("fps")
+            == "eye0: 120.00, world: no data"
+        )
+        assert (
+            stream_manager.format_status("fps", nan_format=None)
+            == "eye0: 120.00, world: nan"
+        )
+
     def test_get_notifications(self, statuses, video_stream):
         """"""
         video_stream.pipeline.steps[0].listen_for = ["pupil"]
@@ -113,12 +134,12 @@ class TestManager:
             }
         }
 
-    def test_save_info(self, video_stream_config, tmpdir):
+    def test_save_info(self, mock_stream_config, tmpdir):
         """"""
         import json
 
         manager = StreamManager(
-            [video_stream_config], folder=tmpdir, policy="here"
+            [mock_stream_config], folder=tmpdir, policy="here"
         )
 
         manager.save_info()
@@ -131,7 +152,7 @@ class TestManager:
 
         # external app info
         manager = StreamManager(
-            [video_stream_config],
+            [mock_stream_config],
             folder=tmpdir,
             policy="here",
             app_info={"name": "parent_app", "version": "1.0.0"},

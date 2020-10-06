@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 class BaseVideoDevice(BaseDevice):
     """ Base class for all video devices. """
 
+    # errors that can occur during restarting
+    _restart_errors = (DeviceNotConnected,)
+
     def __init__(self, device_uid, resolution, fps, **kwargs):
         """ Constructor.
 
@@ -86,18 +89,20 @@ class BaseVideoDevice(BaseDevice):
     def restart(self):
         """ Try restarting this device. """
         self.stop()
-        while not self.is_started:
-            try:
-                self.start()
-                logger.info(
-                    f"{self.device_type} device {self.device_uid} restarted"
-                )
-            except DeviceNotConnected:
-                logger.debug(
-                    f"{self.device_type} device {self.device_uid} is not "
-                    f"connected, waiting for {self.restart_timeout} second(s)"
-                )
-                time.sleep(self.restart_timeout)
+        try:
+            self.start()
+            logger.info(
+                f"{self.device_type} device {self.device_uid} restarted"
+            )
+            return True
+        except self._restart_errors as e:
+            logger.debug(
+                f"Caught error trying to reconnect {self.device_type} "
+                f"device {self.device_uid}, waiting for "
+                f"{self.restart_timeout} second(s): {e}"
+            )
+            time.sleep(self.restart_timeout)
+            return False
 
 
 @device("uvc")
@@ -133,6 +138,14 @@ class VideoDeviceUVC(BaseVideoDevice):
         controls: dict, optional
             Mapping from UVC control display names to values.
         """
+        import uvc
+
+        self._restart_errors = (
+            DeviceNotConnected,
+            uvc.InitError,
+            uvc.OpenError,
+        )
+
         super().__init__(
             device_uid, resolution, fps, initial_controls=controls or {}
         )
@@ -222,25 +235,6 @@ class VideoDeviceUVC(BaseVideoDevice):
 
         return capture
 
-    def restart(self):
-        """ Try restarting this device. """
-        import uvc
-
-        time.sleep(0.02)  # from pupil source code
-        self.stop()
-        while not self.is_started:
-            try:
-                self.start()
-                logger.info(
-                    f"{self.device_type} device {self.device_uid} restarted"
-                )
-            except (DeviceNotConnected, uvc.InitError, uvc.OpenError):
-                logger.debug(
-                    f"{self.device_type} device {self.device_uid} is not "
-                    f"connected, waiting for {self.restart_timeout} second(s)"
-                )
-                time.sleep(self.restart_timeout)
-
     @classmethod
     def get_timestamp(cls):
         """ Get the current monotonic time from the UVC backend. """
@@ -277,14 +271,12 @@ class VideoDeviceUVC(BaseVideoDevice):
         """
         import uvc
 
+        if not self.is_started:
+            if not self.restart():
+                return {"name": "device_disconnect"}
+
         if mode not in ("img", "bgr", "gray", "jpeg_buffer"):
             raise ValueError(f"Unsupported mode: {mode}")
-
-        if not self.is_started:
-            raise RuntimeError(
-                f"{self.device_type} device {self.device_uid}: "
-                f"Device is not started"
-            )
 
         try:
             # TODO check performance overhead of suppressing, technically it's
@@ -296,8 +288,11 @@ class VideoDeviceUVC(BaseVideoDevice):
                 f"{self.device_type} device {self.device_uid}: "
                 f"Stream error, attempting to re-init"
             )
-            self.restart()
-            return self.get_frame_and_timestamp(mode=mode)
+            time.sleep(0.02)  # from pupil source code
+            if self.restart():
+                return self.get_frame_and_timestamp(mode=mode)
+            else:
+                return {"name": "device_disconnect"}
 
         frame = getattr(uvc_frame, mode)
 
@@ -312,8 +307,10 @@ class VideoDeviceUVC(BaseVideoDevice):
             logger.warning(
                 f"Stripes detected, restarting device {self.device_uid}"
             )
-            self.restart()
-            return self.get_frame_and_timestamp(mode=mode)
+            if self.restart():
+                return self.get_frame_and_timestamp(mode=mode)
+            else:
+                return {"name": "device_disconnect"}
 
         return frame, uvc_frame.timestamp
 
@@ -405,7 +402,7 @@ class VideoFileDevice(BaseVideoDevice):
                 self._frame_index = 0
                 self.capture.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
             else:
-                return None
+                return {"name": "stream_stop"}
 
         _, frame = self.capture.capture.read()
         file_timestamp = (

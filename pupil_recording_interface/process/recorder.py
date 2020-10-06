@@ -5,7 +5,10 @@ from collections import deque
 import numpy as np
 
 from pupil_recording_interface.decorators import process
-from pupil_recording_interface.encoder import VideoEncoderFFMPEG
+from pupil_recording_interface.encoder import (
+    VideoEncoderFFMPEG,
+    VideoEncoderAV,
+)
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 from pupil_recording_interface.process import BaseProcess, logger
 
@@ -51,6 +54,7 @@ class VideoRecorder(BaseRecorder):
         fps,
         name=None,
         encode_every=1,
+        backend="ffmpeg",
         color_format="bgr24",
         codec="libx264",
         encoder_kwargs=None,
@@ -96,6 +100,15 @@ class VideoRecorder(BaseRecorder):
 
         super().__init__(folder, name=name, **kwargs)
 
+        if backend == "ffmpeg":
+            self._encoder_type = VideoEncoderFFMPEG
+        elif backend == "av":
+            self._encoder_type = VideoEncoderAV
+        else:
+            raise ValueError(
+                f"Expected 'backend' to be 'ffmpeg' or 'av', got {backend}"
+            )
+
         self.encoder = None
         self.writer = None
 
@@ -132,7 +145,7 @@ class VideoRecorder(BaseRecorder):
 
     def start(self):
         """ Start the process. """
-        self.encoder = VideoEncoderFFMPEG(
+        self.encoder = self._encoder_type(
             self.folder,
             self.name,
             self.resolution,

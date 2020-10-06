@@ -23,6 +23,7 @@ from pupil_recording_interface.process.recorder import VideoRecorder
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
+from pupil_recording_interface.process.validation import Validation
 from pupil_recording_interface.process.cam_params import CamParamEstimator
 from pupil_recording_interface.manager import StreamManager
 from pupil_recording_interface.externals.file_methods import (
@@ -909,6 +910,7 @@ def process_configs(tmpdir):
         "motion_recorder": {"folder": tmpdir},
         "pupil_detector": {"folder": tmpdir},
         "calibration": {"folder": tmpdir},
+        "validation": {"folder": tmpdir},
         "cam_param_estimator": {"streams": ["world"], "folder": tmpdir},
     }
 
@@ -988,6 +990,12 @@ def circle_detector():
 def calibration():
     """"""
     return Calibration((1280, 720))
+
+
+@pytest.fixture()
+def validation():
+    """"""
+    return Validation((1280, 720), eye_resolution=(192, 192))
 
 
 @pytest.fixture()

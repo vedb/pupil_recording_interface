@@ -73,6 +73,7 @@ Process classes
     GazeMapper
     CircleDetector
     Calibration
+    Validation
     CircleGridDetector
     CamParamEstimator
     MotionRecorder

@@ -4,6 +4,7 @@ import time
 from collections import deque
 import signal
 import logging
+from time import monotonic
 
 import numpy as np
 
@@ -12,6 +13,8 @@ from pupil_recording_interface.decorators import stream
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.pipeline import Pipeline
+from pupil_recording_interface.utils import identify_process
+from pupil_recording_interface.errors import DeviceNotConnected
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class StreamHandler:
         self.status_queue = status_queue
 
     def __enter__(self):
-        self.stream.start()
+        self.stream.start(allow_failure=True)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stream.stop()
@@ -43,6 +46,14 @@ class StreamHandler:
             if exc_type:
                 status["exception"] = f"{exc_type.__name__}: {exc_val}"
             self.status_queue.append(status)
+
+        if exc_type:
+            logger.error(
+                f"Stream {self.stream.name} has crashed with exception: "
+                f"{exc_val}"
+            )
+
+        return True
 
 
 class BaseStream(BaseConfigurable):
@@ -142,13 +153,25 @@ class BaseStream(BaseConfigurable):
         """ Run hook(s) before dispatching processing thread(s). """
         self.device.run_pre_thread_hooks()
 
-    def start(self):
+    def start(self, allow_failure=False):
         """ Start the stream. """
         logger.debug(f"Starting stream: {self.name}")
-        if not self.device.is_started:
+
+        try:
             self.device.start()
+        except DeviceNotConnected:
+            if allow_failure:
+                logger.error(
+                    f"Could not start device {self.device.device_uid} for "
+                    f"stream {self.name}, will keep trying"
+                )
+            else:
+                raise
+
         if self.pipeline is not None:
             self.pipeline.start()
+
+        identify_process("stream", self.name)
 
     @classmethod
     def _get_notifications(
@@ -227,9 +250,15 @@ class BaseStream(BaseConfigurable):
                     )
                     packet = self.get_packet()
 
-                    # TODO check if it makes sense to stop streams like this
-                    if packet is None:
-                        break
+                    if hasattr(packet, "event") and isinstance(
+                        packet.event, dict
+                    ):
+                        if packet.event["name"] == "stream_stop":
+                            break
+                        elif packet.event["name"] == "device_disconnect":
+                            # TODO send status update without manager assuming
+                            #  that stream is still running
+                            continue
 
                     if self.pipeline is not None:
                         packet = self.pipeline.process(packet, notifications)
@@ -305,8 +334,14 @@ class VideoStream(BaseStream):
         else:
             data = self.device.get_frame_and_timestamp()
 
-        if data is None:
-            return None
+        if len(data) == 1:
+            return Packet(
+                self.name,
+                self.device.device_uid,
+                timestamp=monotonic(),
+                event=data,
+                broadcasts=["event"],
+            )
         elif len(data) == 2:
             frame, timestamp = data
             source_timestamp = None
@@ -371,17 +406,28 @@ class MotionStream(BaseStream):
 
     def get_packet(self):
         """ Get the last data packet from the stream. """
-        (
-            motion,
-            timestamp,
-            source_timestamp,
-        ) = self.device.get_motion_and_timestamp(self.motion_type)
+        data = self.device.get_motion_and_timestamp(self.motion_type)
 
-        return Packet(
-            self.name,
-            self.device.device_uid,
-            timestamp=timestamp,
-            source_timestamp=source_timestamp,
-            source_timebase=self.device.timebase,
-            **{self.motion_type: motion},
-        )
+        if len(data) == 1:
+            return Packet(
+                self.name,
+                self.device.device_uid,
+                timestamp=monotonic(),
+                event=data,
+                broadcasts=["event"],
+            )
+        elif len(data) == 3:
+            motion, timestamp, source_timestamp = data
+            return Packet(
+                self.name,
+                self.device.device_uid,
+                timestamp=timestamp,
+                source_timestamp=source_timestamp,
+                source_timebase=self.device.timebase,
+                **{self.motion_type: motion},
+            )
+        else:
+            raise RuntimeError(
+                f"Got {len(data)} return values from "
+                f"get_motion_and_timestamp, expected 1 or 3"
+            )
