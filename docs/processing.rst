@@ -65,6 +65,10 @@ attribute to the packet containing the location of the pupil among others.
 Pipelines
 ---------
 
+Multiple processes can be chained with a :py:class:`Pipeline`, e.g. a pupil
+detector and a display that shows the eye camera image with an overlay of the
+detected pupil:
+
 .. doctest::
 
     >>> pipeline = pri.Pipeline(
@@ -80,15 +84,25 @@ Pipelines
 
     pipeline.steps.pop()
 
+
+Starting/stopping the pipeline also starts/stop all of its processes. The
+``process`` method pipes a packet through all of the steps:
+
 .. doctest::
 
     >>> with pri.Session(stream, pipeline):
     ...     pipeline.process(stream.get_packet())
     ...     input("Press enter to close") # doctest:+SKIP
 
-The ``input()`` call is necessary here because the pipeline is stopped upon
-exiting the context manager, which includes closing the window of the video
-display.
+.. note::
+
+    The ``input()`` call is necessary here because the pipeline is stopped upon
+    exiting the context manager, which includes closing the window of the video
+    display.
+
+
+Pipelines can easily be attached to streams created with the config mechanism
+for use with a stream manager:
 
 .. doctest::
 
