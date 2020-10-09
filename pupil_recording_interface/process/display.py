@@ -77,6 +77,14 @@ class VideoDisplay(BaseProcess):
                 cv2.resizeWindow(
                     self.name, self.resolution[0], self.resolution[1]
                 )
+            # Todo: Pass the scale parameter to the VideoDisplay class
+            scale = 4
+            if self.resolution[0] > 800:
+                cv2.resizeWindow(
+                    self.name,
+                    int(self.resolution[0] / scale),
+                    int(self.resolution[1] / scale),
+                )
         except cv2.error:
             pass
 
@@ -223,7 +231,7 @@ class VideoDisplay(BaseProcess):
 
         # TODO make constructor arguments
         # TODO Define color, radius and thickness in config
-        color = (255, 255, 0)
+        color = (0, 0, 255)
         marker_thickness = 5
         radius = 20
 
