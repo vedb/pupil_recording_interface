@@ -9,6 +9,7 @@ Bug fixes
 ~~~~~~~~~
 
 * Fixed bug when loading 3D gaze with only binocular data.
+* Fixed support for configs with ``device_uid=None``.
 
 
 v0.2.0 (October 6th, 2020)
