@@ -170,11 +170,13 @@ class Calibration(BaseProcess):
 
             self.uuid = str(uuid4())
 
+            logger.info("\n\nsaving calibration!\n\n")
             if self.save:
                 filename = self.save_result()
             else:
                 filename = None
 
+        logger.info("\n\nexiting calibration!\n\n")
         return circle_marker_list, pupil_list, filename
 
     def _process_notifications(self, notifications, block=None):
