@@ -27,6 +27,17 @@ class TestManager:
         with pytest.raises(ValueError):
             StreamManager._init_folder(tmpdir, "not_a_policy")
 
+    def test_get_configs_by_uids(self, stream_manager, config_list):
+        """"""
+        configs_by_uids = stream_manager._get_configs_by_uids(config_list)
+        assert list(configs_by_uids.keys()) == ["test_cam", "t265_serial"]
+
+        config_list[0].device_uid = None
+        config_list[1].device_uid = None
+        config_list[2].device_uid = None
+        configs_by_uids = stream_manager._get_configs_by_uids(config_list)
+        assert list(configs_by_uids.keys()) == ["uvc", "t265"]
+
     def test_get_status(self, stream_manager, packet, monkeypatch):
         """"""
         monkeypatch.setattr(time, "time", lambda: 1.0)
