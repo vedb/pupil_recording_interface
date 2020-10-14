@@ -309,6 +309,7 @@ class CircleTracker(object):
                     marker_size[0] < keypoint.size < marker_size[1]
                 ):  # 15 and 42
                     # Todo: Make sure the fields in ellipse are the same as in pupil code
+                    # Todo: Make sure whether the opencv y axis needs to be negated!!
                     ellipses_list.append(
                         {
                             "ellipses": [

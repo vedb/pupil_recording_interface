@@ -4,12 +4,12 @@ import datetime
 
 import pupil_recording_interface as pri
 
-
+logger = logging.getLogger(__name__)
 # Generation of your pupil device (1, 2 or 3)
 pupil_gen = 2
 
 # recording folder
-folder = f"~/recordings/{datetime.datetime.today():%Y_%m_%d}"
+folder = f"~/recordings/{datetime.datetime.today():%Y_%m_%d_%H_%M_%S}"
 
 if __name__ == "__main__":
 
@@ -86,8 +86,8 @@ if __name__ == "__main__":
                 if response == "a":
                     break
                 else:
-                    while validation_counter < 10:
-                        print(
+                    while validation_counter < 5:
+                        logger.info(
                             f"\nCollecting calibration data "
                             f"{validation_counter}..."
                         )
@@ -116,5 +116,6 @@ if __name__ == "__main__":
 
                     manager.send_notification({"calculate_calibration": True})
                     manager.await_status("world", calibration_calculated=True)
+                    break
 
     print("\nStopped")
