@@ -23,7 +23,7 @@ class Validation(Calibration):
         world="world",
         name=None,
         folder=None,
-        save=True,
+        save=False,
         **kwargs,
     ):
         """ Constructor. """
