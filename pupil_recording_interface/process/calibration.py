@@ -172,8 +172,10 @@ class Calibration(BaseProcess):
 
             if self.save:
                 filename = self.save_result()
+                logger.info("calibration saved!")
             else:
                 filename = None
+                logger.info("calibration NOT saved!")
 
         return circle_marker_list, pupil_list, filename
 
