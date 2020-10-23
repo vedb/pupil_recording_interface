@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import msgpack
 
-logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Unpacker:
@@ -157,7 +157,7 @@ class BaseReader:
 
         with open(msgpack_file, "rb") as fh:
             for topic, payload in msgpack.Unpacker(
-                    fh, raw=False, use_list=False
+                fh, raw=False, use_list=False
             ):
                 try:
                     data.append(Unpacker.unpack(payload))
