@@ -3,7 +3,6 @@ import logging
 
 import pupil_recording_interface as pri
 
-logger = logging.getLogger(__name__)
 # Generation of your pupil device (1, 2 or 3)
 pupil_gen = 1
 
@@ -67,6 +66,7 @@ if __name__ == "__main__":
     ]
 
     # set up logger
+    logger = logging.getLogger(__name__)
     logging.basicConfig(
         stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
