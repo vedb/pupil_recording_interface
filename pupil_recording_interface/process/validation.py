@@ -49,7 +49,7 @@ class Validation(Calibration):
         x = [c["img_pos"][0] for c in circle_marker_list]
         y = [c["img_pos"][1] for c in circle_marker_list]
         # Note that: y axis in opencv is inverse of matplotlib!
-        logger.info("plotting {} marker points".format(len(x)))
+        logger.debug(f"plotting {len(x)} marker points")
         plt.plot(
             x, self.resolution[1] - np.array(y), "or", markersize=10, alpha=0.7
         )
