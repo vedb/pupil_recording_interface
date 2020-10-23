@@ -339,12 +339,8 @@ class TestValidation:
             validation._circle_marker_queue.put(r)
 
         _, _, filename = validation.calculate_calibration()
-        assert (
-            filename.parent / (filename.name + "_marker_coverage.png")
-        ).exists()
-        assert (
-            filename.parent / (filename.name + "_pupil_coverage.png")
-        ).exists()
+        assert (filename.parent / "marker_coverage.png").exists()
+        assert (filename.parent / "pupil_coverage.png").exists()
 
 
 class TestCamParamEstimator:
