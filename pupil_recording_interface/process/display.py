@@ -22,6 +22,8 @@ class VideoDisplay(BaseProcess):
         name,
         flip=False,
         resolution=None,
+        max_resolution=800,
+        scale=0.25,
         overlay_pupil=False,
         overlay_gaze=False,
         overlay_circle_marker=False,
@@ -37,6 +39,8 @@ class VideoDisplay(BaseProcess):
         self.overlay_gaze = overlay_gaze
         self.overlay_circle_marker = overlay_circle_marker
         self.overlay_circle_grid = overlay_circle_grid
+        self.max_resolution = max_resolution
+        self.scale = scale
 
         super().__init__(block=block, **kwargs)
 
@@ -77,13 +81,11 @@ class VideoDisplay(BaseProcess):
                 cv2.resizeWindow(
                     self.name, self.resolution[0], self.resolution[1]
                 )
-            # Todo: Pass the scale parameter to the VideoDisplay class
-            scale = 4
-            if self.resolution[0] > 800:
+            if self.resolution[0] > self.max_resolution:
                 cv2.resizeWindow(
                     self.name,
-                    int(self.resolution[0] / scale),
-                    int(self.resolution[1] / scale),
+                    int(self.resolution[0] * self.scale),
+                    int(self.resolution[1] * self.scale),
                 )
         except cv2.error:
             pass

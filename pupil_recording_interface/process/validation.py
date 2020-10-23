@@ -64,9 +64,8 @@ class Validation(Calibration):
         # Todo: Check if we can pass a flag to show the plots
         #  (currently doesn't work with the thread timers)
         # plt.show()
-        figure_file_name = filename.parent / "marker_coverage.png"
-        print(figure_file_name)
         if filename is not None:
+            figure_file_name = filename.parent / "marker_coverage.png"
             plt.savefig(figure_file_name, dpi=200)
             logger.info(f"saved marker plot at: {figure_file_name}")
         plt.close()
@@ -102,9 +101,8 @@ class Validation(Calibration):
         else:
             plt.xlabel("X (normalized position)", fontsize=14)
             plt.ylabel("Y (normalized position)", fontsize=14)
-        figure_file_name = filename.parent / "pupil_coverage.png"
-        print(figure_file_name)
         if filename is not None:
+            figure_file_name = filename.parent / "pupil_coverage.png"
             plt.savefig(figure_file_name, dpi=200)
             logger.info(f"saved pupil plot at: {figure_file_name}")
         # Todo: Check if we can pass a flag to show the plots
