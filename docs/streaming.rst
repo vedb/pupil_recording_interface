@@ -131,7 +131,7 @@ With ``duration=30``, the manager will stop streaming after 30 seconds.
 
     >>> manager = pri.StreamManager(configs, duration=30)
     >>> manager.streams # doctest:+ELLIPSIS
-    {'eye0': <...>, 'eye1': <...>, 'world': <...>}
+    {'world': <...>, 'eye0': <...>, 'eye1': <...>}
 
 Alternatively, use this dummy configuration:
 

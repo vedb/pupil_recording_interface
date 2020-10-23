@@ -21,9 +21,15 @@ from pupil_recording_interface import (
 
 
 @pytest.fixture()
-def t265_folder():
+def test_data_folder():
     """"""
-    return Path(__file__).parent / "test_data" / "t265_test_recording"
+    return Path(__file__).parent / "test_data"
+
+
+@pytest.fixture()
+def t265_folder(test_data_folder):
+    """"""
+    return test_data_folder / "t265_test_recording"
 
 
 @pytest.fixture()
@@ -261,6 +267,12 @@ class TestGazeReader(object):
         # no gaze
         with pytest.raises(FileNotFoundError):
             GazeReader._load_gaze(t265_folder)
+
+    def test_load_binocular_only_gaze(self, test_data_folder):
+        """ Regression test for 3D gaze without monocular data. """
+        data = GazeReader._load_gaze(test_data_folder, "binocular_only_gaze")
+
+        assert data["timestamp"].shape == (665,)
 
     def test_load_merged_gaze(self, folder):
         """"""

@@ -154,13 +154,25 @@ class StreamManager:
         return folder
 
     @classmethod
+    def _get_configs_by_uids(cls, configs):
+        """ Get a mapping from UIDs to configs. """
+        configs_by_uid = {}
+
+        for c in configs:
+            # when device_uid=None, i.e. a placeholder because the UID varies
+            # between users, the device_type is used instead
+            uid = c.device_uid if c.device_uid is not None else c.device_type
+            if uid in configs_by_uid:
+                configs_by_uid[uid].append(c)
+            else:
+                configs_by_uid[uid] = [c]
+
+        return configs_by_uid
+
+    @classmethod
     def _init_streams(cls, configs, folder=None):
         """ Init stream instances for all configs. """
-        # mapping from uids to configs
-        uids = sorted({c.device_uid for c in configs})
-        configs_by_uid = {
-            uid: [c for c in configs if c.device_uid == uid] for uid in uids
-        }
+        configs_by_uid = cls._get_configs_by_uids(configs)
 
         devices_by_uid, streams = {}, {}
         for uid, config_list in configs_by_uid.items():

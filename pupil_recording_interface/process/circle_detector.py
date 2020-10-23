@@ -14,7 +14,13 @@ class CircleDetector(BaseProcess):
         self,
         scale=0.5,
         detection_method="pupil",
-        marker_size=(12, 27),
+        marker_size=(12, 300),
+        threshold_window_size=13,
+        min_area=500,
+        max_area=1000,
+        circularity=0.8,
+        convexity=0.7,
+        inertia=0.4,
         **kwargs,
     ):
         """ Constructor. """
@@ -24,6 +30,13 @@ class CircleDetector(BaseProcess):
             scale=scale,
             detection_method=detection_method,
             marker_size=marker_size,
+            threshold_window_size=threshold_window_size,
+            min_area=min_area,
+            max_area=max_area,
+            circularity=circularity,
+            convexity=convexity,
+            inertia=inertia,
+            **kwargs,
         )
         self.scale = scale
 
@@ -35,7 +48,6 @@ class CircleDetector(BaseProcess):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         elif packet.color_format == "bggr8":
             frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
-
         circle_markers = self.circle_tracker.update(frame)
 
         for marker in circle_markers:

@@ -3,15 +3,44 @@ import abc
 import csv
 import hashlib
 import json
+import collections
 from pathlib import Path
+import logging
 
 import numpy as np
 import pandas as pd
+import msgpack
 
-from pupil_recording_interface.externals.file_methods import load_pldata_file
+logger = logging.getLogger(__name__)
 
 
-class BaseReader(object):
+class Unpacker:
+    MSGPACK_EXT_CODE = 13
+
+    @classmethod
+    def unpack(cls, payload):
+        """"""
+        return msgpack.unpackb(
+            payload,
+            raw=False,
+            use_list=False,
+            object_hook=cls.unpacking_object_hook,
+            ext_hook=cls.unpacking_ext_hook,
+        )
+
+    @classmethod
+    def unpacking_object_hook(cls, obj):
+        if isinstance(obj, dict):
+            return obj
+
+    @classmethod
+    def unpacking_ext_hook(cls, code, data):
+        if code == cls.MSGPACK_EXT_CODE:
+            return cls.unpack(data)
+        return msgpack.ExtType(code, data)
+
+
+class BaseReader:
     """ Base class for all readers. """
 
     def __init__(self, folder):
@@ -123,8 +152,21 @@ class BaseReader(object):
                 f"File {topic}.pldata not found in folder {folder}"
             )
 
-        pldata = load_pldata_file(folder, topic)
-        return pd.DataFrame([dict(d) for d in pldata.data])
+        msgpack_file = folder / (topic + ".pldata")
+        data = collections.deque()
+
+        with open(msgpack_file, "rb") as fh:
+            for topic, payload in msgpack.Unpacker(
+                fh, raw=False, use_list=False
+            ):
+                try:
+                    data.append(Unpacker.unpack(payload))
+                except TypeError:
+                    # can happen when recording is broken
+                    logger.warning("Found corrupt data while unpacking.")
+                    continue
+
+        return pd.DataFrame(list(data))
 
     @staticmethod
     def _timestamps_to_datetimeindex(timestamps, info):

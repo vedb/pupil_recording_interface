@@ -3,6 +3,7 @@ import logging
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process.calibration import Calibration
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +41,18 @@ class Validation(Calibration):
         )
         self.eye_resolution = eye_resolution
 
-    def plot_markers(self, circle_marker_list):
+    def plot_markers(self, circle_marker_list, filename):
         """ Plot marker coverage. """
         import matplotlib.pyplot as plt
 
+        plt.figure(figsize=(8, 8))
         x = [c["img_pos"][0] for c in circle_marker_list]
         y = [c["img_pos"][1] for c in circle_marker_list]
-        plt.plot(x, y, "ob", markersize=4, alpha=0.4)
+        # Note that: y axis in opencv is inverse of matplotlib!
+        logger.debug(f"plotting {len(x)} marker points")
+        plt.plot(
+            x, self.resolution[1] - np.array(y), "or", markersize=10, alpha=0.7
+        )
         plt.xlim(0, self.resolution[0])
         plt.ylim(0, self.resolution[1])
         plt.grid(True)
@@ -55,22 +61,33 @@ class Validation(Calibration):
         plt.rc("ytick", labelsize=12)
         plt.xlabel("X (pixels)", fontsize=14)
         plt.ylabel("Y (pixels)", fontsize=14)
-        plt.show()
+        # Todo: Check if we can pass a flag to show the plots
+        #  (currently doesn't work with the thread timers)
+        # plt.show()
+        if filename is not None:
+            figure_file_name = filename.parent / "marker_coverage.png"
+            plt.savefig(figure_file_name, dpi=200)
+            logger.info(f"saved marker plot at: {figure_file_name}")
+        plt.close()
 
-        return plt.gcf()
-
-    def plot_pupils(self, pupil_list):
+    def plot_pupils(self, pupil_list, filename):
         """ Plot pupil coverage. """
         import matplotlib.pyplot as plt
 
-        res = self.eye_resolution or (1.0, 1.0)
+        if self.eye_resolution is None:
+            res = (1.0, 1.0)
+        else:
+            res = self.eye_resolution
+        plt.figure(figsize=(8, 8))
         x = [p["norm_pos"][0] * res[0] for p in pupil_list if p["id"] == 0]
         y = [p["norm_pos"][1] * res[1] for p in pupil_list if p["id"] == 0]
-        plt.plot(x, y, "*y", markersize=6, alpha=0.4, label="right")
+        logger.debug(f"plotting {len(x)} right pupil points")
+        plt.plot(x, y, "*y", markersize=10, alpha=0.7, label="right")
 
         x = [p["norm_pos"][0] * res[0] for p in pupil_list if p["id"] == 1]
         y = [p["norm_pos"][1] * res[1] for p in pupil_list if p["id"] == 1]
-        plt.plot(x, y, "*g", markersize=6, alpha=0.4, label="left")
+        logger.debug(f"plotting {len(x)} left pupil points")
+        plt.plot(x, y, "*g", markersize=10, alpha=0.7, label="left")
 
         plt.xlim(0, res[0])
         plt.ylim(0, res[1])
@@ -84,9 +101,14 @@ class Validation(Calibration):
         else:
             plt.xlabel("X (normalized position)", fontsize=14)
             plt.ylabel("Y (normalized position)", fontsize=14)
-        plt.show()
-
-        return plt.gcf()
+        if filename is not None:
+            figure_file_name = filename.parent / "pupil_coverage.png"
+            plt.savefig(figure_file_name, dpi=200)
+            logger.info(f"saved pupil plot at: {figure_file_name}")
+        # Todo: Check if we can pass a flag to show the plots
+        #  (currently doesn't work with the thread timers)
+        # plt.show()
+        plt.close()
 
     def calculate_calibration(self):
         """ Calculate calibration from collected data. """
@@ -95,18 +117,9 @@ class Validation(Calibration):
             pupil_list,
             filename,
         ) = super().calculate_calibration()
+        logger.info("Plotting Coverage for marker and pupil...")
+        self.plot_markers(circle_marker_list, filename)
+        self.plot_pupils(pupil_list, filename)
 
-        marker_fig = self.plot_markers(circle_marker_list)
-        pupil_fig = self.plot_pupils(pupil_list)
-
-        if filename is not None:
-            marker_fig.savefig(
-                filename.parent / (filename.name + "_marker_coverage.png"),
-                dpi=200,
-            )
-            pupil_fig.savefig(
-                filename.parent / (filename.name + "_pupil_coverage.png"),
-                dpi=200,
-            )
-
+        logger.info("Validation and Calibration Done Successfully!")
         return circle_marker_list, pupil_list, filename

@@ -22,6 +22,7 @@ class VideoDisplay(BaseProcess):
         name,
         flip=False,
         resolution=None,
+        max_width=None,
         overlay_pupil=False,
         overlay_gaze=False,
         overlay_circle_marker=False,
@@ -37,6 +38,7 @@ class VideoDisplay(BaseProcess):
         self.overlay_gaze = overlay_gaze
         self.overlay_circle_marker = overlay_circle_marker
         self.overlay_circle_grid = overlay_circle_grid
+        self.max_width = max_width
 
         super().__init__(block=block, **kwargs)
 
@@ -74,9 +76,23 @@ class VideoDisplay(BaseProcess):
                 + cv2.WINDOW_GUI_NORMAL,
             )
             if self.resolution is not None:
-                cv2.resizeWindow(
-                    self.name, self.resolution[0], self.resolution[1]
-                )
+                if (
+                    self.max_width is not None
+                    and self.resolution[0] > self.max_width
+                ):
+                    cv2.resizeWindow(
+                        self.name,
+                        self.max_width,
+                        int(
+                            self.resolution[1]
+                            / self.resolution[0]
+                            * self.max_width
+                        ),
+                    )
+                else:
+                    cv2.resizeWindow(
+                        self.name, self.resolution[0], self.resolution[1]
+                    )
         except cv2.error:
             pass
 
@@ -223,7 +239,7 @@ class VideoDisplay(BaseProcess):
 
         # TODO make constructor arguments
         # TODO Define color, radius and thickness in config
-        color = (255, 255, 0)
+        color = (0, 0, 255)
         marker_thickness = 5
         radius = 20
 

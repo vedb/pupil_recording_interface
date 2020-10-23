@@ -903,6 +903,16 @@ def motion_stream_config():
 
 
 @pytest.fixture()
+def config_list():
+    """"""
+    return [
+        VideoStream.Config("uvc", "test_cam", resolution=(1280, 720), fps=30),
+        VideoStream.Config("t265", "t265_serial"),
+        MotionStream.Config("t265", "t265_serial", motion_type="odometry"),
+    ]
+
+
+@pytest.fixture()
 def process_configs(tmpdir):
     """ Mapping from process type to working test config for each process. """
     process_kwargs = {

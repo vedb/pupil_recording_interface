@@ -3,7 +3,6 @@ import logging
 
 import pupil_recording_interface as pri
 
-
 # Generation of your pupil device (1, 2 or 3)
 pupil_gen = 1
 
@@ -23,10 +22,16 @@ if __name__ == "__main__":
             fps=30,
             pipeline=[
                 pri.CircleDetector.Config(
-                    scale=0.8,
+                    scale=0.5,
                     paused=True,
                     detection_method="vedb",
-                    marker_size=(12, 27),
+                    marker_size=(5, 300),
+                    threshold_window_size=13,
+                    min_area=200,
+                    max_area=4000,
+                    circularity=0.8,
+                    convexity=0.7,
+                    inertia=0.4,
                 ),
                 pri.Validation.Config(save=True, folder=folder),
                 pri.VideoDisplay.Config(
@@ -61,6 +66,7 @@ if __name__ == "__main__":
     ]
 
     # set up logger
+    logger = logging.getLogger(__name__)
     logging.basicConfig(
         stream=sys.stdout, level=logging.INFO, format="%(message)s"
     )
@@ -80,7 +86,7 @@ if __name__ == "__main__":
                     break
                 else:
                     while validation_counter < 10:
-                        print(
+                        logger.info(
                             f"\nCollecting calibration data "
                             f"{validation_counter}..."
                         )
@@ -109,5 +115,6 @@ if __name__ == "__main__":
 
                     manager.send_notification({"calculate_calibration": True})
                     manager.await_status("world", calibration_calculated=True)
+                    break
 
     print("\nStopped")

@@ -114,7 +114,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         device_uid,
         resolution,
         fps,
-        exposure_mode="manual",
+        exposure_mode="auto",
         check_stripes=False,
         controls=None,
     ):

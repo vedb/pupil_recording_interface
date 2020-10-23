@@ -1,6 +1,22 @@
 What's New
 ==========
 
+
+v0.2.1 (October 23rd, 2020)
+---------------------------
+
+Bug fixes & improvements
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Set default exposure mode of ``VideoDeviceUVC`` to ``"auto"``.
+* Added ``max_width`` parameter to ``VideoDisplay``.
+* Disabled showing plots in Validation class.
+* Fixed loading of broken recordings (with missing timestamps or corrupt
+  pldata files).
+* Fixed bug when loading 3D gaze with only binocular data.
+* Fixed support for configs with ``device_uid=None``.
+
+
 v0.2.0 (October 6th, 2020)
 --------------------------
 
