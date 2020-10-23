@@ -22,8 +22,7 @@ class VideoDisplay(BaseProcess):
         name,
         flip=False,
         resolution=None,
-        max_resolution=800,
-        scale=0.25,
+        max_width=None,
         overlay_pupil=False,
         overlay_gaze=False,
         overlay_circle_marker=False,
@@ -39,8 +38,7 @@ class VideoDisplay(BaseProcess):
         self.overlay_gaze = overlay_gaze
         self.overlay_circle_marker = overlay_circle_marker
         self.overlay_circle_grid = overlay_circle_grid
-        self.max_resolution = max_resolution
-        self.scale = scale
+        self.max_width = max_width
 
         super().__init__(block=block, **kwargs)
 
@@ -78,15 +76,23 @@ class VideoDisplay(BaseProcess):
                 + cv2.WINDOW_GUI_NORMAL,
             )
             if self.resolution is not None:
-                cv2.resizeWindow(
-                    self.name, self.resolution[0], self.resolution[1]
-                )
-            if self.resolution[0] > self.max_resolution:
-                cv2.resizeWindow(
-                    self.name,
-                    int(self.resolution[0] * self.scale),
-                    int(self.resolution[1] * self.scale),
-                )
+                if (
+                    self.max_width is not None
+                    and self.resolution[0] > self.max_width
+                ):
+                    cv2.resizeWindow(
+                        self.name,
+                        self.max_width,
+                        int(
+                            self.resolution[1]
+                            / self.resolution[0]
+                            * self.max_width
+                        ),
+                    )
+                else:
+                    cv2.resizeWindow(
+                        self.name, self.resolution[0], self.resolution[1]
+                    )
         except cv2.error:
             pass
 
