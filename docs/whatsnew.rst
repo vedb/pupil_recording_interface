@@ -5,9 +5,11 @@ What's New
 v0.2.1 (unreleased)
 -------------------
 
-Bug fixes
-~~~~~~~~~
+Bug fixes & improvements
+~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Fixed loading of broken recordings (with missing timestamps or corrupt
+  pldata files)
 * Fixed bug when loading 3D gaze with only binocular data.
 * Fixed support for configs with ``device_uid=None``.
 
