@@ -87,7 +87,7 @@ class Validation(Calibration):
 
         x = [p["norm_pos"][0] * res[0] for p in pupil_list if p["id"] == 1]
         y = [p["norm_pos"][1] * res[1] for p in pupil_list if p["id"] == 1]
-        logger.info("plotting {} left pupil points".format(len(x)))
+        logger.debug(f"plotting {len(x)} left pupil points")
         plt.plot(x, y, "*g", markersize=10, alpha=0.7, label="left")
 
         plt.xlim(0, res[0])
