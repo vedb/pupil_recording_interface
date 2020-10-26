@@ -114,6 +114,10 @@ class VideoDisplay(BaseProcess):
 
     def process_notifications(self, notifications):
         """ Process new notifications. """
+        # check if window was closed and pause process
+        if cv2.getWindowProperty(self.name, 0) < 0:
+            self.paused = True
+
         # TODO avoid this duplication
         for notification in notifications:
             if (
