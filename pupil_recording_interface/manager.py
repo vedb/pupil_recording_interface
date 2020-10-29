@@ -342,6 +342,9 @@ class StreamManager:
         """ Send a notification over the priority queues. """
         for name, stream in self.streams.items():
             if streams is None or name in streams:
+                logger.debug(
+                    f"Sending notification to stream {name}: {notification}"
+                )
                 self._priority_queues[name].append(notification)
 
     def await_status(self, stream, **kwargs):

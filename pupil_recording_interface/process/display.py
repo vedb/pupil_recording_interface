@@ -295,6 +295,17 @@ class VideoDisplay(BaseProcess):
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
+        # check if window was closed and pause process
+        try:
+            if cv2.getWindowProperty(self.name, cv2.WND_PROP_VISIBLE) < 1:
+                logger.debug(
+                    f"Window '{self.name}' was closed, pausing process"
+                )
+                self.paused = True
+                return packet
+        except cv2.error:
+            pass
+
         packet.display_frame = packet.frame
 
         if packet.color_format == "bayer_rggb8":

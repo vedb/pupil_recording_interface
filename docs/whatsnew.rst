@@ -1,6 +1,14 @@
 What's New
 ==========
 
+v0.2.2 (unreleased)
+-------------------
+
+Bug fixes & improvements
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Don't reopen ``VideoDisplay`` windows closed by user.
+
 
 v0.2.1 (October 23rd, 2020)
 ---------------------------
