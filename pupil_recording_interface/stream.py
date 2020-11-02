@@ -45,7 +45,10 @@ class StreamHandler:
             status = self.stream.get_status()
             if exc_type:
                 status["exception"] = f"{exc_type.__name__}: {exc_val}"
-            self.status_queue.append(status)
+            try:
+                self.status_queue.append(status)
+            except BrokenPipeError:
+                logger.debug("Broken pipe error while sending status")
 
         if exc_type:
             logger.error(
@@ -267,7 +270,10 @@ class BaseStream(BaseConfigurable):
 
                     # TODO yield self.get_status()?
                     if status_queue is not None:
-                        status_queue.append(self.get_status(packet))
+                        try:
+                            status_queue.append(self.get_status(packet))
+                        except (ConnectionResetError, BrokenPipeError):
+                            logger.debug("Error sending status to manager")
 
                 except KeyboardInterrupt:
                     logger.debug("Thread stopped via keyboard interrupt.")

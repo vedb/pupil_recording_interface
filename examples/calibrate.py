@@ -25,9 +25,7 @@ if __name__ == "__main__":
                 pri.CircleDetector.Config(paused=True),
                 pri.Calibration.Config(save=True, folder=folder),
                 pri.GazeMapper.Config(),
-                pri.VideoDisplay.Config(
-                    overlay_circle_marker=True, overlay_gaze=True
-                ),
+                pri.VideoDisplay.Config(),
             ],
         ),
         pri.VideoStream.Config(
@@ -39,7 +37,7 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(flip=True, overlay_pupil=True),
+                pri.VideoDisplay.Config(flip=True),
             ],
         ),
         pri.VideoStream.Config(
@@ -49,10 +47,7 @@ if __name__ == "__main__":
             resolution=(320, 240) if pupil_gen == 1 else (192, 192),
             fps=120,
             color_format="gray",
-            pipeline=[
-                pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(overlay_pupil=True),
-            ],
+            pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
         ),
     ]
 

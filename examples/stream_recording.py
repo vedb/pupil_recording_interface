@@ -5,7 +5,7 @@ import pupil_recording_interface as pri
 
 
 # recording folder
-folder = pri.DATA_DIR + "/test_recording"
+folder = pri.DATA_DIR / "test_recording"
 
 
 if __name__ == "__main__":
@@ -16,10 +16,7 @@ if __name__ == "__main__":
             device_type="video_file",
             device_uid="world",
             resolution=(1280, 720),
-            pipeline=[
-                pri.GazeMapper.Config(),
-                pri.VideoDisplay.Config(overlay_gaze=True),
-            ],
+            pipeline=[pri.GazeMapper.Config(), pri.VideoDisplay.Config()],
         ),
         pri.VideoStream.Config(
             device_type="video_file",
@@ -27,17 +24,14 @@ if __name__ == "__main__":
             resolution=(192, 192),
             pipeline=[
                 pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(flip=True, overlay_pupil=True),
+                pri.VideoDisplay.Config(flip=True),
             ],
         ),
         pri.VideoStream.Config(
             device_type="video_file",
             device_uid="eye1",
             resolution=(192, 192),
-            pipeline=[
-                pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(overlay_pupil=True),
-            ],
+            pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
         ),
     ]
 

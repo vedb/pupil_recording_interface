@@ -7,6 +7,8 @@ v0.3.0 (unreleased)
 New features
 ~~~~~~~~~~~~
 
+* Processes can add display hooks to the packet that are picked up by
+  ``VideoDisplay``.
 * New ``load_pldata`` and ``save_pldata`` top-level methods.
 
 Bug fixes & improvements

@@ -17,6 +17,7 @@ class Packet:
         source_timebase="monotonic",
         broadcasts=None,
         timeout=None,
+        display_hooks=None,
         **kwargs,
     ):
         """ Constructor. """
@@ -30,6 +31,7 @@ class Packet:
             self.source_timebase = source_timebase
         self.broadcasts = broadcasts or []
         self.timeout = timeout
+        self.display_hooks = display_hooks or []
 
         for key, value in kwargs.items():
             setattr(self, key, value)

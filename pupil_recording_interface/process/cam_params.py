@@ -23,11 +23,12 @@ class CircleGridDetector(BaseProcess):
     """ Detector for circle grids. """
 
     def __init__(
-        self, grid_shape=(4, 11), stereo=False, **kwargs,
+        self, grid_shape=(4, 11), stereo=False, display=True, **kwargs,
     ):
         """ Constructor. """
         self.grid_shape = grid_shape
         self.stereo = stereo
+        self.display = display
 
         super().__init__(**kwargs)
 
@@ -68,12 +69,42 @@ class CircleGridDetector(BaseProcess):
         else:
             return None
 
+    def display_hook(self, packet):
+        """ Add circle grid overlay onto frame. """
+        circle_grid = packet["circle_grid"]
+        if circle_grid is None:
+            # Return the attribute to avoid unnecessary waiting
+            return packet.display_frame
+        else:
+            grid_points = circle_grid["grid_points"]
+
+        frame = packet["display_frame"]
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+        if isinstance(grid_points, list):
+            calib_bounds = [
+                cv2.convexHull(gp).astype(np.int32) for gp in grid_points
+            ]
+        else:
+            calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
+
+        # TODO make constructor arguments
+        color = (0, 255, 0)
+
+        cv2.polylines(frame, calib_bounds, True, color)
+
+        return frame
+
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
         packet.circle_grid = self.call(self.detect_grid, packet, block=block)
 
         # TODO maybe don't broadcast on every single packet
         packet.broadcasts.append("circle_grid")
+
+        if self.display:
+            packet.display_hooks.append(self.display_hook)
 
         return packet
 
