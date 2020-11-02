@@ -404,16 +404,23 @@ class StreamManager:
 
         return status_str
 
-    def save_info(self):
-        """ Save info.player.json file. """
+    def save_info(self, final=True):
+        """ Save info.player.json file.
+
+        Parameters
+        ----------
+        final : bool, default True
+            If False, assume that this method is called at the start of the
+            recording and save placeholders for values that can still change.
+        """
         json_file = {
-            "duration_s": self.run_duration,
+            "duration_s": self.run_duration if final else "tbd",
             "meta_version": "2.1",
             "min_player_version": "1.16",
             "recording_name": str(self.folder),
             "recording_software_name": self._app_name,
             "recording_software_version": self._app_version,
-            "recording_uuid": str(uuid.uuid4()),
+            "recording_uuid": str(uuid.uuid4()) if final else "tbd",
             "start_time_synced_s": self._start_time_monotonic,
             "start_time_system_s": self._start_time,
             "system_info": get_system_info(),
@@ -456,6 +463,10 @@ class StreamManager:
             logger.debug(f"Streaming for {self.duration} seconds")
         logger.debug(f"Run start time: {self._start_time}")
         logger.debug(f"Run start time monotonic: {self._start_time_monotonic}")
+
+        # save info.player.json
+        if self.folder is not None and self.policy != "read":
+            self.save_info(final=False)
 
         identify_process("manager")
 

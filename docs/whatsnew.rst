@@ -12,6 +12,7 @@ New features
 Bug fixes & improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Additionally save ``info.player.json`` at the start of the recording.
 * Support loading source timestamps from .pldata files for video streams.
 * Don't reopen ``VideoDisplay`` windows closed by user.
 
