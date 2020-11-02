@@ -114,10 +114,10 @@ def load_dataset(
     Returns
     -------
     xarray.Dataset or tuple thereof
-        The recording data as a dataset or tuple thereof if both `gaze` and
-        `odometry` are specified.
+        The recording data as a dataset or tuple thereof if multiple sources
+        (`gaze`, `odometry`, ...) are specified.
     """
-    folder = Path(folder)
+    folder = Path(folder).expanduser()
     return_vals = tuple()
 
     if gaze:
@@ -151,7 +151,7 @@ def get_gaze_mappers(folder):
     set
         The set of available mappers.
     """
-    folder = Path(folder)
+    folder = Path(folder).expanduser()
     if not folder.exists():
         raise FileNotFoundError(f"No such folder: {folder}")
 
@@ -193,13 +193,13 @@ def write_netcdf(
         The source of the gyro data. Can be 'recording'.
     """
     if output_folder is None:
-        output_folder = Path(folder) / "exports"
+        output_folder = Path(folder).expanduser() / "exports"
         counter = 0
         while (output_folder / f"{counter:03d}").exists():
             counter += 1
         output_folder = output_folder / f"{counter:03d}"
     else:
-        output_folder = Path(output_folder)
+        output_folder = Path(output_folder).expanduser()
 
     if gaze is not None:
         GazeReader(folder, source=gaze).write_netcdf(

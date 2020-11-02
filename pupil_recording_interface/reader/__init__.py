@@ -53,7 +53,7 @@ class BaseReader:
         folder : str or pathlib.Path
             Path to the recording folder.
         """
-        folder = Path(folder)
+        folder = Path(folder).expanduser()
         if not folder.exists():
             raise FileNotFoundError(f"No such folder: {folder}")
 
