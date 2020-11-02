@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import msgpack
 
+from pupil_recording_interface.externals.file_methods import PLData_Writer
+
 logger = logging.getLogger(__name__)
 
 
@@ -144,17 +146,16 @@ class BaseReader:
 
         return info
 
-    @staticmethod
-    def _load_pldata_as_dataframe(folder, topic):
-        """ Load data from a .pldata file into a pandas.DataFrame. """
-        if not (folder / f"{topic}.pldata").exists():
+    @classmethod
+    def _load_pldata(cls, folder, topic):
+        """ Load data from a .pldata file. """
+        msgpack_file = folder / f"{topic}.pldata"
+        if not msgpack_file.exists():
             raise FileNotFoundError(
                 f"File {topic}.pldata not found in folder {folder}"
             )
 
-        msgpack_file = folder / (topic + ".pldata")
         data = collections.deque()
-
         with open(msgpack_file, "rb") as fh:
             for topic, payload in msgpack.Unpacker(
                 fh, raw=False, use_list=False
@@ -166,10 +167,22 @@ class BaseReader:
                     logger.warning("Found corrupt data while unpacking.")
                     continue
 
-        return pd.DataFrame(list(data))
+        return list(data)
 
-    @staticmethod
-    def _timestamps_to_datetimeindex(timestamps, info):
+    @classmethod
+    def _save_pldata(cls, folder, topic, data):
+        """ Save data as a .pldata file. """
+        with PLData_Writer(folder, topic) as writer:
+            for datum in data:
+                writer.append(datum)
+
+    @classmethod
+    def _load_pldata_as_dataframe(cls, folder, topic):
+        """ Load data from a .pldata file into a pandas.DataFrame. """
+        return pd.DataFrame(cls._load_pldata(folder, topic))
+
+    @classmethod
+    def _timestamps_to_datetimeindex(cls, timestamps, info):
         """ Convert timestamps from float to pandas.DatetimeIndex. """
         return pd.to_datetime(
             timestamps
@@ -178,9 +191,24 @@ class BaseReader:
             unit="s",
         )
 
-    @staticmethod
-    def _load_timestamps_as_datetimeindex(folder, topic, info, offset=0.0):
+    @classmethod
+    def _load_timestamps_from_pldata(cls, folder, topic, offset):
+        """"""
+        df = cls._load_pldata_as_dataframe(folder, topic)
+        return pd.to_datetime(df.source_timestamp.values + offset, unit="s")
+
+    @classmethod
+    def _load_timestamps_as_datetimeindex(
+        cls, folder, topic, info, offset=0.0, use_pldata=None
+    ):
         """ Load timestamps as pandas.DatetimeIndex. """
+        if use_pldata is not False:
+            try:
+                return cls._load_timestamps_from_pldata(folder, topic, offset)
+            except (FileNotFoundError, AttributeError):
+                if use_pldata:
+                    raise
+
         filepath = folder / f"{topic}_timestamps.npy"
         if not filepath.exists():
             raise FileNotFoundError(
@@ -188,7 +216,8 @@ class BaseReader:
             )
 
         timestamps = np.load(filepath)
-        idx = BaseReader._timestamps_to_datetimeindex(timestamps, info)
+        idx = cls._timestamps_to_datetimeindex(timestamps, info)
+
         return idx + pd.to_timedelta(offset, unit="s")
 
     @staticmethod
@@ -202,6 +231,34 @@ class BaseReader:
         }
 
         return {v: comp for v in data_vars}
+
+    def load_pldata(self, topic):
+        """ Load data from a .pldata file as a list of dicts.
+
+        Parameters
+        ----------
+        topic : str
+            The topic to load, e.g. "gaze".
+
+        Returns
+        -------
+        data : list of dict
+            The loaded data.
+        """
+        return self._load_pldata(self.folder, topic)
+
+    def save_pldata(self, topic, data):
+        """ Save data from a list of dicts as a .pldata file.
+
+        Parameters
+        ----------
+        topic : str
+            The topic to load, e.g. "gaze".
+
+        data : list of dict
+            The data to be saved.
+        """
+        self._save_pldata(self.folder, topic, data)
 
     @abc.abstractmethod
     def load_dataset(self):

@@ -40,6 +40,8 @@ __all__ = [
     "load_dataset",
     "load_info",
     "load_user_info",
+    "load_pldata",
+    "save_pldata",
     "write_netcdf",
     "get_gaze_mappers",
     # Readers
@@ -218,6 +220,42 @@ def write_netcdf(
         MotionReader(folder, "gyro", source=gyro).write_netcdf(
             filename=output_folder / "gyro.nc"
         )
+
+
+def load_pldata(folder, topic):
+    """ Load data from a .pldata file as a list of dicts.
+
+    Parameters
+    ----------
+    folder : str or pathlib.Path
+        Path to the recording folder.
+
+    topic : str
+        The topic to load, e.g. "gaze".
+
+    Returns
+    -------
+    data : list of dict
+        The loaded data.
+    """
+    return BaseReader(folder).load_pldata(topic)
+
+
+def save_pldata(folder, topic, data):
+    """ Save data from a list of dicts as a .pldata file.
+
+    Parameters
+    ----------
+    folder : str or pathlib.Path
+        Path to the recording folder.
+
+    topic : str
+        The topic to load, e.g. "gaze".
+
+    data : list of dict
+        The data to be saved.
+    """
+    BaseReader(folder).save_pldata(topic, data)
 
 
 def load_info(folder):

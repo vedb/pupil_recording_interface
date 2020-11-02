@@ -74,6 +74,7 @@ def folder():
 def export_folder(folder):
     """"""
     export_folder = Path(folder) / "exports"
+    export_folder.mkdir()
     yield export_folder
     shutil.rmtree(export_folder, ignore_errors=True)
 

@@ -1,12 +1,18 @@
 What's New
 ==========
 
-v0.2.2 (unreleased)
+v0.3.0 (unreleased)
 -------------------
+
+New features
+~~~~~~~~~~~~
+
+* New ``load_pldata`` and ``save_pldata`` top-level methods.
 
 Bug fixes & improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Support loading source timestamps from .pldata files for video streams.
 * Don't reopen ``VideoDisplay`` windows closed by user.
 
 
