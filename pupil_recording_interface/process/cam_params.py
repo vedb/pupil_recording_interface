@@ -70,7 +70,10 @@ class CircleGridDetector(BaseProcess):
             if status_right:
                 if self.scale is not None:
                     grid_points_right /= self.scale
-                grid_points_right[:, :, 0] += frame.shape[1] // 2
+                    horizontal_res = frame.shape[1] / self.scale
+                else:
+                    horizontal_res = frame.shape[1]
+                grid_points_right[:, :, 0] += horizontal_res // 2
 
             status = status_left and status_right
             grid_points = [grid_points_left, grid_points_right]
