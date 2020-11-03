@@ -257,11 +257,6 @@ class StreamManager:
         for stream_name, queue in self._status_queues.items():
             if queue._getvalue():
                 status[stream_name] = queue.popleft()
-                if "exception" in status[stream_name]:
-                    logger.error(
-                        f"Stream {stream_name} has crashed with exception "
-                        f"{status[stream_name]['exception']}"
-                    )
 
         return status
 

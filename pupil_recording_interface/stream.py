@@ -52,8 +52,8 @@ class StreamHandler:
 
         if exc_type:
             logger.error(
-                f"Stream {self.stream.name} has crashed with exception: "
-                f"{exc_val}"
+                f"Stream {self.stream.name} has crashed with exception "
+                f"{exc_type.__name__}: {exc_val}"
             )
 
         return True
@@ -77,6 +77,9 @@ class BaseStream(BaseConfigurable):
         self.device = device
         self.pipeline = pipeline
         self.name = name or device.device_uid
+
+        if self.pipeline is not None:
+            self.pipeline.set_context(self)
 
         self._last_source_timestamp = float("nan")
         self._fps_buffer = deque(maxlen=20)
