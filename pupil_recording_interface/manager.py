@@ -33,7 +33,7 @@ class StreamManager:
         folder=None,
         policy="new_folder",
         duration=None,
-        update_interval=0.1,
+        update_interval=0.01,
         status_timeout=1.0,
         max_queue_size=20,
         app_info=None,
@@ -63,7 +63,7 @@ class StreamManager:
             If provided, the number of seconds after which the streams are
             stopped.
 
-        update_interval: float, default 0.1
+        update_interval: float, default 0.01
             Time in seconds between status and notification updates. Higher
             values might lead to to delays in communicating with the processes
             and dropped messages while lower values might lead to increased
@@ -98,6 +98,7 @@ class StreamManager:
 
         self.status = {}
         self.stopped = False
+        self.keypresses = multiprocessing_deque(maxlen=10)
 
         self._start_time = float("nan")
         self._start_time_monotonic = float("nan")
@@ -304,6 +305,13 @@ class StreamManager:
             if len(notifications) > 0:
                 self._notification_queues[name].append(notifications)
 
+    def _get_keypresses(self, statuses):
+        """"""
+        for status in statuses.values():
+            if "keypress" in status:
+                self.keypresses.append(status["keypress"])
+                logger.debug(f"Received keypress: {status['keypress']}")
+
     def _handle_interrupt(self, signal, frame):
         """ Handle keyboard interrupt. """
         logger.debug(f"{type(self).__name__} caught keyboard interrupt")
@@ -470,6 +478,7 @@ class StreamManager:
         timestamp = time.time()
         status = self._get_status()
         self._notify_streams(status)
+        self._get_keypresses(status)
         self._update_status(status)
         if self.update_interval is not None:
             sleep_time = self.update_interval - (time.time() - timestamp)

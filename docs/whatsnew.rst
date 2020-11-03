@@ -7,6 +7,8 @@ v0.3.0 (November 3rd, 2020)
 New features
 ~~~~~~~~~~~~
 
+* Key presses from ``VideoDisplay`` windows are broadcast and stored in the
+  ``keypresses`` deque by the mananger.
 * ``CircleGridDetector`` now accepts a ``scale`` parameter to speed up
   detection at the expense of accuracy for high-resolution streams.
 * ``CamParamEstimator`` now shows a persistent overlay of previously detected

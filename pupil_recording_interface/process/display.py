@@ -151,7 +151,10 @@ class VideoDisplay(BaseProcess):
 
         if frame is not None:
             cv2.imshow(self.name, frame)
-            cv2.waitKey(1)
+            key = cv2.waitKey(1)
+            if key != -1:
+                logger.debug(f"Captured keypress: {chr(key)}")
+                return chr(key)
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
@@ -182,6 +185,10 @@ class VideoDisplay(BaseProcess):
             )
 
         # TODO make this non-blocking
-        self.call(self.show_frame, packet, block=True)
+        packet.keypress = self.call(
+            self.show_frame, packet, block=True, return_if_full=None
+        )
+        if packet.keypress is not None:
+            packet.broadcasts.append("keypress")
 
         return packet
