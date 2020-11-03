@@ -7,6 +7,8 @@ v0.3.0 (unreleased)
 New features
 ~~~~~~~~~~~~
 
+* ``CamParamEstimator`` now shows a persistent overlay of previously detected
+  circle patterns for the stream it is attached to.
 * Processes and pipelines have access to their parent stream via the
   ``context`` attribute, if applicable.
 * Processes can add display hooks to the packet that are picked up by

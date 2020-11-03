@@ -440,9 +440,13 @@ class CamParamEstimator(BaseProcess):
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         for pattern_dict in list(self._pattern_queue.queue):
-            grid_points = pattern_dict[self.context.device.device_uid][
-                "grid_points"
-            ]
+            try:
+                grid_points = pattern_dict[self.context.device.device_uid][
+                    "grid_points"
+                ]
+            except KeyError:
+                continue
+
             if isinstance(grid_points, list):
                 calib_bounds = [
                     cv2.convexHull(gp).astype(np.int32) for gp in grid_points
