@@ -7,6 +7,8 @@ v0.3.0 (unreleased)
 New features
 ~~~~~~~~~~~~
 
+* ``CircleGridDetector`` now accepts a ``scale`` parameter to speed up
+  detection at the expense of accuracy for high-resolution streams.
 * ``CamParamEstimator`` now shows a persistent overlay of previously detected
   circle patterns for the stream it is attached to.
 * Processes and pipelines have access to their parent stream via the

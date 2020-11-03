@@ -23,10 +23,16 @@ class CircleGridDetector(BaseProcess):
     """ Detector for circle grids. """
 
     def __init__(
-        self, grid_shape=(4, 11), stereo=False, display=True, **kwargs,
+        self,
+        grid_shape=(4, 11),
+        scale=None,
+        stereo=False,
+        display=True,
+        **kwargs,
     ):
         """ Constructor. """
         self.grid_shape = grid_shape
+        self.scale = scale
         self.stereo = stereo
         self.display = display
 
@@ -39,6 +45,15 @@ class CircleGridDetector(BaseProcess):
         if packet.color_format == "bggr8":
             frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
 
+        if self.scale is not None:
+            frame = cv2.resize(
+                frame,
+                None,
+                fx=self.scale,
+                fy=self.scale,
+                interpolation=cv2.INTER_AREA,
+            )
+
         if self.stereo:
             status_left, grid_points_left = cv2.findCirclesGrid(
                 frame[:, : frame.shape[1] // 2],
@@ -50,7 +65,11 @@ class CircleGridDetector(BaseProcess):
                 self.grid_shape,
                 flags=cv2.CALIB_CB_ASYMMETRIC_GRID,
             )
+            if status_left and self.scale is not None:
+                grid_points_left /= self.scale
             if status_right:
+                if self.scale is not None:
+                    grid_points_right /= self.scale
                 grid_points_right[:, :, 0] += frame.shape[1] // 2
 
             status = status_left and status_right
@@ -59,6 +78,8 @@ class CircleGridDetector(BaseProcess):
             status, grid_points = cv2.findCirclesGrid(
                 frame, self.grid_shape, flags=cv2.CALIB_CB_ASYMMETRIC_GRID,
             )
+            if status and self.scale is not None:
+                grid_points /= self.scale
 
         if status:
             return {
