@@ -221,6 +221,7 @@ class CamParamEstimator(BaseProcess):
         num_patterns=10,
         distortion_model="radial",
         extrinsics=False,
+        display=True,
         **kwargs,
     ):
         """ Constructor. """
@@ -229,6 +230,7 @@ class CamParamEstimator(BaseProcess):
         self.num_patterns = num_patterns
         self.distortion_model = distortion_model
         self.extrinsics = extrinsics
+        self.display = display
 
         if len(streams) > 1 and not extrinsics:
             logger.warning(
@@ -427,6 +429,34 @@ class CamParamEstimator(BaseProcess):
 
         logger.info("Successfully estimated camera parameters")
 
+    def display_hook(self, packet):
+        """ Add circle grid overlay onto frame. """
+        if self.context is None:
+            # TODO check if it makes sense to show the grid without a context
+            return packet.display_frame
+
+        frame = packet["display_frame"]
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+        for pattern_dict in list(self._pattern_queue.queue):
+            grid_points = pattern_dict[self.context.device.device_uid][
+                "grid_points"
+            ]
+            if isinstance(grid_points, list):
+                calib_bounds = [
+                    cv2.convexHull(gp).astype(np.int32) for gp in grid_points
+                ]
+            else:
+                calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
+
+            # TODO make constructor arguments
+            color = (200, 100, 0)
+
+            cv2.polylines(frame, calib_bounds, True, color)
+
+        return frame
+
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """
         for notification in notifications:
@@ -471,5 +501,8 @@ class CamParamEstimator(BaseProcess):
             packet.pattern_acquired = False
 
         packet.broadcasts.append("pattern_acquired")
+
+        if self.display:
+            packet.display_hooks.append(self.display_hook)
 
         return packet
