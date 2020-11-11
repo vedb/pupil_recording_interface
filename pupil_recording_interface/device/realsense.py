@@ -1,6 +1,7 @@
 """"""
 import multiprocessing as mp
 import logging
+import time
 from queue import Empty
 
 import numpy as np
@@ -407,6 +408,10 @@ class RealSenseDeviceT265(BaseDevice):
             for name in ("video", "odometry", "accel", "gyro")
             if getattr(self, name)
         }
+
+        # short timeout because _frame_callback sometimes tries to put data
+        # into one of the queues before it is initialized
+        time.sleep(0.1)
 
         # init context
         if self.context is None:

@@ -321,6 +321,7 @@ class VideoStream(BaseStream):
             or 'both'.
         """
         self.color_format = color_format
+        self.side = side
 
         super().__init__(device, pipeline=pipeline, name=name)
 
