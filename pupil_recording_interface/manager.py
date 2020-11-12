@@ -471,7 +471,7 @@ class StreamManager:
         if self.folder is not None and self.policy != "read":
             self.save_info(final=False)
 
-        identify_process("manager")
+        identify_process("manager", self._app_name)
 
     def _update(self):
         """ Update status and notify streams. """

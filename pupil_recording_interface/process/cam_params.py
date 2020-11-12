@@ -135,8 +135,6 @@ def calculate_intrinsics(
     resolution, img_points, obj_points, dist_mode="radial"
 ):
     """ Calculate intrinsic parameters for one camera. """
-    logger.debug(f"Calibrating camera with resolution: {resolution}")
-
     obj_points = [obj_points.reshape(1, -1, 3) for _ in range(len(img_points))]
 
     if dist_mode.lower() == "fisheye":
@@ -190,8 +188,6 @@ def calculate_extrinsics(
     dist_mode="radial",
 ):
     """ Calculate extrinsics for pairs of cameras. """
-    logger.debug("Calculating extrinsics for camera pair")
-
     img_points_a = [x.reshape(1, -1, 2) for x in img_points_a]
     img_points_b = [x.reshape(1, -1, 2) for x in img_points_b]
     obj_points = [
@@ -251,7 +247,7 @@ class CamParamEstimator(BaseProcess):
         self.folder = folder
         self.num_patterns = num_patterns
         self.distortion_model = distortion_model
-        self.extrinsics = extrinsics
+        self.estimate_extrinsics = extrinsics
         self.display = display
 
         if len(streams) > 1 and not extrinsics:
@@ -262,8 +258,8 @@ class CamParamEstimator(BaseProcess):
 
         super().__init__(listen_for=["circle_grid"], **kwargs)
 
-        self.intrinsics = None
-        self.extrinsics = None
+        self._intrinsics = None
+        self._extrinsics = None
 
         self._obj_points = gen_pattern_grid(grid_shape)
         self._pattern_queue = Queue(maxsize=self.num_patterns)
@@ -367,52 +363,55 @@ class CamParamEstimator(BaseProcess):
     @classmethod
     def _save_extrinsics(cls, folder, extrinsics):
         """ Save estimated intrinsics. """
-        for ((first, second), (resolution, R, T)) in extrinsics.items():
+        for (cam_1, cam_2), (res_1, res_2, R, T) in extrinsics.items():
             save_extrinsics(
                 folder,
-                first,
-                resolution,
+                cam_1,
+                res_1,
                 {
-                    second: {
+                    cam_2: {
                         "order": "first",
-                        "rotation": R,
-                        "translation": T,
-                        "resolution": list(resolution),
+                        "rotation": R.tolist(),
+                        "translation": T.tolist(),
+                        "resolution": list(res_1),
                     }
                 },
             )
             save_extrinsics(
                 folder,
-                second,
-                resolution,
+                cam_2,
+                res_2,
                 {
-                    first: {
+                    cam_1: {
                         "order": "second",
-                        "rotation": R,
-                        "translation": T,
-                        "resolution": list(resolution),
+                        "rotation": R.tolist(),
+                        "translation": T.tolist(),
+                        "resolution": list(res_2),
                     }
                 },
             )
 
     def _estimate_params(self):
         """ Estimate camera parameters. """
-        logger.debug("Estimating camera parameters")
-
         resolutions, patterns = self._get_patterns()
 
         try:
-            self.intrinsics = {
-                camera: (
+            self._intrinsics = {}
+            for camera in patterns:
+                logger.debug(
+                    f"Estimating intrinsics for camera {camera} "
+                    f"with resolution {resolutions[camera]} "
+                    f"and {self.distortion_model} distortion"
+                )
+                self._intrinsics[camera] = (
                     resolutions[camera],
                     self.distortion_model,
                     *calculate_intrinsics(
                         resolutions[camera], patterns[camera], self._obj_points
                     ),
                 )
-                for camera in patterns
-            }
         except cv2.error as e:
+            self._intrinsics = None
             logger.warning(
                 f"Intrinsics estimation failed. Reason: {e}\n"
                 f"Please try again with a better coverage of the camera's FOV!"
@@ -422,28 +421,34 @@ class CamParamEstimator(BaseProcess):
         # Skip saving intrinsics when estimating extrinsics because the
         # calibration data will most likely be poorer than when estimating
         # intrinsics for each stream individually
-        if not self.extrinsics:
-            self._save_intrinsics(self.folder, self.intrinsics)
+        if not self.estimate_extrinsics:
+            self._save_intrinsics(self.folder, self._intrinsics)
 
-        if self.extrinsics:
+        if self.estimate_extrinsics:
             try:
-                self.extrinsics = {
-                    (camera_1, camera_2): (
+                self._extrinsics = {}
+                for camera_1, camera_2 in combinations(patterns, 2):
+                    logger.debug(
+                        f"Estimating extrinsics for device pair "
+                        f"({camera_1}, {camera_2}) with "
+                        f"{self.distortion_model} distortion"
+                    )
+                    self._extrinsics[(camera_1, camera_2)] = (
                         resolutions[camera_1],
                         resolutions[camera_2],
                         *calculate_extrinsics(
                             patterns[camera_1],
                             patterns[camera_2],
                             self._obj_points,
-                            self.intrinsics[camera_1][0],
-                            self.intrinsics[camera_1][1],
-                            self.intrinsics[camera_2][0],
-                            self.intrinsics[camera_2][1],
+                            self._intrinsics[camera_1][2],
+                            self._intrinsics[camera_1][3],
+                            self._intrinsics[camera_2][2],
+                            self._intrinsics[camera_2][3],
+                            self.distortion_model,
                         ),
                     )
-                    for camera_1, camera_2 in combinations(patterns, 2)
-                }
             except cv2.error as e:
+                self._extrinsics = None
                 logger.warning(f"Extrinsics estimation failed. Reason: {e}")
                 return
 
