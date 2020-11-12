@@ -182,7 +182,10 @@ class VideoDeviceUVC(BaseVideoDevice):
         """ Get the available modes for a device by UID. """
         import uvc
 
-        return uvc.Capture(device_uid).avaible_modes  # [sic]
+        try:
+            return uvc.Capture(device_uid).avaible_modes  # [sic]
+        except uvc.OpenError:
+            raise DeviceNotConnected
 
     @classmethod
     def _get_controls(cls, device_uid):
