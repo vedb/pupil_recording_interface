@@ -112,46 +112,6 @@ class TestVideoDisplay:
         assert display.resolution == (1280, 720)
         assert display.name == "mock_video_device"
 
-    def test_add_pupil_overlay(self, video_display, pupil_packet):
-        """"""
-        frame = video_display._add_pupil_overlay(pupil_packet)
-        assert frame.ndim == 3
-
-    def test_add_gaze_overlay(self, video_display, gaze_packet):
-        """"""
-        frame = video_display._add_gaze_overlay(gaze_packet)
-        assert frame.ndim == 3
-
-        # one gaze point
-        gaze_packet.gaze = [gaze_packet.gaze[0]]
-        video_display._add_gaze_overlay(gaze_packet)
-
-        # no gaze points
-        gaze_packet.gaze = []
-        video_display._add_gaze_overlay(gaze_packet)
-
-    def test_add_circle_grid_overlay(self, video_display, circle_grid_packet):
-        """"""
-        frame = video_display._add_circle_grid_overlay(circle_grid_packet)
-        assert frame.ndim == 3
-
-        # multiple grids
-        circle_grid_packet.circle_grid["grid_points"] = [
-            circle_grid_packet.circle_grid["grid_points"]
-        ] * 2
-        video_display._add_circle_grid_overlay(circle_grid_packet)
-
-        # no grid
-        circle_grid_packet.circle_grid = None
-        video_display._add_circle_grid_overlay(circle_grid_packet)
-
-    def test_add_circle_marker_overlay(
-        self, video_display, circle_marker_packet
-    ):
-        """"""
-        frame = video_display._add_circle_marker_overlay(circle_marker_packet)
-        assert frame.ndim == 3
-
 
 class TestPupilDetector:
     def test_from_config(
@@ -180,6 +140,11 @@ class TestPupilDetector:
         ]
 
         assert pldata[0] == pupil_packet.pupil
+
+    def test_display_hook(self, pupil_detector, pupil_packet):
+        """"""
+        frame = pupil_detector.display_hook(pupil_packet)
+        assert frame.ndim == 3
 
 
 class TestGazeMapper:
@@ -224,6 +189,19 @@ class TestGazeMapper:
             "timestamp": 2295.232966,
         }
 
+    def test_display_hook(self, gaze_mapper, gaze_packet):
+        """"""
+        frame = gaze_mapper.display_hook(gaze_packet)
+        assert frame.ndim == 3
+
+        # one gaze point
+        gaze_packet.gaze = [gaze_packet.gaze[0]]
+        gaze_mapper.display_hook(gaze_packet)
+
+        # no gaze points
+        gaze_packet.gaze = []
+        gaze_mapper.display_hook(gaze_packet)
+
 
 class TestCircleDetector:
     def test_from_config(
@@ -256,6 +234,11 @@ class TestCircleDetector:
         assert circle_markers[0]["img_pos"] == tuple(
             reference_locations[0][0]["img_pos"]
         )
+
+    def test_display_hook(self, circle_detector, circle_marker_packet):
+        """"""
+        frame = circle_detector.display_hook(circle_marker_packet)
+        assert frame.ndim == 3
 
 
 class TestCalibration:
@@ -407,21 +390,23 @@ class TestCamParamEstimator:
         assert cam_mtx.shape == (3, 3)
         assert dist_coefs.shape == (4, 1)
 
-    @pytest.mark.skip(reason="Hangs sometimes for no apparent reason")
     def test_calculate_extrinsics(self, cam_param_estimator, patterns):
         """"""
+        # TODO fisheye.stereoCalibrate hangs
+        dist_mode = "radial"
+
         cam_mtx_a, dist_coefs_a = calculate_intrinsics(
             (848, 800),
             patterns["t265_left"],
             cam_param_estimator._obj_points,
-            dist_mode="fisheye",
+            dist_mode=dist_mode,
         )
 
         cam_mtx_b, dist_coefs_b = calculate_intrinsics(
             (848, 800),
             patterns["t265_right"],
             cam_param_estimator._obj_points,
-            dist_mode="fisheye",
+            dist_mode=dist_mode,
         )
 
         R, T = calculate_extrinsics(
@@ -432,10 +417,11 @@ class TestCamParamEstimator:
             dist_coefs_a,
             cam_mtx_b,
             dist_coefs_b,
-            dist_mode="fisheye",
+            dist_mode=dist_mode,
         )
 
-        np.testing.assert_allclose(R, np.eye(3), atol=0.02, rtol=1e-4)
+        np.testing.assert_allclose(R, np.eye(3), atol=0.03, rtol=1e-4)
+        assert R.shape == (3, 3)
         assert T.shape == (3, 1)
 
     def test_save_intrinsics(self, cam_param_estimator, intrinsics):
@@ -494,3 +480,20 @@ class TestCamParamEstimator:
                 "resolution": [848, 800],
             }
         }
+
+
+class TestCircleGridDetector:
+    def test_display_hook(self, circle_grid_detector, circle_grid_packet):
+        """"""
+        frame = circle_grid_detector.display_hook(circle_grid_packet)
+        assert frame.ndim == 3
+
+        # multiple grids
+        circle_grid_packet.circle_grid["grid_points"] = [
+            circle_grid_packet.circle_grid["grid_points"]
+        ] * 2
+        circle_grid_detector.display_hook(circle_grid_packet)
+
+        # no grid
+        circle_grid_packet.circle_grid = None
+        circle_grid_detector.display_hook(circle_grid_packet)

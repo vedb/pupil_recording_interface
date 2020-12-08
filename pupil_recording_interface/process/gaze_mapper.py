@@ -1,6 +1,11 @@
 """"""
+from collections import deque
 from queue import Queue
 import logging
+import warnings
+
+import cv2
+import numpy as np
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
@@ -8,6 +13,7 @@ from pupil_recording_interface.externals.gaze_mappers import (
     Binocular_Gaze_Mapper,
 )
 from pupil_recording_interface.externals.file_methods import PLData_Writer
+from pupil_recording_interface.externals.methods import denormalize
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +109,7 @@ class GazeMapper(BaseProcess):
         folder=None,
         record=False,
         block=False,
+        display=True,
         **kwargs,
     ):
         """ Constructor. """
@@ -112,6 +119,7 @@ class GazeMapper(BaseProcess):
         self.calibration = calibration or default_calibration
         self.folder = folder
         self.record = record
+        self.display = display
 
         super().__init__(block=block, listen_for=["pupil"], **kwargs)
 
@@ -128,6 +136,12 @@ class GazeMapper(BaseProcess):
             self.writer = PLData_Writer(self.folder, "gaze")
         else:
             self.writer = None
+
+        # gaze overlay
+        _queue_len = 5  # TODO constructor argument?
+        self._eye0_gaze_deque = deque(maxlen=_queue_len)
+        self._eye1_gaze_deque = deque(maxlen=_queue_len)
+        self._binocular_gaze_deque = deque(maxlen=_queue_len)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -150,6 +164,69 @@ class GazeMapper(BaseProcess):
         """ Record gaze to disk. """
         for gaze in packet["gaze"]:
             self.writer.append(gaze)
+
+    def display_hook(self, packet):
+        """ Add gaze overlay onto frame. """
+        gaze = packet["gaze"]
+        if gaze is None:
+            # Return the attribute to avoid unnecessary waiting
+            return packet.display_frame
+
+        frame = packet["display_frame"]
+        gaze_points = [
+            denormalize(g["norm_pos"], frame.shape[1::-1]) for g in gaze
+        ]
+
+        for idx, gaze_point in enumerate(gaze_points):
+            if len(gaze[idx]["base_data"]) == 2:
+                self._binocular_gaze_deque.append(gaze_point)
+                self._eye0_gaze_deque.append((np.nan, np.nan))
+                self._eye1_gaze_deque.append((np.nan, np.nan))
+            elif gaze[idx]["base_data"][0]["id"] == 0:
+                self._binocular_gaze_deque.append((np.nan, np.nan))
+                self._eye0_gaze_deque.append(gaze_point)
+                self._eye1_gaze_deque.append((np.nan, np.nan))
+            elif gaze[idx]["base_data"][0]["id"] == 1:
+                self._binocular_gaze_deque.append((np.nan, np.nan))
+                self._eye0_gaze_deque.append((np.nan, np.nan))
+                self._eye1_gaze_deque.append(gaze_point)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            binocular_gaze_point = np.nanmean(
+                self._binocular_gaze_deque, axis=0
+            )
+            eye0_gaze_point = np.nanmean(self._eye0_gaze_deque, axis=0)
+            eye1_gaze_point = np.nanmean(self._eye1_gaze_deque, axis=0)
+
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+        # TODO make constructor arguments
+        color = (0, 255, 0)
+        radius = 10
+
+        try:
+            if not np.isnan(binocular_gaze_point).any():
+                cv2.circle(
+                    frame,
+                    tuple(binocular_gaze_point.astype(int)),
+                    radius,
+                    color,
+                    thickness=-1,
+                )
+            if not np.isnan(eye0_gaze_point).any():
+                cv2.circle(
+                    frame, tuple(eye0_gaze_point.astype(int)), radius, color,
+                )
+            if not np.isnan(eye1_gaze_point).any():
+                cv2.circle(
+                    frame, tuple(eye1_gaze_point.astype(int)), radius, color,
+                )
+        except OverflowError as e:
+            logger.debug(e)
+
+        return frame
 
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """
@@ -190,6 +267,9 @@ class GazeMapper(BaseProcess):
             self.call(self.record_data, packet, block=block)
 
         packet.broadcasts.append("gaze")
+
+        if self.display:
+            packet.display_hooks.append(self.display_hook)
 
         return packet
 

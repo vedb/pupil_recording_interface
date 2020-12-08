@@ -145,6 +145,12 @@ class TestManager:
             }
         }
 
+    def test_get_keypresses(self, stream_manager):
+        """"""
+        statuses = {"world": {"keypress": "q"}}
+        stream_manager._get_keypresses(statuses)
+        assert stream_manager.keypresses.popleft() == "q"
+
     def test_save_info(self, mock_stream_config, tmpdir):
         """"""
         import json

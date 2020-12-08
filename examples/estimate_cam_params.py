@@ -27,7 +27,7 @@ if __name__ == "__main__":
                 pri.CamParamEstimator.Config(
                     folder=folder, streams=("world",)
                 ),
-                pri.VideoDisplay.Config(overlay_circle_grid=True),
+                pri.VideoDisplay.Config(),
             ],
         ),
     ]

@@ -72,7 +72,7 @@ detected pupil:
 .. doctest::
 
     >>> pipeline = pri.Pipeline(
-    ...     [pri.PupilDetector(), pri.VideoDisplay("eye", overlay_pupil=True)]
+    ...     [pri.PupilDetector(), pri.VideoDisplay("eye")]
     ... )
     >>> pipeline.steps # doctest:+ELLIPSIS +NORMALIZE_WHITESPACE
     [<pupil_recording_interface.process.pupil_detector.PupilDetector ...>,
@@ -113,7 +113,7 @@ for use with a stream manager:
     ...         loop=False,
     ...         pipeline=[
     ...             pri.PupilDetector.Config(),
-    ...             pri.VideoDisplay.Config(overlay_pupil=True),
+    ...             pri.VideoDisplay.Config(),
     ...         ],
     ...     ),
     ... ]

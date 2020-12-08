@@ -24,7 +24,10 @@ from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
 from pupil_recording_interface.process.validation import Validation
-from pupil_recording_interface.process.cam_params import CamParamEstimator
+from pupil_recording_interface.process.cam_params import (
+    CamParamEstimator,
+    CircleGridDetector,
+)
 from pupil_recording_interface.manager import StreamManager
 from pupil_recording_interface.externals.file_methods import (
     load_object,
@@ -74,6 +77,7 @@ def folder():
 def export_folder(folder):
     """"""
     export_folder = Path(folder) / "exports"
+    export_folder.mkdir()
     yield export_folder
     shutil.rmtree(export_folder, ignore_errors=True)
 
@@ -771,6 +775,7 @@ def extrinsics():
     return {
         ("t265_left", "t265_right"): (
             (848, 800),
+            (848, 800),
             np.array(
                 [
                     [0.99999411, 0.00115959, 0.0032307],
@@ -971,9 +976,7 @@ def world_video_stream(folder):
 @pytest.fixture()
 def video_display():
     """"""
-    return VideoDisplay(
-        "test", overlay_pupil=True, overlay_gaze=True, overlay_circle_grid=True
-    )
+    return VideoDisplay("test")
 
 
 @pytest.fixture()
@@ -1032,6 +1035,12 @@ def cam_param_estimator(tmpdir, circle_grid_packet):
     estimator._pattern_queue.put(pattern)
 
     return estimator
+
+
+@pytest.fixture()
+def circle_grid_detector():
+    """"""
+    return CircleGridDetector()
 
 
 # -- OTHER -- #

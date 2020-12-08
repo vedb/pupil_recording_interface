@@ -1,6 +1,32 @@
 What's New
 ==========
 
+v0.3.0 (December 8th, 2020)
+---------------------------
+
+New features
+~~~~~~~~~~~~
+
+* Key presses from ``VideoDisplay`` windows are broadcast and stored in the
+  ``keypresses`` deque by the manager.
+* ``CircleGridDetector`` now accepts a ``scale`` parameter to speed up
+  detection at the expense of accuracy for high-resolution streams.
+* ``CamParamEstimator`` now shows a persistent overlay of previously detected
+  circle patterns for the stream it is attached to.
+* Processes and pipelines have access to their parent stream via the
+  ``context`` attribute, if applicable.
+* Processes can add display hooks to the packet that are picked up by
+  ``VideoDisplay``.
+* New ``load_pldata`` and ``save_pldata`` top-level methods.
+
+Bug fixes & improvements
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Fixed several bugs in ``CamParamEstimator`` regarding extrinsics estimation.
+* Additionally save ``info.player.json`` at the start of the recording.
+* Support loading source timestamps from .pldata files for video streams.
+* Don't reopen ``VideoDisplay`` windows closed by user.
+
 
 v0.2.1 (October 23rd, 2020)
 ---------------------------

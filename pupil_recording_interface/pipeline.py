@@ -10,9 +10,19 @@ logger = logging.getLogger(__name__)
 class Pipeline:
     """ Pipeline for different processing steps. """
 
-    def __init__(self, steps):
-        """ Constructor. """
+    def __init__(self, steps, context=None):
+        """ Constructor.
+
+        Parameters
+        ----------
+        steps : iterable of BaseProcess
+            Processing steps for this pipeline.
+
+        context : BaseStream, optional
+            The stream this pipeline is attached to, if applicable.
+        """
         self.steps = list(steps)
+        self.set_context(context)
 
     @property
     def listen_for(self):
@@ -36,6 +46,12 @@ class Pipeline:
             return cls(steps)
         else:
             return None
+
+    def set_context(self, context):
+        """ Set the stream this pipeline is attached to. """
+        self.context = context
+        for step in self.steps:
+            step.context = self.context
 
     def start(self):
         """ Start the pipeline. """

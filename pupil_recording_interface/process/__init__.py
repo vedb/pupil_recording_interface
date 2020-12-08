@@ -12,13 +12,19 @@ class BaseProcess(BaseConfigurable):
     """ Base class for all processes. """
 
     def __init__(
-        self, process_name=None, paused=False, block=True, listen_for=None,
+        self,
+        process_name=None,
+        paused=False,
+        block=True,
+        listen_for=None,
+        context=None,
     ):
         """ Constructor. """
         self.process_name = process_name or type(self).__name__
         self.paused = paused
         self.block = block
         self.listen_for = listen_for or []
+        self.context = context
 
         self._packet_executor = DroppingThreadPoolExecutor(maxsize=10)
         self._notification_executor = DroppingThreadPoolExecutor(maxsize=10)

@@ -11,3 +11,12 @@ class TestPipeline:
         assert len(pipeline.steps) == 1
         assert isinstance(pipeline.steps[0], VideoRecorder)
         assert pipeline.steps[0].folder == "test"
+
+    def test_set_context(self, video_stream):
+        """"""
+        pipeline = Pipeline([VideoRecorder("test", (1280, 720), 30)])
+        pipeline.set_context(video_stream)
+
+        assert pipeline.context is video_stream
+        for step in pipeline.steps:
+            assert step.context is video_stream

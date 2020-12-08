@@ -1,5 +1,6 @@
 .idea/
-scratch/
+pkgs
+scratch
 recordings
 
 # Byte-compiled / optimized / DLL files

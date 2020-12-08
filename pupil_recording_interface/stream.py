@@ -45,12 +45,15 @@ class StreamHandler:
             status = self.stream.get_status()
             if exc_type:
                 status["exception"] = f"{exc_type.__name__}: {exc_val}"
-            self.status_queue.append(status)
+            try:
+                self.status_queue.append(status)
+            except BrokenPipeError:
+                logger.debug("Broken pipe error while sending status")
 
         if exc_type:
             logger.error(
-                f"Stream {self.stream.name} has crashed with exception: "
-                f"{exc_val}"
+                f"Stream {self.stream.name} has crashed with exception "
+                f"{exc_type.__name__}: {exc_val}"
             )
 
         return True
@@ -74,6 +77,9 @@ class BaseStream(BaseConfigurable):
         self.device = device
         self.pipeline = pipeline
         self.name = name or device.device_uid
+
+        if self.pipeline is not None:
+            self.pipeline.set_context(self)
 
         self._last_source_timestamp = float("nan")
         self._fps_buffer = deque(maxlen=20)
@@ -267,7 +273,10 @@ class BaseStream(BaseConfigurable):
 
                     # TODO yield self.get_status()?
                     if status_queue is not None:
-                        status_queue.append(self.get_status(packet))
+                        try:
+                            status_queue.append(self.get_status(packet))
+                        except (ConnectionResetError, BrokenPipeError):
+                            logger.debug("Error sending status to manager")
 
                 except KeyboardInterrupt:
                     logger.debug("Thread stopped via keyboard interrupt.")
@@ -312,6 +321,7 @@ class VideoStream(BaseStream):
             or 'both'.
         """
         self.color_format = color_format
+        self.side = side
 
         super().__init__(device, pipeline=pipeline, name=name)
 

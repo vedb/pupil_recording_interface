@@ -40,7 +40,7 @@ def t265_export_folder(t265_folder):
     shutil.rmtree(export_folder, ignore_errors=True)
 
 
-class TestBaseReader(object):
+class TestBaseReader:
     def test_constructor(self, folder):
         """"""
         exporter = BaseReader(folder)
@@ -102,10 +102,49 @@ class TestBaseReader(object):
         )
         assert np.all(idx_with_offs == idx + pd.to_timedelta("1s"))
 
+        # source timestamps from pldata
+        idx_world_source = BaseReader._load_timestamps_as_datetimeindex(
+            folder, "world", info
+        )
+        assert isinstance(idx_world_source, pd.DatetimeIndex)
+        assert len(idx_world_source) == 504
+
+        # source timestamps from pldata
+        idx_world_monotonic = BaseReader._load_timestamps_as_datetimeindex(
+            folder, "world", info, use_pldata=False
+        )
+        assert isinstance(idx_world_monotonic, pd.DatetimeIndex)
+        np.testing.assert_almost_equal(
+            idx_world_monotonic.values.astype(float),
+            idx_world_source.values.astype(float),
+        )
+
         with pytest.raises(FileNotFoundError):
             BaseReader._load_timestamps_as_datetimeindex(
                 folder, "not_a_topic", info
             )
+
+    def test_load_pldata(self, folder):
+        """"""
+        data = BaseReader._load_pldata(folder, "odometry")
+
+        assert len(data) == 4220
+        assert set(data[0].keys()) == {
+            "topic",
+            "timestamp",
+            "confidence",
+            "linear_velocity",
+            "angular_velocity",
+            "position",
+            "orientation",
+        }
+
+    def test_save_pldata(self, folder, export_folder):
+        """"""
+        data = BaseReader._load_pldata(folder, "odometry")
+        BaseReader._save_pldata(export_folder, "odometry", data)
+
+        assert (export_folder / "odometry.pldata").exists()
 
     def test_load_pldata_as_dataframe(self, folder):
         """"""
@@ -157,7 +196,7 @@ class TestBaseReader(object):
         ds.close()
 
 
-class TestFunctionalReader(object):
+class TestFunctionalReader:
     def test_load_dataset(self, folder):
         """"""
         gaze, odometry = load_dataset(
@@ -228,7 +267,7 @@ class TestFunctionalReader(object):
         assert mappers == {"recording", "2d Gaze Mapper ", "3d Gaze Mapper"}
 
 
-class TestGazeReader(object):
+class TestGazeReader:
     @pytest.fixture(autouse=True)
     def set_up(self):
         """"""
@@ -377,7 +416,7 @@ class TestGazeReader(object):
         ds.close()
 
 
-class TestMotionReader(object):
+class TestMotionReader:
     @pytest.fixture(autouse=True)
     def set_up(self):
         """"""
@@ -699,7 +738,7 @@ class TestVideoReader(object):
         assert ds.frames.dtype == "uint8"
 
 
-class TestOpticalFlowReader(object):
+class TestOpticalFlowReader:
     @pytest.fixture(autouse=True)
     def set_up(self):
         """"""

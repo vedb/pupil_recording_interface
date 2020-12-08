@@ -21,10 +21,7 @@ if __name__ == "__main__":
             name="world",
             resolution=(1280, 720),
             fps=30,
-            pipeline=[
-                pri.GazeMapper.Config(),
-                pri.VideoDisplay.Config(overlay_gaze=True),
-            ],
+            pipeline=[pri.GazeMapper.Config(), pri.VideoDisplay.Config()],
         ),
         pri.VideoStream.Config(
             device_type="uvc",
@@ -35,7 +32,7 @@ if __name__ == "__main__":
             color_format="gray",
             pipeline=[
                 pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(flip=True, overlay_pupil=True),
+                pri.VideoDisplay.Config(flip=True),
             ],
         ),
         pri.VideoStream.Config(
@@ -45,10 +42,7 @@ if __name__ == "__main__":
             resolution=(320, 240) if pupil_gen == 1 else (192, 192),
             fps=120,
             color_format="gray",
-            pipeline=[
-                pri.PupilDetector.Config(),
-                pri.VideoDisplay.Config(overlay_pupil=True),
-            ],
+            pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
         ),
     ]
 
@@ -62,7 +56,10 @@ if __name__ == "__main__":
         while not manager.stopped:
             if manager.all_streams_running:
                 status = manager.format_status(
-                    "pupil.confidence", max_cols=72, sleep=0.1
+                    "pupil.confidence",
+                    max_cols=72,
+                    sleep=0.1,
+                    nan_format=None,
                 )
                 print("\r" + status, end="")
 

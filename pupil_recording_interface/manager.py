@@ -33,7 +33,7 @@ class StreamManager:
         folder=None,
         policy="new_folder",
         duration=None,
-        update_interval=0.1,
+        update_interval=0.01,
         status_timeout=1.0,
         max_queue_size=20,
         app_info=None,
@@ -63,7 +63,7 @@ class StreamManager:
             If provided, the number of seconds after which the streams are
             stopped.
 
-        update_interval: float, default 0.1
+        update_interval: float, default 0.01
             Time in seconds between status and notification updates. Higher
             values might lead to to delays in communicating with the processes
             and dropped messages while lower values might lead to increased
@@ -98,6 +98,7 @@ class StreamManager:
 
         self.status = {}
         self.stopped = False
+        self.keypresses = multiprocessing_deque(maxlen=10)
 
         self._start_time = float("nan")
         self._start_time_monotonic = float("nan")
@@ -257,11 +258,6 @@ class StreamManager:
         for stream_name, queue in self._status_queues.items():
             if queue._getvalue():
                 status[stream_name] = queue.popleft()
-                if "exception" in status[stream_name]:
-                    logger.error(
-                        f"Stream {stream_name} has crashed with exception "
-                        f"{status[stream_name]['exception']}"
-                    )
 
         return status
 
@@ -309,6 +305,13 @@ class StreamManager:
             if len(notifications) > 0:
                 self._notification_queues[name].append(notifications)
 
+    def _get_keypresses(self, statuses):
+        """"""
+        for status in statuses.values():
+            if "keypress" in status:
+                self.keypresses.append(status["keypress"])
+                logger.debug(f"Received keypress: {status['keypress']}")
+
     def _handle_interrupt(self, signal, frame):
         """ Handle keyboard interrupt. """
         logger.debug(f"{type(self).__name__} caught keyboard interrupt")
@@ -342,6 +345,9 @@ class StreamManager:
         """ Send a notification over the priority queues. """
         for name, stream in self.streams.items():
             if streams is None or name in streams:
+                logger.debug(
+                    f"Sending notification to stream {name}: {notification}"
+                )
                 self._priority_queues[name].append(notification)
 
     def await_status(self, stream, **kwargs):
@@ -401,16 +407,23 @@ class StreamManager:
 
         return status_str
 
-    def save_info(self):
-        """ Save info.player.json file. """
+    def save_info(self, final=True):
+        """ Save info.player.json file.
+
+        Parameters
+        ----------
+        final : bool, default True
+            If False, assume that this method is called at the start of the
+            recording and save placeholders for values that can still change.
+        """
         json_file = {
-            "duration_s": self.run_duration,
+            "duration_s": self.run_duration if final else "tbd",
             "meta_version": "2.1",
             "min_player_version": "1.16",
             "recording_name": str(self.folder),
             "recording_software_name": self._app_name,
             "recording_software_version": self._app_version,
-            "recording_uuid": str(uuid.uuid4()),
+            "recording_uuid": str(uuid.uuid4()) if final else "tbd",
             "start_time_synced_s": self._start_time_monotonic,
             "start_time_system_s": self._start_time,
             "system_info": get_system_info(),
@@ -454,13 +467,18 @@ class StreamManager:
         logger.debug(f"Run start time: {self._start_time}")
         logger.debug(f"Run start time monotonic: {self._start_time_monotonic}")
 
-        identify_process("manager")
+        # save info.player.json
+        if self.folder is not None and self.policy != "read":
+            self.save_info(final=False)
+
+        identify_process("manager", self._app_name)
 
     def _update(self):
         """ Update status and notify streams. """
         timestamp = time.time()
         status = self._get_status()
         self._notify_streams(status)
+        self._get_keypresses(status)
         self._update_status(status)
         if self.update_interval is not None:
             sleep_time = self.update_interval - (time.time() - timestamp)

@@ -23,11 +23,18 @@ class CircleGridDetector(BaseProcess):
     """ Detector for circle grids. """
 
     def __init__(
-        self, grid_shape=(4, 11), stereo=False, **kwargs,
+        self,
+        grid_shape=(4, 11),
+        scale=None,
+        stereo=False,
+        display=True,
+        **kwargs,
     ):
         """ Constructor. """
         self.grid_shape = grid_shape
+        self.scale = scale
         self.stereo = stereo
+        self.display = display
 
         super().__init__(**kwargs)
 
@@ -37,6 +44,16 @@ class CircleGridDetector(BaseProcess):
 
         if packet.color_format == "bggr8":
             frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
+
+        resolution = frame.shape[1::-1]
+        if self.scale is not None:
+            frame = cv2.resize(
+                frame,
+                None,
+                fx=self.scale,
+                fy=self.scale,
+                interpolation=cv2.INTER_AREA,
+            )
 
         if self.stereo:
             status_left, grid_points_left = cv2.findCirclesGrid(
@@ -49,8 +66,12 @@ class CircleGridDetector(BaseProcess):
                 self.grid_shape,
                 flags=cv2.CALIB_CB_ASYMMETRIC_GRID,
             )
+            if status_left and self.scale is not None:
+                grid_points_left /= self.scale
             if status_right:
-                grid_points_right[:, :, 0] += frame.shape[1] // 2
+                if self.scale is not None:
+                    grid_points_right /= self.scale
+                grid_points_right[:, :, 0] += resolution[0] // 2
 
             status = status_left and status_right
             grid_points = [grid_points_left, grid_points_right]
@@ -58,15 +79,44 @@ class CircleGridDetector(BaseProcess):
             status, grid_points = cv2.findCirclesGrid(
                 frame, self.grid_shape, flags=cv2.CALIB_CB_ASYMMETRIC_GRID,
             )
+            if status and self.scale is not None:
+                grid_points /= self.scale
 
         if status:
             return {
                 "grid_points": grid_points,
-                "resolution": frame.shape[1::-1],
+                "resolution": resolution,
                 "stereo": self.stereo,
             }
         else:
             return None
+
+    def display_hook(self, packet):
+        """ Add circle grid overlay onto frame. """
+        circle_grid = packet["circle_grid"]
+        if circle_grid is None:
+            # Return the attribute to avoid unnecessary waiting
+            return packet.display_frame
+        else:
+            grid_points = circle_grid["grid_points"]
+
+        frame = packet["display_frame"]
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+        if isinstance(grid_points, list):
+            calib_bounds = [
+                cv2.convexHull(gp).astype(np.int32) for gp in grid_points
+            ]
+        else:
+            calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
+
+        # TODO make constructor arguments
+        color = (0, 255, 0)
+
+        cv2.polylines(frame, calib_bounds, True, color)
+
+        return frame
 
     def _process_packet(self, packet, block=None):
         """ Process a new packet. """
@@ -75,6 +125,9 @@ class CircleGridDetector(BaseProcess):
         # TODO maybe don't broadcast on every single packet
         packet.broadcasts.append("circle_grid")
 
+        if self.display:
+            packet.display_hooks.append(self.display_hook)
+
         return packet
 
 
@@ -82,8 +135,6 @@ def calculate_intrinsics(
     resolution, img_points, obj_points, dist_mode="radial"
 ):
     """ Calculate intrinsic parameters for one camera. """
-    logger.debug(f"Calibrating camera with resolution: {resolution}")
-
     obj_points = [obj_points.reshape(1, -1, 3) for _ in range(len(img_points))]
 
     if dist_mode.lower() == "fisheye":
@@ -137,8 +188,6 @@ def calculate_extrinsics(
     dist_mode="radial",
 ):
     """ Calculate extrinsics for pairs of cameras. """
-    logger.debug("Calculating extrinsics for camera pair")
-
     img_points_a = [x.reshape(1, -1, 2) for x in img_points_a]
     img_points_b = [x.reshape(1, -1, 2) for x in img_points_b]
     obj_points = [
@@ -190,6 +239,7 @@ class CamParamEstimator(BaseProcess):
         num_patterns=10,
         distortion_model="radial",
         extrinsics=False,
+        display=True,
         **kwargs,
     ):
         """ Constructor. """
@@ -197,7 +247,8 @@ class CamParamEstimator(BaseProcess):
         self.folder = folder
         self.num_patterns = num_patterns
         self.distortion_model = distortion_model
-        self.extrinsics = extrinsics
+        self.estimate_extrinsics = extrinsics
+        self.display = display
 
         if len(streams) > 1 and not extrinsics:
             logger.warning(
@@ -207,8 +258,8 @@ class CamParamEstimator(BaseProcess):
 
         super().__init__(listen_for=["circle_grid"], **kwargs)
 
-        self.intrinsics = None
-        self.extrinsics = None
+        self._intrinsics = None
+        self._extrinsics = None
 
         self._obj_points = gen_pattern_grid(grid_shape)
         self._pattern_queue = Queue(maxsize=self.num_patterns)
@@ -312,52 +363,55 @@ class CamParamEstimator(BaseProcess):
     @classmethod
     def _save_extrinsics(cls, folder, extrinsics):
         """ Save estimated intrinsics. """
-        for ((first, second), (resolution, R, T)) in extrinsics.items():
+        for (cam_1, cam_2), (res_1, res_2, R, T) in extrinsics.items():
             save_extrinsics(
                 folder,
-                first,
-                resolution,
+                cam_1,
+                res_1,
                 {
-                    second: {
+                    cam_2: {
                         "order": "first",
-                        "rotation": R,
-                        "translation": T,
-                        "resolution": list(resolution),
+                        "rotation": R.tolist(),
+                        "translation": T.tolist(),
+                        "resolution": list(res_1),
                     }
                 },
             )
             save_extrinsics(
                 folder,
-                second,
-                resolution,
+                cam_2,
+                res_2,
                 {
-                    first: {
+                    cam_1: {
                         "order": "second",
-                        "rotation": R,
-                        "translation": T,
-                        "resolution": list(resolution),
+                        "rotation": R.tolist(),
+                        "translation": T.tolist(),
+                        "resolution": list(res_2),
                     }
                 },
             )
 
     def _estimate_params(self):
         """ Estimate camera parameters. """
-        logger.debug("Estimating camera parameters")
-
         resolutions, patterns = self._get_patterns()
 
         try:
-            self.intrinsics = {
-                camera: (
+            self._intrinsics = {}
+            for camera in patterns:
+                logger.debug(
+                    f"Estimating intrinsics for camera {camera} "
+                    f"with resolution {resolutions[camera]} "
+                    f"and {self.distortion_model} distortion"
+                )
+                self._intrinsics[camera] = (
                     resolutions[camera],
                     self.distortion_model,
                     *calculate_intrinsics(
                         resolutions[camera], patterns[camera], self._obj_points
                     ),
                 )
-                for camera in patterns
-            }
         except cv2.error as e:
+            self._intrinsics = None
             logger.warning(
                 f"Intrinsics estimation failed. Reason: {e}\n"
                 f"Please try again with a better coverage of the camera's FOV!"
@@ -367,34 +421,72 @@ class CamParamEstimator(BaseProcess):
         # Skip saving intrinsics when estimating extrinsics because the
         # calibration data will most likely be poorer than when estimating
         # intrinsics for each stream individually
-        if not self.extrinsics:
-            self._save_intrinsics(self.folder, self.intrinsics)
+        if not self.estimate_extrinsics:
+            self._save_intrinsics(self.folder, self._intrinsics)
 
-        if self.extrinsics:
+        if self.estimate_extrinsics:
             try:
-                self.extrinsics = {
-                    (camera_1, camera_2): (
+                self._extrinsics = {}
+                for camera_1, camera_2 in combinations(patterns, 2):
+                    logger.debug(
+                        f"Estimating extrinsics for device pair "
+                        f"({camera_1}, {camera_2}) with "
+                        f"{self.distortion_model} distortion"
+                    )
+                    self._extrinsics[(camera_1, camera_2)] = (
                         resolutions[camera_1],
                         resolutions[camera_2],
                         *calculate_extrinsics(
                             patterns[camera_1],
                             patterns[camera_2],
                             self._obj_points,
-                            self.intrinsics[camera_1][0],
-                            self.intrinsics[camera_1][1],
-                            self.intrinsics[camera_2][0],
-                            self.intrinsics[camera_2][1],
+                            self._intrinsics[camera_1][2],
+                            self._intrinsics[camera_1][3],
+                            self._intrinsics[camera_2][2],
+                            self._intrinsics[camera_2][3],
+                            self.distortion_model,
                         ),
                     )
-                    for camera_1, camera_2 in combinations(patterns, 2)
-                }
             except cv2.error as e:
+                self._extrinsics = None
                 logger.warning(f"Extrinsics estimation failed. Reason: {e}")
                 return
 
             self._save_extrinsics(self.folder, self.extrinsics)
 
         logger.info("Successfully estimated camera parameters")
+
+    def display_hook(self, packet):
+        """ Add circle grid overlay onto frame. """
+        if self.context is None:
+            # TODO check if it makes sense to show the grid without a context
+            return packet.display_frame
+
+        frame = packet["display_frame"]
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+        for pattern_dict in list(self._pattern_queue.queue):
+            try:
+                grid_points = pattern_dict[self.context.device.device_uid][
+                    "grid_points"
+                ]
+            except KeyError:
+                continue
+
+            if isinstance(grid_points, list):
+                calib_bounds = [
+                    cv2.convexHull(gp).astype(np.int32) for gp in grid_points
+                ]
+            else:
+                calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
+
+            # TODO make constructor arguments
+            color = (200, 100, 0)
+
+            cv2.polylines(frame, calib_bounds, True, color)
+
+        return frame
 
     def _process_notifications(self, notifications, block=None):
         """ Process new notifications. """
@@ -440,5 +532,8 @@ class CamParamEstimator(BaseProcess):
             packet.pattern_acquired = False
 
         packet.broadcasts.append("pattern_acquired")
+
+        if self.display:
+            packet.display_hooks.append(self.display_hook)
 
         return packet
