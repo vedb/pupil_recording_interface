@@ -1,14 +1,14 @@
 What's New
 ==========
 
-v0.3.0 (November 3rd, 2020)
+v0.3.0 (December 8th, 2020)
 ---------------------------
 
 New features
 ~~~~~~~~~~~~
 
 * Key presses from ``VideoDisplay`` windows are broadcast and stored in the
-  ``keypresses`` deque by the mananger.
+  ``keypresses`` deque by the manager.
 * ``CircleGridDetector`` now accepts a ``scale`` parameter to speed up
   detection at the expense of accuracy for high-resolution streams.
 * ``CamParamEstimator`` now shows a persistent overlay of previously detected
@@ -22,6 +22,7 @@ New features
 Bug fixes & improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Fixed several bugs in ``CamParamEstimator`` regarding extrinsics estimation.
 * Additionally save ``info.player.json`` at the start of the recording.
 * Support loading source timestamps from .pldata files for video streams.
 * Don't reopen ``VideoDisplay`` windows closed by user.
