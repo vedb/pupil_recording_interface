@@ -8,7 +8,8 @@ Processing and recording data
 pupil_recording_interface uses the concept of *processes* to handle data
 produced by devices and streams. This tutorial will present the pupil
 detector as an example process, then introduce the concept of pipelines and
-finally list other available processes such as the gaze mapper and recorders.
+notifications and finally list other available processes such as the gaze
+mapper and recorders.
 
 
 Pupil detection
@@ -26,7 +27,7 @@ create a stream from an eye video and a detector:
 
     >>> import pupil_recording_interface as pri
     >>> eye0_video = pri.VideoFileDevice(pri.TEST_RECORDING, "eye0")
-    >>> stream = pri.VideoStream(eye0_video, color_format="gray")
+    >>> eye0_stream = pri.VideoStream(eye0_video, color_format="gray")
     >>> detector = pri.PupilDetector()
 
 Each process has a ``process_packet`` method that takes a :py:class:`Packet`
@@ -36,8 +37,8 @@ started and stopped via the :py:class:`Session` context manager:
 
 .. doctest::
 
-    >>> with pri.Session(stream, detector):
-    ...     packet = stream.get_packet()
+    >>> with pri.Session(eye0_stream, detector):
+    ...     packet = eye0_stream.get_packet()
     ...     packet = detector.process_packet(packet)
     >>> packet.pupil # doctest:+NORMALIZE_WHITESPACE +ELLIPSIS
     {'ellipse':
@@ -90,8 +91,8 @@ Starting/stopping the pipeline also starts/stop all of its processes. The
 
 .. doctest::
 
-    >>> with pri.Session(stream, pipeline):
-    ...     pipeline.process(stream.get_packet())
+    >>> with pri.Session(eye0_stream, pipeline):
+    ...     pipeline.process(eye0_stream.get_packet())
     ...     input("Press enter to close") # doctest:+SKIP
 
 .. note::
@@ -130,6 +131,114 @@ for use with a stream manager:
 
     >>> manager.run()
 
+
+Notifications
+-------------
+
+In addition to packets which are emitted every time a stream provides new
+data (e.g. a new video frame from a camera), processes also need to deal with
+asynchronous data from other sources.
+
+This data falls into two categories:
+
+1. Events emitted from the :py:class:`StreamManager`, e.g. instructing the
+   :py:class:`Calibration` process to start collecting calibration data.
+2. Data from other processes, e.g. information about detected pupils from an
+   eye camera stream that the :py:class:`GazeMapper` process - attached to the
+   world camera stream - uses to calculate the current gaze position in the
+   world video frame.
+
+For this purpose, processes have a ``process_notifications`` method that
+handles this kind of data. Notifications are passed a list of dictionaries; the
+dictionary key denotes the type of notification and the value contains the
+notification's payload. Internally, each process filters the notification list
+and responds only to certain pre-defined types.
+
+One class of notifications that all processes understand are ``"pause_process"``
+and ``"resume_process"`` that will temporarily pause the process:
+
+.. doctest::
+
+    >>> detector.paused
+    False
+    >>> detector.process_notifications([{"pause_process": "PupilDetector"}])
+    >>> detector.paused
+    True
+    >>> detector.process_notifications([{"resume_process": "PupilDetector"}])
+    >>> detector.paused
+    False
+
+Note that the notification's payload must match ``detector.process_name`` in
+order for this to work.
+
+
+Gaze mapping
+------------
+
+The :py:class:`GazeMapper` collects data from one or two
+:py:class:`PupilDetector` s and maps them to a gaze position according to a
+previously defined calibration.
+
+.. doctest::
+
+    >>> detector = pri.PupilDetector(camera_id=0)
+    >>> mapper = pri.GazeMapper()
+
+.. doctest::
+
+    >>> with pri.Session(eye0_stream, detector, mapper):
+    ...     for _ in range(11):
+    ...         packet = detector.process_packet(eye0_stream.get_packet())
+    ...         mapper.process_notifications([{"eye0": {"pupil": packet.pupil}}])
+    ...     mapper.get_mapped_gaze() # doctest:+NORMALIZE_WHITESPACE +ELLIPSIS
+    [{'topic': 'gaze.2d.0.',
+      'norm_pos': (1.40..., -1.08...),
+      'confidence': 0.99...,
+      'timestamp': 1570725800.2802918,
+      'base_data': [...]}]
+
+
+
+.. doctest::
+
+    >>> configs = [
+    ...     pri.VideoStream.Config(
+    ...         device_type="video_file",
+    ...         device_uid="world",
+    ...         loop=False,
+    ...         pipeline=[pri.GazeMapper.Config(), pri.VideoDisplay.Config()],
+    ...     ),
+    ...     pri.VideoStream.Config(
+    ...         device_type="video_file",
+    ...         device_uid="eye0",
+    ...         loop=False,
+    ...         pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
+    ...     ),
+    ...     pri.VideoStream.Config(
+    ...         device_type="video_file",
+    ...         device_uid="eye1",
+    ...         loop=False,
+    ...         pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
+    ...     ),
+    ... ]
+    >>> manager = pri.StreamManager(
+    ...     configs, duration=10, folder=pri.TEST_RECORDING, policy="read"
+    ... )
+
+.. testcode::
+    :hide:
+
+    manager.streams["world"].pipeline.steps.pop()
+    manager.streams["eye0"].pipeline.steps.pop()
+    manager.streams["eye1"].pipeline.steps.pop()
+
+
+.. note::
+
+    So far, only the standard 2D gaze mapping is available. We are working
+    on supporting more gaze mapping methods.
+
+
 Calibration
 -----------
 
@@ -137,15 +246,6 @@ Calibration
 
     So far, only the standard 2D calibration is available. We are working
     on supporting more calibration methods.
-
-
-Gaze mapping
-------------
-
-.. note::
-
-    So far, only the standard 2D gaze mapping is available. We are working
-    on supporting more gaze mapping methods.
 
 Recording
 ---------

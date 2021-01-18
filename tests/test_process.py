@@ -162,6 +162,7 @@ class TestGazeMapper:
 
     def test_mapper(self, gaze_mapper, gaze_2d):
         """"""
+        gaze_mapper.start()
         for g in gaze_2d:
             if len(g["base_data"]) == 2:
                 mapped = gaze_mapper.mapper._map_binocular(

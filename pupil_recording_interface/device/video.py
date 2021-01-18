@@ -389,6 +389,7 @@ class VideoFileDevice(BaseVideoDevice):
                 self.fps,
                 **self.capture_kwargs,
             )
+            self._frame_index = 0
             if self.fps is not None:
                 self.speed = self.fps / self.capture.fps
 

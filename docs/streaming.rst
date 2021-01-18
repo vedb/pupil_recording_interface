@@ -76,7 +76,7 @@ and stopping of the stream:
     pupil_recording_interface.Packet with data:
     * stream_name: world
     * device_uid: world
-    * timestamp: 1570725800.2718818
+    * timestamp: 1570725800.2383718
     >>> packet.frame.shape
     (720, 1280, 3)
 

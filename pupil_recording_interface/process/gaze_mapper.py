@@ -108,7 +108,6 @@ class GazeMapper(BaseProcess):
         calibration=None,
         folder=None,
         record=False,
-        block=False,
         display=True,
         **kwargs,
     ):
@@ -121,14 +120,10 @@ class GazeMapper(BaseProcess):
         self.record = record
         self.display = display
 
-        super().__init__(block=block, listen_for=["pupil"], **kwargs)
+        super().__init__(listen_for=["pupil"], **kwargs)
 
         self._gaze_queue = Queue()
-        self.mapper = Binocular_Gaze_Mapper(
-            self.calibration["params"],
-            self.calibration["params_eye0"],
-            self.calibration["params_eye1"],
-        )
+        self.mapper = None
 
         if self.record:
             if self.folder is None:
@@ -255,6 +250,11 @@ class GazeMapper(BaseProcess):
                 self.calibration = packet["calibration_result"]["args"][
                     "params"
                 ]
+                self.mapper = Binocular_Gaze_Mapper(
+                    self.calibration["params"],
+                    self.calibration["params_eye0"],
+                    self.calibration["params_eye1"],
+                )
                 logger.info(
                     "Updated gaze mapper params with calibration results"
                 )
@@ -273,7 +273,16 @@ class GazeMapper(BaseProcess):
 
         return packet
 
+    def start(self):
+        """ Start the process. """
+        self.mapper = Binocular_Gaze_Mapper(
+            self.calibration["params"],
+            self.calibration["params_eye0"],
+            self.calibration["params_eye1"],
+        )
+
     def stop(self):
         """ Stop the process. """
+        self.mapper = None
         if self.writer is not None:
             self.writer.close()
