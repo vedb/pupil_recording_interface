@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import (
@@ -60,6 +61,35 @@ class TestVideoDeviceUVC:
         frame, ts = device.get_frame_and_timestamp()
         assert frame.shape == (720, 1280, 3)
         assert isinstance(ts, float)
+
+
+class TestVideoFileDevice:
+    def test_set_frame_index(self, video_file_device):
+        """"""
+        with video_file_device:
+            _, file_ts, _ = video_file_device.get_frame_and_timestamp()
+            assert file_ts == 1570725800.2383718
+            video_file_device.set_frame_index(0)
+            _, file_ts, _ = video_file_device.get_frame_and_timestamp()
+            assert file_ts == 1570725800.2383718
+
+    def test_get_frame_and_timestamp(self, video_file_device):
+        """"""
+        with video_file_device:
+            frame, _, _ = video_file_device.get_frame_and_timestamp()
+            assert frame.shape == (720, 1280, 3)
+
+        file_ts = np.zeros(100)
+        pb_ts = np.zeros(100)
+        with video_file_device:
+            for idx in range(100):
+                (
+                    _,
+                    file_ts[idx],
+                    pb_ts[idx],
+                ) = video_file_device.get_frame_and_timestamp()
+
+        assert np.median(np.abs(np.diff(pb_ts) - np.diff(file_ts))) < 1.5e-4
 
 
 class TestVideoDeviceFLIR:

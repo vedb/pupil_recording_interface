@@ -55,6 +55,7 @@ class StreamHandler:
                 f"Stream {self.stream.name} has crashed with exception "
                 f"{exc_type.__name__}: {exc_val}"
             )
+            logger.debug(exc_val, exc_info=True)
 
         return True
 

@@ -79,6 +79,7 @@ Process classes
     CircleGridDetector
     CamParamEstimator
     MotionRecorder
+    VideoFileSyncer
 
 
 Class member details

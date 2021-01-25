@@ -16,6 +16,7 @@ from .manager import StreamManager
 
 from .pipeline import Pipeline
 
+from .process.helpers import VideoFileSyncer
 from .process.recorder import VideoRecorder, MotionRecorder
 from .process.display import VideoDisplay
 from .process.pupil_detector import PupilDetector

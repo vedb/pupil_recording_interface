@@ -23,6 +23,7 @@ if __name__ == "__main__":
             device_uid="eye0",
             resolution=(192, 192),
             pipeline=[
+                pri.VideoFileSyncer.Config("world"),
                 pri.PupilDetector.Config(),
                 pri.VideoDisplay.Config(flip=True),
             ],
@@ -31,7 +32,11 @@ if __name__ == "__main__":
             device_type="video_file",
             device_uid="eye1",
             resolution=(192, 192),
-            pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
+            pipeline=[
+                pri.VideoFileSyncer.Config("world"),
+                pri.PupilDetector.Config(),
+                pri.VideoDisplay.Config(),
+            ],
         ),
     ]
 
