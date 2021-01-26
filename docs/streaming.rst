@@ -190,3 +190,7 @@ current frame rates for each stream to the command line:
     ...         if manager.all_streams_running:
     ...             print("\r" + manager.format_status("fps", sleep=0.1), end="") # doctest:+ELLIPSIS,+NORMALIZE_WHITESPACE
     eye0: ..., eye1: ..., world: ...
+
+Self-contained scripts and Jupyter notebooks for streaming that you can
+download and modify can be found in the
+:ref:`online examples section<online_examples>`.

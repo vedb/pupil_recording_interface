@@ -281,12 +281,22 @@ position overlaid on the respective camera images:
 Calibration
 -----------
 
-:py:class:`Calibration`
+For calibrating the gaze mapping, pupil_recording_interface provides two
+processes:
+
+- The :py:class:`CircleDetector` process that detects the circular calibration
+  marker.
+- The :py:class:`Calibration` process that collects detected calibration
+  markers and pupils and calculates and stores the calibration.
+
+For more details, please refer to the
+:ref:`calibration example<calibration_example>`.
 
 .. note::
 
     So far, only the standard 2D calibration is available. We are working
     on supporting more calibration methods.
+
 
 Recording
 ---------
@@ -296,7 +306,23 @@ Recording
     Make sure that you have installed the necessary
     :ref:`dependencies for recording<recording_dependencies>`.
 
+Video streams can be recorded to disk along with the timestamps with the
+:py:class:`VideoRecorder` process.
+
+For more details, please refer to the
+:ref:`recording example<recording_example>`.
+
 
 Camera parameter estimation
 ---------------------------
 
+For estimating camera parameters, pupil_recording_interface provides two
+processes:
+
+- The :py:class:`CircleGridDetector` process that detects the asymmetric circle
+  grid.
+- :py:class:`CamParamEstimator` that collects detected circle grids and
+  calculates and stores the camera parameters.
+
+For more details, please refer to the
+:ref:`camera parameter estimation example<cam_param_example>`.

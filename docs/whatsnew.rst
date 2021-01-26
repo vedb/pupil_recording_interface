@@ -1,6 +1,17 @@
 What's New
 ==========
 
+v0.3.1 (unreleased)
+---------------------------
+
+New features
+~~~~~~~~~~~~
+
+* Devices, streams and processes can now be used as context managers which
+  starts and stops them automatically. This makes the ``Session`` context
+  manager obsolete, which is being deprecated.
+
+
 v0.3.0 (December 8th, 2020)
 ---------------------------
 

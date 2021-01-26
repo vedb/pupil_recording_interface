@@ -1,4 +1,6 @@
 """
+.. _recording_example:
+
 Record from connected devices
 =============================
 
@@ -76,6 +78,12 @@ logging.basicConfig(
 # %%
 # Run manager
 # -----------
+#
+# .. note::
+#
+#     When running the script from the command line, press 'Ctrl+C' to stop the
+#     manager. When running from a Jupyter notebook, interrupt the kernel
+#     (*Kernel > Interrupt Kernel* or press 'Esc' and then twice 'i').
 with pri.StreamManager(configs, folder) as manager:
     while not manager.stopped:
         if manager.all_streams_running:
