@@ -89,7 +89,7 @@ class TestVideoFileDevice:
                     pb_ts[idx],
                 ) = video_file_device.get_frame_and_timestamp()
 
-        assert np.median(np.abs(np.diff(pb_ts) - np.diff(file_ts))) < 1.5e-4
+        assert np.median(np.abs(np.diff(pb_ts) - np.diff(file_ts))) < 1e-3
 
 
 class TestVideoDeviceFLIR:
