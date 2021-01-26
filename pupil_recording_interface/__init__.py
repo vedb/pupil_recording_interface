@@ -77,6 +77,7 @@ __all__ = [
     "process",
     # other
     "Session",
+    "VideoFileSyncer",
 ]
 
 # disable active threads when OpenCV is built with OpenMP support
