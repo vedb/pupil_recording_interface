@@ -1,8 +1,0 @@
-numpy
-pandas
-xarray
-scipy
-opencv
-msgpack-python
-netcdf4
-tqdm
