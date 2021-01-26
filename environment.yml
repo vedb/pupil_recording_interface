@@ -41,6 +41,7 @@ dependencies:
   - sphinx=2.4.4
   - sphinx_rtd_theme
   - numpydoc
+  - sphinx-gallery
   - matplotlib
   - bump2version
   # pip

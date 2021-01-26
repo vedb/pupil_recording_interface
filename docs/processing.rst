@@ -11,6 +11,14 @@ detector as an example process, then introduce the concept of pipelines and
 notifications and finally list other available processes such as the gaze
 mapper and recorders.
 
+.. note::
+
+    The data processing described in the following is aimed at the online
+    (real-time) use case needed for recording as well as online pupil
+    detection, gaze mapping and calibration. For offline (post-hoc) analysis of
+    recorded data, refer to the :ref:`reading<reading>` and
+    :ref:`analysis<analysis>` pages.
+
 
 Pupil detection
 ---------------
@@ -273,6 +281,8 @@ position overlaid on the respective camera images:
 Calibration
 -----------
 
+:py:class:`Calibration`
+
 .. note::
 
     So far, only the standard 2D calibration is available. We are working
@@ -285,3 +295,8 @@ Recording
 
     Make sure that you have installed the necessary
     :ref:`dependencies for recording<recording_dependencies>`.
+
+
+Camera parameter estimation
+---------------------------
+
