@@ -33,11 +33,12 @@ create a stream from an eye video and a detector:
 Each process has a ``process_packet`` method that takes a :py:class:`Packet`
 produced by the stream as an input and returns the same packet, possibly
 attaching additional attributes. Note that the detector also needs to be
-started and stopped via the :py:class:`Session` context manager:
+started and stopped, which we conveniently achieve with the context manager
+syntax:
 
 .. doctest::
 
-    >>> with pri.Session(eye0_stream, detector):
+    >>> with eye0_stream, detector:
     ...     packet = eye0_stream.get_packet()
     ...     packet = detector.process_packet(packet)
     >>> packet.pupil # doctest:+NORMALIZE_WHITESPACE +ELLIPSIS
@@ -91,7 +92,7 @@ Starting/stopping the pipeline also starts/stop all of its processes. The
 
 .. doctest::
 
-    >>> with pri.Session(eye0_stream, pipeline):
+    >>> with eye0_stream, pipeline:
     ...     pipeline.process(eye0_stream.get_packet())
     ...     input("Press enter to close") # doctest:+SKIP
 
@@ -135,8 +136,8 @@ for use with a stream manager:
 Notifications
 -------------
 
-In addition to packets which are emitted every time a stream provides new
-data (e.g. a new video frame from a camera), processes also need to deal with
+In addition to packets which are produced every time a stream provides new
+data (e.g. a new video frame from a camera), streams also need to deal with
 asynchronous data from other sources.
 
 This data falls into two categories:
@@ -176,28 +177,50 @@ Gaze mapping
 ------------
 
 The :py:class:`GazeMapper` collects data from one or two
-:py:class:`PupilDetector` s and maps them to a gaze position according to a
+:py:class:`PupilDetector` s and maps it to a gaze position according to a
 previously defined calibration.
 
+For the next example, we need to create a stream for the second eye:
+
 .. doctest::
 
-    >>> detector = pri.PupilDetector(camera_id=0)
+    >>> eye1_video = pri.VideoFileDevice(pri.TEST_RECORDING, "eye1")
+    >>> eye1_stream = pri.VideoStream(eye1_video, color_format="gray")
+
+We also create two :py:class:`PupilDetector` s which we assign a ``camera_id``
+because the mapper needs to know which eye the detected pupil came from:
+
+.. doctest::
+
+    >>> eye0_detector = pri.PupilDetector(camera_id=0)
+    >>> eye1_detector = pri.PupilDetector(camera_id=1)
     >>> mapper = pri.GazeMapper()
 
+Now we can read one frame from each eye camera, detect pupils and pass them as
+notifications to the gaze mapper. Calling ``get_mapped_gaze`` returns a list
+of newly mapped gaze data since the last call.
+
 .. doctest::
 
-    >>> with pri.Session(eye0_stream, detector, mapper):
-    ...     for _ in range(11):
-    ...         packet = detector.process_packet(eye0_stream.get_packet())
-    ...         mapper.process_notifications([{"eye0": {"pupil": packet.pupil}}])
+    >>> with eye0_stream, eye0_detector, eye1_stream, eye1_detector, mapper:
+    ...     packet = eye0_detector.process_packet(eye0_stream.get_packet())
+    ...     mapper.process_notifications([{"eye0": {"pupil": packet.pupil}}])
+    ...     packet = eye1_detector.process_packet(eye1_stream.get_packet())
+    ...     mapper.process_notifications([{"eye1": {"pupil": packet.pupil}}])
     ...     mapper.get_mapped_gaze() # doctest:+NORMALIZE_WHITESPACE +ELLIPSIS
-    [{'topic': 'gaze.2d.0.',
-      'norm_pos': (1.40..., -1.08...),
-      'confidence': 0.99...,
-      'timestamp': 1570725800.2802918,
+    [{'topic': 'gaze.2d.01.',
+      'norm_pos': (0.32..., 0.67...),
+      'confidence': 0.97...,
+      'timestamp': 1570725800.2788825,
       'base_data': [...]}]
 
-
+When using the :py:class:`GazeMapper` in a pipeline with the config mechanism,
+the stream manager takes care of forwarding the necessary notifications from
+the pupil detectors to the mapper. The ``left`` and ``right`` constructor
+arguments of the :py:class:`GazeMapper` specify the names of the left and right
+eye camera stream and are set to ``"eye1"`` and ``"eye0"`` by default. The
+config below sets up all three video streams and overlays the mapped gaze
+onto the world camera image.
 
 .. doctest::
 
@@ -211,18 +234,20 @@ previously defined calibration.
     ...     pri.VideoStream.Config(
     ...         device_type="video_file",
     ...         device_uid="eye0",
+    ...         name="eye0",
     ...         loop=False,
     ...         pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
     ...     ),
     ...     pri.VideoStream.Config(
     ...         device_type="video_file",
     ...         device_uid="eye1",
+    ...         name="eye1",
     ...         loop=False,
     ...         pipeline=[pri.PupilDetector.Config(), pri.VideoDisplay.Config()],
     ...     ),
     ... ]
     >>> manager = pri.StreamManager(
-    ...     configs, duration=10, folder=pri.TEST_RECORDING, policy="read"
+    ...     configs, duration=20, folder=pri.TEST_RECORDING, policy="read"
     ... )
 
 .. testcode::
@@ -232,6 +257,12 @@ previously defined calibration.
     manager.streams["eye0"].pipeline.steps.pop()
     manager.streams["eye1"].pipeline.steps.pop()
 
+When running the manager you should now see detected pupils and mapped gaze
+position overlaid on the respective camera images:
+
+.. doctest::
+
+    >>> manager.run()
 
 .. note::
 
