@@ -10,6 +10,7 @@ New features
 * Devices, streams and processes can now be used as context managers which
   starts and stops them automatically. This makes the ``Session`` context
   manager obsolete, which is being deprecated.
+* New ``VideoFileSyncer`` process for syncing video streamed from files.
 
 Bug fixes & improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~

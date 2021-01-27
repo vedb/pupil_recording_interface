@@ -71,13 +71,13 @@ __all__ = [
     "Validation",
     "CircleGridDetector",
     "CamParamEstimator",
+    "VideoFileSyncer",
     # Decorators
     "device",
     "stream",
     "process",
     # other
     "Session",
-    "VideoFileSyncer",
 ]
 
 # disable active threads when OpenCV is built with OpenMP support
