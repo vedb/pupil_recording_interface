@@ -95,7 +95,7 @@ jobs:
       - name: Upload to channel (on tags)
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u phausamann ~/conda-bld/noarch/pupil_recording_interface*.tar.bz2 --force
+          anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u vedb /usr/share/miniconda/conda-bld/noarch/pupil_recording_interface*.tar.bz2 --force
 
   docs:
     runs-on: ubuntu-18.04
