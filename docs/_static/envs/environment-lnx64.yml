@@ -1,0 +1,29 @@
+name: pri-examples
+channels:
+  - conda-forge
+  - vedb
+dependencies:
+  - python=3.6
+  - pip=20.1
+  # scientific stack
+  - numpy=1.18
+  - pandas=1.0
+  - xarray=0.15
+  - scipy=1.4
+  # video
+  - opencv=4.2.0
+  - ffmpeg=4.2.3
+  # pupil
+  - libusb=1.0.23
+  - libuvc=0.0.7
+  - libjpeg-turbo=2.0.3
+  - pyuvc=0.13
+  - msgpack-python=0.6.2
+  - pupil-detectors=1.0.5
+  # other
+  - tqdm=4.46.0
+  - matplotlib=3.1.1
+  - ipykernel=5.4.3
+  - netcdf4=1.5.3
+  # the package itself
+  - pupil_recording_interface>=0.3.1
