@@ -8,19 +8,13 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    $ pip install opencv-python git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
 
-If you are using the conda package manager, install these dependencies first:
-
-.. code-block:: console
-
-    $ conda install xarray scipy opencv "msgpack-python<1.0"
-
-Afterwards, install the package via ``pip``, but without dependencies:
+or via ``conda`` from our own channel:
 
 .. code-block:: console
 
-    $ pip install --no-deps git+https://github.com/vedb/pupil_recording_interface.git
+    $ conda install -c vedb pupil_recording_interface
 
 
 .. _optional_dependencies:
@@ -55,7 +49,7 @@ A conda package is available for Linux:
 
 .. code-block:: console
 
-    $ conda install -c phausamann -c conda-forge pyuvc
+    $ conda install -c vedb -c conda-forge pyuvc
 
 Set these udev rules to access the cameras as a normal user:
 
@@ -104,7 +98,7 @@ will need to install our own ``ffmpeg`` package instead:
 
 .. code-block:: console
 
-    $ conda install -c loopbio -c phausamann ffmpeg=3.4.2 x265
+    $ conda install -c loopbio -c vedb ffmpeg=3.4.2 x265
 
 
 .. _pupil_detection_dependencies:
@@ -124,7 +118,7 @@ A conda package is available for Linux:
 
 .. code-block:: console
 
-    $ conda install -c phausamann -c conda-forge pupil-detectors
+    $ conda install -c vedb -c conda-forge pupil-detectors
 
 Windows and MacOS
 ~~~~~~~~~~~~~~~~~
@@ -158,7 +152,7 @@ The RealSense SDK can be installed on Linux through conda:
 
 .. code-block:: console
 
-    $ conda install -c phausamann librealsense2
+    $ conda install -c vedb librealsense2
 
 Windows and MacOS
 ~~~~~~~~~~~~~~~~~
@@ -189,7 +183,7 @@ A conda package of FLIR's ``PySpin`` library is available for Linux:
 
 .. code-block:: console
 
-    $ conda install -c phausamann -c conda-forge pyspin
+    $ conda install -c vedb -c conda-forge pyspin
 
 Windows and MacOS
 ~~~~~~~~~~~~~~~~~
