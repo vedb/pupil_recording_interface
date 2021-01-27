@@ -303,8 +303,11 @@ def _load_dataset(folder, topic, source, cache):
     from .gaze import GazeReader
     from .motion import MotionReader
 
-    reader_type = GazeReader if topic == "gaze" else MotionReader
-    reader = reader_type(folder, source=source)
+    if topic == "gaze":
+        reader = GazeReader(folder, source=source)
+    else:
+        reader = MotionReader(folder, stream=topic, source=source)
+
     if cache:
         filepath = folder / "cache" / f"{topic}-{_compute_hash(source)}.nc"
         if not filepath.exists():

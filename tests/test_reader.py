@@ -197,7 +197,7 @@ class TestBaseReader:
 
 
 class TestFunctionalReader:
-    def test_load_dataset(self, folder):
+    def test_load_dataset(self, folder, t265_folder):
         """"""
         gaze, odometry = load_dataset(
             folder, gaze="recording", odometry="recording"
@@ -220,6 +220,25 @@ class TestFunctionalReader:
             "position",
             "orientation",
         }
+
+        # t265 recording
+        odometry, accel, gyro = load_dataset(
+            t265_folder,
+            odometry="recording",
+            accel="recording",
+            gyro="recording",
+        )
+        assert set(odometry.data_vars) == {
+            "confidence",
+            "linear_acceleration",
+            "angular_acceleration",
+            "linear_velocity",
+            "angular_velocity",
+            "position",
+            "orientation",
+        }
+        assert set(accel.data_vars) == {"linear_acceleration"}
+        assert set(gyro.data_vars) == {"angular_velocity"}
 
     def test_load_dataset_cached(self, folder):
         """"""
@@ -507,7 +526,7 @@ class TestMotionReader:
             MotionReader(folder, source="not_supported").load_dataset()
 
 
-class TestVideoReader(object):
+class TestVideoReader:
     @pytest.fixture(autouse=True)
     def set_up(self):
         """"""

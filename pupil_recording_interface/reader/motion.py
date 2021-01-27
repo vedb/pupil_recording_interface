@@ -17,12 +17,11 @@ class MotionReader(BaseReader):
         folder : str or pathlib.Path
             Path to the recording folder.
 
-        source : str or dict, default 'recording'
-            The source of the data. If 'recording', the recorded data will
-            be used. Can also be the name of a gaze mapper or a dict in the
-            format ``{'2d': '<2d_gaze_mapper>', '3d': '<3d_gaze_mapper>'}`` in
-            which case the norm pos from the 2d mapper and the gaze point
-            from the 3d mapper will be used.
+        stream : str, default 'odometry'
+            The motion stream to read. Can be 'odometry', 'accel' or 'gyro'.
+
+        source : str, default 'recording'
+            The source of the data. So far, only 'recording' is supported.
         """
         super().__init__(folder)
 

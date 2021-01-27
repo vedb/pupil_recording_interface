@@ -11,6 +11,12 @@ New features
   starts and stops them automatically. This makes the ``Session`` context
   manager obsolete, which is being deprecated.
 
+Bug fixes & improvements
+~~~~~~~~~~~~~~~~~~~~~~~~
+* Fixed ``VideoDeviceUVC.get_frame_and_timestamp`` not working in Jupyter
+  notebook.
+* Fixed bug in ``load_dataset`` for accelerometer and gyro streams.
+
 
 v0.3.0 (December 8th, 2020)
 ---------------------------
