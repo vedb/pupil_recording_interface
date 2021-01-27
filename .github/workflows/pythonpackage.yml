@@ -76,6 +76,27 @@ jobs:
           conda install pytest
           pytest
 
+  conda-build:
+    runs-on: ubuntu-18.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v2
+      - uses: s-weigand/setup-conda@v1
+      - name: Check versions
+        run: |
+          conda --version
+          which python
+      - name: Set up build system
+        run: |
+          conda install -y -c conda-forge boa anaconda-client
+          conda config --set anaconda_upload no
+      - name: Run conda build
+        run: conda mambabuild -f build_tools/conda_recipe
+      - name: Upload to channel (on tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u phausamann ~/conda-bld/noarch/pupil_recording_interface*.tar.bz2 --force
+
   docs:
     runs-on: ubuntu-18.04
     timeout-minutes: 15
