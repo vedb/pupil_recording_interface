@@ -5,12 +5,13 @@ requirements = [
     "pandas",
     "xarray",
     "scipy",
+    "opencv-python",
     "msgpack<1.0",
 ]
 
 setup(
     name="pupil_recording_interface",
-    version="0.3.0",
+    version="0.4.0",
     packages=find_packages(),
     long_description=open("README.rst").read(),
     install_requires=requirements,

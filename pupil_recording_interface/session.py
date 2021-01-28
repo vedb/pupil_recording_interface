@@ -1,4 +1,5 @@
 """"""
+from warnings import warn
 
 
 class Session:
@@ -14,6 +15,11 @@ class Session:
             methods will be called on entry in the specified order, the stop
             methods will be called on exit in opposite order.
         """
+        warn(
+            "The Session context manager is deprecated, you can now use "
+            "devices, streams and processes directly as context managers.",
+            DeprecationWarning,
+        )
         self.instances = instances
 
     def __enter__(self):

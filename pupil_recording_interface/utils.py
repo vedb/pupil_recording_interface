@@ -2,6 +2,7 @@
 import logging
 import os
 import sys
+import io
 from collections import deque
 from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing.managers import SyncManager
@@ -70,15 +71,20 @@ class SuppressStream:
     """
 
     def __init__(self, stream=sys.stderr):
-        self.orig_stream_fileno = stream.fileno()
+        try:
+            self.orig_stream_fileno = stream.fileno()
+        except io.UnsupportedOperation:
+            self.orig_stream_fileno = None
 
     def __enter__(self):
-        self.orig_stream_dup = os.dup(self.orig_stream_fileno)
-        self.devnull = open(os.devnull, "w")
-        os.dup2(self.devnull.fileno(), self.orig_stream_fileno)
+        if self.orig_stream_fileno is not None:
+            self.orig_stream_dup = os.dup(self.orig_stream_fileno)
+            self.devnull = open(os.devnull, "w")
+            os.dup2(self.devnull.fileno(), self.orig_stream_fileno)
 
     def __exit__(self, type, value, traceback):
-        os.close(self.orig_stream_fileno)
-        os.dup2(self.orig_stream_dup, self.orig_stream_fileno)
-        os.close(self.orig_stream_dup)
-        self.devnull.close()
+        if self.orig_stream_fileno is not None:
+            os.close(self.orig_stream_fileno)
+            os.dup2(self.orig_stream_dup, self.orig_stream_fileno)
+            os.close(self.orig_stream_dup)
+            self.devnull.close()

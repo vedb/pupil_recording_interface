@@ -927,6 +927,7 @@ def process_configs(tmpdir):
         "calibration": {"folder": tmpdir},
         "validation": {"folder": tmpdir},
         "cam_param_estimator": {"streams": ["world"], "folder": tmpdir},
+        "video_file_syncer": {"master_stream": "world"},
     }
 
     configs = {
@@ -950,6 +951,12 @@ def mock_video_device():
     return MockVideoDevice("mock_video_device")
 
 
+@pytest.fixture()
+def video_file_device(folder):
+    """"""
+    return VideoFileDevice(folder, "world")
+
+
 # -- STREAMS -- #
 @pytest.fixture()
 def mock_stream(mock_device):
@@ -964,12 +971,9 @@ def video_stream(pipeline):
 
 
 @pytest.fixture()
-def world_video_stream(folder):
+def world_video_stream(video_file_device):
     """"""
-    device = VideoFileDevice(folder, "world")
-    stream = VideoStream(device)
-
-    return stream
+    return VideoStream(video_file_device)
 
 
 # -- PROCESSES -- #

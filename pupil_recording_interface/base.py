@@ -148,3 +148,17 @@ class BaseConfigurable:
     @abc.abstractmethod
     def from_config(cls, config, *args, **kwargs):
         """ Create an instance from a Config. """
+
+    @abc.abstractmethod
+    def start(self):
+        """ Start this instance. """
+
+    @abc.abstractmethod
+    def stop(self):
+        """ Stop this instance. """
+
+    def __enter__(self):
+        self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()

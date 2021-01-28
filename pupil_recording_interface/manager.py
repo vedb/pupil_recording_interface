@@ -254,10 +254,23 @@ class StreamManager:
     def _get_status(self):
         """ Get information about the status of all streams. """
         status = {}
+        broken_streams = []
 
         for stream_name, queue in self._status_queues.items():
-            if queue._getvalue():
-                status[stream_name] = queue.popleft()
+            try:
+                if queue is not None and queue._getvalue():
+                    status[stream_name] = queue.popleft()
+            except (BrokenPipeError, ConnectionResetError):
+                # TODO this can happen when a stream process terminates,
+                #  e.g. with a VideoFileDevice with loop=False
+                broken_streams.append(stream_name)
+                logger.debug(
+                    f"Error while getting status from stream '{stream_name}', "
+                    f"stream might have died"
+                )
+
+        for stream_name in broken_streams:
+            self._status_queues[stream_name] = None
 
         return status
 
@@ -303,7 +316,13 @@ class StreamManager:
         for name, stream in self.streams.items():
             notifications = self._get_notifications(statuses, stream)
             if len(notifications) > 0:
-                self._notification_queues[name].append(notifications)
+                try:
+                    self._notification_queues[name].append(notifications)
+                except (BrokenPipeError, ConnectionResetError):
+                    logger.debug(
+                        f"Error while notifying stream '{name}', "
+                        f"stream might have died"
+                    )
 
     def _get_keypresses(self, statuses):
         """"""

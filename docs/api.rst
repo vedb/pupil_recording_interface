@@ -79,16 +79,7 @@ Process classes
     CircleGridDetector
     CamParamEstimator
     MotionRecorder
-
-
-Other
-.....
-
-.. autosummary::
-    :nosignatures:
-    :toctree: _generated
-
-    Session
+    VideoFileSyncer
 
 
 Class member details

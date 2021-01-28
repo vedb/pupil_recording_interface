@@ -2,7 +2,7 @@ name: pri
 channels:
   - conda-forge
   - loopbio
-  - phausamann
+  - vedb
 dependencies:
   - python=3.6
   - pip=20.1
@@ -27,8 +27,8 @@ dependencies:
   # realsense
   - librealsense2=2.36.0
   # flir
-  - spinnaker-sdk=1.27.0.48
-  - pyspin=1.27.0.48
+  - spinnaker-sdk=2.0.0.147
+  - pyspin=2.0.0.147
   # other
   - tqdm=4.46.0
   - matplotlib=3.1.1
@@ -41,6 +41,7 @@ dependencies:
   - sphinx=2.4.4
   - sphinx_rtd_theme
   - numpydoc
+  - sphinx-gallery
   - matplotlib
   - bump2version
   # pip

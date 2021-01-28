@@ -35,16 +35,16 @@ dependencies, you can use a dummy device that streams from a recording instead:
     >>> world_cam = pri.VideoFileDevice(pri.TEST_RECORDING, "world", timestamps="file")
 
 A device needs to be started before streaming any data and stopped afterwards
-in order to release the resource. To facilitate this, the :py:class:`Session`
-context manager automatically calls the ``start`` and ``stop`` methods of
-devices passed to it.
+in order to release the resource. To facilitate this, using the device as a
+context manager automatically calls its ``start`` and ``stop`` methods upon
+entering and exiting, respectively.
 
 You can grab a video frame and its timestamp from the device with the
 :py:meth:`get_frame_and_timestamp` method:
 
 .. doctest::
 
-    >>> with pri.Session(world_cam):
+    >>> with world_cam:
     ...     frame, timestamp = world_cam.get_frame_and_timestamp()
     >>> frame.shape
     (720, 1280, 3)
@@ -65,18 +65,18 @@ detection, recording, ...):
     <pupil_recording_interface.stream.VideoStream object at ...>
 
 The :py:meth:`get_packet` returns a :py:class:`Packet` that bundles the data
-retrieved from the device. We use :py:class:`Session` again to handle starting
+retrieved from the device. We use a context manager again to handle starting
 and stopping of the stream:
 
 .. doctest::
 
-    >>> with pri.Session(stream):
+    >>> with stream:
     ...     packet = stream.get_packet()
     >>> packet # doctest:+ELLIPSIS
     pupil_recording_interface.Packet with data:
     * stream_name: world
     * device_uid: world
-    * timestamp: 1570725800.2718818
+    * timestamp: 1570725800.2383718
     >>> packet.frame.shape
     (720, 1280, 3)
 
@@ -190,3 +190,7 @@ current frame rates for each stream to the command line:
     ...         if manager.all_streams_running:
     ...             print("\r" + manager.format_status("fps", sleep=0.1), end="") # doctest:+ELLIPSIS,+NORMALIZE_WHITESPACE
     eye0: ..., eye1: ..., world: ...
+
+Self-contained scripts and Jupyter notebooks for streaming that you can
+download and modify can be found in the
+:ref:`online examples section<online_examples>`.

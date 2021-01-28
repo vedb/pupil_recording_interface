@@ -389,6 +389,7 @@ class VideoFileDevice(BaseVideoDevice):
                 self.fps,
                 **self.capture_kwargs,
             )
+            self._frame_index = 0
             if self.fps is not None:
                 self.speed = self.fps / self.capture.fps
 
@@ -398,6 +399,32 @@ class VideoFileDevice(BaseVideoDevice):
         # TODO get subsampling from resolution
         return VideoReader(folder, topic)
 
+    def reset(self):
+        """ Reset the video stream. """
+        self.set_frame_index(0)
+
+    def set_frame_index(self, new_index):
+        """ Set frame index"""
+        if not self.is_started:
+            raise RuntimeError("Device is not started")
+
+        if new_index < 0 or new_index >= self.capture.frame_count:
+            raise ValueError(
+                f"Index {new_index} out of range "
+                f"(0-{self.capture.frame_count})"
+            )
+
+        self._frame_index = new_index
+        self.capture.capture.set(cv2.CAP_PROP_POS_FRAMES, new_index)
+
+        if new_index == 0:
+            self._last_file_timestamp = float("nan")
+        else:
+            self._last_file_timestamp = (
+                float(self.capture.timestamps[self._frame_index - 1].value)
+                / 1e9
+            )
+
     def get_frame_and_timestamp(self, mode="img"):
         """ Get a frame and its associated timestamp. """
         if not self.is_started:
@@ -406,16 +433,20 @@ class VideoFileDevice(BaseVideoDevice):
         # TODO get gray image when mode="gray"
         if self._frame_index >= self.capture.frame_count - 1:
             if self.loop:
-                self._frame_index = 0
-                self.capture.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                self.reset()
             else:
                 return {"name": "stream_stop"}
 
         _, frame = self.capture.capture.read()
+        if frame is None:
+            # skip frame if it can't be read
+            self.set_frame_index(self._frame_index + 1)
+            return self.get_frame_and_timestamp(mode)
+
         file_timestamp = (
             float(self.capture.timestamps[self._frame_index].value) / 1e9
         )
-        self._frame_index += 1
+        self._frame_index = self.capture.current_frame_index
 
         if self.speed < float("inf"):
             playback_timestamp = monotonic()
@@ -424,6 +455,7 @@ class VideoFileDevice(BaseVideoDevice):
             diff = desired - elapsed
             if diff > 0:
                 sleep(diff)
+                playback_timestamp = monotonic()
             self._last_file_timestamp = file_timestamp
             self._last_playback_timestamp = playback_timestamp
         else:

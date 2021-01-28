@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = "pupil_recording_interface"
-copyright = "2020, Peter Hausamann / The Visual Experience Database"
+copyright = "2021, Peter Hausamann / The Visual Experience Database"
 author = "Peter Hausamann"
 
 # The short X.Y version
 version = ""
 # The full version, including alpha/beta/rc tags
-release = "0.3.0"
+release = "0.4.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -47,6 +47,7 @@ extensions = [
     "numpydoc",
     "matplotlib.sphinxext.plot_directive",
     "sphinx_multiversion",
+    "sphinx_gallery.gen_gallery",
 ]
 
 autosummary_generate = True
@@ -83,6 +84,16 @@ pygments_style = None
 # sphinx-multiversion config
 smv_branch_whitelist = r"^(master|devel)$"
 smv_tag_whitelist = r"^v\d+\.\d+.\d+(-.*)?$"
+
+# sphinx-gallery config
+from sphinx_gallery.sorting import FileNameSortKey  # noqa
+
+sphinx_gallery_conf = {
+    "examples_dirs": "../examples",  # path to your example scripts
+    "gallery_dirs": "auto_examples",  # path to where to save generated output
+    "ignore_pattern": "validate.py",
+    "within_subsection_order": FileNameSortKey,
+}
 
 # -- Options for HTML output -------------------------------------------------
 
