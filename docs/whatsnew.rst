@@ -1,12 +1,13 @@
 What's New
 ==========
 
-v0.3.1 (unreleased)
+v0.4.0 (January 28th, 2021)
 ---------------------------
 
 New features
 ~~~~~~~~~~~~
 
+* Package is now available via conda from our own channel.
 * Devices, streams and processes can now be used as context managers which
   starts and stops them automatically. This makes the ``Session`` context
   manager obsolete, which is being deprecated.
@@ -16,7 +17,7 @@ Bug fixes & improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~
 * Fixed ``VideoDeviceUVC.get_frame_and_timestamp`` not working in Jupyter
   notebook.
-* Fixed bug in ``load_dataset`` for accelerometer and gyro streams.
+* Fixed bug in ``load_dataset`` for accelerometer and gyroscope streams.
 
 
 v0.3.0 (December 8th, 2020)

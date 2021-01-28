@@ -24,3 +24,9 @@ notebook installed in your base environment alongside ``nb_conda``:
 
 Now you can open any of the example notebooks, go to *Kernel > Change kernel*
 and select *Python [conda env:pri-examples]*.
+
+.. note::
+
+    For streaming from the Pupil Core cameras as a normal user on Linux you
+    will also have to set up the udev rules specified in the
+    :ref:`streaming dependencies section<streaming_dependencies>`.
