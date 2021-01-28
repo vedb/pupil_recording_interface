@@ -46,7 +46,6 @@ extensions = [
     "sphinx.ext.autosummary",
     "numpydoc",
     "matplotlib.sphinxext.plot_directive",
-    "sphinx_multiversion",
     "sphinx_gallery.gen_gallery",
 ]
 
@@ -80,10 +79,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
-
-# sphinx-multiversion config
-smv_branch_whitelist = r"^(master|devel)$"
-smv_tag_whitelist = r"^v\d+\.\d+.\d+(-.*)?$"
 
 # sphinx-gallery config
 from sphinx_gallery.sorting import FileNameSortKey  # noqa
