@@ -83,44 +83,34 @@ logging.basicConfig(
 # %%
 # Run manager
 # -----------
-#
-# .. note::
-#
-#     When running the script from the command line, press 'Ctrl+C' to stop the
-#     manager. When running from a Jupyter notebook, interrupt the kernel
-#     (*Kernel > Interrupt Kernel* or press 'Esc' and then twice 'i').
+# With one of the video windows in focus, press 'c' to start collecting
+# calibration data, then 'c' again to calculate the calibration from the
+# collected data. Press 'q' to quit.
+collecting = False
 with pri.StreamManager(configs) as manager:
     while not manager.stopped:
-        if manager.all_streams_running:
-            # Collect data
-            response = input(
-                "Press enter to start calibration or type 'a' to abort: "
-            )
-            if response == "a":
+        if manager.keypresses._getvalue():
+            key = manager.keypresses.popleft()
+            if key.lower() == "c":
+                if not collecting:
+                    print("Collecting calibration data...")
+                    manager.send_notification(
+                        {"resume_process": "world.CircleDetector"},
+                        streams=["world"],
+                    )
+                    manager.send_notification(
+                        {"collect_calibration_data": True}, streams=["world"],
+                    )
+                    collecting = True
+                else:
+                    print("Calculating calibration...")
+                    manager.send_notification(
+                        {"pause_process": "world.CircleDetector"},
+                        streams=["world"],
+                    )
+                    manager.send_notification({"calculate_calibration": True})
+                    collecting = False
+            elif key.lower() == "q":
                 break
-            else:
-                print("Collecting calibration data...")
-                manager.send_notification(
-                    {"resume_process": "world.CircleDetector"},
-                    streams=["world"],
-                )
-                manager.send_notification(
-                    {"collect_calibration_data": True}, streams=["world"],
-                )
-                manager.await_status("world", collected_markers=None)
-
-            # Calculate calibration
-            response = input(
-                "Press enter to stop calibration or type 'a' to abort: "
-            )
-            if response == "a":
-                break
-            else:
-                manager.send_notification(
-                    {"pause_process": "world.CircleDetector"},
-                    streams=["world"],
-                )
-                manager.send_notification({"calculate_calibration": True})
-                manager.await_status("world", calibration_calculated=True)
 
 print("\nStopped")
