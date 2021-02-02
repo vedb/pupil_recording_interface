@@ -452,7 +452,7 @@ class CamParamEstimator(BaseProcess):
                 logger.warning(f"Extrinsics estimation failed. Reason: {e}")
                 return
 
-            self._save_extrinsics(self.folder, self.extrinsics)
+            self._save_extrinsics(self.folder, self._extrinsics)
 
         logger.info("Successfully estimated camera parameters")
 
