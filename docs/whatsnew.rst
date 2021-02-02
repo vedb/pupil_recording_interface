@@ -1,6 +1,14 @@
 What's New
 ==========
 
+v0.4.1 (unreleased)
+-------------------
+
+Bug fixes & improvements
+~~~~~~~~~~~~~~~~~~~~~~~~
+* Fixed extrinsics not being saved by ``CamParamEstimator``.
+
+
 v0.4.0 (January 28th, 2021)
 ---------------------------
 
