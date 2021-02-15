@@ -44,6 +44,10 @@ class BaseVideoDevice(BaseDevice):
 
         fps: int
             Desired camera refresh rate.
+
+        kwargs:
+            Additional keyword arguments that are stored in ``capture_kwargs``
+            and passed to ``get_capture()`` when starting the device.
         """
         super().__init__(device_uid)
         if not hasattr(self, "device_type"):
@@ -133,7 +137,13 @@ class VideoDeviceUVC(BaseVideoDevice):
             Desired camera refresh rate.
 
         exposure_mode: str, default "auto".
-            Exposure mode. Can be "manual" or "auto".
+            Exposure mode. Can be "manual", "auto" or "forced_auto".
+            Note that the "auto" mode only applies to 2nd and 3rd generation
+            Pupil Core cameras. These cameras don't support auto exposure on
+            the hardware so an exposure time is set by this class based on an
+            average of the last camera frames. You can force this behavior with
+            "forced_auto" but for 1st generation Pupil cameras it might result
+            in flickering.
 
         controls: dict, optional
             Mapping from UVC control display names to values.
@@ -147,18 +157,21 @@ class VideoDeviceUVC(BaseVideoDevice):
         )
 
         super().__init__(
-            device_uid, resolution, fps, initial_controls=controls or {}
+            device_uid, resolution, fps, user_controls=controls or {}
         )
         self.exposure_mode = exposure_mode
 
-        if self.exposure_mode == "auto" and device_uid.startswith(
-            ("Pupil Cam ID2", "Pupil Cam ID3")
+        if (
+            self.exposure_mode == "forced_auto"
+            or self.exposure_mode == "auto"
+            and device_uid.startswith(("Pupil Cam2", "Pupil Cam3"))
         ):
             self.exposure_handler = init_exposure_handler(fps)
+            logger.debug("Software auto-exposure activated.")
         else:
             self.exposure_handler = None
 
-        self.stripe_detector = Check_Frame_Stripes if check_stripes else None
+        self.stripe_detector = Check_Frame_Stripes() if check_stripes else None
 
     @classmethod
     def _get_connected_device_uids(cls):
@@ -178,30 +191,60 @@ class VideoDeviceUVC(BaseVideoDevice):
             )
 
     @classmethod
-    def _get_available_modes(cls, device_uid):
-        """ Get the available modes for a device by UID. """
+    def _get_uvc_capture(cls, device_uid):
+        """ Get a uvc.Capture for a device for a device by UID. """
         import uvc
 
         try:
-            return uvc.Capture(device_uid).avaible_modes  # [sic]
+            return uvc.Capture(device_uid)
         except uvc.OpenError:
+            # TODO could also be device already claimed
             raise DeviceNotConnected
 
     @classmethod
-    def _get_controls(cls, device_uid):
-        """ Get the current controls for a device by UID. """
-        import uvc
-
-        try:
-            return {
-                c.display_name: c.value
-                for c in uvc.Capture(device_uid).controls
-            }
-        except uvc.OpenError:
-            raise DeviceNotConnected
+    def _get_controls(cls, capture):
+        """ Get the current controls for a uvc.Capture instance. """
+        return {c.display_name: c.value for c in capture.controls}
 
     @classmethod
-    def get_capture(cls, uid, resolution, fps, initial_controls=None):
+    def _get_valid_controls(cls, capture):
+        """ Get valid controls for a uvc.Capture instance. """
+        valid_controls = {}
+        for control in capture.controls:
+            if control.d_type is bool:
+                valid_controls[control.display_name] = (
+                    control.min_val,
+                    control.max_val,
+                )
+            if control.d_type is int:
+                valid_controls[control.display_name] = range(
+                    control.min_val, control.max_val, control.step
+                )
+            elif isinstance(control.d_type, dict):
+                valid_controls[control.display_name] = control.d_type
+            else:
+                logger.debug(f"Unsupported control type: {control.d_type}")
+
+        return valid_controls
+
+    @classmethod
+    def _set_controls(cls, capture, controls_dict):
+        """ Set controls of a uvc.Capture instance. """
+        current_controls = {c.display_name: c for c in capture.controls}
+
+        for name, value in controls_dict.items():
+            if name not in current_controls:
+                logger.error(f"Unsupported UVC control: {name}")
+            else:
+                with SuppressStream(sys.stdout):
+                    current_controls[name].value = value
+                if current_controls[name].value != value:
+                    logger.error(
+                        f"Could not set UVC control {name} to {value}"
+                    )
+
+    @classmethod
+    def get_capture(cls, uid, resolution, fps, user_controls=None):
         """ Get a capture instance for a device by name.
 
         Parameters
@@ -216,29 +259,26 @@ class VideoDeviceUVC(BaseVideoDevice):
         fps: int
             Desired camera refresh rate.
 
-        initial_controls: dict, optional
+        user_controls: dict, optional
             Mapping from UVC control display names to values.
         """
-        import uvc
-
+        # get device uid and capture instance
         device_uid = cls._get_uvc_device_uid(uid)
+        capture = cls._get_uvc_capture(device_uid)
 
-        # check frame mode
-        if resolution + (fps,) not in cls._get_available_modes(device_uid):
+        # set resolution and fps
+        if resolution + (fps,) not in capture.avaible_modes:
             raise IllegalSetting(
                 f"Unsupported frame mode: "
                 f"{resolution[0]}x{resolution[1]}@{fps}fps."
             )
-
-        # init capture
-        capture = uvc.Capture(device_uid)
         capture.frame_mode = resolution + (fps,)
 
-        # set controls
+        # pre_configure_capture is copied from the Pupil source code a sets
+        # a couple of defaults, after which the user-defined controls (if any)
+        # are applied.
         capture = pre_configure_capture(capture)
-        for control in capture.controls:
-            if control.display_name in (initial_controls or {}):
-                control.value = initial_controls[control.display_name]
+        cls._set_controls(capture, user_controls)
 
         return capture
 
@@ -304,9 +344,9 @@ class VideoDeviceUVC(BaseVideoDevice):
         frame = getattr(uvc_frame, mode)
 
         if self.exposure_handler:
-            target = self.exposure_handler.calculate_based_on_frame(frame)
+            target = self.exposure_handler.calculate_based_on_frame(uvc_frame)
             if target is not None:
-                self.controls["Absolute Exposure Time"].value = target
+                self.controls = {"Absolute Exposure Time": target}
 
         if self.stripe_detector and self.stripe_detector.require_restart(
             frame
@@ -330,17 +370,39 @@ class VideoDeviceUVC(BaseVideoDevice):
     def available_modes(self):
         """ Available frame modes for this device. """
         if not self.is_started:
-            return self._get_available_modes(self.uvc_device_uid)
+            capture = self._get_uvc_capture(self.uvc_device_uid)
         else:
-            return self.capture.avaible_modes  # [sic]
+            capture = self.capture
+
+        return capture.avaible_modes  # [sic]
+
+    @property
+    def valid_controls(self):
+        """ Valid settings for UVC controls. """
+        if not self.is_started:
+            capture = self._get_uvc_capture(self.uvc_device_uid)
+        else:
+            capture = self.capture
+
+        return self._get_valid_controls(capture)
 
     @property
     def controls(self):
-        """ Current controls for this device. """
+        """ Current UVC controls for this device. """
         if not self.is_started:
-            return self._get_controls(self.uvc_device_uid)
+            capture = self._get_uvc_capture(self.uvc_device_uid)
         else:
-            return {c.display_name: c.value for c in self.capture.controls}
+            capture = self.capture
+
+        return self._get_controls(capture)
+
+    @controls.setter
+    def controls(self, controls_dict):
+        """ Set controls for this device. """
+        if not self.is_started:
+            raise RuntimeError("Device not started.")
+
+        self._set_controls(self.capture, controls_dict)
 
 
 @device("video_file", optional=("topic",))
