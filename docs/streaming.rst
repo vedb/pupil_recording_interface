@@ -194,3 +194,99 @@ current frame rates for each stream to the command line:
 Self-contained scripts and Jupyter notebooks for streaming that you can
 download and modify can be found in the
 :ref:`online examples section<online_examples>`.
+
+
+UVC camera settings
+-------------------
+
+The Pupil Core cameras implement the USB Video Class (UVC) protocol and Pupil
+Labs provides a Python wrapper for accessing the cameras called ``pyuvc``.
+In turn, pupil_recording_interface provides a high-level interface to this via
+the :py:class:`VideoDeviceUVC` class.
+
+Possible combinations of resolutions and FPS can be queried via the
+``available_modes`` attribute, returning a list of
+``(horizontal_res, vertical_res, fps)`` tuples:
+
+.. doctest::
+
+    >>> from pprint import pprint
+    >>> pprint(world_cam.available_modes) # doctest:+SKIP
+    [(1920, 1080, 30),
+     (640, 480, 120),
+     (640, 480, 90),
+     (640, 480, 60),
+     (640, 480, 30),
+     (1280, 720, 60),
+     (1280, 720, 30),
+     (1024, 768, 30),
+     (800, 600, 60),
+     (1280, 1024, 30),
+     (320, 240, 120)]
+
+Other settings (called controls) together with valid ranges of values can be
+obtained via ``available_controls``.
+
+.. doctest::
+
+    >>> pprint(world_cam.available_controls) # doctest:+SKIP
+    {'Absolute Exposure Time': range(1, 500),
+     'Auto Exposure Mode': {'aperture priority mode': 8,
+                            'auto mode': 2,
+                            'manual mode': 1,
+                            'shutter priority mode': 4},
+     'Auto Exposure Priority': (0, 1),
+     'Backlight Compensation': range(0, 2),
+     'Brightness': range(-64, 64),
+     'Contrast': range(0, 64),
+     'Gain': range(0, 100),
+     'Gamma': range(72, 500),
+     'Hue': range(-40, 40),
+     'Power Line frequency': {'50Hz': 1, '60Hz': 2, 'Disabled': 0},
+     'Saturation': range(0, 128),
+     'Sharpness': range(0, 6),
+     'White Balance temperature': range(2800, 6500),
+     'White Balance temperature,Auto': (0, 1)}
+
+The current settings of a running device are stored in the ``controls``
+attribute.
+
+.. doctest::
+
+    >>> with world_cam: # doctest:+SKIP
+    ...     pprint(world_cam.controls)
+    {'Absolute Exposure Time': 32,
+     'Auto Exposure Mode': 8,
+     'Auto Exposure Priority': 1,
+     'Backlight Compensation': 1,
+     'Brightness': 0,
+     'Contrast': 32,
+     'Gain': 0,
+     'Gamma': 100,
+     'Hue': 0,
+     'Power Line frequency': 1,
+     'Saturation': 60,
+     'Sharpness': 2,
+     'White Balance temperature': 4600,
+     'White Balance temperature,Auto': 1}
+
+You can also assign controls by passing a dictionary as the ``controls``
+constructor argument...
+
+.. doctest::
+
+    >>> world_cam = pri.VideoDeviceUVC(
+    ...     "Pupil Cam1 ID2", (1280, 720), 30, controls={"Gamma": 200}
+    ... )
+    ... with world_cam: # doctest:+SKIP
+    ...     print(world_cam.controls["Gamma"])
+    200
+
+...or to a running device in the same manner:
+
+.. doctest::
+
+    >>> with world_cam: # doctest:+SKIP
+    ...     world_cam.controls = {"Gamma": 120}
+    ...     print(world_cam.controls["Gamma"])
+    120
