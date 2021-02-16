@@ -4,16 +4,13 @@ What's New
 v0.4.1 (unreleased)
 -------------------
 
-New features
-~~~~~~~~~~~~
-* New ``available_controls`` attribute to ``VideoDeviceUVC`` that returns
-  legal values for UVC controls and ``controls`` can be set by assigning
-  assigning a mapping from control names to new values.
-
 Bug fixes & improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~
 * Fixed ``exposure_mode="auto"`` not working in ``VideoDeviceUVC``.
 * Fixed extrinsics not being saved by ``CamParamEstimator``.
+* Added ``available_controls`` attribute to ``VideoDeviceUVC`` that returns
+  legal values for UVC controls and ``controls`` can be set by assigning
+  a mapping from control names to new values.
 
 
 v0.4.0 (January 28th, 2021)
