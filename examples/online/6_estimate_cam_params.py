@@ -24,7 +24,7 @@ import pupil_recording_interface as pri
 # -------------------------
 #
 # Set the generation of your Pupil Core device (1, 2 or 3)
-pupil_gen = 1
+pupil_gen = 2
 
 # %%
 # Set folder for saving camera parameter

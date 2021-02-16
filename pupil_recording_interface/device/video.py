@@ -242,6 +242,7 @@ class VideoDeviceUVC(BaseVideoDevice):
                 with SuppressStream(sys.stdout):
                     current_controls[name].value = value
                 if current_controls[name].value != value:
+                    # TODO raise IllegalSetting instead?
                     logger.error(
                         f"Could not set UVC control {name} to {value}"
                     )
