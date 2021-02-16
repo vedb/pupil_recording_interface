@@ -142,8 +142,8 @@ class VideoDeviceUVC(BaseVideoDevice):
             Pupil Core cameras. These cameras don't support auto exposure on
             the hardware so an exposure time is set by this class based on an
             average of the last camera frames. You can force this behavior with
-            "forced_auto" but for 1st generation Pupil cameras it might result
-            in flickering.
+            "forced_auto" but for 1st generation Pupil cameras it will probably
+            result in significantly reduced frame rates.
 
         controls: dict, optional
             Mapping from UVC control display names to values.
@@ -161,6 +161,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         )
         self.exposure_mode = exposure_mode
 
+        # create the exposure handler for "software" auto exposure
         if (
             self.exposure_mode == "forced_auto"
             or self.exposure_mode == "auto"
@@ -171,6 +172,8 @@ class VideoDeviceUVC(BaseVideoDevice):
         else:
             self.exposure_handler = None
 
+        # creat the stripe detector that restarts the device when it detects
+        # stripes in frames
         self.stripe_detector = Check_Frame_Stripes() if check_stripes else None
 
     @classmethod
@@ -318,14 +321,16 @@ class VideoDeviceUVC(BaseVideoDevice):
         """
         import uvc
 
-        if not self.is_started:
-            if not self.restart():
-                return {"name": "device_disconnect"}
-
+        # check mode
         if mode not in ("img", "bgr", "gray", "jpeg_buffer"):
             raise ValueError(f"Unsupported mode: {mode}")
 
+        if not self.is_started:
+            # try restarting once, otherwise return a disconnect event
+            if not self.restart():
+                return {"name": "device_disconnect"}
         try:
+            # get uvc.Frame instance and suppress stdout prints from C library
             # TODO check performance overhead of suppressing, technically it's
             #  necessary only once after starting the stream
             with SuppressStream(sys.stdout):
@@ -336,30 +341,33 @@ class VideoDeviceUVC(BaseVideoDevice):
                 f"Stream error, attempting to re-init"
             )
             time.sleep(0.02)  # from pupil source code
+
+            # try restarting once, otherwise return a disconnect event
             if self.restart():
                 return self.get_frame_and_timestamp(mode=mode)
             else:
                 return {"name": "device_disconnect"}
 
-        frame = getattr(uvc_frame, mode)
-
+        # adjust absolute exposure time if "software" auto exposure is enabled
         if self.exposure_handler:
             target = self.exposure_handler.calculate_based_on_frame(uvc_frame)
             if target is not None:
                 self.controls = {"Absolute Exposure Time": target}
 
+        # restart device if stripes detected in frame
         if self.stripe_detector and self.stripe_detector.require_restart(
-            frame
+            uvc_frame
         ):
             logger.warning(
                 f"Stripes detected, restarting device {self.device_uid}"
             )
+            # try restarting once, otherwise return a disconnect event
             if self.restart():
                 return self.get_frame_and_timestamp(mode=mode)
             else:
                 return {"name": "device_disconnect"}
 
-        return frame, uvc_frame.timestamp
+        return getattr(uvc_frame, mode), uvc_frame.timestamp
 
     @property
     def uvc_device_uid(self):
