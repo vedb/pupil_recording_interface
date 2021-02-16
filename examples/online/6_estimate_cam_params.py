@@ -24,7 +24,7 @@ import pupil_recording_interface as pri
 # -------------------------
 #
 # Set the generation of your Pupil Core device (1, 2 or 3)
-pupil_gen = 1
+pupil_gen = 2
 
 # %%
 # Set folder for saving camera parameter
@@ -42,7 +42,6 @@ configs = [
         name="world",
         resolution=(1280, 720),
         fps=30,
-        color_format="gray",
         pipeline=[
             pri.CircleGridDetector.Config(),
             pri.CamParamEstimator.Config(folder=folder, streams=("world",)),
@@ -61,22 +60,16 @@ logging.basicConfig(
 # %%
 # Run manager
 # -----------
-#
-# .. note::
-#
-#     When running the script from the command line, press 'Ctrl+C' to stop the
-#     manager. When running from a Jupyter notebook, interrupt the kernel
-#     (*Kernel > Interrupt Kernel* or press 'Esc' and then twice 'i').
+# With one of the video windows in focus, press 'i' to acquire a pattern. You
+# need 10 in total, attempting to cover the entire FOV of the camera. Press 'q'
+# to quit.
 with pri.StreamManager(configs) as manager:
     while not manager.stopped:
-        if manager.all_streams_running:
-            response = input(
-                "Press enter to capture a pattern or type 's' to stop: "
-            )
-            if response == "s":
-                break
-            else:
+        if manager.keypresses._getvalue():
+            key = manager.keypresses.popleft()
+            if key.lower() == "i":
                 manager.send_notification({"acquire_pattern": True})
-                manager.await_status("world", pattern_acquired=True)
+            elif key.lower() == "q":
+                break
 
 print("\nStopped")

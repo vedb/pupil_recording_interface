@@ -158,13 +158,14 @@ This data falls into two categories:
    world video frame.
 
 For this purpose, processes have a ``process_notifications`` method that
-handles this kind of data. Notifications are passed a list of dictionaries; the
-dictionary key denotes the type of notification and the value contains the
-notification's payload. Internally, each process filters the notification list
-and responds only to certain pre-defined types.
+handles this kind of data. Notifications are passed a list of dictionaries;
+for events from the manager the dictionary key denotes the type of event and
+the value contains the notification's payload.
 
-One class of notifications that all processes understand are ``"pause_process"``
-and ``"resume_process"`` that will temporarily pause the process:
+Internally, each process filters the notification list and responds only to
+certain pre-defined types. One class of notifications that all processes
+understand are ``"pause_process"`` and ``"resume_process"`` that will
+temporarily pause the process:
 
 .. doctest::
 
@@ -205,8 +206,10 @@ because the mapper needs to know which eye the detected pupil came from:
     >>> mapper = pri.GazeMapper()
 
 Now we can read one frame from each eye camera, detect pupils and pass them as
-notifications to the gaze mapper. Calling ``get_mapped_gaze`` returns a list
-of newly mapped gaze data since the last call.
+notifications to the gaze mapper. Note that for data from other streams, the
+key of the notification is the name of the stream that produced the data.
+Calling ``get_mapped_gaze`` returns a list of newly mapped gaze data since the
+last call.
 
 .. doctest::
 

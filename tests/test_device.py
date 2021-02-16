@@ -34,6 +34,28 @@ class TestVideoDeviceUVC:
         """"""
         return pytest.importorskip("uvc")
 
+    def test_exposure_mode(self):
+        """"""
+        # 1st gen
+        device = VideoDeviceUVC("Pupil Cam1 ID0", (320, 240), 120)
+        assert device.exposure_handler is None
+
+        # 2nd gen
+        device = VideoDeviceUVC("Pupil Cam2 ID0", (192, 192), 120)
+        assert device.exposure_handler is not None
+
+        # 1st gen & forced
+        device = VideoDeviceUVC(
+            "Pupil Cam1 ID0", (320, 240), 120, exposure_mode="forced_auto"
+        )
+        assert device.exposure_handler is not None
+
+        # manual
+        device = VideoDeviceUVC(
+            "Pupil Cam2 ID0", (192, 192), 120, exposure_mode="manual"
+        )
+        assert device.exposure_handler is None
+
     @pytest.mark.xfail(raises=DeviceNotConnected)
     @pytest.mark.parametrize(
         "device_uid", ["Pupil Cam1 ID2", "Pupil Cam2 ID2", "Pupil Cam3 ID2"]
@@ -41,10 +63,10 @@ class TestVideoDeviceUVC:
     def test_get_capture(self, device_uid):
         """"""
         capture = VideoDeviceUVC.get_capture(
-            device_uid, (1280, 720), 30, {"Auto Exposure Mode": 1}
+            device_uid, (1280, 720), 30, {"Gamma": 200}
         )
         controls = {c.display_name: c.value for c in capture.controls}
-        assert controls["Auto Exposure Mode"] == 1
+        assert controls["Gamma"] == 200
         del capture
 
         with pytest.raises(IllegalSetting):
@@ -54,13 +76,37 @@ class TestVideoDeviceUVC:
     @pytest.mark.parametrize(
         "device_uid", ["Pupil Cam1 ID2", "Pupil Cam2 ID2", "Pupil Cam3 ID2"]
     )
+    def test_controls(self, device_uid):
+        """"""
+        device = VideoDeviceUVC(device_uid, (1280, 720), 60)
+
+        # legal value
+        with device:
+            device.controls = {"Gamma": 100}
+            device.controls = {"Gamma": 200}
+            assert device.controls["Gamma"] == 200
+
+        # illegal value
+        with device:
+            with pytest.raises(IllegalSetting):
+                device.controls = {"Gamma": 0}
+
+        # illegal name
+        with device:
+            with pytest.raises(IllegalSetting):
+                device.controls = {"Beta": 0}
+
+    @pytest.mark.xfail(raises=DeviceNotConnected)
+    @pytest.mark.parametrize(
+        "device_uid", ["Pupil Cam1 ID2", "Pupil Cam2 ID2", "Pupil Cam3 ID2"]
+    )
     def test_get_frame_and_timestamp(self, device_uid):
         """"""
         device = VideoDeviceUVC(device_uid, (1280, 720), 60)
-        device.start()
-        frame, ts = device.get_frame_and_timestamp()
-        assert frame.shape == (720, 1280, 3)
-        assert isinstance(ts, float)
+        with device:
+            frame, ts = device.get_frame_and_timestamp()
+            assert frame.shape == (720, 1280, 3)
+            assert isinstance(ts, float)
 
 
 class TestVideoFileDevice:
