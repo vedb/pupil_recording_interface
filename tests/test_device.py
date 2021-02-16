@@ -76,13 +76,37 @@ class TestVideoDeviceUVC:
     @pytest.mark.parametrize(
         "device_uid", ["Pupil Cam1 ID2", "Pupil Cam2 ID2", "Pupil Cam3 ID2"]
     )
+    def test_controls(self, device_uid):
+        """"""
+        device = VideoDeviceUVC(device_uid, (1280, 720), 60)
+
+        # legal value
+        with device:
+            device.controls = {"Gamma": 100}
+            device.controls = {"Gamma": 200}
+            assert device.controls["Gamma"] == 200
+
+        # illegal value
+        with device:
+            with pytest.raises(IllegalSetting):
+                device.controls = {"Gamma": 0}
+
+        # illegal name
+        with device:
+            with pytest.raises(IllegalSetting):
+                device.controls = {"Beta": 0}
+
+    @pytest.mark.xfail(raises=DeviceNotConnected)
+    @pytest.mark.parametrize(
+        "device_uid", ["Pupil Cam1 ID2", "Pupil Cam2 ID2", "Pupil Cam3 ID2"]
+    )
     def test_get_frame_and_timestamp(self, device_uid):
         """"""
         device = VideoDeviceUVC(device_uid, (1280, 720), 60)
-        device.start()
-        frame, ts = device.get_frame_and_timestamp()
-        assert frame.shape == (720, 1280, 3)
-        assert isinstance(ts, float)
+        with device:
+            frame, ts = device.get_frame_and_timestamp()
+            assert frame.shape == (720, 1280, 3)
+            assert isinstance(ts, float)
 
 
 class TestVideoFileDevice:

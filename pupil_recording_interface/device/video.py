@@ -143,10 +143,12 @@ class VideoDeviceUVC(BaseVideoDevice):
             the hardware so an exposure time is set by this class based on an
             average of the last camera frames. You can force this behavior with
             "forced_auto" but for 1st generation Pupil cameras it will probably
-            result in significantly reduced frame rates.
+            result in significantly reduced frame rates. Instead, you it is
+            advised to set hardware auto exposure via `controls` (see below).
 
         controls: dict, optional
-            Mapping from UVC control display names to values.
+            Mapping from UVC control display names to values, e.g.
+            ``{"Auto Exposure Mode": 1}``.
         """
         import uvc
 
@@ -231,21 +233,29 @@ class VideoDeviceUVC(BaseVideoDevice):
         return valid_controls
 
     @classmethod
-    def _set_controls(cls, capture, controls_dict):
+    def _set_controls(cls, capture, controls_dict, raise_error=True):
         """ Set controls of a uvc.Capture instance. """
         current_controls = {c.display_name: c for c in capture.controls}
 
         for name, value in controls_dict.items():
             if name not in current_controls:
-                logger.error(f"Unsupported UVC control: {name}")
+                msg = f"Unsupported UVC control: {name}"
+                if raise_error:
+                    raise IllegalSetting(msg)
+                else:
+                    logger.error(msg)
             else:
                 with SuppressStream(sys.stdout):
                     current_controls[name].value = value
                 if current_controls[name].value != value:
-                    # TODO raise IllegalSetting instead?
-                    logger.error(
-                        f"Could not set UVC control {name} to {value}"
+                    msg = (
+                        f"Could not set UVC control {name} to {value} "
+                        f"(actual value: {current_controls[name].value})"
                     )
+                    if raise_error:
+                        raise IllegalSetting(msg)
+                    else:
+                        logger.error(msg)
 
     @classmethod
     def get_capture(cls, uid, resolution, fps, user_controls=None):
@@ -282,7 +292,7 @@ class VideoDeviceUVC(BaseVideoDevice):
         # a couple of defaults, after which the user-defined controls (if any)
         # are applied.
         capture = pre_configure_capture(capture)
-        cls._set_controls(capture, user_controls)
+        cls._set_controls(capture, user_controls, raise_error=False)
 
         return capture
 
@@ -353,7 +363,11 @@ class VideoDeviceUVC(BaseVideoDevice):
         if self.exposure_handler:
             target = self.exposure_handler.calculate_based_on_frame(uvc_frame)
             if target is not None:
-                self.controls = {"Absolute Exposure Time": target}
+                self._set_controls(
+                    self.capture,
+                    {"Absolute Exposure Time": int(target)},
+                    raise_error=False,
+                )
 
         # restart device if stripes detected in frame
         if self.stripe_detector and self.stripe_detector.require_restart(
@@ -386,8 +400,8 @@ class VideoDeviceUVC(BaseVideoDevice):
         return capture.avaible_modes  # [sic]
 
     @property
-    def valid_controls(self):
-        """ Valid settings for UVC controls. """
+    def available_controls(self):
+        """ Available UVC controls for this device. """
         if not self.is_started:
             capture = self._get_uvc_capture(self.uvc_device_uid)
         else:
