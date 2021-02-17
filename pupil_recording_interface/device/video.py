@@ -143,8 +143,8 @@ class VideoDeviceUVC(BaseVideoDevice):
             the hardware so an exposure time is set by this class based on an
             average of the last camera frames. You can force this behavior with
             "forced_auto" but for 1st generation Pupil cameras it will probably
-            result in significantly reduced frame rates. Instead, you it is
-            advised to set hardware auto exposure via `controls` (see below).
+            result in under-exposed camera images. Instead, it is advised to
+            set hardware auto exposure via `controls` (see below).
 
         controls: dict, optional
             Mapping from UVC control display names to values, e.g.
@@ -245,17 +245,20 @@ class VideoDeviceUVC(BaseVideoDevice):
                 else:
                     logger.error(msg)
             else:
-                with SuppressStream(sys.stdout):
-                    current_controls[name].value = value
-                if current_controls[name].value != value:
-                    msg = (
-                        f"Could not set UVC control {name} to {value} "
-                        f"(actual value: {current_controls[name].value})"
-                    )
-                    if raise_error:
-                        raise IllegalSetting(msg)
-                    else:
-                        logger.error(msg)
+                old_value = current_controls[name].value
+                # only update if new value is different
+                if value != old_value:
+                    with SuppressStream(sys.stdout):
+                        current_controls[name].value = value
+                    if current_controls[name].value != value:
+                        msg = (
+                            f"Could not set UVC control {name} to {value} "
+                            f"(actual value: {current_controls[name].value})"
+                        )
+                        if raise_error:
+                            raise IllegalSetting(msg)
+                        else:
+                            logger.error(msg)
 
     @classmethod
     def get_capture(cls, uid, resolution, fps, user_controls=None):

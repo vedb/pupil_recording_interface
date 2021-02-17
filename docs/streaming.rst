@@ -276,7 +276,7 @@ constructor argument...
 .. doctest::
 
     >>> world_cam = pri.VideoDeviceUVC(
-    ...     "Pupil Cam1 ID2", (1280, 720), 30, controls={"Gamma": 200}
+    ...     "Pupil Cam2 ID2", (1280, 720), 30, controls={"Gamma": 200}
     ... )
     ... with world_cam: # doctest:+SKIP
     ...     print(world_cam.controls["Gamma"])
