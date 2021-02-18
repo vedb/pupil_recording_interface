@@ -428,6 +428,9 @@ class VideoDeviceUVC(BaseVideoDevice):
         if not self.is_started:
             raise RuntimeError("Device not started.")
 
+        if not hasattr(controls_dict, "items"):
+            raise ValueError("Data must be dictionary-like")
+
         self._set_controls(self.capture, controls_dict)
 
 
