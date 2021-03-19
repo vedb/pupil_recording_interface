@@ -57,6 +57,7 @@ syntax:
      'diameter': 44...,
      'location': (96..., 130...),
      'confidence': 0.99,
+     'internal_2d_raw_data': ...,
      'norm_pos': (0.5..., 0.6...),
      'timestamp': 1570725800...,
      'method': '2d c++',
