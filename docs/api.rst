@@ -22,6 +22,8 @@ I/O functions
     load_pldata
     save_pldata
     get_gaze_mappers
+    load_object
+    save_object
 
 
 Reader classes
