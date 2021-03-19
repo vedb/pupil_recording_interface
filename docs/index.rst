@@ -12,9 +12,14 @@ The code is hosted on GitHub: https://github.com/vedb/pupil_recording_interface
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Getting started
 
    installation
+
+.. toctree::
+   :maxdepth: 1
+   :caption: User guide
+
    reading
    streaming
    processing
@@ -22,8 +27,13 @@ The code is hosted on GitHub: https://github.com/vedb/pupil_recording_interface
    analysis
    additional
    auto_examples/index
-   whatsnew
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Help & reference
+
    api
+   whatsnew
    contributing
 
 
