@@ -210,7 +210,12 @@ class RealSenseDeviceT265(BaseDevice):
             else:
                 pipeline.start(config)
         except RuntimeError:
-            raise DeviceNotConnected(f"T265 device not connected")
+            if uid is None:
+                raise DeviceNotConnected(f"T265 device not connected")
+            else:
+                raise DeviceNotConnected(
+                    f"T265 device with serial number {uid} not connected"
+                )
 
         logger.debug(
             f"T265 pipeline started with video={video}, odometry={odometry}, "
