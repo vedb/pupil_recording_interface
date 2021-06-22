@@ -32,6 +32,7 @@ test:
   requires:
     - python 3.6
     - netcdf4
+    - pooch
     - pytest
     - pytest-cov
   commands:

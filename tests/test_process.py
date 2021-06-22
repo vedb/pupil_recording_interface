@@ -278,7 +278,7 @@ class TestCalibration:
 
     def test_save_result(self, calibration, calibration_2d, tmpdir):
         """"""
-        calibration.folder_v1 = tmpdir
+        calibration.folder = tmpdir
         calibration.uuid = calibration_2d["data"][0]
         calibration.recording_uuid = calibration_2d["data"][2]
         calibration.frame_index_range = [0, 541]
@@ -313,7 +313,7 @@ class TestValidation:
         """"""
         pytest.importorskip("matplotlib")
 
-        validation.folder_v1 = tmpdir
+        validation.folder = tmpdir
         validation.save = True
 
         for p in pupil:
