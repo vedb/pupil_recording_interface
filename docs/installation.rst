@@ -34,6 +34,24 @@ dependencies that aren't already available through conda. At the moment, only
 packages for Linux x64 and Python versions 3.6 and 3.7 are available.
 
 
+.. _example_dependencies:
+
+Example data
+............
+
+To download the test recording used in the examples you need to install pooch:
+
+.. code-block:: console
+
+    $ pip install pooch
+
+or:
+
+.. code-block:: console
+
+    $ conda install pooch
+
+
 .. _streaming_dependencies:
 
 Streaming

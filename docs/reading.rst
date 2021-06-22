@@ -5,6 +5,11 @@ Reading data
 
 .. currentmodule:: pupil_recording_interface
 
+.. note::
+
+    Make sure that you have installed the necessary
+    :ref:`dependencies for running the examples<example_dependencies>`.
+
 Loading recordings
 ------------------
 

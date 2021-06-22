@@ -37,9 +37,6 @@ from .externals.file_methods import save_object as _save_object
 
 from ._version import __version__  # noqa
 
-DATA_DIR = Path(__file__).parent / "data"
-TEST_RECORDING = Path(DATA_DIR) / "test_recording"
-
 
 __all__ = [
     # Functions
