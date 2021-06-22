@@ -24,7 +24,7 @@ You can easily load recorded gaze data with:
 .. doctest::
 
     >>> import pupil_recording_interface as pri
-    >>> pri.load_dataset(pri.TEST_RECORDING, gaze='recording')
+    >>> pri.load_dataset(pri.get_test_recording(), gaze='recording')
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5160)
     Coordinates:
@@ -42,7 +42,7 @@ You can easily load recorded gaze data with:
         gaze_confidence_3d  (time) float64 0.8787 0.8769 0.9233 ... 0.9528 0.9528
 
 
-Here, ``pri.TEST_RECORDING`` is an alias for a folder included in the
+Here, ``pri.get_test_recording()`` is an alias for a folder included in the
 package that includes a very short example recording. ``gaze='recording'``
 tells the function to load the recorded gaze data. The dataset contains
 the following arrays:
@@ -69,7 +69,7 @@ offline gaze mapper by name and load its data:
 
 .. doctest::
 
-    >>> pri.load_dataset(pri.TEST_RECORDING, gaze='3d Gaze Mapper')
+    >>> pri.load_dataset(pri.get_test_recording(), gaze='3d Gaze Mapper')
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5134)
     Coordinates:
@@ -93,7 +93,7 @@ point from the 3d mapper:
 .. doctest::
 
     >>> pri.load_dataset(
-    ...     pri.TEST_RECORDING, gaze={'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
+    ...     pri.get_test_recording(), gaze={'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
     ... )
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5134)
@@ -116,7 +116,7 @@ You can get a set of all available gaze mappers for a recording with:
 
 .. doctest::
 
-    >>> pri.get_gaze_mappers(pri.TEST_RECORDING) # doctest:+SKIP
+    >>> pri.get_gaze_mappers(pri.get_test_recording()) # doctest:+SKIP
     {'2d Gaze Mapper ', '3d Gaze Mapper', 'recording'}
 
 
@@ -131,7 +131,7 @@ world camera video with:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> reader = pri.VideoReader(pri.get_test_recording())
     >>> reader.video_info
     {'resolution': (1280, 720), 'frame_count': 504, 'fps': 23.987}
 
@@ -140,7 +140,7 @@ frame by index:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> reader = pri.VideoReader(pri.get_test_recording())
     >>> frame = reader.load_raw_frame(100)
     >>> frame.shape
     (720, 1280, 3)
@@ -149,7 +149,7 @@ or by timestamp:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> reader = pri.VideoReader(pri.get_test_recording())
     >>> frame = reader.load_raw_frame(reader.timestamps[100])
     >>> frame.shape
     (720, 1280, 3)
@@ -169,7 +169,7 @@ is loaded as a BGR image but imshow expects RGB:
 .. plot::
 
     import pupil_recording_interface as pri
-    reader = pri.VideoReader(pri.TEST_RECORDING)
+    reader = pri.VideoReader(pri.get_test_recording())
     frame = reader.load_raw_frame(100)
 
     import matplotlib.pyplot as plt
@@ -183,7 +183,7 @@ Eye videos can be loaded by specifying the ``stream`` parameter:
 
 .. doctest::
 
-    >>> eye_reader = pri.VideoReader(pri.TEST_RECORDING, stream='eye0')
+    >>> eye_reader = pri.VideoReader(pri.get_test_recording(), stream='eye0')
 
 With ``return_timestamp=True`` you can get the corresponding timestamp for a
 frame:
@@ -211,9 +211,9 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
 
 .. doctest::
 
-    >>> gaze = pri.load_dataset(pri.TEST_RECORDING, gaze='2d Gaze Mapper ')
+    >>> gaze = pri.load_dataset(pri.get_test_recording(), gaze='2d Gaze Mapper ')
     >>> reader = pri.VideoReader(
-    ...     pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64
+    ...     pri.get_test_recording(), norm_pos=gaze.gaze_norm_pos, roi_size=64
     ... )
     >>> frame = reader.load_frame(100)
     >>> frame.shape
@@ -223,9 +223,9 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
 .. plot::
 
     import pupil_recording_interface as pri
-    gaze = pri.load_dataset(pri.TEST_RECORDING, gaze='2d Gaze Mapper ')
+    gaze = pri.load_dataset(pri.get_test_recording(), gaze='2d Gaze Mapper ')
     reader = pri.VideoReader(
-        pri.TEST_RECORDING, norm_pos=gaze.gaze_norm_pos, roi_size=64
+        pri.get_test_recording(), norm_pos=gaze.gaze_norm_pos, roi_size=64
     )
     frame = reader.load_frame(100)
 
@@ -246,7 +246,7 @@ Video frames can also be sub-sampled and converted to grayscale with the
 .. doctest::
 
     >>> reader = pri.VideoReader(
-    ...     pri.TEST_RECORDING, color_format='gray', subsampling=4.
+    ...     pri.get_test_recording(), color_format='gray', subsampling=4.
     ... )
     >>> frame = reader.load_frame(100)
     >>> frame.shape
@@ -258,7 +258,7 @@ parameters:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.TEST_RECORDING)
+    >>> reader = pri.VideoReader(pri.get_test_recording())
     >>> reader.read_frames(start=100, end=200) # doctest:+ELLIPSIS
     <generator object VideoReader.read_frames at ...>
 
@@ -269,7 +269,7 @@ of the loaded data:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.TEST_RECORDING, subsampling=8.)
+    >>> reader = pri.VideoReader(pri.get_test_recording(), subsampling=8.)
     >>> reader.load_dataset(
     ...     start=reader.user_info['experiment_start'],
     ...     end=reader.user_info['experiment_end'],
@@ -291,7 +291,7 @@ The recording metadata file created by Pupil Capture can be loaded with:
 
 .. doctest::
 
-    >>> pri.load_info(pri.TEST_RECORDING) # doctest:+NORMALIZE_WHITESPACE
+    >>> pri.load_info(pri.get_test_recording()) # doctest:+NORMALIZE_WHITESPACE
     {'duration_s': 21.0,
      'meta_version': '2.0',
      'min_player_version': '1.16',
@@ -307,7 +307,7 @@ You can also load the user info with:
 
 .. doctest::
 
-    >>> pri.load_user_info(pri.TEST_RECORDING) # doctest:+NORMALIZE_WHITESPACE
+    >>> pri.load_user_info(pri.get_test_recording()) # doctest:+NORMALIZE_WHITESPACE
     {'name': 'TEST',
      'pre_calibration_start': Timestamp('2019-10-10 16:43:21.220912933'),
      'pre_calibration_end': Timestamp('2019-10-10 16:43:22.220912933'),
@@ -330,7 +330,7 @@ Recorded data can also directly be written to disk:
 .. doctest::
 
     >>> pri.write_netcdf(
-    ...    pri.TEST_RECORDING, gaze='recording', output_folder='.'
+    ...    pri.get_test_recording(), gaze='recording', output_folder='.'
     ... )
 
 This will create a ``gaze.nc`` file in the current folder. This file type can

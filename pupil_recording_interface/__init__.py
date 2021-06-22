@@ -30,6 +30,8 @@ from .decorators import device, stream, process
 
 from .session import Session
 
+from .utils import get_test_recording
+
 from .externals.file_methods import load_object as _load_object
 from .externals.file_methods import save_object as _save_object
 
@@ -83,6 +85,7 @@ __all__ = [
     "process",
     # other
     "Session",
+    "get_test_recording",
 ]
 
 # disable active threads when OpenCV is built with OpenMP support

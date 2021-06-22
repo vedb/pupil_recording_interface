@@ -6,7 +6,6 @@ from collections import deque
 import pytest
 import numpy as np
 
-from pupil_recording_interface import DATA_DIR
 from pupil_recording_interface.decorators import device, stream, process
 from pupil_recording_interface.device import BaseDevice
 from pupil_recording_interface.device.video import VideoFileDevice
@@ -29,6 +28,7 @@ from pupil_recording_interface.process.cam_params import (
     CircleGridDetector,
 )
 from pupil_recording_interface.manager import StreamManager
+from pupil_recording_interface.utils import get_test_recording
 from pupil_recording_interface.externals.file_methods import (
     load_object,
     load_pldata_file,
@@ -68,15 +68,15 @@ def mock_mp_deque():
 
 
 @pytest.fixture()
-def folder():
+def folder_v1():
     """"""
-    return Path(DATA_DIR) / "test_recording"
+    return get_test_recording("1.16")
 
 
 @pytest.fixture()
-def export_folder(folder):
+def export_folder_v1(folder_v1):
     """"""
-    export_folder = Path(folder) / "exports"
+    export_folder = Path(folder_v1) / "exports"
     export_folder.mkdir()
     yield export_folder
     shutil.rmtree(export_folder, ignore_errors=True)
@@ -134,9 +134,9 @@ def statuses():
 
 # -- PUPIL DATA -- #
 @pytest.fixture()
-def pupil(folder):
+def pupil(folder_v1):
     """"""
-    pldata = load_pldata_file(folder, "pupil",)
+    pldata = load_pldata_file(folder_v1, "pupil",)
 
     pupil = [dict(d) for d in pldata.data]
 
@@ -144,10 +144,10 @@ def pupil(folder):
 
 
 @pytest.fixture()
-def gaze_2d(folder):
+def gaze_2d(folder_v1):
     """"""
     pldata = load_pldata_file(
-        Path(folder) / "offline_data" / "gaze-mappings",
+        Path(folder_v1) / "offline_data" / "gaze-mappings",
         "2d_Gaze_Mapper_-28b2161b-24dd-4265-b12f-7d09c380bf4f",
     )
 
@@ -159,32 +159,32 @@ def gaze_2d(folder):
 
 
 @pytest.fixture()
-def calibration_2d(folder):
+def calibration_2d(folder_v1):
     """"""
     return load_object(
-        Path(folder)
+        Path(folder_v1)
         / "calibrations"
         / "2d_Calibration-4fb6bf62-0ae8-42d2-a16c-913e68a5f3c3.plcal"
     )
 
 
 @pytest.fixture()
-def calibration_recorded(folder):
+def calibration_recorded(folder_v1):
     """"""
     return load_object(
-        Path(folder)
+        Path(folder_v1)
         / "calibrations"
         / "Recorded_Calibration-85f75cc5-e2b2-5a46-b083-0a2054bbc810.plcal"
     )
 
 
 @pytest.fixture()
-def reference_locations(folder):
+def reference_locations(folder_v1):
     """"""
     resolution = (1280, 720)
 
     locations = load_object(
-        Path(folder) / "offline_data" / "reference_locations.msgpack"
+        Path(folder_v1) / "offline_data" / "reference_locations.msgpack"
     )
 
     locations = [
@@ -952,9 +952,9 @@ def mock_video_device():
 
 
 @pytest.fixture()
-def video_file_device(folder):
+def video_file_device(folder_v1):
     """"""
-    return VideoFileDevice(folder, "world")
+    return VideoFileDevice(folder_v1, "world")
 
 
 # -- STREAMS -- #

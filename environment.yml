@@ -35,15 +35,12 @@ dependencies:
   # other
   - tqdm=4.46.0
   - matplotlib=3.1.1
+  - pooch=1.4.0
   # development
   - pytest
   - coverage
-  - flake8=3.7.9
-  - black=19.10b0
   - pre_commit
   - sphinx=2.4.4
   - sphinx_rtd_theme
   - numpydoc
   - sphinx-gallery
-  - matplotlib
-  - bump2version
