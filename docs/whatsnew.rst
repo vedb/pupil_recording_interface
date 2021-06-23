@@ -1,6 +1,22 @@
 What's New
 ==========
 
+v0.5.0 (June 23rd, 2021)
+------------------------
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+* The test recording in the examples is not part of the package anymore but
+  instead downloaded and cached through the ``pooch`` library.
+  This means that ``TEST_RECORDING`` is not working anymore and is replaced
+  by ``get_test_recording``.
+
+Bug fixes & improvements
+~~~~~~~~~~~~~~~~~~~~~~~~
+* Updated the default test recording to contain post-hoc gaze mapped by
+  Pupil Player v3.
+
+
 v0.4.1 (February 22nd, 2021)
 ----------------------------
 

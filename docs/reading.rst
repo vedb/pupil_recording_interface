@@ -47,10 +47,10 @@ You can easily load recorded gaze data with:
         gaze_confidence_3d  (time) float64 0.8787 0.8769 0.9233 ... 0.9528 0.9528
 
 
-Here, ``pri.get_test_recording()`` is an alias for a folder included in the
-package that includes a very short example recording. ``gaze='recording'``
-tells the function to load the recorded gaze data. The dataset contains
-the following arrays:
+:py:func:`get_test_recording` downloads and caches a very short example
+recording and returns the path to the cached folder. ``gaze='recording'`` tells
+the function to load the recorded gaze data. The dataset contains the following
+arrays:
 
 * ``eye``: the eye data that produced the mapping, 0 for eye 0 (usually right),
   1 for eye 1 (usually left), 2 for binocular mapping
