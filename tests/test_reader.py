@@ -197,10 +197,13 @@ class TestBaseReader:
 
 
 class TestFunctionalReader:
-    def test_load_dataset(self, folder_v1, t265_folder):
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_dataset(self, folder, t265_folder):
         """"""
         gaze, odometry = load_dataset(
-            folder_v1, gaze="recording", odometry="recording"
+            folder, gaze="recording", odometry="recording"
         )
 
         assert set(gaze.data_vars) == {
@@ -240,22 +243,25 @@ class TestFunctionalReader:
         assert set(accel.data_vars) == {"linear_acceleration"}
         assert set(gyro.data_vars) == {"angular_velocity"}
 
-    def test_load_dataset_cached(self, folder_v1):
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_dataset_cached(self, folder):
         """"""
         pytest.importorskip("netCDF4")
 
-        load_dataset(folder_v1, gaze="recording", cache=True)
+        load_dataset(folder, gaze="recording", cache=True)
         assert (
-            folder_v1
+            folder
             / "cache"
             / "gaze-18a8baba7367c3ed0086a0c345f3c67bc2ca8b39.nc"
         ).exists()
 
-        gaze = load_dataset(folder_v1, gaze="recording", cache=False)
-        gaze_nc = load_dataset(folder_v1, gaze="recording", cache=True)
+        gaze = load_dataset(folder, gaze="recording", cache=False)
+        gaze_nc = load_dataset(folder, gaze="recording", cache=True)
         assert gaze_nc == gaze
 
-        shutil.rmtree(folder_v1 / "cache")
+        shutil.rmtree(folder / "cache")
 
     def test_write_netcdf(
         self, folder_v1, t265_folder, export_folder_v1, t265_export_folder
@@ -279,9 +285,12 @@ class TestFunctionalReader:
         assert (t265_export_folder / "000" / "accel.nc").exists()
         assert (t265_export_folder / "000" / "gyro.nc").exists()
 
-    def test_get_gaze_mappers(self, folder_v1):
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_get_gaze_mappers(self, folder):
         """"""
-        mappers = get_gaze_mappers(str(folder_v1))
+        mappers = get_gaze_mappers(str(folder))
 
         assert mappers == {"recording", "2d Gaze Mapper ", "3d Gaze Mapper"}
 
@@ -291,12 +300,16 @@ class TestGazeReader:
     def set_up(self):
         """"""
         self.n_gaze = 5160
-        self.n_gaze_offline = 5134
+        self.n_gaze_offline = {"1.16": 5134, "2.0": 5125}
+        self.n_gaze_merged = {"1.16": 5134, "2.0": 4987}
         self.gaze_mappers = {"2d": "2d Gaze Mapper ", "3d": "3d Gaze Mapper"}
 
-    def test_constructor(self, folder_v1, t265_folder):
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_constructor(self, folder, t265_folder):
         """"""
-        reader = GazeReader(folder_v1)
+        reader = GazeReader(folder)
         assert set(reader.gaze_mappers.keys()) == {
             "3d Gaze Mapper",
             "2d Gaze Mapper ",
@@ -332,38 +345,51 @@ class TestGazeReader:
 
         assert data["timestamp"].shape == (665,)
 
-    def test_load_merged_gaze(self, folder_v1):
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_merged_gaze(self, folder):
         """"""
-        data = GazeReader._load_merged_gaze(folder_v1, self.gaze_mappers)
+        data = GazeReader._load_merged_gaze(folder, self.gaze_mappers)
+        version = GazeReader(folder).info["min_player_version"]
+        n = self.n_gaze_merged[version]
 
-        assert data["timestamp"].shape == (self.n_gaze_offline,)
-        assert data["confidence_2d"].shape == (self.n_gaze_offline,)
-        assert data["confidence_3d"].shape == (self.n_gaze_offline,)
-        assert data["norm_pos"].shape == (self.n_gaze_offline, 2)
-        assert data["eye"].shape == (self.n_gaze_offline,)
-        assert data["gaze_point"].shape == (self.n_gaze_offline, 3)
-        assert data["eye0_center"].shape == (self.n_gaze_offline, 3)
-        assert data["eye1_center"].shape == (self.n_gaze_offline, 3)
-        assert data["eye0_normal"].shape == (self.n_gaze_offline, 3)
-        assert data["eye1_normal"].shape == (self.n_gaze_offline, 3)
+        assert data["timestamp"].shape == (n,)
+        assert data["confidence_2d"].shape == (n,)
+        assert data["confidence_3d"].shape == (n,)
+        assert data["norm_pos"].shape == (n, 2)
+        assert data["eye"].shape == (n,)
+        assert data["gaze_point"].shape == (n, 3)
+        assert data["eye0_center"].shape == (n, 3)
+        assert data["eye1_center"].shape == (n, 3)
+        assert data["eye0_normal"].shape == (n, 3)
+        assert data["eye1_normal"].shape == (n, 3)
 
-    def test_get_offline_gaze_mapper(self, folder_v1):
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_get_offline_gaze_mapper(self, folder):
         """"""
-        mappers = GazeReader._get_offline_gaze_mappers(folder_v1)
+        mappers = GazeReader._get_offline_gaze_mappers(folder)
 
         assert set(mappers.keys()) == {"3d Gaze Mapper", "2d Gaze Mapper "}
         for v in mappers.values():
             assert (
-                folder_v1 / "offline_data" / "gaze-mappings" / f"{v}.pldata"
+                folder / "offline_data" / "gaze-mappings" / f"{v}.pldata"
             ).exists()
 
         with pytest.raises(FileNotFoundError):
-            GazeReader._get_offline_gaze_mappers(folder_v1 / "not_a_folder")
+            GazeReader._get_offline_gaze_mappers(folder / "not_a_folder")
 
-    def test_load_dataset(self, folder_v1):
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_dataset(self, folder):
         """"""
+        version = GazeReader(folder).info["min_player_version"]
+
         # from recording
-        ds = GazeReader(folder_v1).load_dataset()
+        ds = GazeReader(folder).load_dataset()
         assert dict(ds.sizes) == {
             "time": self.n_gaze,
             "cartesian_axis": 3,
@@ -381,11 +407,9 @@ class TestGazeReader:
         }
 
         # offline 2d mapper
-        ds = GazeReader(
-            folder_v1, source=self.gaze_mappers["2d"]
-        ).load_dataset()
+        ds = GazeReader(folder, source=self.gaze_mappers["2d"]).load_dataset()
         assert dict(ds.sizes) == {
-            "time": self.n_gaze_offline,
+            "time": self.n_gaze_offline[version],
             "pixel_axis": 2,
         }
         assert set(ds.data_vars) == {
@@ -395,9 +419,9 @@ class TestGazeReader:
         }
 
         # merged 2d/3d gaze
-        ds = GazeReader(folder_v1, source=self.gaze_mappers).load_dataset()
+        ds = GazeReader(folder, source=self.gaze_mappers).load_dataset()
         assert dict(ds.sizes) == {
-            "time": self.n_gaze_offline,
+            "time": self.n_gaze_merged[version],
             "cartesian_axis": 3,
             "pixel_axis": 2,
         }
@@ -415,7 +439,7 @@ class TestGazeReader:
 
         # bad gaze argument
         with pytest.raises(ValueError):
-            GazeReader(folder_v1, source="not_gaze_mapper").load_dataset()
+            GazeReader(folder, source="not_gaze_mapper").load_dataset()
 
     def test_write_netcdf(self, folder_v1, export_folder_v1):
         """"""

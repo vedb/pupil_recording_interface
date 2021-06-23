@@ -67,10 +67,22 @@ def mock_mp_deque():
     return MockMultiprocessingDeque
 
 
+@pytest.fixture
+def folder(request):
+    """"""
+    return request.getfixturevalue(request.param)
+
+
 @pytest.fixture()
 def folder_v1():
     """"""
     return get_test_recording("1.16")
+
+
+@pytest.fixture()
+def folder_v2():
+    """"""
+    return get_test_recording("2.0")
 
 
 @pytest.fixture()

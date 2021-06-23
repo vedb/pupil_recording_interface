@@ -85,14 +85,14 @@ class GazeReader(BaseReader):
             # merge monocular and binocular eye centers
             df_c = pd.DataFrame(df.eye_centers_3d[bin_idx].to_list())
             c0 = np.nan * np.ones(df.timestamp.shape + (3,))
-            c0[bin_idx, :] = np.array(df_c[0].to_list())
+            c0[bin_idx, :] = np.array(df_c.iloc[:, 0].to_list())
             if "eye_center_3d" in df.columns:
                 c0[mon0_idx, :] = np.array(
                     df.eye_center_3d[mon0_idx].to_list()
                 )
             data["eye0_center"] = c0 / 1000.0
             c1 = np.nan * np.ones(df.timestamp.shape + (3,))
-            c1[bin_idx, :] = np.array(df_c[1].to_list())
+            c1[bin_idx, :] = np.array(df_c.iloc[:, 1].to_list())
             if "eye_center_3d" in df.columns:
                 c1[mon1_idx, :] = np.array(
                     df.eye_center_3d[mon1_idx].to_list()
@@ -102,14 +102,14 @@ class GazeReader(BaseReader):
             # merge monocular and binocular gaze normals
             df_n = pd.DataFrame(df.gaze_normals_3d[bin_idx].to_list())
             n0 = np.nan * np.ones(df.timestamp.shape + (3,))
-            n0[bin_idx, :] = np.array(df_n[0].to_list())
+            n0[bin_idx, :] = np.array(df_n.iloc[:, 0].to_list())
             if "eye_normal_3d" in df.columns:
                 n0[mon0_idx, :] = np.array(
                     df.gaze_normal_3d[mon0_idx].to_list()
                 )
             data["eye0_normal"] = n0
             n1 = np.nan * np.ones(df.timestamp.shape + (3,))
-            n1[bin_idx, :] = np.array(df_n[1].to_list())
+            n1[bin_idx, :] = np.array(df_n.iloc[:, 1].to_list())
             if "eye_normal_3d" in df.columns:
                 n1[mon1_idx, :] = np.array(
                     df.gaze_normal_3d[mon1_idx].to_list()
