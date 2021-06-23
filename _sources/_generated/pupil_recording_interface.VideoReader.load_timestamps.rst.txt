@@ -1,0 +1,6 @@
+pupil\_recording\_interface.VideoReader.load\_timestamps
+========================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: VideoReader.load_timestamps

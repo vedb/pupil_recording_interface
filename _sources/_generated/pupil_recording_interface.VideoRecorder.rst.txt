@@ -1,0 +1,39 @@
+pupil\_recording\_interface.VideoRecorder
+=========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: VideoRecorder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VideoRecorder.Config
+      ~VideoRecorder.__init__
+      ~VideoRecorder.call
+      ~VideoRecorder.from_config
+      ~VideoRecorder.get_constructor_args
+      ~VideoRecorder.get_params
+      ~VideoRecorder.process
+      ~VideoRecorder.process_notifications
+      ~VideoRecorder.process_packet
+      ~VideoRecorder.start
+      ~VideoRecorder.stop
+      ~VideoRecorder.write
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VideoRecorder.process_type
+   
+   

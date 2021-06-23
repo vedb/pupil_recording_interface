@@ -1,0 +1,6 @@
+pupil\_recording\_interface.GazeReader.load\_dataset
+====================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: GazeReader.load_dataset

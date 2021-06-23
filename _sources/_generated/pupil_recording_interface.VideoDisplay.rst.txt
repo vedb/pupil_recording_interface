@@ -1,0 +1,42 @@
+pupil\_recording\_interface.VideoDisplay
+========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: VideoDisplay
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VideoDisplay.Config
+      ~VideoDisplay.__init__
+      ~VideoDisplay.call
+      ~VideoDisplay.close_window
+      ~VideoDisplay.create_window
+      ~VideoDisplay.from_config
+      ~VideoDisplay.get_constructor_args
+      ~VideoDisplay.get_params
+      ~VideoDisplay.process
+      ~VideoDisplay.process_notifications
+      ~VideoDisplay.process_packet
+      ~VideoDisplay.rggb_to_bgr
+      ~VideoDisplay.show_frame
+      ~VideoDisplay.start
+      ~VideoDisplay.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VideoDisplay.process_type
+   
+   

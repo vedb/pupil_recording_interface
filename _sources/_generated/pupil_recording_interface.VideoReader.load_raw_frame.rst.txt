@@ -1,0 +1,6 @@
+pupil\_recording\_interface.VideoReader.load\_raw\_frame
+========================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: VideoReader.load_raw_frame

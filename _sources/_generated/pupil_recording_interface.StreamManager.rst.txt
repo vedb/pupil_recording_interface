@@ -1,0 +1,38 @@
+pupil\_recording\_interface.StreamManager
+=========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: StreamManager
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StreamManager.__init__
+      ~StreamManager.await_status
+      ~StreamManager.format_status
+      ~StreamManager.run
+      ~StreamManager.save_info
+      ~StreamManager.send_notification
+      ~StreamManager.spin
+      ~StreamManager.spin_generator
+      ~StreamManager.start
+      ~StreamManager.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~StreamManager.all_streams_running
+      ~StreamManager.run_duration
+   
+   

@@ -1,0 +1,6 @@
+pupil\_recording\_interface.load\_info
+======================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: load_info

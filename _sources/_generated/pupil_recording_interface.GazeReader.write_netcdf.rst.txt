@@ -1,0 +1,6 @@
+pupil\_recording\_interface.GazeReader.write\_netcdf
+====================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: GazeReader.write_netcdf

@@ -1,0 +1,368 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pupil_recording_interface.VideoReader &mdash; pupil_recording_interface 0.5.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-rendered-html.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pupil_recording_interface.OpticalFlowReader" href="pupil_recording_interface.OpticalFlowReader.html" />
+    <link rel="prev" title="pupil_recording_interface.MotionReader" href="pupil_recording_interface.MotionReader.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pupil_recording_interface
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#top-level-functions-and-classes">Top-level functions and classes</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#i-o-functions">I/O functions</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#reader-classes">Reader classes</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.GazeReader.html">pupil_recording_interface.GazeReader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.MotionReader.html">pupil_recording_interface.MotionReader</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pupil_recording_interface.VideoReader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.OpticalFlowReader.html">pupil_recording_interface.OpticalFlowReader</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#device-classes">Device classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#stream-classes">Stream classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#process-classes">Process classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#class-member-details">Class member details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>pupil_recording_interface.VideoReader</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/_generated/pupil_recording_interface.VideoReader.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pupil-recording-interface-videoreader">
+<h1>pupil_recording_interface.VideoReader<a class="headerlink" href="#pupil-recording-interface-videoreader" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pupil_recording_interface.VideoReader">
+<em class="property">class </em><code class="sig-prename descclassname">pupil_recording_interface.</code><code class="sig-name descname">VideoReader</code><span class="sig-paren">(</span><em class="sig-param">folder</em>, <em class="sig-param">stream='world'</em>, <em class="sig-param">color_format=None</em>, <em class="sig-param">norm_pos=None</em>, <em class="sig-param">roi_size=None</em>, <em class="sig-param">interpolation_method='linear'</em>, <em class="sig-param">video_offset=0.0</em>, <em class="sig-param">subsampling=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reader for video data.</p>
+<dl class="method">
+<dt id="pupil_recording_interface.VideoReader.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">folder</em>, <em class="sig-param">stream='world'</em>, <em class="sig-param">color_format=None</em>, <em class="sig-param">norm_pos=None</em>, <em class="sig-param">roi_size=None</em>, <em class="sig-param">interpolation_method='linear'</em>, <em class="sig-param">video_offset=0.0</em>, <em class="sig-param">subsampling=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoReader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>folder</strong><span class="classifier">str or pathlib.Path</span></dt><dd><p>Path to the recording folder.</p>
+</dd>
+<dt><strong>stream</strong><span class="classifier">str, default ‘world’</span></dt><dd><p>The name of the video stream to read.</p>
+</dd>
+<dt><strong>color_format</strong><span class="classifier">str, optional</span></dt><dd><p>If ‘gray’, convert video frames to grayscale.</p>
+</dd>
+<dt><strong>norm_pos</strong><span class="classifier">xarray DataArray, optional</span></dt><dd><p>If specified, extract an ROI around the norm pos for each frame.
+The DataArray must contain a coordinate named ‘time’ with the
+timestamps which will be used to match the timestamps of the video
+frames. The parameter <cite>roi_size</cite> must also be specified.</p>
+</dd>
+<dt><strong>roi_size</strong><span class="classifier">int, optional</span></dt><dd><p>The size of the ROI in pixels (see <cite>norm_pos</cite>).</p>
+</dd>
+<dt><strong>interpolation_method</strong><span class="classifier">str, default ‘linear’</span></dt><dd><p>Interpolation method for matching norm pos timestamps with video
+timestamps (see <cite>norm_pos</cite>).</p>
+</dd>
+<dt><strong>video_offset</strong><span class="classifier">float, default 0.</span></dt><dd><p>The offset of the video frames wrt to their recorded timestamps.
+It might be necessary to adjust this in order to fix
+synchronization issues between norm pos timestamps and video
+timestamps (see <cite>norm_pos</cite>).</p>
+</dd>
+<dt><strong>subsampling</strong><span class="classifier">float, optional</span></dt><dd><p>If specified, sub-sample each frame by this factor. Sub-sampling
+is applied before ROI extraction.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoReader.__init__" title="pupil_recording_interface.VideoReader.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(folder[, stream, color_format, …])</p></td>
+<td><p>Constructor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.convert_color.html#pupil_recording_interface.VideoReader.convert_color" title="pupil_recording_interface.VideoReader.convert_color"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_color</span></code></a>(frame)</p></td>
+<td><p>Convert color format of a video frame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.convert_to_uint8.html#pupil_recording_interface.VideoReader.convert_to_uint8" title="pupil_recording_interface.VideoReader.convert_to_uint8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_to_uint8</span></code></a>(frame)</p></td>
+<td><p>Convert a video frame to uint8 dtype.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.get_roi.html#pupil_recording_interface.VideoReader.get_roi" title="pupil_recording_interface.VideoReader.get_roi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_roi</span></code></a>(frame, norm_pos)</p></td>
+<td><p>Extract the ROI from a video frame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.load_dataset.html#pupil_recording_interface.VideoReader.load_dataset" title="pupil_recording_interface.VideoReader.load_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_dataset</span></code></a>([dropna, start, end])</p></td>
+<td><p>Load video data as an xarray Dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.load_frame.html#pupil_recording_interface.VideoReader.load_frame" title="pupil_recording_interface.VideoReader.load_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_frame</span></code></a>([idx, return_timestamp])</p></td>
+<td><p>Load a single processed video frame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_pldata</span></code>(topic)</p></td>
+<td><p>Load data from a .pldata file as a list of dicts.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.load_raw_frame.html#pupil_recording_interface.VideoReader.load_raw_frame" title="pupil_recording_interface.VideoReader.load_raw_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_raw_frame</span></code></a>([idx])</p></td>
+<td><p>Load a single un-processed video frame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.load_timestamps.html#pupil_recording_interface.VideoReader.load_timestamps" title="pupil_recording_interface.VideoReader.load_timestamps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_timestamps</span></code></a>()</p></td>
+<td><p>Load the timestamps for the video file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.process_frame.html#pupil_recording_interface.VideoReader.process_frame" title="pupil_recording_interface.VideoReader.process_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_frame</span></code></a>(frame[, norm_pos])</p></td>
+<td><p>Process a video frame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.read_frames.html#pupil_recording_interface.VideoReader.read_frames" title="pupil_recording_interface.VideoReader.read_frames"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_frames</span></code></a>([start, end])</p></td>
+<td><p>Generator for processed frames.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_pldata</span></code>(topic, data)</p></td>
+<td><p>Save data from a list of dicts as a .pldata file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.subsample_frame.html#pupil_recording_interface.VideoReader.subsample_frame" title="pupil_recording_interface.VideoReader.subsample_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subsample_frame</span></code></a>(frame)</p></td>
+<td><p>Sub-sample a video frame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.undistort_frame.html#pupil_recording_interface.VideoReader.undistort_frame" title="pupil_recording_interface.VideoReader.undistort_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undistort_frame</span></code></a>(frame)</p></td>
+<td><p>Un-distort a video frame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">undistort_point</span></code>(point)</p></td>
+<td><p>Un-distort a two-dimensional point.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="pupil_recording_interface.VideoReader.write_netcdf.html#pupil_recording_interface.VideoReader.write_netcdf" title="pupil_recording_interface.VideoReader.write_netcdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_netcdf</span></code></a>([filename])</p></td>
+<td><p>Export data to netCDF.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">current_frame_index</span></code></p></td>
+<td><p>Index of current video frame.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_name</span></code></p></td>
+<td><p>Name of exported files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">video_info</span></code></p></td>
+<td><p>Video metadata.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pupil_recording_interface.OpticalFlowReader.html" class="btn btn-neutral float-right" title="pupil_recording_interface.OpticalFlowReader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pupil_recording_interface.MotionReader.html" class="btn btn-neutral float-left" title="pupil_recording_interface.MotionReader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

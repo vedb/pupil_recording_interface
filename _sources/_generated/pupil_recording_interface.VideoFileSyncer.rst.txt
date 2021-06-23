@@ -1,0 +1,38 @@
+pupil\_recording\_interface.VideoFileSyncer
+===========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: VideoFileSyncer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VideoFileSyncer.Config
+      ~VideoFileSyncer.__init__
+      ~VideoFileSyncer.call
+      ~VideoFileSyncer.from_config
+      ~VideoFileSyncer.get_constructor_args
+      ~VideoFileSyncer.get_params
+      ~VideoFileSyncer.process
+      ~VideoFileSyncer.process_notifications
+      ~VideoFileSyncer.process_packet
+      ~VideoFileSyncer.start
+      ~VideoFileSyncer.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VideoFileSyncer.process_type
+   
+   

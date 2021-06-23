@@ -1,0 +1,6 @@
+pupil\_recording\_interface.VideoReader.undistort\_frame
+========================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: VideoReader.undistort_frame

@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pupil_recording_interface.StreamManager &mdash; pupil_recording_interface 0.5.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-rendered-html.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pupil_recording_interface.Pipeline" href="pupil_recording_interface.Pipeline.html" />
+    <link rel="prev" title="pupil_recording_interface.MotionStream" href="pupil_recording_interface.MotionStream.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pupil_recording_interface
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#top-level-functions-and-classes">Top-level functions and classes</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#i-o-functions">I/O functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#reader-classes">Reader classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#device-classes">Device classes</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#stream-classes">Stream classes</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.VideoStream.html">pupil_recording_interface.VideoStream</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.MotionStream.html">pupil_recording_interface.MotionStream</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pupil_recording_interface.StreamManager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#process-classes">Process classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#class-member-details">Class member details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>pupil_recording_interface.StreamManager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/_generated/pupil_recording_interface.StreamManager.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pupil-recording-interface-streammanager">
+<h1>pupil_recording_interface.StreamManager<a class="headerlink" href="#pupil-recording-interface-streammanager" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pupil_recording_interface.StreamManager">
+<em class="property">class </em><code class="sig-prename descclassname">pupil_recording_interface.</code><code class="sig-name descname">StreamManager</code><span class="sig-paren">(</span><em class="sig-param">configs</em>, <em class="sig-param">folder=None</em>, <em class="sig-param">policy='new_folder'</em>, <em class="sig-param">duration=None</em>, <em class="sig-param">update_interval=0.01</em>, <em class="sig-param">status_timeout=1.0</em>, <em class="sig-param">max_queue_size=20</em>, <em class="sig-param">app_info=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.StreamManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manager for multiple streams.</p>
+<dl class="method">
+<dt id="pupil_recording_interface.StreamManager.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">configs</em>, <em class="sig-param">folder=None</em>, <em class="sig-param">policy='new_folder'</em>, <em class="sig-param">duration=None</em>, <em class="sig-param">update_interval=0.01</em>, <em class="sig-param">status_timeout=1.0</em>, <em class="sig-param">max_queue_size=20</em>, <em class="sig-param">app_info=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.StreamManager.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>configs: iterable of StreamConfig</strong></dt><dd><p>An iterable of stream configurations.</p>
+</dd>
+<dt><strong>folder: str, optional</strong></dt><dd><p>Path to the recording folder if any of the streams are being
+recorded.</p>
+</dd>
+<dt><strong>policy: str, default ‘new_folder’</strong></dt><dd><p>Policy for recording folder creation. If ‘new_folder’,
+new sub-folders will be created with incremental numbering. If
+‘here’, the data will be recorded to the specified folder but
+will throw an error when existing files would be overwritten. If
+‘overwrite’, the data will be recorded to the specified folder
+and existing files will possibly be overwritten. If ‘read’,
+the folder is only read from, for example when using a
+‘video_file’ device.</p>
+</dd>
+<dt><strong>duration: float, optional</strong></dt><dd><p>If provided, the number of seconds after which the streams are
+stopped.</p>
+</dd>
+<dt><strong>update_interval: float, default 0.01</strong></dt><dd><p>Time in seconds between status and notification updates. Higher
+values might lead to to delays in communicating with the processes
+and dropped messages while lower values might lead to increased
+CPU load of the main process. Set to None for maximum update rate.
+Will be dropped in a future version with an asynchronous
+implementation of the update mechanism.</p>
+</dd>
+<dt><strong>status_timeout: float, default 1.0</strong></dt><dd><p>Maximum time in seconds to wait for status updates from a stream.
+After this time, the status of the stream will be reset to the
+default.</p>
+</dd>
+<dt><strong>max_queue_size: int, default 20</strong></dt><dd><p>Maximum size of process status and notification queues. Higher
+values might lead to delays in communicating with the processes
+while lower values might lead to dropped messages.</p>
+</dd>
+<dt><strong>app_info: dict</strong></dt><dd><p>When using pupil_recording_interface as the backend for a recording
+app, provide a dict with the <code class="docutils literal notranslate"><span class="pre">&quot;name&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;</span></code> of your
+app such that the “recording_software_name” and
+“recording_software_version” fields in <cite>info.player.json</cite> will
+be set appropriately.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.StreamManager.__init__" title="pupil_recording_interface.StreamManager.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(configs[, folder, policy, …])</p></td>
+<td><p>Constructor.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">await_status</span></code>(stream, **kwargs)</p></td>
+<td><p>Wait for a stream to report a certain status.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_status</span></code>(key[, format, nan_format, …])</p></td>
+<td><p>Format status dictionary to string.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code>()</p></td>
+<td><p>Main loop (blocking).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_info</span></code>([final])</p></td>
+<td><p>Save info.player.json file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">send_notification</span></code>(notification[, streams])</p></td>
+<td><p>Send a notification over the priority queues.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">spin</span></code>([block])</p></td>
+<td><p>Main worker loop of the manager.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">spin_generator</span></code>()</p></td>
+<td><p>Main worker loop of the manager, implemented as a generator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>()</p></td>
+<td><p>Start recording.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
+<td><p>Stop streams.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_streams_running</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_duration</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pupil_recording_interface.Pipeline.html" class="btn btn-neutral float-right" title="pupil_recording_interface.Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pupil_recording_interface.MotionStream.html" class="btn btn-neutral float-left" title="pupil_recording_interface.MotionStream" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

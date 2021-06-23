@@ -1,0 +1,6 @@
+pupil\_recording\_interface.OpticalFlowReader.calculate\_optical\_flow
+======================================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: OpticalFlowReader.calculate_optical_flow

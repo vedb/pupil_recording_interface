@@ -1,0 +1,42 @@
+pupil\_recording\_interface.Validation
+======================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: Validation
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Validation.Config
+      ~Validation.__init__
+      ~Validation.calculate_calibration
+      ~Validation.call
+      ~Validation.from_config
+      ~Validation.get_constructor_args
+      ~Validation.get_params
+      ~Validation.plot_markers
+      ~Validation.plot_pupils
+      ~Validation.process
+      ~Validation.process_notifications
+      ~Validation.process_packet
+      ~Validation.save_result
+      ~Validation.start
+      ~Validation.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Validation.process_type
+   
+   

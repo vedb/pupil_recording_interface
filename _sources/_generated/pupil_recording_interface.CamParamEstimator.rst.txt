@@ -1,0 +1,39 @@
+pupil\_recording\_interface.CamParamEstimator
+=============================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: CamParamEstimator
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CamParamEstimator.Config
+      ~CamParamEstimator.__init__
+      ~CamParamEstimator.call
+      ~CamParamEstimator.display_hook
+      ~CamParamEstimator.from_config
+      ~CamParamEstimator.get_constructor_args
+      ~CamParamEstimator.get_params
+      ~CamParamEstimator.process
+      ~CamParamEstimator.process_notifications
+      ~CamParamEstimator.process_packet
+      ~CamParamEstimator.start
+      ~CamParamEstimator.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CamParamEstimator.process_type
+   
+   

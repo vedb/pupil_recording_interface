@@ -1,0 +1,41 @@
+pupil\_recording\_interface.GazeMapper
+======================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: GazeMapper
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GazeMapper.Config
+      ~GazeMapper.__init__
+      ~GazeMapper.call
+      ~GazeMapper.display_hook
+      ~GazeMapper.from_config
+      ~GazeMapper.get_constructor_args
+      ~GazeMapper.get_mapped_gaze
+      ~GazeMapper.get_params
+      ~GazeMapper.process
+      ~GazeMapper.process_notifications
+      ~GazeMapper.process_packet
+      ~GazeMapper.record_data
+      ~GazeMapper.start
+      ~GazeMapper.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GazeMapper.process_type
+   
+   

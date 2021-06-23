@@ -1,0 +1,6 @@
+pupil\_recording\_interface.MotionReader.write\_netcdf
+======================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: MotionReader.write_netcdf

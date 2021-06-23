@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pupil_recording_interface.VideoStream &mdash; pupil_recording_interface 0.5.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-rendered-html.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pupil_recording_interface.MotionStream" href="pupil_recording_interface.MotionStream.html" />
+    <link rel="prev" title="pupil_recording_interface.RealSenseDeviceT265" href="pupil_recording_interface.RealSenseDeviceT265.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pupil_recording_interface
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#top-level-functions-and-classes">Top-level functions and classes</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#i-o-functions">I/O functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#reader-classes">Reader classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#device-classes">Device classes</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#stream-classes">Stream classes</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pupil_recording_interface.VideoStream</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.MotionStream.html">pupil_recording_interface.MotionStream</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.StreamManager.html">pupil_recording_interface.StreamManager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#process-classes">Process classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#class-member-details">Class member details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>pupil_recording_interface.VideoStream</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/_generated/pupil_recording_interface.VideoStream.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pupil-recording-interface-videostream">
+<h1>pupil_recording_interface.VideoStream<a class="headerlink" href="#pupil-recording-interface-videostream" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pupil_recording_interface.VideoStream">
+<em class="property">class </em><code class="sig-prename descclassname">pupil_recording_interface.</code><code class="sig-name descname">VideoStream</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">color_format='bgr24'</em>, <em class="sig-param">side='both'</em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Video stream.</p>
+<dl class="method">
+<dt id="pupil_recording_interface.VideoStream.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">color_format='bgr24'</em>, <em class="sig-param">side='both'</em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoStream.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>device: BaseVideoDevice</strong></dt><dd><p>The device producing the stream.</p>
+</dd>
+<dt><strong>name: str, optional</strong></dt><dd><p>The name of the stream. If not specified, <cite>device.device_uid</cite>
+will be used.</p>
+</dd>
+<dt><strong>color_format: str, default ‘bgr24’</strong></dt><dd><p>The target color format. Set to ‘gray’ for eye cameras.</p>
+</dd>
+<dt><strong>side: str, default ‘both’</strong></dt><dd><p>For stereo cameras, which side to record. Can be ‘left’, ‘right’
+or ‘both’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Config</span></code>(*args, **kwargs)</p></td>
+<td><p>Configuration for this class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoStream.__init__" title="pupil_recording_interface.VideoStream.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(device[, pipeline, name, …])</p></td>
+<td><p>Constructor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_config</span></code>(config[, device, folder])</p></td>
+<td><p>Create a stream from a StreamConfig.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constructor_args</span></code>(config, **kwargs)</p></td>
+<td><p>Construct and instance of a class from a Config.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_packet</span></code>()</p></td>
+<td><p>Get the last data packet from the stream.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>()</p></td>
+<td><p>Get constructor parameters for a class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_status</span></code>([packet])</p></td>
+<td><p>Get information about the stream status.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code>()</p></td>
+<td><p>Main loop.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_in_thread</span></code>([stop_event, status_queue, …])</p></td>
+<td><p>Main loop for running in a dedicated thread.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_post_thread_hooks</span></code>()</p></td>
+<td><p>Run hook(s) after processing thread(s) finish(es).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_pre_thread_hooks</span></code>()</p></td>
+<td><p>Run hook(s) before dispatching processing thread(s).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>([allow_failure])</p></td>
+<td><p>Start the stream.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
+<td><p>Stop the stream.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">current_fps</span></code></p></td>
+<td><p>Current average fps.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">listen_for</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_type</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pupil_recording_interface.MotionStream.html" class="btn btn-neutral float-right" title="pupil_recording_interface.MotionStream" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pupil_recording_interface.RealSenseDeviceT265.html" class="btn btn-neutral float-left" title="pupil_recording_interface.RealSenseDeviceT265" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

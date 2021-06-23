@@ -1,0 +1,6 @@
+pupil\_recording\_interface.write\_netcdf
+=========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: write_netcdf

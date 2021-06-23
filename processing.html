@@ -1,0 +1,507 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Processing and recording data &mdash; pupil_recording_interface 0.5.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-rendered-html.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Custom devices, streams and processes" href="custom.html" />
+    <link rel="prev" title="Streaming data" href="streaming.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pupil_recording_interface
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streaming.html">Streaming data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Processing and recording data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pupil-detection">Pupil detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipelines">Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notifications">Notifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gaze-mapping">Gaze mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calibration">Calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recording">Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#camera-parameter-estimation">Camera parameter estimation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pupil_recording_interface</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Processing and recording data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/processing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="processing-and-recording-data">
+<span id="processing"></span><h1>Processing and recording data<a class="headerlink" href="#processing-and-recording-data" title="Permalink to this headline">¶</a></h1>
+<p>pupil_recording_interface uses the concept of <em>processes</em> to handle data
+produced by devices and streams. This tutorial will present the pupil
+detector as an example process, then introduce the concept of pipelines and
+notifications and finally list other available processes such as the gaze
+mapper and recorders.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The data processing described in the following is aimed at the online
+(real-time) use case needed for recording as well as online pupil
+detection, gaze mapping and calibration. For offline (post-hoc) analysis of
+recorded data, refer to the <a class="reference internal" href="reading.html#reading"><span class="std std-ref">reading</span></a> and
+<a class="reference internal" href="analysis.html#analysis"><span class="std std-ref">analysis</span></a> pages.</p>
+</div>
+<div class="section" id="pupil-detection">
+<h2>Pupil detection<a class="headerlink" href="#pupil-detection" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Make sure that you have installed the necessary
+<a class="reference internal" href="installation.html#pupil-detection-dependencies"><span class="std std-ref">dependencies for pupil detection</span></a>.</p>
+</div>
+<p>Pupil detection is implemented in the <a class="reference internal" href="_generated/pupil_recording_interface.PupilDetector.html#pupil_recording_interface.PupilDetector" title="pupil_recording_interface.PupilDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">PupilDetector</span></code></a> class. We
+create a stream from an eye video and a detector:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pupil_recording_interface</span> <span class="k">as</span> <span class="nn">pri</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eye0_video</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoFileDevice</span><span class="p">(</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="s2">&quot;eye0&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eye0_stream</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="p">(</span><span class="n">eye0_video</span><span class="p">,</span> <span class="n">color_format</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detector</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Each process has a <code class="docutils literal notranslate"><span class="pre">process_packet</span></code> method that takes a <code class="xref py py-class docutils literal notranslate"><span class="pre">Packet</span></code>
+produced by the stream as an input and returns the same packet, possibly
+attaching additional attributes. Note that the detector also needs to be
+started and stopped, which we conveniently achieve with the context manager
+syntax:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">eye0_stream</span><span class="p">,</span> <span class="n">detector</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">packet</span> <span class="o">=</span> <span class="n">eye0_stream</span><span class="o">.</span><span class="n">get_packet</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">packet</span> <span class="o">=</span> <span class="n">detector</span><span class="o">.</span><span class="n">process_packet</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">packet</span><span class="o">.</span><span class="n">pupil</span> 
+<span class="go">{&#39;ellipse&#39;:</span>
+<span class="go">    {&#39;center&#39;: (96..., 130...),</span>
+<span class="go">     &#39;axes&#39;: (39..., 44...),</span>
+<span class="go">     &#39;angle&#39;: 77...},</span>
+<span class="go"> &#39;diameter&#39;: 44...,</span>
+<span class="go"> &#39;location&#39;: (96..., 130...),</span>
+<span class="go"> &#39;confidence&#39;: 0.99,</span>
+<span class="go"> &#39;internal_2d_raw_data&#39;: ...,</span>
+<span class="go"> &#39;norm_pos&#39;: (0.5..., 0.6...),</span>
+<span class="go"> &#39;timestamp&#39;: 1570725800...,</span>
+<span class="go"> &#39;method&#39;: &#39;2d c++&#39;,</span>
+<span class="go"> &#39;id&#39;: None,</span>
+<span class="go"> &#39;topic&#39;: &#39;pupil&#39;}</span>
+</pre></div>
+</div>
+<p>As you can see, the detector has detected a pupil and added the <code class="docutils literal notranslate"><span class="pre">pupil</span></code>
+attribute to the packet containing the location of the pupil among others.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>So far, only the standard 2D pupil detector is available. We are working
+on supporting more pupil detection methods.</p>
+</div>
+</div>
+<div class="section" id="pipelines">
+<h2>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this headline">¶</a></h2>
+<p>Multiple processes can be chained with a <a class="reference internal" href="_generated/pupil_recording_interface.Pipeline.html#pupil_recording_interface.Pipeline" title="pupil_recording_interface.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>, e.g. a pupil
+detector and a display that shows the eye camera image with an overlay of the
+detected pupil:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="p">(),</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">)]</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">steps</span> 
+<span class="go">[&lt;pupil_recording_interface.process.pupil_detector.PupilDetector ...&gt;,</span>
+<span class="go"> &lt;pupil_recording_interface.process.display.VideoDisplay ...&gt;]</span>
+</pre></div>
+</div>
+<p>Starting/stopping the pipeline also starts/stop all of its processes. The
+<code class="docutils literal notranslate"><span class="pre">process</span></code> method pipes a packet through all of the steps:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">eye0_stream</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">pipeline</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">eye0_stream</span><span class="o">.</span><span class="n">get_packet</span><span class="p">())</span>
+<span class="gp">... </span>    <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Press enter to close&quot;</span><span class="p">)</span> 
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">input()</span></code> call is necessary here because the pipeline is stopped upon
+exiting the context manager, which includes closing the window of the video
+display.</p>
+</div>
+<p>Pipelines can easily be attached to streams created with the config mechanism
+for use with a stream manager:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;video_file&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;eye0&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">... </span>            <span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="o">.</span><span class="n">Config</span><span class="p">(),</span>
+<span class="gp">... </span>            <span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">(),</span>
+<span class="gp">... </span>        <span class="p">],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">StreamManager</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">configs</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">folder</span><span class="o">=</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;read&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="notifications">
+<h2>Notifications<a class="headerlink" href="#notifications" title="Permalink to this headline">¶</a></h2>
+<p>In addition to packets which are produced every time a stream provides new
+data (e.g. a new video frame from a camera), streams also need to deal with
+asynchronous data from other sources.</p>
+<p>This data falls into two categories:</p>
+<ol class="arabic simple">
+<li><p>Events emitted from the <a class="reference internal" href="_generated/pupil_recording_interface.StreamManager.html#pupil_recording_interface.StreamManager" title="pupil_recording_interface.StreamManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamManager</span></code></a>, e.g. instructing the
+<a class="reference internal" href="_generated/pupil_recording_interface.Calibration.html#pupil_recording_interface.Calibration" title="pupil_recording_interface.Calibration"><code class="xref py py-class docutils literal notranslate"><span class="pre">Calibration</span></code></a> process to start collecting calibration data.</p></li>
+<li><p>Data from other processes, e.g. information about detected pupils from an
+eye camera stream that the <a class="reference internal" href="_generated/pupil_recording_interface.GazeMapper.html#pupil_recording_interface.GazeMapper" title="pupil_recording_interface.GazeMapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">GazeMapper</span></code></a> process - attached to the
+world camera stream - uses to calculate the current gaze position in the
+world video frame.</p></li>
+</ol>
+<p>For this purpose, processes have a <code class="docutils literal notranslate"><span class="pre">process_notifications</span></code> method that
+handles this kind of data. Notifications are passed a list of dictionaries;
+for events from the manager the dictionary key denotes the type of event and
+the value contains the notification’s payload.</p>
+<p>Internally, each process filters the notification list and responds only to
+certain pre-defined types. One class of notifications that all processes
+understand are <code class="docutils literal notranslate"><span class="pre">&quot;pause_process&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;resume_process&quot;</span></code> that will
+temporarily pause the process:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">detector</span><span class="o">.</span><span class="n">paused</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detector</span><span class="o">.</span><span class="n">process_notifications</span><span class="p">([{</span><span class="s2">&quot;pause_process&quot;</span><span class="p">:</span> <span class="s2">&quot;PupilDetector&quot;</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detector</span><span class="o">.</span><span class="n">paused</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detector</span><span class="o">.</span><span class="n">process_notifications</span><span class="p">([{</span><span class="s2">&quot;resume_process&quot;</span><span class="p">:</span> <span class="s2">&quot;PupilDetector&quot;</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detector</span><span class="o">.</span><span class="n">paused</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Note that the notification’s payload must match <code class="docutils literal notranslate"><span class="pre">detector.process_name</span></code> in
+order for this to work.</p>
+</div>
+<div class="section" id="gaze-mapping">
+<h2>Gaze mapping<a class="headerlink" href="#gaze-mapping" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="_generated/pupil_recording_interface.GazeMapper.html#pupil_recording_interface.GazeMapper" title="pupil_recording_interface.GazeMapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">GazeMapper</span></code></a> collects data from one or two
+<a class="reference internal" href="_generated/pupil_recording_interface.PupilDetector.html#pupil_recording_interface.PupilDetector" title="pupil_recording_interface.PupilDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">PupilDetector</span></code></a> s and maps it to a gaze position according to a
+previously defined calibration.</p>
+<p>For the next example, we need to create a stream for the second eye:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eye1_video</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoFileDevice</span><span class="p">(</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="s2">&quot;eye1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eye1_stream</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="p">(</span><span class="n">eye1_video</span><span class="p">,</span> <span class="n">color_format</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We also create two <a class="reference internal" href="_generated/pupil_recording_interface.PupilDetector.html#pupil_recording_interface.PupilDetector" title="pupil_recording_interface.PupilDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">PupilDetector</span></code></a> s which we assign a <code class="docutils literal notranslate"><span class="pre">camera_id</span></code>
+because the mapper needs to know which eye the detected pupil came from:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eye0_detector</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="p">(</span><span class="n">camera_id</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eye1_detector</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="p">(</span><span class="n">camera_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mapper</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">GazeMapper</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now we can read one frame from each eye camera, detect pupils and pass them as
+notifications to the gaze mapper. Note that for data from other streams, the
+key of the notification is the name of the stream that produced the data.
+Calling <code class="docutils literal notranslate"><span class="pre">get_mapped_gaze</span></code> returns a list of newly mapped gaze data since the
+last call.</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">eye0_stream</span><span class="p">,</span> <span class="n">eye0_detector</span><span class="p">,</span> <span class="n">eye1_stream</span><span class="p">,</span> <span class="n">eye1_detector</span><span class="p">,</span> <span class="n">mapper</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">packet</span> <span class="o">=</span> <span class="n">eye0_detector</span><span class="o">.</span><span class="n">process_packet</span><span class="p">(</span><span class="n">eye0_stream</span><span class="o">.</span><span class="n">get_packet</span><span class="p">())</span>
+<span class="gp">... </span>    <span class="n">mapper</span><span class="o">.</span><span class="n">process_notifications</span><span class="p">([{</span><span class="s2">&quot;eye0&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;pupil&quot;</span><span class="p">:</span> <span class="n">packet</span><span class="o">.</span><span class="n">pupil</span><span class="p">}}])</span>
+<span class="gp">... </span>    <span class="n">packet</span> <span class="o">=</span> <span class="n">eye1_detector</span><span class="o">.</span><span class="n">process_packet</span><span class="p">(</span><span class="n">eye1_stream</span><span class="o">.</span><span class="n">get_packet</span><span class="p">())</span>
+<span class="gp">... </span>    <span class="n">mapper</span><span class="o">.</span><span class="n">process_notifications</span><span class="p">([{</span><span class="s2">&quot;eye1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;pupil&quot;</span><span class="p">:</span> <span class="n">packet</span><span class="o">.</span><span class="n">pupil</span><span class="p">}}])</span>
+<span class="gp">... </span>    <span class="n">mapper</span><span class="o">.</span><span class="n">get_mapped_gaze</span><span class="p">()</span> 
+<span class="go">[{&#39;topic&#39;: &#39;gaze.2d.01.&#39;,</span>
+<span class="go">  &#39;norm_pos&#39;: (0.32..., 0.67...),</span>
+<span class="go">  &#39;confidence&#39;: 0.97...,</span>
+<span class="go">  &#39;timestamp&#39;: 1570725800.2788825,</span>
+<span class="go">  &#39;base_data&#39;: [...]}]</span>
+</pre></div>
+</div>
+<p>When using the <a class="reference internal" href="_generated/pupil_recording_interface.GazeMapper.html#pupil_recording_interface.GazeMapper" title="pupil_recording_interface.GazeMapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">GazeMapper</span></code></a> in a pipeline with the config mechanism,
+the stream manager takes care of forwarding the necessary notifications from
+the pupil detectors to the mapper. The <code class="docutils literal notranslate"><span class="pre">left</span></code> and <code class="docutils literal notranslate"><span class="pre">right</span></code> constructor
+arguments of the <a class="reference internal" href="_generated/pupil_recording_interface.GazeMapper.html#pupil_recording_interface.GazeMapper" title="pupil_recording_interface.GazeMapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">GazeMapper</span></code></a> specify the names of the left and right
+eye camera stream and are set to <code class="docutils literal notranslate"><span class="pre">&quot;eye1&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;eye0&quot;</span></code> by default. The
+config below sets up all three video streams and overlays the mapped gaze
+onto the world camera image.</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;video_file&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;world&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">GazeMapper</span><span class="o">.</span><span class="n">Config</span><span class="p">(),</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;video_file&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;eye0&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eye0&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="o">.</span><span class="n">Config</span><span class="p">(),</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;video_file&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;eye1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eye1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="o">.</span><span class="n">Config</span><span class="p">(),</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">StreamManager</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">configs</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">folder</span><span class="o">=</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;read&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When running the manager you should now see detected pupils and mapped gaze
+position overlaid on the respective camera images:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>So far, only the standard 2D gaze mapping is available. We are working
+on supporting more gaze mapping methods.</p>
+</div>
+</div>
+<div class="section" id="calibration">
+<h2>Calibration<a class="headerlink" href="#calibration" title="Permalink to this headline">¶</a></h2>
+<p>For calibrating the gaze mapping, pupil_recording_interface provides two
+processes:</p>
+<ul class="simple">
+<li><p>The <a class="reference internal" href="_generated/pupil_recording_interface.CircleDetector.html#pupil_recording_interface.CircleDetector" title="pupil_recording_interface.CircleDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">CircleDetector</span></code></a> process that detects the circular calibration
+marker.</p></li>
+<li><p>The <a class="reference internal" href="_generated/pupil_recording_interface.Calibration.html#pupil_recording_interface.Calibration" title="pupil_recording_interface.Calibration"><code class="xref py py-class docutils literal notranslate"><span class="pre">Calibration</span></code></a> process that collects detected calibration
+markers and pupils and calculates and stores the calibration.</p></li>
+</ul>
+<p>For more details, please refer to the
+<a class="reference internal" href="auto_examples/online/4_calibrate.html#calibration-example"><span class="std std-ref">calibration example</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>So far, only the standard 2D calibration is available. We are working
+on supporting more calibration methods.</p>
+</div>
+</div>
+<div class="section" id="recording">
+<h2>Recording<a class="headerlink" href="#recording" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Make sure that you have installed the necessary
+<a class="reference internal" href="installation.html#recording-dependencies"><span class="std std-ref">dependencies for recording</span></a>.</p>
+</div>
+<p>Video streams can be recorded to disk along with the timestamps with the
+<a class="reference internal" href="_generated/pupil_recording_interface.VideoRecorder.html#pupil_recording_interface.VideoRecorder" title="pupil_recording_interface.VideoRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoRecorder</span></code></a> process.</p>
+<p>For more details, please refer to the
+<a class="reference internal" href="auto_examples/online/3_record.html#recording-example"><span class="std std-ref">recording example</span></a>.</p>
+</div>
+<div class="section" id="camera-parameter-estimation">
+<h2>Camera parameter estimation<a class="headerlink" href="#camera-parameter-estimation" title="Permalink to this headline">¶</a></h2>
+<p>For estimating camera parameters, pupil_recording_interface provides two
+processes:</p>
+<ul class="simple">
+<li><p>The <a class="reference internal" href="_generated/pupil_recording_interface.CircleGridDetector.html#pupil_recording_interface.CircleGridDetector" title="pupil_recording_interface.CircleGridDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">CircleGridDetector</span></code></a> process that detects the asymmetric circle
+grid.</p></li>
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.CamParamEstimator.html#pupil_recording_interface.CamParamEstimator" title="pupil_recording_interface.CamParamEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">CamParamEstimator</span></code></a> that collects detected circle grids and
+calculates and stores the camera parameters.</p></li>
+</ul>
+<p>For more details, please refer to the
+<a class="reference internal" href="auto_examples/online/6_estimate_cam_params.html#cam-param-example"><span class="std std-ref">camera parameter estimation example</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="custom.html" class="btn btn-neutral float-right" title="Custom devices, streams and processes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="streaming.html" class="btn btn-neutral float-left" title="Streaming data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

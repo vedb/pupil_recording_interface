@@ -1,0 +1,6 @@
+pupil\_recording\_interface.MotionReader.load\_dataset
+======================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: MotionReader.load_dataset

@@ -1,0 +1,412 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Installation &mdash; pupil_recording_interface 0.5.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-rendered-html.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reading data" href="reading.html" />
+    <link rel="prev" title="pupil_recording_interface" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pupil_recording_interface
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#latest-version">Latest version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example-data">Example data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#streaming">Streaming</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linux">Linux</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#windows-and-macos">Windows and MacOS</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#recording">Recording</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#h-265-encoding-linux">H.265 encoding (Linux)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pupil-detection">Pupil detection</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Linux</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Windows and MacOS</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#realsense-t265">RealSense T265</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linux-and-macos">Linux and MacOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#flir-cameras">FLIR cameras</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Linux</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Windows and MacOS</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#export">Export</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pupil_recording_interface</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="latest-version">
+<h2>Latest version<a class="headerlink" href="#latest-version" title="Permalink to this headline">¶</a></h2>
+<p>pupil_recording_interface can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install opencv-python git+https://github.com/vedb/pupil_recording_interface.git
+</pre></div>
+</div>
+<p>or via <code class="docutils literal notranslate"><span class="pre">conda</span></code> from our own channel:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install -c vedb pupil_recording_interface
+</pre></div>
+</div>
+</div>
+<div class="section" id="optional-dependencies">
+<span id="id1"></span><h2>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>The library requires several optional dependencies for features like streaming
+video from the Pupil Core cameras, recording data or special algorithms such as
+pupil detection.</p>
+<p>Many of these dependencies are non-trivial to install, especially on Windows.
+Therefore, we recommend installing the library in a conda environment since
+conda provides a straightforward way of cross-platform distribution for
+non-Python dependencies. We are actively working on packaging those
+dependencies that aren’t already available through conda. At the moment, only
+packages for Linux x64 and Python versions 3.6 and 3.7 are available.</p>
+<div class="section" id="example-data">
+<span id="example-dependencies"></span><h3>Example data<a class="headerlink" href="#example-data" title="Permalink to this headline">¶</a></h3>
+<p>To download the test recording used in the examples you need to install pooch:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install pooch
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install pooch
+</pre></div>
+</div>
+</div>
+<div class="section" id="streaming">
+<span id="streaming-dependencies"></span><h3>Streaming<a class="headerlink" href="#streaming" title="Permalink to this headline">¶</a></h3>
+<p>To stream video from the pupil cameras you need to install the <a class="reference external" href="https://github.com/pupil-labs/pyuvc">PyUVC</a>
+library.</p>
+<div class="section" id="linux">
+<h4>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h4>
+<p>A conda package is available for Linux:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install -c vedb -c conda-forge pyuvc
+</pre></div>
+</div>
+<p>Set these udev rules to access the cameras as a normal user:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">echo</span> <span class="s1">&#39;SUBSYSTEM==&quot;usb&quot;, ENV{DEVTYPE}==&quot;usb_device&quot;, GROUP=&quot;plugdev&quot;, MODE=&quot;0664&quot;&#39;</span> <span class="p">|</span> sudo tee /etc/udev/rules.d/10-libuvc.rules &gt; /dev/null
+<span class="gp">$ </span>sudo udevadm trigger
+</pre></div>
+</div>
+</div>
+<div class="section" id="windows-and-macos">
+<h4>Windows and MacOS<a class="headerlink" href="#windows-and-macos" title="Permalink to this headline">¶</a></h4>
+<p>For these operating systems, follow the instructions on the <a class="reference external" href="https://github.com/pupil-labs/pyuvc">PyUVC</a> GitHub
+page.</p>
+</div>
+</div>
+<div class="section" id="recording">
+<span id="recording-dependencies"></span><h3>Recording<a class="headerlink" href="#recording" title="Permalink to this headline">¶</a></h3>
+<p>To record video you need to install <a class="reference external" href="https://www.ffmpeg.org">ffmpeg</a>. This can be done via conda on
+all operating systems:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install ffmpeg x264
+</pre></div>
+</div>
+<div class="section" id="h-265-encoding-linux">
+<h4>H.265 encoding (Linux)<a class="headerlink" href="#h-265-encoding-linux" title="Permalink to this headline">¶</a></h4>
+<p>On Linux it is also possible to record videos using the H.265/HEVC standard.
+The <code class="docutils literal notranslate"><span class="pre">x265</span></code> implementation of the codec can be installed via conda along
+with an <code class="docutils literal notranslate"><span class="pre">ffmpeg</span></code> package build with support for the library:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install -c loopbio ffmpeg x265
+</pre></div>
+</div>
+<p>If you also need support for FLIR cameras (see <a class="reference internal" href="#flir-dependencies"><span class="std std-ref">FLIR cameras</span></a>), you
+will need to install our own <code class="docutils literal notranslate"><span class="pre">ffmpeg</span></code> package instead:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install -c loopbio -c vedb <span class="nv">ffmpeg</span><span class="o">=</span><span class="m">3</span>.4.2 x265
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="pupil-detection">
+<span id="pupil-detection-dependencies"></span><h3>Pupil detection<a class="headerlink" href="#pupil-detection" title="Permalink to this headline">¶</a></h3>
+<p>Pupil detection is implemented based on Pupil Labs’ <a class="reference external" href="https://github.com/pupil-labs/pupil-detectors">pupil-detectors</a>
+package.</p>
+<div class="section" id="id2">
+<h4>Linux<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<p>A conda package is available for Linux:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install -c vedb -c conda-forge pupil-detectors
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h4>Windows and MacOS<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p>Install via pip:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install pupil-detectors
+</pre></div>
+</div>
+<p>On MacOS, you will probably need to install some build dependencies. Please
+refer to the <a class="reference external" href="https://github.com/pupil-labs/pupil-detectors">pupil-detectors</a> GitHub pages for details.</p>
+</div>
+</div>
+<div class="section" id="realsense-t265">
+<span id="realsense-dependencies"></span><h3>RealSense T265<a class="headerlink" href="#realsense-t265" title="Permalink to this headline">¶</a></h3>
+<p>Motion and video data from an Intel RealSense T265 tracking camera can be
+streamed by installing the <a class="reference external" href="https://github.com/IntelRealSense/librealsense">RealSense SDK</a> and <code class="docutils literal notranslate"><span class="pre">pyrealsense2</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install pyrealsense2
+</pre></div>
+</div>
+<div class="section" id="linux-and-macos">
+<h4>Linux and MacOS<a class="headerlink" href="#linux-and-macos" title="Permalink to this headline">¶</a></h4>
+<p>The RealSense SDK can be installed through conda:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install -c conda-forge librealsense
+</pre></div>
+</div>
+</div>
+<div class="section" id="windows">
+<h4>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h4>
+<p>Follow the instructions on the <a class="reference external" href="https://github.com/IntelRealSense/librealsense">RealSense SDK</a> GitHub page.</p>
+</div>
+</div>
+<div class="section" id="flir-cameras">
+<span id="flir-dependencies"></span><h3>FLIR cameras<a class="headerlink" href="#flir-cameras" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">PySpin</span></code> and <code class="docutils literal notranslate"><span class="pre">simple-pyspin</span></code> are required for FLIR camera support.</p>
+<div class="section" id="id4">
+<h4>Linux<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+<p>We provide a <code class="docutils literal notranslate"><span class="pre">simple-pyspin</span></code> conda package with all dependencies for Linux:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install -c vedb -c conda-forge simple-pyspin
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h4>Windows and MacOS<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
+<p>For <code class="docutils literal notranslate"><span class="pre">PySpin</span></code> download the latest <a class="reference external" href="https://www.flir.com/products/spinnaker-sdk">Spinnaker SDK</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">simple-pyspin</span></code> can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install simple-pyspin
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="export">
+<span id="export-dependencies"></span><h3>Export<a class="headerlink" href="#export" title="Permalink to this headline">¶</a></h3>
+<p>Install the <code class="docutils literal notranslate"><span class="pre">netcdf4</span></code> library in order to export data to the netCDF format:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install netcdf4
+</pre></div>
+</div>
+<p>or with conda:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda install netcdf4
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reading.html" class="btn btn-neutral float-right" title="Reading data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="pupil_recording_interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

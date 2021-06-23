@@ -1,0 +1,42 @@
+pupil\_recording\_interface.MotionStream
+========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: MotionStream
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MotionStream.Config
+      ~MotionStream.__init__
+      ~MotionStream.from_config
+      ~MotionStream.get_constructor_args
+      ~MotionStream.get_packet
+      ~MotionStream.get_params
+      ~MotionStream.get_status
+      ~MotionStream.run
+      ~MotionStream.run_in_thread
+      ~MotionStream.run_post_thread_hooks
+      ~MotionStream.run_pre_thread_hooks
+      ~MotionStream.start
+      ~MotionStream.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MotionStream.current_fps
+      ~MotionStream.listen_for
+      ~MotionStream.stream_type
+   
+   

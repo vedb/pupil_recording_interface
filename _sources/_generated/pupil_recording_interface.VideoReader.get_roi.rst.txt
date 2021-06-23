@@ -1,0 +1,6 @@
+pupil\_recording\_interface.VideoReader.get\_roi
+================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: VideoReader.get_roi
