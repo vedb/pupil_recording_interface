@@ -7,6 +7,7 @@ from collections import deque
 from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing.managers import SyncManager
 from queue import Queue
+from pathlib import Path
 import multiprocessing as mp
 
 logger = logging.getLogger(__name__)
@@ -88,3 +89,42 @@ class SuppressStream:
             os.dup2(self.orig_stream_dup, self.orig_stream_fileno)
             os.close(self.orig_stream_dup)
             self.devnull.close()
+
+
+def get_test_recording(version="2.0"):
+    """ Get a short test recording for demonstration.
+
+    The recording will be automatically downloaded and cached. The method
+    returns a path to the cache location that can be used in reader methods
+    and classes.
+
+    Parameters
+    ----------
+    version: str, default "2.0"
+        Pupil Player version used for post-hoc gaze mapping. Can be
+        "1.16" or "2.0".
+
+    Returns
+    -------
+    recording: pathlib.Path
+        Path to the test recording.
+    """
+    try:
+        import pooch
+        from pooch import Unzip
+    except ImportError:
+        raise ModuleNotFoundError(
+            "pooch must be installed to load example data"
+        )
+
+    url = "https://github.com/vedb/pupil-example-data/archive/refs/heads/"
+
+    goodboy = pooch.create(
+        path=pooch.os_cache("pupil-example-data"),
+        base_url=url,
+        registry={"branch-v1.16.zip": None, "branch-v2.0.zip": None},
+    )
+
+    fnames = goodboy.fetch(f"branch-v{version}.zip", processor=Unzip())
+
+    return Path(fnames[0]).parent

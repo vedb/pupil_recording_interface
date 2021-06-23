@@ -41,31 +41,31 @@ def t265_export_folder(t265_folder):
 
 
 class TestBaseReader:
-    def test_constructor(self, folder):
+    def test_constructor(self, folder_v1):
         """"""
-        exporter = BaseReader(folder)
-        assert exporter.folder == folder
+        exporter = BaseReader(folder_v1)
+        assert exporter.folder == folder_v1
 
         with pytest.raises(FileNotFoundError):
             BaseReader("not_a_folder")
 
-    def test_load_info(self, folder):
+    def test_load_info(self, folder_v1):
         """"""
-        info = BaseReader._load_info(folder)
+        info = BaseReader._load_info(folder_v1)
         assert info == info
 
         # legacy format
-        info = BaseReader._load_info(folder, "info.csv")
+        info = BaseReader._load_info(folder_v1, "info.csv")
         info["duration_s"] = 21.0
         assert info == info
 
         with pytest.raises(FileNotFoundError):
-            BaseReader._load_info(folder, "not_a_file")
+            BaseReader._load_info(folder_v1, "not_a_file")
 
-    def test_load_user_info(self, folder, info):
+    def test_load_user_info(self, folder_v1, info):
         """"""
         user_info = BaseReader._load_user_info(
-            folder, info["start_time_system_s"]
+            folder_v1, info["start_time_system_s"]
         )
 
         t0 = pd.to_datetime(info["start_time_system_s"], unit="s")
@@ -81,7 +81,7 @@ class TestBaseReader:
             "height": 1.80,
         }
 
-    def test_timestamps_to_datetimeindex(self, folder, info):
+    def test_timestamps_to_datetimeindex(self, folder_v1, info):
         """"""
         timestamps = np.array([2295.0, 2296.0, 2297.0])
 
@@ -89,29 +89,29 @@ class TestBaseReader:
 
         assert idx.values[0].astype(float) / 1e9 == 1570725800.4130569
 
-    def test_load_timestamps_as_datetimeindex(self, folder, info):
+    def test_load_timestamps_as_datetimeindex(self, folder_v1, info):
         """"""
         idx = BaseReader._load_timestamps_as_datetimeindex(
-            folder, "gaze", info
+            folder_v1, "gaze", info
         )
         assert idx.values[0].astype(float) / 1e9 == 1570725800.149778
 
         # with offset
         idx_with_offs = BaseReader._load_timestamps_as_datetimeindex(
-            folder, "gaze", info, 1.0
+            folder_v1, "gaze", info, 1.0
         )
         assert np.all(idx_with_offs == idx + pd.to_timedelta("1s"))
 
         # source timestamps from pldata
         idx_world_source = BaseReader._load_timestamps_as_datetimeindex(
-            folder, "world", info
+            folder_v1, "world", info
         )
         assert isinstance(idx_world_source, pd.DatetimeIndex)
         assert len(idx_world_source) == 504
 
         # source timestamps from pldata
         idx_world_monotonic = BaseReader._load_timestamps_as_datetimeindex(
-            folder, "world", info, use_pldata=False
+            folder_v1, "world", info, use_pldata=False
         )
         assert isinstance(idx_world_monotonic, pd.DatetimeIndex)
         np.testing.assert_almost_equal(
@@ -121,12 +121,12 @@ class TestBaseReader:
 
         with pytest.raises(FileNotFoundError):
             BaseReader._load_timestamps_as_datetimeindex(
-                folder, "not_a_topic", info
+                folder_v1, "not_a_topic", info
             )
 
-    def test_load_pldata(self, folder):
+    def test_load_pldata(self, folder_v1):
         """"""
-        data = BaseReader._load_pldata(folder, "odometry")
+        data = BaseReader._load_pldata(folder_v1, "odometry")
 
         assert len(data) == 4220
         assert set(data[0].keys()) == {
@@ -139,16 +139,16 @@ class TestBaseReader:
             "orientation",
         }
 
-    def test_save_pldata(self, folder, export_folder):
+    def test_save_pldata(self, folder_v1, export_folder_v1):
         """"""
-        data = BaseReader._load_pldata(folder, "odometry")
-        BaseReader._save_pldata(export_folder, "odometry", data)
+        data = BaseReader._load_pldata(folder_v1, "odometry")
+        BaseReader._save_pldata(export_folder_v1, "odometry", data)
 
-        assert (export_folder / "odometry.pldata").exists()
+        assert (export_folder_v1 / "odometry.pldata").exists()
 
-    def test_load_pldata_as_dataframe(self, folder):
+    def test_load_pldata_as_dataframe(self, folder_v1):
         """"""
-        df = BaseReader._load_pldata_as_dataframe(folder, "odometry")
+        df = BaseReader._load_pldata_as_dataframe(folder_v1, "odometry")
 
         assert set(df.columns) == {
             "topic",
@@ -161,7 +161,7 @@ class TestBaseReader:
         }
 
         with pytest.raises(FileNotFoundError):
-            BaseReader._load_pldata_as_dataframe(folder, "not_a_topic")
+            BaseReader._load_pldata_as_dataframe(folder_v1, "not_a_topic")
 
     def test_get_encoding(self):
         """"""
@@ -174,13 +174,13 @@ class TestBaseReader:
             "_FillValue": np.iinfo("int32").min,
         }
 
-    def test_write_netcdf(self, folder, export_folder):
+    def test_write_netcdf(self, folder_v1, export_folder_v1):
         """"""
         pytest.importorskip("netCDF4")
 
-        GazeReader(folder).write_netcdf()
+        GazeReader(folder_v1).write_netcdf()
 
-        ds = xr.open_dataset(export_folder / "000" / "gaze.nc")
+        ds = xr.open_dataset(export_folder_v1 / "000" / "gaze.nc")
 
         assert set(ds.data_vars) == {
             "eye",
@@ -197,6 +197,9 @@ class TestBaseReader:
 
 
 class TestFunctionalReader:
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
     def test_load_dataset(self, folder, t265_folder):
         """"""
         gaze, odometry = load_dataset(
@@ -240,6 +243,9 @@ class TestFunctionalReader:
         assert set(accel.data_vars) == {"linear_acceleration"}
         assert set(gyro.data_vars) == {"angular_velocity"}
 
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
     def test_load_dataset_cached(self, folder):
         """"""
         pytest.importorskip("netCDF4")
@@ -258,15 +264,15 @@ class TestFunctionalReader:
         shutil.rmtree(folder / "cache")
 
     def test_write_netcdf(
-        self, folder, t265_folder, export_folder, t265_export_folder
+        self, folder_v1, t265_folder, export_folder_v1, t265_export_folder
     ):
         """"""
         pytest.importorskip("netCDF4")
 
         # packaged recording
-        write_netcdf(folder, gaze="recording", odometry="recording")
-        assert (export_folder / "000" / "odometry.nc").exists()
-        assert (export_folder / "000" / "gaze.nc").exists()
+        write_netcdf(folder_v1, gaze="recording", odometry="recording")
+        assert (export_folder_v1 / "000" / "odometry.nc").exists()
+        assert (export_folder_v1 / "000" / "gaze.nc").exists()
 
         # test data recording
         write_netcdf(
@@ -279,6 +285,9 @@ class TestFunctionalReader:
         assert (t265_export_folder / "000" / "accel.nc").exists()
         assert (t265_export_folder / "000" / "gyro.nc").exists()
 
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
     def test_get_gaze_mappers(self, folder):
         """"""
         mappers = get_gaze_mappers(str(folder))
@@ -291,9 +300,13 @@ class TestGazeReader:
     def set_up(self):
         """"""
         self.n_gaze = 5160
-        self.n_gaze_offline = 5134
+        self.n_gaze_offline = {"1.16": 5134, "2.0": 5125}
+        self.n_gaze_merged = {"1.16": 5134, "2.0": 4987}
         self.gaze_mappers = {"2d": "2d Gaze Mapper ", "3d": "3d Gaze Mapper"}
 
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
     def test_constructor(self, folder, t265_folder):
         """"""
         reader = GazeReader(folder)
@@ -306,9 +319,9 @@ class TestGazeReader:
         reader = GazeReader(t265_folder)
         assert reader.gaze_mappers == {}
 
-    def test_load_gaze(self, folder, t265_folder):
+    def test_load_gaze(self, folder_v1, t265_folder):
         """"""
-        data = GazeReader._load_gaze(folder)
+        data = GazeReader._load_gaze(folder_v1)
 
         assert data["timestamp"].shape == (self.n_gaze,)
         assert data["confidence"].shape == (self.n_gaze,)
@@ -332,21 +345,29 @@ class TestGazeReader:
 
         assert data["timestamp"].shape == (665,)
 
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
     def test_load_merged_gaze(self, folder):
         """"""
         data = GazeReader._load_merged_gaze(folder, self.gaze_mappers)
+        version = GazeReader(folder).info["min_player_version"]
+        n = self.n_gaze_merged[version]
 
-        assert data["timestamp"].shape == (self.n_gaze_offline,)
-        assert data["confidence_2d"].shape == (self.n_gaze_offline,)
-        assert data["confidence_3d"].shape == (self.n_gaze_offline,)
-        assert data["norm_pos"].shape == (self.n_gaze_offline, 2)
-        assert data["eye"].shape == (self.n_gaze_offline,)
-        assert data["gaze_point"].shape == (self.n_gaze_offline, 3)
-        assert data["eye0_center"].shape == (self.n_gaze_offline, 3)
-        assert data["eye1_center"].shape == (self.n_gaze_offline, 3)
-        assert data["eye0_normal"].shape == (self.n_gaze_offline, 3)
-        assert data["eye1_normal"].shape == (self.n_gaze_offline, 3)
+        assert data["timestamp"].shape == (n,)
+        assert data["confidence_2d"].shape == (n,)
+        assert data["confidence_3d"].shape == (n,)
+        assert data["norm_pos"].shape == (n, 2)
+        assert data["eye"].shape == (n,)
+        assert data["gaze_point"].shape == (n, 3)
+        assert data["eye0_center"].shape == (n, 3)
+        assert data["eye1_center"].shape == (n, 3)
+        assert data["eye0_normal"].shape == (n, 3)
+        assert data["eye1_normal"].shape == (n, 3)
 
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
     def test_get_offline_gaze_mapper(self, folder):
         """"""
         mappers = GazeReader._get_offline_gaze_mappers(folder)
@@ -360,8 +381,13 @@ class TestGazeReader:
         with pytest.raises(FileNotFoundError):
             GazeReader._get_offline_gaze_mappers(folder / "not_a_folder")
 
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
     def test_load_dataset(self, folder):
         """"""
+        version = GazeReader(folder).info["min_player_version"]
+
         # from recording
         ds = GazeReader(folder).load_dataset()
         assert dict(ds.sizes) == {
@@ -383,7 +409,7 @@ class TestGazeReader:
         # offline 2d mapper
         ds = GazeReader(folder, source=self.gaze_mappers["2d"]).load_dataset()
         assert dict(ds.sizes) == {
-            "time": self.n_gaze_offline,
+            "time": self.n_gaze_offline[version],
             "pixel_axis": 2,
         }
         assert set(ds.data_vars) == {
@@ -395,7 +421,7 @@ class TestGazeReader:
         # merged 2d/3d gaze
         ds = GazeReader(folder, source=self.gaze_mappers).load_dataset()
         assert dict(ds.sizes) == {
-            "time": self.n_gaze_offline,
+            "time": self.n_gaze_merged[version],
             "cartesian_axis": 3,
             "pixel_axis": 2,
         }
@@ -415,12 +441,12 @@ class TestGazeReader:
         with pytest.raises(ValueError):
             GazeReader(folder, source="not_gaze_mapper").load_dataset()
 
-    def test_write_netcdf(self, folder, export_folder):
+    def test_write_netcdf(self, folder_v1, export_folder_v1):
         """"""
         pytest.importorskip("netCDF4")
 
-        GazeReader(folder).write_netcdf()
-        ds = xr.open_dataset(export_folder / "000" / "gaze.nc")
+        GazeReader(folder_v1).write_netcdf()
+        ds = xr.open_dataset(export_folder_v1 / "000" / "gaze.nc")
         assert set(ds.data_vars) == {
             "eye",
             "gaze_confidence_3d",
@@ -444,10 +470,10 @@ class TestMotionReader:
         self.n_accel = 1939
         self.n_gyro = 5991
 
-    def test_load_data(self, folder, t265_folder):
+    def test_load_data(self, folder_v1, t265_folder):
         """"""
         # legacy odometry
-        data = MotionReader._load_data(folder)
+        data = MotionReader._load_data(folder_v1)
         assert data["timestamp"].shape == (self.n_odometry_legacy,)
         assert data["confidence"].shape == (self.n_odometry_legacy,)
         assert data["confidence"].dtype == int
@@ -477,10 +503,10 @@ class TestMotionReader:
         assert data["timestamp"].shape == (self.n_gyro,)
         assert data["angular_velocity"].shape == (self.n_gyro, 3)
 
-    def test_load_dataset(self, folder, t265_folder):
+    def test_load_dataset(self, folder_v1, t265_folder):
         """"""
         # legacy odometry
-        ds = MotionReader(folder).load_dataset()
+        ds = MotionReader(folder_v1).load_dataset()
         assert dict(ds.sizes) == {
             "time": self.n_odometry_legacy,
             "cartesian_axis": 3,
@@ -523,7 +549,7 @@ class TestMotionReader:
 
         # bad source argument
         with pytest.raises(ValueError):
-            MotionReader(folder, source="not_supported").load_dataset()
+            MotionReader(folder_v1, source="not_supported").load_dataset()
 
 
 class TestVideoReader:
@@ -545,41 +571,41 @@ class TestVideoReader:
             "dtype": "uint8",
         }
 
-    def test_get_capture(self, folder):
+    def test_get_capture(self, folder_v1):
         """"""
-        capture = VideoReader._get_capture(folder, "world")
+        capture = VideoReader._get_capture(folder_v1, "world")
 
         assert isinstance(capture, cv2.VideoCapture)
 
         with pytest.raises(FileNotFoundError):
-            VideoReader._get_capture(folder, "not_a_topic")
+            VideoReader._get_capture(folder_v1, "not_a_topic")
 
-    def test_resolution(self, folder):
+    def test_resolution(self, folder_v1):
         """"""
-        resolution = VideoReader(folder, "world").resolution
+        resolution = VideoReader(folder_v1, "world").resolution
         assert resolution == self.frame_shape[-2::-1]
         assert isinstance(resolution[0], int)
         assert isinstance(resolution[1], int)
 
-    def test_frame_count(self, folder):
+    def test_frame_count(self, folder_v1):
         """"""
-        frame_count = VideoReader(folder, "world").frame_count
+        frame_count = VideoReader(folder_v1, "world").frame_count
         assert frame_count == self.n_frames
         assert isinstance(frame_count, int)
 
-    def test_frame_shape(self, folder):
+    def test_frame_shape(self, folder_v1):
         """"""
-        shape = VideoReader(folder).frame_shape
+        shape = VideoReader(folder_v1).frame_shape
         assert shape == self.frame_shape
 
-    def test_fps(self, folder):
+    def test_fps(self, folder_v1):
         """"""
-        fps = VideoReader(folder).fps
+        fps = VideoReader(folder_v1).fps
         assert fps == self.fps
 
-    def test_current_frame_index(self, folder):
+    def test_current_frame_index(self, folder_v1):
         """"""
-        reader = VideoReader(folder)
+        reader = VideoReader(folder_v1)
         assert reader.current_frame_index == 0
 
         reader.load_raw_frame()
@@ -595,9 +621,9 @@ class TestVideoReader:
 
         np.testing.assert_equal(idx, (True, True, False, False, True))
 
-    def test_get_bounds(self, folder):
+    def test_get_bounds(self, folder_v1):
         """"""
-        reader = VideoReader(folder, roi_size=self.roi_size)
+        reader = VideoReader(folder_v1, roi_size=self.roi_size)
 
         # completely inside
         bounds = reader._get_bounds(256, 512, self.roi_size)
@@ -615,18 +641,18 @@ class TestVideoReader:
         bounds = reader._get_bounds(-512, 512, self.roi_size)
         npt.assert_equal(bounds, ((576, 128), (0, 0)))
 
-    def test_get_frame_index(self, folder):
+    def test_get_frame_index(self, folder_v1):
         """"""
-        reader = VideoReader(folder)
+        reader = VideoReader(folder_v1)
         assert reader._get_frame_index(None) == 0
         assert reader._get_frame_index(None, default=1) == 1
         assert reader._get_frame_index(1) == 1
         assert reader._get_frame_index(reader.timestamps[2]) == 2
 
-    def test_get_roi(self, folder):
+    def test_get_roi(self, folder_v1):
         """"""
         frame = np.random.rand(512, 512)
-        reader = VideoReader(folder, roi_size=self.roi_size)
+        reader = VideoReader(folder_v1, roi_size=self.roi_size)
 
         # completely inside
         roi = reader.get_roi(frame, (0.5, 0.5))
@@ -657,13 +683,13 @@ class TestVideoReader:
             frame, np.zeros(self.frame_shape, dtype="uint8")
         )
 
-    def test_load_raw_frame(self, folder):
+    def test_load_raw_frame(self, folder_v1):
         """"""
-        reader = VideoReader(folder)
+        reader = VideoReader(folder_v1)
         frame = reader.load_raw_frame()
         assert frame.shape == self.frame_shape
 
-        reader = VideoReader(folder)
+        reader = VideoReader(folder_v1)
         frame_by_idx = reader.load_raw_frame(0)
         npt.assert_equal(frame_by_idx, frame)
 
@@ -671,9 +697,9 @@ class TestVideoReader:
         with pytest.raises(ValueError):
             reader.load_raw_frame(self.n_frames)
 
-    def test_load_frame(self, folder):
+    def test_load_frame(self, folder_v1):
         """"""
-        reader = VideoReader(folder)
+        reader = VideoReader(folder_v1)
         frame = reader.load_frame()
         assert frame.shape == self.frame_shape
 
@@ -685,8 +711,10 @@ class TestVideoReader:
         npt.assert_equal(frame_by_ts, frame)
 
         # ROI around norm pos
-        norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        reader = VideoReader(folder, norm_pos=norm_pos, roi_size=self.roi_size)
+        norm_pos = load_dataset(folder_v1, gaze="recording").gaze_norm_pos
+        reader = VideoReader(
+            folder_v1, norm_pos=norm_pos, roi_size=self.roi_size
+        )
         frame = reader.load_frame(0)
         assert frame.shape == (
             self.roi_size,
@@ -695,23 +723,23 @@ class TestVideoReader:
         )
 
         # with timestamp
-        reader = VideoReader(folder)
+        reader = VideoReader(folder_v1)
         t, frame = reader.load_frame(0, return_timestamp=True)
         assert float(t.value) / 1e9 == 1570725800.2383718
 
-    def test_read_frames(self, folder):
+    def test_read_frames(self, folder_v1):
         """"""
         # TODO move this to process_frame test
         # full frame
-        reader = VideoReader(folder)
+        reader = VideoReader(folder_v1)
         assert next(reader.read_frames()).shape == self.frame_shape
 
         # grayscale
-        reader = VideoReader(folder, color_format="gray")
+        reader = VideoReader(folder_v1, color_format="gray")
         assert next(reader.read_frames()).shape == self.frame_shape[:2]
 
         # sub-sampled frame
-        reader = VideoReader(folder, subsampling=2.0)
+        reader = VideoReader(folder_v1, subsampling=2.0)
         assert next(reader.read_frames()).shape == (
             self.frame_shape[0] / 2,
             self.frame_shape[1] / 2,
@@ -719,17 +747,19 @@ class TestVideoReader:
         )
 
         # ROI around gaze position
-        norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        reader = VideoReader(folder, norm_pos=norm_pos, roi_size=self.roi_size)
+        norm_pos = load_dataset(folder_v1, gaze="recording").gaze_norm_pos
+        reader = VideoReader(
+            folder_v1, norm_pos=norm_pos, roi_size=self.roi_size
+        )
         assert next(reader.read_frames()).shape == (
             self.roi_size,
             self.roi_size,
             self.frame_shape[2],
         )
 
-    def test_load_dataset(self, folder):
+    def test_load_dataset(self, folder_v1):
         """"""
-        reader = VideoReader(folder, subsampling=8.0, color_format="gray")
+        reader = VideoReader(folder_v1, subsampling=8.0, color_format="gray")
 
         ds = reader.load_dataset(
             start=reader.user_info["experiment_start"],
@@ -741,8 +771,10 @@ class TestVideoReader:
         assert ds.frames.dtype == "uint8"
 
         # ROI around norm_pos
-        norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
-        reader = VideoReader(folder, norm_pos=norm_pos, roi_size=self.roi_size)
+        norm_pos = load_dataset(folder_v1, gaze="recording").gaze_norm_pos
+        reader = VideoReader(
+            folder_v1, norm_pos=norm_pos, roi_size=self.roi_size
+        )
 
         ds = reader.load_dataset(dropna=True)
 
@@ -792,9 +824,9 @@ class TestOpticalFlowReader:
         )
         npt.assert_equal(flow, np.nan * np.ones((128, 128, 2)))
 
-    def test_load_optical_flow(self, folder):
+    def test_load_optical_flow(self, folder_v1):
         """"""
-        reader = OpticalFlowReader(folder)
+        reader = OpticalFlowReader(folder_v1)
 
         flow = reader.load_optical_flow(1)
         assert flow.shape == self.frame_shape
@@ -812,11 +844,11 @@ class TestOpticalFlowReader:
         with pytest.raises(ValueError):
             reader.load_optical_flow(self.n_frames)
 
-    def test_read_optical_flow(self, folder):
+    def test_read_optical_flow(self, folder_v1):
         """"""
-        norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
+        norm_pos = load_dataset(folder_v1, gaze="recording").gaze_norm_pos
         reader = OpticalFlowReader(
-            folder, norm_pos=norm_pos, roi_size=self.roi_size
+            folder_v1, norm_pos=norm_pos, roi_size=self.roi_size
         )
 
         assert next(reader.read_optical_flow()).shape == (
@@ -825,11 +857,11 @@ class TestOpticalFlowReader:
             2,
         )
 
-    def test_load_dataset(self, folder):
+    def test_load_dataset(self, folder_v1):
         """"""
         tqdm = pytest.importorskip("tqdm")
 
-        reader = OpticalFlowReader(folder, subsampling=8.0)
+        reader = OpticalFlowReader(folder_v1, subsampling=8.0)
 
         ds = reader.load_dataset(
             start=reader.user_info["experiment_start"],
@@ -847,9 +879,9 @@ class TestOpticalFlowReader:
         assert set(ds.data_vars) == {"optical_flow"}
 
         # ROI around norm_pos
-        norm_pos = load_dataset(folder, gaze="recording").gaze_norm_pos
+        norm_pos = load_dataset(folder_v1, gaze="recording").gaze_norm_pos
         reader = OpticalFlowReader(
-            folder, norm_pos=norm_pos, roi_size=self.roi_size
+            folder_v1, norm_pos=norm_pos, roi_size=self.roi_size
         )
 
         ds = reader.load_dataset(dropna=True, iter_wrapper=tqdm.tqdm)

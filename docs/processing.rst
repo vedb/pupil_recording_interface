@@ -34,7 +34,7 @@ create a stream from an eye video and a detector:
 .. doctest::
 
     >>> import pupil_recording_interface as pri
-    >>> eye0_video = pri.VideoFileDevice(pri.TEST_RECORDING, "eye0")
+    >>> eye0_video = pri.VideoFileDevice(pri.get_test_recording(), "eye0")
     >>> eye0_stream = pri.VideoStream(eye0_video, color_format="gray")
     >>> detector = pri.PupilDetector()
 
@@ -57,6 +57,7 @@ syntax:
      'diameter': 44...,
      'location': (96..., 130...),
      'confidence': 0.99,
+     'internal_2d_raw_data': ...,
      'norm_pos': (0.5..., 0.6...),
      'timestamp': 1570725800...,
      'method': '2d c++',
@@ -128,7 +129,7 @@ for use with a stream manager:
     ...     ),
     ... ]
     >>> manager = pri.StreamManager(
-    ...     configs, duration=10, folder=pri.TEST_RECORDING, policy="read"
+    ...     configs, duration=10, folder=pri.get_test_recording(), policy="read"
     ... )
 
 .. testcode::
@@ -193,7 +194,7 @@ For the next example, we need to create a stream for the second eye:
 
 .. doctest::
 
-    >>> eye1_video = pri.VideoFileDevice(pri.TEST_RECORDING, "eye1")
+    >>> eye1_video = pri.VideoFileDevice(pri.get_test_recording(), "eye1")
     >>> eye1_stream = pri.VideoStream(eye1_video, color_format="gray")
 
 We also create two :py:class:`PupilDetector` s which we assign a ``camera_id``
@@ -258,7 +259,7 @@ onto the world camera image.
     ...     ),
     ... ]
     >>> manager = pri.StreamManager(
-    ...     configs, duration=20, folder=pri.TEST_RECORDING, policy="read"
+    ...     configs, duration=20, folder=pri.get_test_recording(), policy="read"
     ... )
 
 .. testcode::

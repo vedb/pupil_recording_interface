@@ -30,10 +30,12 @@ from .decorators import device, stream, process
 
 from .session import Session
 
-from ._version import __version__  # noqa
+from .utils import get_test_recording
 
-DATA_DIR = Path(__file__).parent / "data"
-TEST_RECORDING = Path(DATA_DIR) / "test_recording"
+from .externals.file_methods import load_object as _load_object
+from .externals.file_methods import save_object as _save_object
+
+from ._version import __version__  # noqa
 
 
 __all__ = [
@@ -45,6 +47,8 @@ __all__ = [
     "save_pldata",
     "write_netcdf",
     "get_gaze_mappers",
+    "load_object",
+    "save_object",
     # Readers
     "GazeReader",
     "MotionReader",
@@ -78,6 +82,7 @@ __all__ = [
     "process",
     # other
     "Session",
+    "get_test_recording",
 ]
 
 # disable active threads when OpenCV is built with OpenMP support
@@ -286,7 +291,37 @@ def load_user_info(folder):
 
     Returns
     -------
-    dict:
+    dict :
         The user info.
     """
     return BaseReader(folder).user_info
+
+
+def load_object(filepath):
+    """ Load a msgpack object (intrinsics, calibration, etc.).
+
+    Parameters
+    ----------
+    filepath : str or pathlib.Path
+        Path to the msgpack file.
+
+    Returns
+    -------
+    obj :
+        The loaded data
+    """
+    return _load_object(filepath)
+
+
+def save_object(obj, filepath):
+    """ Save data as a msgpack object (intrinsics, calibration, etc.).
+
+    Parameters
+    ----------
+    obj :
+        The object to save
+
+    filepath : str or pathlib.Path
+        Path to the msgpack file.
+    """
+    return _save_object(obj, filepath)

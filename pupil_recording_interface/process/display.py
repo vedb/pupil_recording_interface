@@ -100,15 +100,15 @@ class VideoDisplay(BaseProcess):
                     cv2.resizeWindow(
                         self.name, self.resolution[0], self.resolution[1]
                     )
-        except cv2.error:
-            pass
+        except cv2.error as e:
+            logger.debug(f"Failed to open window {self.name}, reason: {e}")
 
     def close_window(self):
         """ Close the window for this process. """
         try:
             cv2.destroyWindow(self.name)
-        except cv2.error:
-            pass
+        except cv2.error as e:
+            logger.debug(f"Failed to close window {self.name}, reason: {e}")
 
     def start(self):
         """ Start the process. """

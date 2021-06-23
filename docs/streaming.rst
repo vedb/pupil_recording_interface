@@ -32,7 +32,7 @@ dependencies, you can use a dummy device that streams from a recording instead:
 
 .. doctest::
 
-    >>> world_cam = pri.VideoFileDevice(pri.TEST_RECORDING, "world", timestamps="file")
+    >>> world_cam = pri.VideoFileDevice(pri.get_test_recording(), "world", timestamps="file")
 
 A device needs to be started before streaming any data and stopped afterwards
 in order to release the resource. To facilitate this, using the device as a
@@ -158,7 +158,7 @@ Alternatively, use this dummy configuration:
     ...     ),
     ... ]
     >>> manager = pri.StreamManager(
-    ...     configs, duration=10, folder=pri.TEST_RECORDING, policy="read"
+    ...     configs, duration=10, folder=pri.get_test_recording(), policy="read"
     ... )
 
 .. testcode::

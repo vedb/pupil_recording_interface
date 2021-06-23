@@ -11,6 +11,7 @@ dependencies:
   - pandas=1.0
   - xarray=0.15
   - scipy=1.4
+  - netcdf4=1.5.6
   # video
   - opencv=4.2.0
   - ffmpeg=3.4.2=x265_0
@@ -18,34 +19,28 @@ dependencies:
   - x264=1!152.20180806
   - x265=2.8
   # pupil
-  - libusb=1.0.23
+  - libusb=1.0.24
   - libuvc=0.0.7
-  - libjpeg-turbo=2.0.3
-  - pyuvc=0.13
+  - libjpeg-turbo=2.0.5
+  - pyuvc=0.14
   - msgpack-python=0.6.2
-  - pupil-detectors=1.0.5
+  - pupil-detectors=1.1.1
   # realsense
-  - librealsense2=2.36.0
+  - librealsense=2.42.0
+  - pyrealsense2=2.42.0.2849
   # flir
   - spinnaker-sdk=2.0.0.147
   - pyspin=2.0.0.147
+  - simple-pyspin=0.1.1
   # other
   - tqdm=4.46.0
   - matplotlib=3.1.1
+  - pooch=1.4.0
   # development
   - pytest
   - coverage
-  - flake8=3.7.9
-  - black=19.10b0
   - pre_commit
   - sphinx=2.4.4
   - sphinx_rtd_theme
   - numpydoc
   - sphinx-gallery
-  - matplotlib
-  - bump2version
-  # pip
-  - pip:
-    - netcdf4==1.5.3
-    - pyrealsense2==2.36.0.2038
-    - simple-pyspin==0.1.1

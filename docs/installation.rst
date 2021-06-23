@@ -34,6 +34,24 @@ dependencies that aren't already available through conda. At the moment, only
 packages for Linux x64 and Python versions 3.6 and 3.7 are available.
 
 
+.. _example_dependencies:
+
+Example data
+............
+
+To download the test recording used in the examples you need to install pooch:
+
+.. code-block:: console
+
+    $ pip install pooch
+
+or:
+
+.. code-block:: console
+
+    $ conda install pooch
+
+
 .. _streaming_dependencies:
 
 Streaming
@@ -145,20 +163,19 @@ streamed by installing the `RealSense SDK`_ and ``pyrealsense2``:
 
     $ pip install pyrealsense2
 
-Linux
-~~~~~
+Linux and MacOS
+~~~~~~~~~~~~~~~
 
-The RealSense SDK can be installed on Linux through conda:
+The RealSense SDK can be installed through conda:
 
 .. code-block:: console
 
-    $ conda install -c vedb librealsense2
+    $ conda install -c conda-forge librealsense
 
-Windows and MacOS
-~~~~~~~~~~~~~~~~~
+Windows
+~~~~~~~
 
-For these operating systems, follow the instructions on the `RealSense SDK`_
-GitHub page.
+Follow the instructions on the `RealSense SDK`_ GitHub page.
 
 .. _RealSense SDK: https://github.com/IntelRealSense/librealsense
 
@@ -170,27 +187,27 @@ FLIR cameras
 
 ``PySpin`` and ``simple-pyspin`` are required for FLIR camera support.
 
+Linux
+~~~~~
+
+We provide a ``simple-pyspin`` conda package with all dependencies for Linux:
+
+.. code-block:: console
+
+    $ conda install -c vedb -c conda-forge simple-pyspin
+
+Windows and MacOS
+~~~~~~~~~~~~~~~~~
+
+For ``PySpin`` download the latest `Spinnaker SDK`_.
+
+.. _Spinnaker SDK: https://www.flir.com/products/spinnaker-sdk
+
 ``simple-pyspin`` can be installed via ``pip``:
 
 .. code-block:: console
 
     $ pip install simple-pyspin
-
-Linux
-~~~~~
-
-A conda package of FLIR's ``PySpin`` library is available for Linux:
-
-.. code-block:: console
-
-    $ conda install -c vedb -c conda-forge pyspin
-
-Windows and MacOS
-~~~~~~~~~~~~~~~~~
-
-Download the latest `Spinnaker SDK`_.
-
-.. _Spinnaker SDK: https://www.flir.com/products/spinnaker-sdk
 
 
 .. _export_dependencies:
@@ -209,11 +226,3 @@ or with conda:
 .. code-block:: console
 
     $ conda install netcdf4
-
-.. note::
-
-    Unfortunately, the ``netcdf4`` conda package seems to be incompatible with
-    the ``pupil-detectors`` package built against our OpenCV package with
-    ffmpeg 3.4 support. However, this is only an issue if you need support for
-    FLIR cameras. In that case, we recommend installing ``netcdf4`` through
-    pip.

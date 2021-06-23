@@ -16,7 +16,7 @@ import pupil_recording_interface as pri
 # %%
 # Set recording folder
 # --------------------
-folder = pri.DATA_DIR / "test_recording"
+folder = pri.get_test_recording()
 
 # %%
 # Set up stream configurations
