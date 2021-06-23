@@ -27,4 +27,4 @@ dependencies:
   - netcdf4=1.5.3
   - pooch=1.4.0
   # the package itself
-  - pupil_recording_interface>=0.4
+  - pupil_recording_interface=0.4.1
