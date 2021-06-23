@@ -24,6 +24,7 @@ I/O functions
     get_gaze_mappers
     load_object
     save_object
+    get_test_recording
 
 
 Reader classes

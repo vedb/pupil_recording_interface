@@ -91,16 +91,23 @@ class SuppressStream:
             self.devnull.close()
 
 
-def get_test_recording(version="1.16"):
-    """
+def get_test_recording(version="2.0"):
+    """ Get a short test recording for demonstration.
+
+    The recording will be automatically downloaded and cached. The method
+    returns a path to the cache location that can be used in reader methods
+    and classes.
 
     Parameters
     ----------
-    version
+    version: str, default "2.0"
+        Pupil Player version used for post-hoc gaze mapping. Can be
+        "1.16" or "2.0".
 
     Returns
     -------
-
+    recording: pathlib.Path
+        Path to the test recording.
     """
     try:
         import pooch

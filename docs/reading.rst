@@ -76,20 +76,20 @@ offline gaze mapper by name and load its data:
 
     >>> pri.load_dataset(pri.get_test_recording(), gaze='3d Gaze Mapper')
     <xarray.Dataset>
-    Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5134)
+    Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5125)
     Coordinates:
-      * time                (time) datetime64[ns] 2019-10-10T16:43:20.242571831 ... 2019-10-10T16:43:41.209933281
+      * time                (time) datetime64[ns] 2019-10-10T16:43:20.278882265 ... 2019-10-10T16:43:41.209933281
       * pixel_axis          (pixel_axis) <U1 'x' 'y'
       * cartesian_axis      (cartesian_axis) <U1 'x' 'y' 'z'
     Data variables:
         eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
-        gaze_norm_pos       (time, pixel_axis) float64 0.4247 0.4144 ... 0.1215
-        gaze_point          (time, cartesian_axis) float64 -0.01031 ... 0.09778
-        eye0_center         (time, cartesian_axis) float64 0.02037 0.01459 ... -0.02
-        eye1_center         (time, cartesian_axis) float64 -0.03989 ... -0.02
-        eye0_normal         (time, cartesian_axis) float64 -0.2449 ... 0.9327
-        eye1_normal         (time, cartesian_axis) float64 0.2435 ... 0.9696
-        gaze_confidence_3d  (time) float64 0.8977 0.8977 0.9281 ... 0.9002 0.8536
+        gaze_norm_pos       (time, pixel_axis) float64 0.551 -0.2074 ... -0.07305
+        gaze_point          (time, cartesian_axis) float64 0.003464 ... 0.03572
+        eye0_center         (time, cartesian_axis) float64 0.005147 ... -0.02
+        eye1_center         (time, cartesian_axis) float64 -0.04123 ... -0.02
+        eye0_normal         (time, cartesian_axis) float64 -0.252 ... 0.9327
+        eye1_normal         (time, cartesian_axis) float64 0.8417 -0.1958 ... 0.8089
+        gaze_confidence_3d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207
 
 Finally, it is also possible to merge the data from a 2d and a 3d gaze
 mapper, in which case the norm pos will come from the 2d mapper and the gaze
@@ -101,21 +101,21 @@ point from the 3d mapper:
     ...     pri.get_test_recording(), gaze={'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
     ... )
     <xarray.Dataset>
-    Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5134)
+    Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 4987)
     Coordinates:
-      * time                (time) datetime64[ns] 2019-10-10T16:43:20.242571831 ... 2019-10-10T16:43:41.209933281
+      * time                (time) datetime64[ns] 2019-10-10T16:43:20.278882265 ... 2019-10-10T16:43:41.209933281
       * pixel_axis          (pixel_axis) <U1 'x' 'y'
       * cartesian_axis      (cartesian_axis) <U1 'x' 'y' 'z'
     Data variables:
         eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2
-        gaze_norm_pos       (time, pixel_axis) float64 0.4586 0.5304 ... 1.072 2.01
-        gaze_point          (time, cartesian_axis) float64 -0.01031 ... 0.09778
-        eye0_center         (time, cartesian_axis) float64 0.02037 0.01459 ... -0.02
-        eye1_center         (time, cartesian_axis) float64 -0.03989 ... -0.02
-        eye0_normal         (time, cartesian_axis) float64 -0.2449 ... 0.9327
-        eye1_normal         (time, cartesian_axis) float64 0.2435 ... 0.9696
-        gaze_confidence_2d  (time) float64 0.9428 0.929 0.9442 ... 0.9501 0.9268
-        gaze_confidence_3d  (time) float64 0.8977 0.8977 0.9281 ... 0.9002 0.8536
+        gaze_norm_pos       (time, pixel_axis) float64 0.4303 0.3921 ... 0.1736
+        gaze_point          (time, cartesian_axis) float64 0.003464 ... 0.03572
+        eye0_center         (time, cartesian_axis) float64 0.005147 ... -0.02
+        eye1_center         (time, cartesian_axis) float64 -0.04123 ... -0.02
+        eye0_normal         (time, cartesian_axis) float64 -0.252 ... 0.9327
+        eye1_normal         (time, cartesian_axis) float64 0.8417 -0.1958 ... 0.8089
+        gaze_confidence_2d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207
+        gaze_confidence_3d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207
 
 You can get a set of all available gaze mappers for a recording with:
 
@@ -297,9 +297,9 @@ The recording metadata file created by Pupil Capture can be loaded with:
 .. doctest::
 
     >>> pri.load_info(pri.get_test_recording()) # doctest:+NORMALIZE_WHITESPACE
-    {'duration_s': 21.0,
-     'meta_version': '2.0',
-     'min_player_version': '1.16',
+    {'duration_s': 21.111775958999715,
+     'meta_version': '2.3',
+     'min_player_version': '2.0',
      'recording_name': '2019_10_10',
      'recording_software_name': 'Pupil Capture',
      'recording_software_version': '1.16.95',
