@@ -49,15 +49,15 @@ class TestBaseReader:
         with pytest.raises(FileNotFoundError):
             BaseReader("not_a_folder")
 
-    def test_load_info(self, folder_v1):
+    def test_load_info(self, folder_v1, info):
         """"""
-        info = BaseReader._load_info(folder_v1)
-        assert info == info
+        loaded_info = BaseReader._load_info(folder_v1)
+        assert loaded_info == info
 
         # legacy format
-        info = BaseReader._load_info(folder_v1, "info.csv")
-        info["duration_s"] = 21.0
-        assert info == info
+        loaded_info = BaseReader._load_info(folder_v1, "info.csv")
+        loaded_info["duration_s"] = 21.111775958999715
+        assert loaded_info == info
 
         with pytest.raises(FileNotFoundError):
             BaseReader._load_info(folder_v1, "not_a_file")
