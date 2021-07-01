@@ -5,6 +5,7 @@ import cv2
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
+from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.externals.methods import normalize
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 
@@ -137,3 +138,63 @@ class PupilDetector(BaseProcess):
         """ Stop the process. """
         if self.writer is not None:
             self.writer.close()
+
+    def batch_run(
+        self, video_reader, start=None, end=None, return_type="list"
+    ):
+        """ Detect pupils in an eye video.
+
+        Parameters
+        ----------
+        video_reader : pri.VideoReader instance
+            Video reader for an eye camera recording.
+
+        start : int or pandas.Timestamp, optional
+            If specified, start the detection at this frame index or timestamp.
+
+        end : int or pandas.Timestamp, optional
+            If specified, stop the detection at this frame index or timestamp.
+
+        return_type : str or None, default "list"
+            The data type that this method should return. "list" returns o list
+            of dicts with pupil data for each frame. Can also be None, in that
+            case pupil data is not loaded into memory and this method returns
+            nothing, which is useful when recording detected pupils to disk.
+
+        Returns
+        -------
+        pupil_list : list of dict
+            List of detected pupils (one per frame).
+        """
+        if return_type not in ("list", None):
+            raise ValueError(
+                f"return_type can be 'list' or None, got {return_type}"
+            )
+
+        pupil_list = []
+
+        # the video reader timestamps are datetime values but pupil timestamps
+        # should be monotonic
+        monotonic_offset = (
+            video_reader.info["start_time_synced_s"]
+            - video_reader.info["start_time_system_s"]
+        )
+
+        with self:
+            for frame, ts in video_reader.read_frames(
+                start, end, raw=True, return_timestamp=True
+            ):
+                ts = float(ts.value) / 1e9 + monotonic_offset
+                packet = Packet(
+                    "video_reader", "video_reader", ts, frame=frame,
+                )
+                packet.pupil = self.detect_pupil(packet)
+
+                if return_type is not None:
+                    pupil_list.append(packet.pupil)
+
+                if self.record:
+                    self.record_data(packet)
+
+        if return_type == "list":
+            return pupil_list

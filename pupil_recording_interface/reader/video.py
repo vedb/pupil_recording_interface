@@ -492,10 +492,10 @@ class VideoReader(BaseReader):
 
         Parameters
         ----------
-        start : int or Timestamp, optional
+        start : int or pandas.Timestamp, optional
             If specified, start the generator at this frame index or timestamp.
 
-        end : int or timestamp, optional
+        end : int or pandas.Timestamp, optional
             If specified, stop the generator at this frame index or timestamp.
 
         raw : bool, default False

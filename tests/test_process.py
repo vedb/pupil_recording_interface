@@ -19,6 +19,7 @@ from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
 from pupil_recording_interface.process.validation import Validation
+from pupil_recording_interface.reader.video import VideoReader
 from pupil_recording_interface.externals.file_methods import (
     load_object,
     load_pldata_file,
@@ -145,6 +146,29 @@ class TestPupilDetector:
         """"""
         frame = pupil_detector.display_hook(pupil_packet)
         assert frame.ndim == 3
+
+    def test_batch_run(self, folder_v1, tmpdir):
+        """"""
+        reader = VideoReader(folder_v1, stream="eye0", color_format="gray")
+
+        # returning list of dicts
+        detector = PupilDetector(camera_id=0)
+        pupil_list = detector.batch_run(reader)
+        assert len(pupil_list) == 2582
+        assert pupil_list[0]["timestamp"] == 2294.8672349452972
+
+        # recording the first 100 frames
+        detector = PupilDetector(camera_id=0, record=True, folder=tmpdir)
+        detector.batch_run(reader, end=100, return_type=None)
+        pupil_list = [
+            dict(d) for d in load_pldata_file(detector.folder, "pupil").data
+        ]
+        assert len(pupil_list) == 100
+        assert pupil_list[0]["timestamp"] == 2294.8672349452972
+
+        # wrong return type
+        with pytest.raises(ValueError):
+            detector.batch_run(reader, return_type="not_a_return_type")
 
 
 class TestGazeMapper:
