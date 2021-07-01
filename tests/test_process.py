@@ -149,6 +149,8 @@ class TestPupilDetector:
 
     def test_batch_run(self, folder_v1, tmpdir):
         """"""
+        pytest.importorskip("pupil_detectors")
+
         reader = VideoReader(folder_v1, stream="eye0", color_format="gray")
 
         # returning list of dicts
