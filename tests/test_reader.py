@@ -757,6 +757,13 @@ class TestVideoReader:
             self.frame_shape[2],
         )
 
+        # raw
+        assert next(reader.read_frames(raw=True)).dtype == np.uint8
+
+        # with timestamp
+        _, ts = next(reader.read_frames(return_timestamp=True))
+        assert ts == pd.Timestamp("2019-10-10 16:43:20.238371849")
+
     def test_load_dataset(self, folder_v1):
         """"""
         reader = VideoReader(folder_v1, subsampling=8.0, color_format="gray")

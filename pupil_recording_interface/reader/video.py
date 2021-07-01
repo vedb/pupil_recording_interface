@@ -485,8 +485,10 @@ class VideoReader(BaseReader):
         else:
             return self.process_frame(frame, norm_pos=norm_pos)
 
-    def read_frames(self, start=None, end=None):
-        """ Generator for processed frames.
+    def read_frames(
+        self, start=None, end=None, raw=False, return_timestamp=False
+    ):
+        """ Generator for frames.
 
         Parameters
         ----------
@@ -496,10 +498,19 @@ class VideoReader(BaseReader):
         end : int or timestamp, optional
             If specified, stop the generator at this frame index or timestamp.
 
+        raw : bool, default False
+            If True, return raw frames, otherwise return processed frames.
+
+        return_timestamp : bool, default False
+            If True, also return the corresponding timestamp of the frame.
+
         Yields
         -------
-        numpy.ndarray
+        frame : numpy.ndarray
             The loaded frame.
+
+        timestamp : pandas.Timestamp
+            The corresponding timestamp if return_timestamp is True
         """
         start = self._get_frame_index(start, default=0)
         end = self._get_frame_index(end, default=self.frame_count)
@@ -508,12 +519,17 @@ class VideoReader(BaseReader):
 
         for idx in range(end - start):
             _, frame = self.capture.read()
-            if self.norm_pos is not None:
-                yield self.process_frame(
+            if not raw and self.norm_pos is not None:
+                frame = self.process_frame(
                     frame, self.norm_pos.values[idx - start]
                 )
+            elif not raw:
+                frame = self.process_frame(frame)
+
+            if return_timestamp:
+                yield frame, self.timestamps[idx - start]
             else:
-                yield self.process_frame(frame)
+                yield frame
 
     def load_dataset(self, dropna=False, start=None, end=None):
         """ Load video data as an xarray Dataset
