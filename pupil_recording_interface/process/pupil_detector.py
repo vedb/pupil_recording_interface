@@ -22,6 +22,8 @@ class PupilDetector(BaseProcess):
         self,
         method="2d c++",
         camera_id=None,
+        resolution=None,
+        focal_length=None,
         folder=None,
         record=False,
         display=True,
@@ -30,14 +32,22 @@ class PupilDetector(BaseProcess):
         """ Constructor. """
         self.method = method
         self.camera_id = camera_id
+        self.resolution = resolution
+        self.focal_length = focal_length
         self.folder = folder
         self.record = record
         self.display = display
 
         super().__init__(**kwargs)
 
-        if self.method not in ("2d c++",):
+        if self.method not in ("2d c++", "pye3d"):
             raise ValueError(f"Unsupported detection method: {self.method}")
+        if self.method == "pye3d" and (
+            self.resolution is None or self.focal_length is None
+        ):
+            raise ValueError(
+                "Resolution and focal length must be specified for pye3d"
+            )
 
         self.detector = None
 
@@ -54,6 +64,14 @@ class PupilDetector(BaseProcess):
             from pupil_detectors import Detector2D
 
             self.detector = Detector2D()
+        elif self.method == "pye3d":
+            from pupil_detectors import Detector2D
+            from pye3d.camera import CameraModel
+            from pye3d.detector_3d import Detector3D
+
+            camera = CameraModel(self.focal_length, self.resolution)
+            self.detector = Detector2D()
+            self.detector_pye3d = Detector3D(camera)
         else:
             raise ValueError(f"Unsupported detection method: {self.method}")
 
@@ -73,6 +91,8 @@ class PupilDetector(BaseProcess):
                 except (ValueError, TypeError):
                     logger.debug("Could not auto-determine eye camera ID")
 
+        # TODO focal length and resolution
+
         return cls(**cls_kwargs)
 
     def detect_pupil(self, packet):
@@ -91,6 +111,11 @@ class PupilDetector(BaseProcess):
         pupil["topic"] = (
             f"pupil.{self.camera_id}" if self.camera_id else "pupil"
         )
+
+        # second pass for pye3d detector
+        if self.method == "pye3d":
+            pupil_3d = self.detector_pye3d.update_and_detect(pupil, frame)
+            pupil.update(pupil_3d)
 
         return pupil
 
@@ -159,9 +184,10 @@ class PupilDetector(BaseProcess):
 
         return_type : str or None, default "list"
             The data type that this method should return. "list" returns o list
-            of dicts with pupil data for each frame. Can also be None, in that
-            case pupil data is not loaded into memory and this method returns
-            nothing, which is useful when recording detected pupils to disk.
+            of dicts with pupil data for each frame. "dataset" returns an
+            xarray Dataset. Can also be None, in that case pupil data is not
+            loaded into memory and this method returns nothing, which is useful
+            when recording detected pupils to disk.
 
         Returns
         -------

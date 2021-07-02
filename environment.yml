@@ -25,6 +25,7 @@ dependencies:
   - pyuvc=0.14
   - msgpack-python=0.6.2
   - pupil-detectors=1.1.1
+  - pye3d=0.0.5
   # realsense
   - librealsense=2.42.0
   - pyrealsense2=2.42.0.2849

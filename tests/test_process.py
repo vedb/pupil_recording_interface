@@ -150,6 +150,7 @@ class TestPupilDetector:
     def test_batch_run(self, folder_v1, tmpdir):
         """"""
         pytest.importorskip("pupil_detectors")
+        pytest.importorskip("pye3d")
 
         reader = VideoReader(folder_v1, stream="eye0", color_format="gray")
 
@@ -160,9 +161,9 @@ class TestPupilDetector:
         assert pupil_list[0]["timestamp"] == 2294.8672349452972
 
         # returning a dataset
-        ds = detector.batch_run(reader, return_type="dataset")
+        ds = detector.batch_run(reader, end=100, return_type="dataset")
         assert dict(ds.sizes) == {
-            "time": 2582,
+            "time": 100,
             "pixel_axis": 2,
         }
         assert set(ds.data_vars) == {
@@ -174,6 +175,17 @@ class TestPupilDetector:
             "eye",
             "pupil_norm_pos",
         }
+
+        # pye3d detector
+        detector = PupilDetector(
+            camera_id=0,
+            resolution=(192, 192),
+            focal_length=1.0,
+            method="pye3d",
+        )
+        pupil_list = detector.batch_run(reader, end=100)
+        assert len(pupil_list) == 100
+        assert pupil_list[0]["timestamp"] == 2294.8672349452972
 
         # recording the first 100 frames
         detector = PupilDetector(camera_id=0, record=True, folder=tmpdir)
