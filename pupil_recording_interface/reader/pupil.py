@@ -51,6 +51,11 @@ class PupilReader(BaseReader):
                 f"from method {method}"
             )
 
+        return PupilReader._extract_pupil_data(df, method)
+
+    @staticmethod
+    def _extract_pupil_data(df, method):
+        """ Extract pupil data from a DataFrame. """
         ellipse = pd.DataFrame(df.ellipse.to_list())
 
         data = {
@@ -98,24 +103,10 @@ class PupilReader(BaseReader):
 
         return data
 
-    def load_dataset(self):
-        """ Load pupil data as an xarray Dataset.
-
-        Returns
-        -------
-        xarray.Dataset
-            The pupil data as a dataset.
-        """
-        if self.source == "recording":
-            data = self._load_pupil(self.folder, self.method)
-        elif self.source == "offline":
-            data = self._load_pupil(
-                self.folder / "offline_data", self.method, "offline_pupil"
-            )
-        else:
-            raise ValueError(f"Invalid pupil source: {self.source}")
-
-        t = self._timestamps_to_datetimeindex(data["timestamp"], self.info)
+    @staticmethod
+    def _create_dataset(data, info, method):
+        """ Create an xarray.Dataset from pupil data. """
+        t = BaseReader._timestamps_to_datetimeindex(data["timestamp"], info)
 
         coords = {
             "time": t.values,
@@ -133,7 +124,7 @@ class PupilReader(BaseReader):
         }
 
         # 3d only data
-        if self.method in ("3d", "pye3d"):
+        if method in ("3d", "pye3d"):
             coords["cartesian_axis"] = ["x", "y", "z"]
 
             # 3d data
@@ -163,12 +154,12 @@ class PupilReader(BaseReader):
             ):
                 data_vars[key] = ("time", data[key])
 
-        if self.method == "3d":
+        if method == "3d":
             data_vars["model_birth_timestamp"] = (
                 "time",
                 data["model_birth_timestamp"],
             )
-        elif self.method == "pye3d":
+        elif method == "pye3d":
             data_vars["location"] = (["time", "pixel_axis"], data["location"])
 
         ds = xr.Dataset(data_vars, coords)
@@ -179,3 +170,22 @@ class PupilReader(BaseReader):
         ds = ds.isel(time=index)
 
         return ds
+
+    def load_dataset(self):
+        """ Load pupil data as an xarray Dataset.
+
+        Returns
+        -------
+        xarray.Dataset
+            The pupil data as a dataset.
+        """
+        if self.source == "recording":
+            data = self._load_pupil(self.folder, self.method)
+        elif self.source == "offline":
+            data = self._load_pupil(
+                self.folder / "offline_data", self.method, "offline_pupil"
+            )
+        else:
+            raise ValueError(f"Invalid pupil source: {self.source}")
+
+        return self._create_dataset(data, self.info, self.method)

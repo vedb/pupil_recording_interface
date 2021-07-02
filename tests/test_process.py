@@ -159,6 +159,22 @@ class TestPupilDetector:
         assert len(pupil_list) == 2582
         assert pupil_list[0]["timestamp"] == 2294.8672349452972
 
+        # returning a dataset
+        ds = detector.batch_run(reader, return_type="dataset")
+        assert dict(ds.sizes) == {
+            "time": 2582,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "confidence",
+            "diameter",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "pupil_norm_pos",
+        }
+
         # recording the first 100 frames
         detector = PupilDetector(camera_id=0, record=True, folder=tmpdir)
         detector.batch_run(reader, end=100, return_type=None)

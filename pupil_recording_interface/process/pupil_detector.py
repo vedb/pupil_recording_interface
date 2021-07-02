@@ -2,10 +2,12 @@
 import logging
 
 import cv2
+import pandas as pd
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.packet import Packet
+from pupil_recording_interface.reader.pupil import PupilReader
 from pupil_recording_interface.externals.methods import normalize
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 
@@ -164,11 +166,15 @@ class PupilDetector(BaseProcess):
         Returns
         -------
         pupil_list : list of dict
-            List of detected pupils (one per frame).
+            List of detected pupils if return_type="list" (one per frame).
+
+        ds : xarray.Dataset
+            Dataset with pupil data if return_type="dataset".
         """
-        if return_type not in ("list", None):
+        if return_type not in ("list", "dataset", None):
             raise ValueError(
-                f"return_type can be 'list' or None, got {return_type}"
+                f"return_type can be 'list', 'dataset' or None, "
+                f"got {return_type}"
             )
 
         pupil_list = []
@@ -198,3 +204,10 @@ class PupilDetector(BaseProcess):
 
         if return_type == "list":
             return pupil_list
+
+        elif return_type == "dataset":
+            df = pd.DataFrame(pupil_list)
+            # only the stem of the method (e.g. 2d instead of 2d c++)
+            method = self.method.split()[0]
+            data = PupilReader._extract_pupil_data(df, method)
+            return PupilReader._create_dataset(data, video_reader.info, method)
