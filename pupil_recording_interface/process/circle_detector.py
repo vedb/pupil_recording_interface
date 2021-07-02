@@ -1,8 +1,11 @@
 """"""
 import cv2
+import pandas as pd
 
 from pupil_recording_interface.decorators import process
+from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.process import BaseProcess
+from pupil_recording_interface.reader.marker import MarkerReader
 from pupil_recording_interface.externals.circle_detector import CircleTracker
 
 
@@ -102,3 +105,81 @@ class CircleDetector(BaseProcess):
             packet.display_hooks.append(self.display_hook)
 
         return packet
+
+    def batch_run(
+        self, video_reader, start=None, end=None, return_type="list"
+    ):
+        """ Detect reference markers in a world video.
+
+        Parameters
+        ----------
+        video_reader : pri.VideoReader instance
+            Video reader for an eye camera recording.
+
+        start : int or pandas.Timestamp, optional
+            If specified, start the detection at this frame index or timestamp.
+
+        end : int or pandas.Timestamp, optional
+            If specified, stop the detection at this frame index or timestamp.
+
+        return_type : str or None, default "list"
+            The data type that this method should return. "list" returns o list
+            of dicts with pupil data for each frame. "dataset" returns an
+            xarray Dataset. Can also be None, in that case pupil data is not
+            loaded into memory and this method returns nothing, which is useful
+            when recording detected pupils to disk.
+
+        Returns
+        -------
+        marker_list : list of list
+            List of detected markers if return_type="list".
+
+        ds : xarray.Dataset
+            Dataset with marker data if return_type="dataset".
+        """
+        if return_type not in ("list", "dataset", None):
+            raise ValueError(
+                f"return_type can be 'list', 'dataset' or None, "
+                f"got {return_type}"
+            )
+
+        marker_list = []
+
+        # the video reader timestamps are datetime values but marker timestamps
+        # should be monotonic
+        monotonic_offset = (
+            video_reader.info["start_time_synced_s"]
+            - video_reader.info["start_time_system_s"]
+        )
+
+        with self:
+            for frame, ts, idx in video_reader.read_frames(
+                start, end, raw=True, return_timestamp=True, return_index=True
+            ):
+                ts = float(ts.value) / 1e9 + monotonic_offset
+                packet = Packet(
+                    "video_reader",
+                    "video_reader",
+                    ts,
+                    frame=frame,
+                    color_format="bgr24",
+                )
+                circle_markers = self.detect_circle(packet)
+
+                if circle_markers is None or len(circle_markers) == 0:
+                    continue
+
+                marker = [circle_markers[0]["img_pos"], idx, ts]
+
+                if return_type is not None:
+                    marker_list.append(marker)
+
+        if return_type == "list":
+            return marker_list
+
+        elif return_type == "dataset":
+            df = pd.DataFrame(
+                marker_list, columns=["location", "frame_index", "timestamp"]
+            )
+            data = MarkerReader._extract_marker_data(df)
+            return MarkerReader._create_dataset(data, video_reader.info)

@@ -295,6 +295,28 @@ class TestCircleDetector:
         frame = circle_detector.display_hook(circle_marker_packet)
         assert frame.ndim == 3
 
+    def test_batch_run(self, folder_v1, tmpdir):
+        """"""
+        reader = VideoReader(folder_v1)
+
+        # returning list of lists
+        detector = CircleDetector()
+        marker_list = detector.batch_run(reader)
+        assert len(marker_list) == 265
+        assert marker_list[0] == [
+            (202.40928840637207, 258.93427181243896),
+            0,
+            2294.8253149986267,
+        ]
+
+        # returning a dataset
+        ds = detector.batch_run(reader, end=100, return_type="dataset")
+        assert dict(ds.sizes) == {
+            "time": 34,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {"frame_index", "location"}
+
 
 class TestCalibration:
     def test_from_config(
