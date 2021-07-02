@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from pupil_recording_interface import BaseReader
+from pupil_recording_interface.reader import BaseReader
 
 
 class PupilReader(BaseReader):

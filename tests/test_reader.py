@@ -16,6 +16,7 @@ from pupil_recording_interface import (
     BaseReader,
     PupilReader,
     MotionReader,
+    MarkerReader,
     VideoReader,
     OpticalFlowReader,
 )
@@ -585,6 +586,31 @@ class TestPupilReader:
         # bad gaze argument
         with pytest.raises(ValueError):
             PupilReader(folder_v1, source="not_a_pupil_source").load_dataset()
+
+
+class TestMarkerReader:
+    @pytest.fixture(autouse=True)
+    def set_up(self):
+        """"""
+        self.n_markers = 238
+
+    def test_load_markers(self, folder_v1):
+        """"""
+        data = MarkerReader._load_markers(folder_v1 / "offline_data")
+
+        assert data["timestamp"].shape == (self.n_markers,)
+        assert data["frame_index"].shape == (self.n_markers,)
+        assert data["location"].shape == (self.n_markers, 2)
+
+    def test_load_dataset(self, folder_v1, folder_v2):
+        """"""
+        # from recording
+        ds = MarkerReader(folder_v1).load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_markers,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {"frame_index", "location"}
 
 
 class TestMotionReader:

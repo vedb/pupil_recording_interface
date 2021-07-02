@@ -4,7 +4,7 @@ import pandas as pd
 import xarray as xr
 from msgpack import Unpacker
 
-from pupil_recording_interface import BaseReader
+from pupil_recording_interface.reader import BaseReader
 
 
 class GazeReader(BaseReader):

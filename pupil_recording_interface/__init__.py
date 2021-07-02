@@ -5,6 +5,7 @@ from pathlib import Path
 from .reader import BaseReader, _load_dataset
 from .reader.motion import MotionReader
 from .reader.gaze import GazeReader
+from .reader.marker import MarkerReader
 from .reader.pupil import PupilReader
 from .reader.video import VideoReader, OpticalFlowReader
 
@@ -53,6 +54,7 @@ __all__ = [
     # Readers
     "GazeReader",
     "PupilReader",
+    "MarkerReader",
     "MotionReader",
     "VideoReader",
     "OpticalFlowReader",
