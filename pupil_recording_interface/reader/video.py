@@ -486,7 +486,12 @@ class VideoReader(BaseReader):
             return self.process_frame(frame, norm_pos=norm_pos)
 
     def read_frames(
-        self, start=None, end=None, raw=False, return_timestamp=False
+        self,
+        start=None,
+        end=None,
+        raw=False,
+        return_timestamp=False,
+        return_index=False,
     ):
         """ Generator for frames.
 
@@ -504,6 +509,9 @@ class VideoReader(BaseReader):
         return_timestamp : bool, default False
             If True, also return the corresponding timestamp of the frame.
 
+        return_index : bool, default False
+            If True, also return the corresponding index of the frame.
+
         Yields
         -------
         frame : numpy.ndarray
@@ -517,17 +525,19 @@ class VideoReader(BaseReader):
 
         self.capture.set(cv2.CAP_PROP_POS_FRAMES, start)
 
-        for idx in range(end - start):
+        for idx in range(start, end):
             _, frame = self.capture.read()
             if not raw and self.norm_pos is not None:
-                frame = self.process_frame(
-                    frame, self.norm_pos.values[idx - start]
-                )
+                frame = self.process_frame(frame, self.norm_pos.values[idx])
             elif not raw:
                 frame = self.process_frame(frame)
 
-            if return_timestamp:
-                yield frame, self.timestamps[idx - start]
+            if return_timestamp and return_index:
+                yield frame, self.timestamps[idx], idx
+            elif return_timestamp:
+                yield frame, self.timestamps[idx]
+            elif return_index:
+                yield frame, idx
             else:
                 yield frame
 
