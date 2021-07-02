@@ -5,6 +5,7 @@ from pathlib import Path
 from .reader import BaseReader, _load_dataset
 from .reader.motion import MotionReader
 from .reader.gaze import GazeReader
+from .reader.pupil import PupilReader
 from .reader.video import VideoReader, OpticalFlowReader
 
 from .device.video import VideoDeviceUVC, VideoFileDevice
@@ -51,6 +52,7 @@ __all__ = [
     "save_object",
     # Readers
     "GazeReader",
+    "PupilReader",
     "MotionReader",
     "VideoReader",
     "OpticalFlowReader",

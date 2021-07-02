@@ -14,6 +14,7 @@ from pupil_recording_interface import (
     write_netcdf,
     get_gaze_mappers,
     BaseReader,
+    PupilReader,
     MotionReader,
     VideoReader,
     OpticalFlowReader,
@@ -459,6 +460,131 @@ class TestGazeReader:
         }
 
         ds.close()
+
+
+class TestPupilReader:
+    @pytest.fixture(autouse=True)
+    def set_up(self):
+        """"""
+        self.n_pupil_2d = 5164
+        self.n_pupil_3d = 5170
+        self.n_pupil_pye3d = 5164
+
+    def test_load_pupil(self, folder_v1, folder_v2):
+        """"""
+        # v1 3d
+        data = PupilReader._load_pupil(folder_v1, "3d")
+        assert data["timestamp"].shape == (self.n_pupil_3d,)
+        assert data["confidence"].shape == (self.n_pupil_3d,)
+        assert data["norm_pos"].shape == (self.n_pupil_3d, 2)
+        assert data["eye"].shape == (self.n_pupil_3d,)
+        assert data["diameter"].shape == (self.n_pupil_3d,)
+        assert data["model_birth_timestamp"].shape == (self.n_pupil_3d,)
+
+        # v2 2d
+        data = PupilReader._load_pupil(
+            folder_v2 / "offline_data", "2d", "offline_pupil"
+        )
+        assert data["timestamp"].shape == (self.n_pupil_2d,)
+        assert data["confidence"].shape == (self.n_pupil_2d,)
+        assert data["norm_pos"].shape == (self.n_pupil_2d, 2)
+        assert data["eye"].shape == (self.n_pupil_2d,)
+        assert data["diameter"].shape == (self.n_pupil_2d,)
+
+        # v2 pye3d
+        data = PupilReader._load_pupil(
+            folder_v2 / "offline_data", "pye3d", "offline_pupil"
+        )
+        assert data["timestamp"].shape == (self.n_pupil_pye3d,)
+        assert data["confidence"].shape == (self.n_pupil_pye3d,)
+        assert data["norm_pos"].shape == (self.n_pupil_pye3d, 2)
+        assert data["eye"].shape == (self.n_pupil_pye3d,)
+        assert data["diameter"].shape == (self.n_pupil_pye3d,)
+        assert data["location"].shape == (self.n_pupil_pye3d, 2)
+
+    def test_load_dataset(self, folder_v1, folder_v2):
+        """"""
+        # from recording
+        ds = PupilReader(folder_v1, method="3d").load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_pupil_3d,
+            "cartesian_axis": 3,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "model_birth_timestamp",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+        # offline 2d
+        ds = PupilReader(
+            folder_v2, source="offline", method="2d"
+        ).load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_pupil_2d,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "confidence",
+            "diameter",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "pupil_norm_pos",
+        }
+
+        # offline pye3d
+        ds = PupilReader(folder_v2, source="offline").load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_pupil_pye3d,
+            "cartesian_axis": 3,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "location",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+        # bad gaze argument
+        with pytest.raises(ValueError):
+            PupilReader(folder_v1, source="not_a_pupil_source").load_dataset()
 
 
 class TestMotionReader:
