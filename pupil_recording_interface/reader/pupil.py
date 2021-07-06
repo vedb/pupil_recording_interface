@@ -171,6 +171,15 @@ class PupilReader(BaseReader):
 
         return ds
 
+    @staticmethod
+    def _dataset_from_list(pupil_list, info, method):
+        """ Create dataset from list of dicts. """
+        df = pd.DataFrame(pupil_list)
+        data = PupilReader._extract_pupil_data(df, method)
+        ds = PupilReader._create_dataset(data, info, method)
+
+        return ds
+
     def load_dataset(self):
         """ Load pupil data as an xarray Dataset.
 

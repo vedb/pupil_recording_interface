@@ -518,7 +518,10 @@ class VideoReader(BaseReader):
             The loaded frame.
 
         timestamp : pandas.Timestamp
-            The corresponding timestamp if return_timestamp is True
+            The corresponding timestamp if return_timestamp is True.
+
+        index : int
+            The corresponding index if return_index is True.
         """
         start = self._get_frame_index(start, default=0)
         end = self._get_frame_index(end, default=self.frame_count)

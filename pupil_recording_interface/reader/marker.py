@@ -21,7 +21,7 @@ class MarkerReader(BaseReader):
         markers = load_object(folder / f"{topic}.msgpack")["data"]
 
         df = pd.DataFrame(
-            markers, columns=["location", "frame_index", "timestamp"]
+            markers, columns=["img_pos", "frame_index", "timestamp"]
         )
 
         return MarkerReader._extract_marker_data(df)
@@ -30,7 +30,7 @@ class MarkerReader(BaseReader):
     def _extract_marker_data(df):
         """"""
         data = {
-            "location": np.array(df.location.to_list()),
+            "location": np.array(df.img_pos.to_list()),
             "frame_index": df.frame_index,
             "timestamp": df.timestamp,
         }
@@ -58,6 +58,15 @@ class MarkerReader(BaseReader):
         ds.sortby("time")
         _, index = np.unique(ds["time"], return_index=True)
         ds = ds.isel(time=index)
+
+        return ds
+
+    @staticmethod
+    def _dataset_from_list(marker_list, info):
+        """ Create dataset from list of dicts. """
+        df = pd.DataFrame(marker_list)
+        data = MarkerReader._extract_marker_data(df)
+        ds = MarkerReader._create_dataset(data, info)
 
         return ds
 
