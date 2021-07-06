@@ -131,6 +131,8 @@ class TestPupilDetector:
 
     def test_record_data(self, pupil_detector, pupil_packet):
         """"""
+        pytest.importorskip("pupil-detectors")
+
         pupil_packet.device_uid = "Pupil Cam1 ID0"
 
         with pupil_detector:
