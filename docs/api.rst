@@ -56,6 +56,8 @@ Device classes
 .. autosummary::
     :nosignatures:
     :toctree: _generated
+    :template: custom-class-template.rst
+    :recursive:
 
     VideoDeviceUVC
     VideoDeviceFLIR
@@ -68,6 +70,8 @@ Stream classes
 .. autosummary::
     :nosignatures:
     :toctree: _generated
+    :template: custom-class-template.rst
+    :recursive:
 
     VideoStream
     MotionStream
@@ -80,6 +84,8 @@ Process classes
 .. autosummary::
     :nosignatures:
     :toctree: _generated
+    :template: custom-class-template.rst
+    :recursive:
 
     Pipeline
     VideoDisplay
@@ -88,7 +94,6 @@ Process classes
     GazeMapper
     CircleDetector
     Calibration
-    Validation
     CircleGridDetector
     CamParamEstimator
     MotionRecorder
@@ -102,6 +107,3 @@ Class member details
    :maxdepth: 1
 
    api/reader
-   api/device
-   api/stream
-   api/process

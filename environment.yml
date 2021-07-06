@@ -41,7 +41,8 @@ dependencies:
   - pytest
   - coverage
   - pre_commit
-  - sphinx=2.4.4
+  - sphinx=4.0
   - sphinx_rtd_theme
   - numpydoc
   - sphinx-gallery
+  - jinja2=2
