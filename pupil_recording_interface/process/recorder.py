@@ -1,6 +1,6 @@
 import abc
-import os
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 
@@ -112,10 +112,8 @@ class VideoRecorder(BaseRecorder):
         self.encoder = None
         self.writer = None
 
-        self.timestamp_file = os.path.join(
-            self.folder, f"{self.name}_timestamps.npy"
-        )
-        if os.path.exists(self.timestamp_file):
+        self.timestamp_file = Path(self.folder) / f"{self.name}_timestamps.npy"
+        if self.timestamp_file.exists():
             raise FileExistsError(
                 f"{self.timestamp_file} exists, will not overwrite"
             )
@@ -159,6 +157,16 @@ class VideoRecorder(BaseRecorder):
         if self.source_timestamps:
             self.writer = PLData_Writer(self.folder, self.name)
 
+    def stop(self):
+        """ Stop the recorder. """
+        self.encoder.stop()
+        self.encoder = None
+        np.save(self.timestamp_file, np.array(self._timestamps))
+
+        if self.writer is not None:
+            self.writer.file_handle.close()
+            self.writer = None
+
     def write(self, packet):
         """ Write data to disk. """
         if len(self._timestamps) % self.encode_every == 0:
@@ -181,16 +189,6 @@ class VideoRecorder(BaseRecorder):
 
         return packet
 
-    def stop(self):
-        """ Stop the recorder. """
-        self.encoder.stop()
-        self.encoder = None
-        np.save(self.timestamp_file, np.array(self._timestamps))
-
-        if self.writer is not None:
-            self.writer.file_handle.close()
-            self.writer = None
-
 
 @process("motion_recorder", optional=("folder", "motion_type"))
 class MotionRecorder(BaseRecorder):
@@ -203,8 +201,8 @@ class MotionRecorder(BaseRecorder):
 
         super().__init__(folder, name=name, **kwargs)
 
-        self.filename = os.path.join(self.folder, self.topic + ".pldata")
-        if os.path.exists(self.filename):
+        self.filename = Path(self.folder) / f"{self.topic}.pldata"
+        if self.filename.exists():
             raise FileExistsError(
                 f"{self.filename} exists, will not overwrite"
             )
