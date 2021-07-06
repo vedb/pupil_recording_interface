@@ -30,7 +30,7 @@ class BaseRecorder(BaseProcess):
         if folder is None:
             raise ValueError("Recording folder cannot be None")
         else:
-            self.folder = folder
+            self.folder = Path(folder).expanduser()
 
         self.name = name
 
@@ -112,7 +112,7 @@ class VideoRecorder(BaseRecorder):
         self.encoder = None
         self.writer = None
 
-        self.timestamp_file = Path(self.folder) / f"{self.name}_timestamps.npy"
+        self.timestamp_file = self.folder / f"{self.name}_timestamps.npy"
         if self.timestamp_file.exists():
             raise FileExistsError(
                 f"{self.timestamp_file} exists, will not overwrite"
@@ -161,7 +161,7 @@ class VideoRecorder(BaseRecorder):
         """ Stop the recorder. """
         self.encoder.stop()
         self.encoder = None
-        np.save(self.timestamp_file, np.array(self._timestamps))
+        np.save(str(self.timestamp_file), np.array(self._timestamps))
 
         if self.writer is not None:
             self.writer.file_handle.close()
@@ -201,12 +201,13 @@ class MotionRecorder(BaseRecorder):
 
         super().__init__(folder, name=name, **kwargs)
 
-        self.filename = Path(self.folder) / f"{self.topic}.pldata"
+        self.writer = None
+
+        self.filename = self.folder / f"{self.topic}.pldata"
         if self.filename.exists():
             raise FileExistsError(
                 f"{self.filename} exists, will not overwrite"
             )
-        self.writer = PLData_Writer(self.folder, self.topic)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -229,7 +230,13 @@ class MotionRecorder(BaseRecorder):
 
     def start(self):
         """ Start the recorder. """
+        self.writer = PLData_Writer(self.folder, self.topic)
         logger.debug(f"Started motion recorder, recording to {self.filename}")
+
+    def stop(self):
+        """ Stop the recorder. """
+        self.writer.close()
+        self.writer = None
 
     def write(self, packet):
         """ Write data to disk. """
@@ -243,7 +250,3 @@ class MotionRecorder(BaseRecorder):
         self.call(self.write, packet, block=block)
 
         return packet
-
-    def stop(self):
-        """ Stop the recorder. """
-        self.writer.close()
