@@ -230,8 +230,8 @@ class TestGazeMapper:
 
     def test_record_data(self, gaze_mapper, gaze_packet):
         """"""
-        gaze_mapper.record_data(gaze_packet)
-        gaze_mapper.stop()
+        with gaze_mapper:
+            gaze_mapper.record_data(gaze_packet)
 
         pldata = [
             dict(d) for d in load_pldata_file(gaze_mapper.folder, "gaze").data
@@ -258,6 +258,24 @@ class TestGazeMapper:
         # no gaze points
         gaze_packet.gaze = []
         gaze_mapper.display_hook(gaze_packet)
+
+    def test_batch_run(self, gaze_mapper, pupil, info):
+        """"""
+        # as list
+        gaze_list = gaze_mapper.batch_run(pupil)
+        assert len(gaze_list) == 5160
+
+        # as dataset
+        ds = gaze_mapper.batch_run(pupil, return_type="dataset", info=info)
+        assert dict(ds.sizes) == {
+            "time": 5160,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "eye",
+            "gaze_confidence_2d",
+            "gaze_norm_pos",
+        }
 
 
 class TestCircleDetector:

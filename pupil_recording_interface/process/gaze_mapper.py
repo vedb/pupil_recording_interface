@@ -9,6 +9,7 @@ import numpy as np
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
+from pupil_recording_interface.reader.gaze import GazeReader
 from pupil_recording_interface.externals.gaze_mappers import (
     Binocular_Gaze_Mapper,
 )
@@ -124,13 +125,10 @@ class GazeMapper(BaseProcess):
 
         self._gaze_queue = Queue()
         self.mapper = None
+        self.writer = None
 
-        if self.record:
-            if self.folder is None:
-                raise ValueError("folder cannot be None")
-            self.writer = PLData_Writer(self.folder, "gaze")
-        else:
-            self.writer = None
+        if self.record and self.folder is None:
+            raise ValueError("folder cannot be None")
 
         # gaze overlay
         _queue_len = 5  # TODO constructor argument?
@@ -281,8 +279,62 @@ class GazeMapper(BaseProcess):
             self.calibration["params_eye1"],
         )
 
+        if self.record:
+            self.writer = PLData_Writer(self.folder, "gaze")
+
     def stop(self):
         """ Stop the process. """
         self.mapper = None
         if self.writer is not None:
             self.writer.close()
+            self.writer = None
+
+    def batch_run(self, pupils, return_type="list", info=None):
+        """ Map pupils to gaze data.
+
+        Parameters
+        ----------
+        pupils : list of dict
+            List of previously detected pupils.
+
+        return_type : str or None, default "list"
+            The data type that this method should return. "list" returns o list
+            of dicts with gaze data. "dataset" returns an xarray Dataset.
+            Can also be None, in that case gaze data is not loaded into memory
+            and this method returns nothing, which is useful when recording
+            mapped gaze to disk.
+
+        info : dict, optional
+            dict containing recording info. Required for return_type="dataset".
+
+        Returns
+        -------
+        pupil_list : list of dict
+            List of mapped gaze if return_type="list".
+
+        ds : xarray.Dataset
+            Dataset with gaze data if return_type="dataset".
+        """
+        if return_type not in ("list", "dataset", None):
+            raise ValueError(
+                f"return_type can be 'list', 'dataset' or None, "
+                f"got {return_type}"
+            )
+
+        gaze_list = []
+
+        with self:
+            for pupil in pupils:
+                for gaze in self.mapper.on_pupil_datum(pupil):
+                    if return_type is not None:
+                        gaze_list.append(gaze)
+                    # TODO record
+
+        if return_type == "list":
+            return gaze_list
+        elif return_type == "dataset":
+            if info is None:
+                raise ValueError(
+                    "info must be provided for return_type='dataset'"
+                )
+            return GazeReader._dataset_from_list(gaze_list, info)
