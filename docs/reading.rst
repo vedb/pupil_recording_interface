@@ -20,16 +20,22 @@ labeled data.
 
 .. _xarray: https://xarray.pydata.org
 
-
-Gaze
-....
-
-You can easily load recorded gaze data with:
+To get started, we use :py:func:`get_test_recording` to download and cache a
+very short example recording. The method returns the path to the cached folder:
 
 .. doctest::
 
     >>> import pupil_recording_interface as pri
-    >>> pri.load_dataset(pri.get_test_recording(), gaze='recording')
+    >>> folder = pri.get_test_recording()
+
+Gaze
+....
+
+You can easily load recorded gaze data with :py:meth:`load_gaze`:
+
+.. doctest::
+
+    >>> pri.load_gaze(folder)
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5160)
     Coordinates:
@@ -46,11 +52,7 @@ You can easily load recorded gaze data with:
         eye1_normal         (time, cartesian_axis) float64 nan nan ... 0.1646 0.9797
         gaze_confidence_3d  (time) float64 0.8787 0.8769 0.9233 ... 0.9528 0.9528
 
-
-:py:func:`get_test_recording` downloads and caches a very short example
-recording and returns the path to the cached folder. ``gaze='recording'`` tells
-the function to load the recorded gaze data. The dataset contains the following
-arrays:
+The gaze dataset contains the following arrays:
 
 * ``eye``: the eye data that produced the mapping, 0 for eye 0 (usually right),
   1 for eye 1 (usually left), 2 for binocular mapping
@@ -74,7 +76,7 @@ offline gaze mapper by name and load its data:
 
 .. doctest::
 
-    >>> pri.load_dataset(pri.get_test_recording(), gaze='3d Gaze Mapper')
+    >>> pri.load_gaze(folder, source='3d Gaze Mapper')
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5125)
     Coordinates:
@@ -97,8 +99,8 @@ point from the 3d mapper:
 
 .. doctest::
 
-    >>> pri.load_dataset(
-    ...     pri.get_test_recording(), gaze={'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
+    >>> pri.load_gaze(
+    ...     folder, source={'2d': '2d Gaze Mapper ', '3d': '3d Gaze Mapper'}
     ... )
     <xarray.Dataset>
     Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 4987)
@@ -117,13 +119,127 @@ point from the 3d mapper:
         gaze_confidence_2d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207
         gaze_confidence_3d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207
 
-You can get a set of all available gaze mappers for a recording with:
+We can get a set of all available gaze mappers for a recording with:
 
 .. doctest::
 
-    >>> pri.get_gaze_mappers(pri.get_test_recording()) # doctest:+SKIP
+    >>> pri.get_gaze_mappers(folder) # doctest:+SKIP
     {'2d Gaze Mapper ', '3d Gaze Mapper', 'recording'}
 
+
+Pupils
+......
+
+Pupil data can be loaded in a similar manner with :py:meth:`load_pupils`.
+Since the recorded pupil data in the example recording uses the 3d pupil
+detector, we need to specify ``method="3d"``:
+
+.. doctest::
+
+    >>> pri.load_pupils(folder, method="3d")
+    <xarray.Dataset>
+    Dimensions:                  (cartesian_axis: 3, pixel_axis: 2, time: 5170)
+    Coordinates:
+      * time                     (time) datetime64[ns] 2019-10-10T16:43:20.188713789 ... 2019-10-10T16:43:41.300101757
+      * pixel_axis               (pixel_axis) <U1 'x' 'y'
+      * cartesian_axis           (cartesian_axis) <U1 'x' 'y' 'z'
+    Data variables:
+        eye                      (time) int64 1 0 1 0 1 0 1 0 1 ... 1 0 1 0 1 0 1 0
+        confidence               (time) float64 0.9374 0.9412 0.9036 ... 1.0 0.9771
+        diameter                 (time) float64 49.14 43.71 49.01 ... 47.23 39.66
+        ellipse_angle            (time) float64 61.4 85.65 61.37 ... 53.67 76.26
+        pupil_norm_pos           (time, pixel_axis) float64 0.2423 0.663 ... 0.4504
+        ellipse_center           (time, pixel_axis) float64 46.52 64.7 ... 105.5
+        ellipse_axes             (time, pixel_axis) float64 42.82 49.14 ... 39.66
+        circle_center            (time, cartesian_axis) float64 -5.992 ... 81.2
+        circle_normal            (time, cartesian_axis) float64 -0.1717 ... -0.9904
+        sphere_center            (time, cartesian_axis) float64 -3.931 ... 93.08
+        projected_sphere_center  (time, pixel_axis) float64 67.58 101.9 ... 93.74
+        projected_sphere_axes    (time, pixel_axis) float64 173.5 173.5 ... 159.9
+        diameter_3d              (time) float64 5.928 5.864 5.913 ... 5.876 5.194
+        theta                    (time) float64 1.175 1.993 1.174 ... 1.354 1.704
+        phi                      (time) float64 -1.758 -1.533 ... -1.691 -1.534
+        model_confidence         (time) float64 0.5911 0.851 ... 0.1845 0.6902
+        circle_radius            (time) float64 2.964 2.932 2.956 ... 2.938 2.597
+        sphere_radius            (time) float64 12.0 12.0 12.0 ... 12.0 12.0 12.0
+        projected_sphere_angle   (time) float64 90.0 90.0 90.0 ... 90.0 90.0 90.0
+        model_birth_timestamp    (time) float64 2.286e+03 2.284e+03 ... 2.284e+03
+
+
+It is also possible to load pupil data that was computed post-hoc by
+specifying ``source="offline"``. The post-hoc data contains 2d pupil data which
+we can load with ``method="2d"``:
+
+.. doctest::
+
+    >>> pri.load_pupils(folder, source="offline", method="2d")
+    <xarray.Dataset>
+    Dimensions:         (pixel_axis: 2, time: 5164)
+    Coordinates:
+      * time            (time) datetime64[ns] 2019-10-10T16:43:20.277472973 ... 2019-10-10T16:43:41.364654779
+      * pixel_axis      (pixel_axis) <U1 'x' 'y'
+    Data variables:
+        eye             (time) int64 1 0 1 0 1 0 1 0 1 0 1 ... 0 1 0 1 0 1 0 1 0 1 0
+        confidence      (time) float64 0.9622 0.99 0.9273 0.9674 ... 0.99 0.99 0.0
+        diameter        (time) float64 49.46 44.2 49.62 44.2 ... 39.84 47.64 0.0
+        ellipse_angle   (time) float64 62.86 77.64 61.91 78.05 ... 83.34 124.2 -90.0
+        pupil_norm_pos  (time, pixel_axis) float64 0.242 0.6634 0.5005 ... 0.0 1.0
+        ellipse_center  (time, pixel_axis) float64 46.46 64.62 96.1 ... 0.0 0.0
+        ellipse_axes    (time, pixel_axis) float64 43.06 49.46 39.78 ... 0.0 0.0
+
+
+Calibration markers
+...................
+
+Locations of calibration markers that were detected post-hoc can be loaded
+with :py:meth:`load_markers`:
+
+.. doctest::
+
+    >>> pri.load_markers(folder)
+    <xarray.Dataset>
+    Dimensions:      (pixel_axis: 2, time: 240)
+    Coordinates:
+      * time         (time) datetime64[ns] 2019-10-10T16:43:20.238371849 ... 2019-10-10T16:43:41.232636929
+      * pixel_axis   (pixel_axis) <U1 'x' 'y'
+    Data variables:
+        frame_index  (time) int64 0 1 3 4 90 91 92 ... 427 428 429 430 431 513 540
+        location     (time, pixel_axis) float64 202.4 258.9 202.8 ... 822.5 598.0
+
+
+Caching
+.......
+
+.. note::
+
+    This functionality requires the ``netcdf4`` library, see the
+    :ref:`dependencies for data export<export_dependencies>`.
+
+All of the above methods accept a ``cache`` argument that will cache the loaded
+data in the netCDF format, making subsequent loading significantly faster:
+
+    >>> pri.load_gaze(folder, cache=True)
+    <xarray.Dataset>
+    Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5160)
+    Coordinates:
+      * time                (time) datetime64[ns] 2019-10-10T16:43:20.149777889 ... 2019-10-10T16:43:41.262381792
+      * pixel_axis          (pixel_axis) object 'x' 'y'
+      * cartesian_axis      (cartesian_axis) object 'x' 'y' 'z'
+    Data variables:
+        eye                 (time) float64 ...
+        gaze_norm_pos       (time, pixel_axis) float64 ...
+        gaze_point          (time, cartesian_axis) float64 ...
+        eye0_center         (time, cartesian_axis) float64 ...
+        eye1_center         (time, cartesian_axis) float64 ...
+        eye0_normal         (time, cartesian_axis) float64 ...
+        eye1_normal         (time, cartesian_axis) float64 ...
+        gaze_confidence_3d  (time) float64 ...
+
+.. testcode::
+    :hide:
+
+    import shutil
+    shutil.rmtree(folder / "cache")
 
 Loading videos
 --------------
@@ -136,7 +252,7 @@ world camera video with:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.get_test_recording())
+    >>> reader = pri.VideoReader(folder)
     >>> reader.video_info
     {'resolution': (1280, 720), 'frame_count': 504, 'fps': 23.987}
 
@@ -145,7 +261,7 @@ frame by index:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.get_test_recording())
+    >>> reader = pri.VideoReader(folder)
     >>> frame = reader.load_raw_frame(100)
     >>> frame.shape
     (720, 1280, 3)
@@ -154,7 +270,7 @@ or by timestamp:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.get_test_recording())
+    >>> reader = pri.VideoReader(folder)
     >>> frame = reader.load_raw_frame(reader.timestamps[100])
     >>> frame.shape
     (720, 1280, 3)
@@ -188,7 +304,7 @@ Eye videos can be loaded by specifying the ``stream`` parameter:
 
 .. doctest::
 
-    >>> eye_reader = pri.VideoReader(pri.get_test_recording(), stream='eye0')
+    >>> eye_reader = pri.VideoReader(folder, stream='eye0')
 
 With ``return_timestamp=True`` you can get the corresponding timestamp for a
 frame:
@@ -216,9 +332,9 @@ specifying the ``norm_pos`` and ``roi_size`` parameters and using the
 
 .. doctest::
 
-    >>> gaze = pri.load_dataset(pri.get_test_recording(), gaze='2d Gaze Mapper ')
+    >>> gaze = pri.load_dataset(folder, gaze='2d Gaze Mapper ')
     >>> reader = pri.VideoReader(
-    ...     pri.get_test_recording(), norm_pos=gaze.gaze_norm_pos, roi_size=64
+    ...     folder, norm_pos=gaze.gaze_norm_pos, roi_size=64
     ... )
     >>> frame = reader.load_frame(100)
     >>> frame.shape
@@ -251,7 +367,7 @@ Video frames can also be sub-sampled and converted to grayscale with the
 .. doctest::
 
     >>> reader = pri.VideoReader(
-    ...     pri.get_test_recording(), color_format='gray', subsampling=4.
+    ...     folder, color_format='gray', subsampling=4.
     ... )
     >>> frame = reader.load_frame(100)
     >>> frame.shape
@@ -263,7 +379,7 @@ parameters:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.get_test_recording())
+    >>> reader = pri.VideoReader(folder)
     >>> reader.read_frames(start=100, end=200) # doctest:+ELLIPSIS
     <generator object VideoReader.read_frames at ...>
 
@@ -274,7 +390,7 @@ of the loaded data:
 
 .. doctest::
 
-    >>> reader = pri.VideoReader(pri.get_test_recording(), subsampling=8.)
+    >>> reader = pri.VideoReader(folder, subsampling=8.)
     >>> reader.load_dataset(
     ...     start=reader.user_info['experiment_start'],
     ...     end=reader.user_info['experiment_end'],
@@ -296,7 +412,7 @@ The recording metadata file created by Pupil Capture can be loaded with:
 
 .. doctest::
 
-    >>> pri.load_info(pri.get_test_recording()) # doctest:+NORMALIZE_WHITESPACE
+    >>> pri.load_info(folder) # doctest:+NORMALIZE_WHITESPACE
     {'duration_s': 21.111775958999715,
      'meta_version': '2.3',
      'min_player_version': '2.0',
@@ -312,7 +428,7 @@ You can also load the user info with:
 
 .. doctest::
 
-    >>> pri.load_user_info(pri.get_test_recording()) # doctest:+NORMALIZE_WHITESPACE
+    >>> pri.load_user_info(folder) # doctest:+NORMALIZE_WHITESPACE
     {'name': 'TEST',
      'pre_calibration_start': Timestamp('2019-10-10 16:43:21.220912933'),
      'pre_calibration_end': Timestamp('2019-10-10 16:43:22.220912933'),
@@ -328,19 +444,16 @@ Data export
 .. note::
 
     Make sure you have installed the necessary
-    :ref:`dependencies for data export<optional_dependencies>`.
+    :ref:`dependencies for data export<export_dependencies>`.
 
 Recorded data can also directly be written to disk:
 
 .. doctest::
 
-    >>> pri.write_netcdf(
-    ...    pri.get_test_recording(), gaze='recording', output_folder='.'
-    ... )
+    >>> pri.write_netcdf(folder, gaze='recording', output_folder='.')
 
 This will create a ``gaze.nc`` file in the current folder. This file type can
-directly be loaded by xarray which is a lot faster than the
-:py:func:`load_dataset` function:
+directly be loaded by xarray:
 
 .. doctest::
 

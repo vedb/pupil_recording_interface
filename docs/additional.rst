@@ -17,7 +17,7 @@ Recorded odometry data can be loaded the same way as gaze data:
 .. doctest::
 
     >>> import pupil_recording_interface as pri
-    >>> pri.load_dataset(pri.get_test_recording(), odometry='recording')
+    >>> pri.load_motion(pri.get_test_recording(), stream="odometry")
     <xarray.Dataset>
     Dimensions:           (cartesian_axis: 3, quaternion_axis: 4, time: 4220)
     Coordinates:
@@ -32,7 +32,7 @@ Recorded odometry data can be loaded the same way as gaze data:
         orientation       (time, quaternion_axis) float64 0.004093 ... 0.06829
 
 
-The dataset contains linear and angular position, linear and angular
+The dataset contains position and orientation, linear and angular
 velocity as well as the confidence of the tracking.
 
 
