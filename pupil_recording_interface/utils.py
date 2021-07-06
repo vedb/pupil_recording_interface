@@ -10,6 +10,8 @@ from queue import Queue
 from pathlib import Path
 import multiprocessing as mp
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 SyncManager.register("deque", deque)
@@ -128,3 +130,24 @@ def get_test_recording(version="2.0"):
     fnames = goodboy.fetch(f"branch-v{version}.zip", processor=Unzip())
 
     return Path(fnames[0]).parent
+
+
+def merge_pupils(pupils_eye0, pupils_eye1):
+    """ Merge detected pupils from both eyes, sorted by timestamp.
+
+    Parameters
+    ----------
+    pupils_eye0 : list of dict
+        Detected pupils from the first eye.
+
+    pupils_eye1 : list of dict
+        Detected pupils from the second eye.
+
+    Returns
+    -------
+    pupils : list of dict
+        Merged pupils.
+    """
+    pupils = sorted(pupils_eye0 + pupils_eye1, key=lambda p: p["timestamp"])
+
+    return pupils

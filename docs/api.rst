@@ -27,6 +27,16 @@ I/O functions
     get_test_recording
 
 
+Other functions
+...............
+
+.. autosummary::
+    :nosignatures:
+    :toctree: _generated
+
+    merge_pupils
+
+
 Reader classes
 ..............
 
