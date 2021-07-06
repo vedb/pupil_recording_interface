@@ -49,30 +49,11 @@ class PupilDetector(BaseProcess):
             )
 
         self.detector = None
+        self.detector_pye3d = None
+        self.writer = None
 
-        if self.record:
-            if self.folder is None:
-                raise ValueError("folder cannot be None")
-            self.writer = PLData_Writer(self.folder, "pupil")
-        else:
-            self.writer = None
-
-    def start(self):
-        """ Start the process. """
-        if self.method == "2d c++":
-            from pupil_detectors import Detector2D
-
-            self.detector = Detector2D()
-        elif self.method == "pye3d":
-            from pupil_detectors import Detector2D
-            from pye3d.camera import CameraModel
-            from pye3d.detector_3d import Detector3D
-
-            camera = CameraModel(self.focal_length, self.resolution)
-            self.detector = Detector2D()
-            self.detector_pye3d = Detector3D(camera)
-        else:
-            raise ValueError(f"Unsupported detection method: {self.method}")
+        if self.record and self.folder is None:
+            raise ValueError("folder cannot be None")
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
@@ -93,6 +74,37 @@ class PupilDetector(BaseProcess):
         # TODO focal length and resolution
 
         return cls(**cls_kwargs)
+
+    def start(self):
+        """ Start the process. """
+        if self.method == "2d c++":
+            from pupil_detectors import Detector2D
+
+            self.detector = Detector2D()
+
+        elif self.method == "pye3d":
+            from pupil_detectors import Detector2D
+            from pye3d.camera import CameraModel
+            from pye3d.detector_3d import Detector3D
+
+            camera = CameraModel(self.focal_length, self.resolution)
+            self.detector = Detector2D()
+            self.detector_pye3d = Detector3D(camera)
+
+        else:
+            raise ValueError(f"Unsupported detection method: {self.method}")
+
+        if self.record:
+            self.writer = PLData_Writer(self.folder, "pupil")
+
+    def stop(self):
+        """ Stop the process. """
+        self.detector = None
+        self.detector_pye3d = None
+
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = None
 
     def detect_pupil(self, packet):
         """ Detect pupil in frame. """
@@ -159,11 +171,6 @@ class PupilDetector(BaseProcess):
             packet.display_hooks.append(self.display_hook)
 
         return packet
-
-    def stop(self):
-        """ Stop the process. """
-        if self.writer is not None:
-            self.writer.close()
 
     def batch_run(
         self, video_reader, start=None, end=None, return_type="list"

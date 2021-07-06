@@ -132,8 +132,9 @@ class TestPupilDetector:
     def test_record_data(self, pupil_detector, pupil_packet):
         """"""
         pupil_packet.device_uid = "Pupil Cam1 ID0"
-        pupil_detector.record_data(pupil_packet)
-        pupil_detector.stop()
+
+        with pupil_detector:
+            pupil_detector.record_data(pupil_packet)
 
         pldata = [
             dict(d)
