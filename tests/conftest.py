@@ -148,7 +148,7 @@ def statuses():
 @pytest.fixture()
 def pupil(folder_v1):
     """"""
-    pldata = load_pldata_file(folder_v1, "pupil",)
+    pldata = load_pldata_file(folder_v1, "pupil")
 
     pupil = [dict(d) for d in pldata.data]
 
@@ -191,23 +191,27 @@ def calibration_recorded(folder_v1):
 
 
 @pytest.fixture()
-def reference_locations(folder_v1):
+def reference_locations_raw(folder_v1):
     """"""
-    resolution = (1280, 720)
-
     locations = load_object(
         Path(folder_v1) / "offline_data" / "reference_locations.msgpack"
     )
 
+    return locations["data"]
+
+
+@pytest.fixture()
+def reference_locations(reference_locations_raw):
+    """"""
+    resolution = (1280, 720)
+
     locations = [
-        [
-            {
-                "img_pos": location[0],
-                "norm_pos": normalize(location[0], resolution),
-                "timestamp": location[2],
-            }
-        ]
-        for location in locations["data"]
+        {
+            "img_pos": location[0],
+            "norm_pos": normalize(location[0], resolution),
+            "timestamp": location[2],
+        }
+        for location in reference_locations_raw
     ]
 
     return locations

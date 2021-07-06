@@ -129,22 +129,8 @@ class Calibration(BaseProcess):
 
         return filename
 
-    def calculate_calibration(self):
-        """ Calculate calibration from collected data. """
-        # gather pupils
-        pupil_list = []
-
-        while not self._pupil_queue.empty():
-            pupil_list.append(self._pupil_queue.get())
-
-        # gather reference markers
-        circle_marker_list = []
-        while not self._circle_marker_queue.empty():
-            # TODO get biggest circle marker
-            circle_markers = self._circle_marker_queue.get()
-            if len(circle_markers) > 0:
-                circle_marker_list.append(circle_markers[0])
-
+    def _calibrate(self, circle_marker_list, pupil_list):
+        """ Calibrate and save result. """
         # call calibration function
         g_pool = GPoolDummy(
             capture=GPoolDummy(frame_size=self.resolution),
@@ -155,7 +141,6 @@ class Calibration(BaseProcess):
         method, result = select_method_and_perform_calibration(
             g_pool, pupil_list, circle_marker_list
         )
-
         self._calculated = True
 
         # process result
@@ -176,6 +161,26 @@ class Calibration(BaseProcess):
             else:
                 filename = None
                 logger.debug("Calibration not saved")
+
+        return filename
+
+    def calculate_calibration(self):
+        """ Calculate calibration from collected data. """
+        # gather pupils
+        pupil_list = []
+
+        while not self._pupil_queue.empty():
+            pupil_list.append(self._pupil_queue.get())
+
+        # gather reference markers
+        circle_marker_list = []
+        while not self._circle_marker_queue.empty():
+            # TODO get biggest circle marker
+            circle_markers = self._circle_marker_queue.get()
+            if len(circle_markers) > 0:
+                circle_marker_list.append(circle_markers[0])
+
+        filename = self._calibrate(circle_marker_list, pupil_list)
 
         return circle_marker_list, pupil_list, filename
 
@@ -231,3 +236,35 @@ class Calibration(BaseProcess):
         packet.broadcasts.append("calibration_calculated")
 
         return packet
+
+    def batch_run(self, pupils, markers, return_type="dict"):
+        """ Run calibration on detected pupils and reference markers.
+
+        Parameters
+        ----------
+        pupils : list of dict
+            List of detected pupils.
+
+        markers : list of dict
+            List of detected reference markers.
+
+        return_type : str or None, default "dict"
+            The data type that this method should return. "dict" returns the
+            calibration result as a dict. Can also be None, in that case this
+            method returns nothing, which is useful when recording the
+            calibration directly to disk.
+
+        Returns
+        -------
+        result : dict
+            Calibration results if return_type="dict".
+        """
+        self._calibrate(markers, pupils)
+
+        if self.result is None:
+            raise ValueError("Calibration failed")
+        else:
+            if return_type == "dict":
+                return self.result["args"]
+            elif return_type is not None:
+                raise ValueError(f"Unsupported return_type {return_type}")

@@ -230,10 +230,9 @@ class PupilDetector(BaseProcess):
 
         if return_type == "list":
             return pupil_list
-
         elif return_type == "dataset":
-            df = pd.DataFrame(pupil_list)
             # only the stem of the method (e.g. 2d instead of 2d c++)
             method = self.method.split()[0]
-            data = PupilReader._extract_pupil_data(df, method)
-            return PupilReader._create_dataset(data, video_reader.info, method)
+            return PupilReader._dataset_from_list(
+                pupil_list, video_reader.info, method
+            )

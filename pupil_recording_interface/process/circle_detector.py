@@ -169,17 +169,14 @@ class CircleDetector(BaseProcess):
                 if circle_markers is None or len(circle_markers) == 0:
                     continue
 
-                marker = [circle_markers[0]["img_pos"], idx, ts]
-
                 if return_type is not None:
+                    marker = circle_markers[0]
+                    marker["frame_index"] = idx
                     marker_list.append(marker)
 
         if return_type == "list":
             return marker_list
-
         elif return_type == "dataset":
-            df = pd.DataFrame(
-                marker_list, columns=["location", "frame_index", "timestamp"]
+            return MarkerReader._dataset_from_list(
+                marker_list, video_reader.info
             )
-            data = MarkerReader._extract_marker_data(df)
-            return MarkerReader._create_dataset(data, video_reader.info)

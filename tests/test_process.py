@@ -20,6 +20,8 @@ from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
 from pupil_recording_interface.process.validation import Validation
 from pupil_recording_interface.reader.video import VideoReader
+from pupil_recording_interface.reader.pupil import PupilReader
+from pupil_recording_interface.reader.marker import MarkerReader
 from pupil_recording_interface.externals.file_methods import (
     load_object,
     load_pldata_file,
@@ -287,7 +289,7 @@ class TestCircleDetector:
             "timestamp",
         }
         assert circle_markers[0]["img_pos"] == tuple(
-            reference_locations[0][0]["img_pos"]
+            reference_locations[0]["img_pos"]
         )
 
     def test_display_hook(self, circle_detector, circle_marker_packet):
@@ -303,11 +305,30 @@ class TestCircleDetector:
         detector = CircleDetector()
         marker_list = detector.batch_run(reader)
         assert len(marker_list) == 265
-        assert marker_list[0] == [
-            (202.40928840637207, 258.93427181243896),
-            0,
-            2294.8253149986267,
-        ]
+        assert marker_list[0] == {
+            "ellipses": [
+                (
+                    (202.40928840637207, 258.93427181243896),
+                    (3.161648750305176, 7.702362537384033),
+                    5.040442943572998,
+                ),
+                (
+                    (202.5661106109619, 258.9437084197998),
+                    (9.932433128356934, 14.860321998596191),
+                    7.16973876953125,
+                ),
+                (
+                    (202.12913990020752, 258.6039705276489),
+                    (14.167598724365234, 21.80955696105957),
+                    8.583196640014648,
+                ),
+            ],
+            "frame_index": 0,
+            "img_pos": (202.40928840637207, 258.93427181243896),
+            "marker_type": "Ref",
+            "norm_pos": (0.15813225656747817, 0.6403690669271681),
+            "timestamp": 2294.8253149986267,
+        }
 
         # returning a dataset
         ds = detector.batch_run(reader, end=100, return_type="dataset")
@@ -340,7 +361,7 @@ class TestCalibration:
             calibration._pupil_queue.put(p)
 
         for r in reference_locations:
-            calibration._circle_marker_queue.put(r)
+            calibration._circle_marker_queue.put([r])
 
         calibration.calculate_calibration()
 
@@ -367,6 +388,16 @@ class TestCalibration:
         filename = calibration.save_result()
 
         np.testing.assert_equal(load_object(filename), calibration_2d)
+
+    def test_batch_run(
+        self, calibration, pupil, reference_locations, calibration_2d, info
+    ):
+        """"""
+        # from lists
+        result = calibration.batch_run(pupil, reference_locations)
+        for param, actual in result.items():
+            expected = calibration_2d["data"][8][1][param]
+            np.testing.assert_allclose(actual[:2], expected[:2])
 
 
 class TestValidation:
@@ -396,7 +427,7 @@ class TestValidation:
             validation._pupil_queue.put(p)
 
         for r in reference_locations:
-            validation._circle_marker_queue.put(r)
+            validation._circle_marker_queue.put([r])
 
         _, _, filename = validation.calculate_calibration()
         assert (filename.parent / "marker_coverage.png").exists()
