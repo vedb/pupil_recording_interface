@@ -16,6 +16,35 @@ I/O functions
     GazeReader.load_dataset
     GazeReader.write_netcdf
 
+
+PupilReader
+..............
+
+I/O functions
+~~~~~~~~~~~~~
+
+.. autosummary::
+    :nosignatures:
+    :toctree: ../_generated
+
+    PupilReader.load_dataset
+    PupilReader.write_netcdf
+
+
+MarkerReader
+..............
+
+I/O functions
+~~~~~~~~~~~~~
+
+.. autosummary::
+    :nosignatures:
+    :toctree: ../_generated
+
+    MarkerReader.load_dataset
+    MarkerReader.write_netcdf
+
+
 MotionReader
 ..............
 

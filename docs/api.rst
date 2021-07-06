@@ -15,7 +15,11 @@ I/O functions
     :nosignatures:
     :toctree: _generated
 
-    load_dataset
+    get_test_recording
+    load_gaze
+    load_pupils
+    load_markers
+    load_motion
     write_netcdf
     load_info
     load_user_info
@@ -24,7 +28,6 @@ I/O functions
     get_gaze_mappers
     load_object
     save_object
-    get_test_recording
 
 
 Other functions

@@ -11,6 +11,10 @@ from numpy import testing as npt
 from pupil_recording_interface import (
     GazeReader,
     load_dataset,
+    load_gaze,
+    load_pupils,
+    load_markers,
+    load_motion,
     write_netcdf,
     get_gaze_mappers,
     BaseReader,
@@ -199,6 +203,131 @@ class TestBaseReader:
 
 
 class TestFunctionalReader:
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_gaze(self, folder):
+        """"""
+        gaze = load_gaze(folder, cache=True)
+
+        assert set(gaze.data_vars) == {
+            "eye",
+            "gaze_confidence_3d",
+            "gaze_point",
+            "eye0_center",
+            "eye1_center",
+            "eye0_normal",
+            "eye1_normal",
+            "gaze_norm_pos",
+        }
+
+        shutil.rmtree(folder / "cache")
+
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_pupils(self, folder):
+        """"""
+        pupils = load_pupils(folder, method="3d", cache=True)
+
+        assert set(pupils.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "model_birth_timestamp",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+    def test_load_offline_pupils(self, folder_v2):
+        """"""
+        pupils = load_pupils(
+            folder_v2, source="offline", method="2d", cache=True
+        )
+
+        assert set(pupils.data_vars) == {
+            "confidence",
+            "diameter",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "pupil_norm_pos",
+        }
+
+        pupils = load_pupils(folder_v2, source="offline", cache=True)
+
+        assert set(pupils.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "location",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+        shutil.rmtree(folder_v2 / "cache")
+
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_markers(self, folder):
+        """"""
+        markers = load_markers(folder, cache=True)
+
+        assert set(markers.data_vars) == {"frame_index", "location"}
+
+        shutil.rmtree(folder / "cache")
+
+    def test_load_motion(self, t265_folder):
+        """"""
+        odometry = load_motion(t265_folder, cache=True)
+        assert set(odometry.data_vars) == {
+            "confidence",
+            "linear_acceleration",
+            "angular_acceleration",
+            "linear_velocity",
+            "angular_velocity",
+            "position",
+            "orientation",
+        }
+
+        accel = load_motion(t265_folder, stream="accel", cache=True)
+        assert set(accel.data_vars) == {"linear_acceleration"}
+
+        gyro = load_motion(t265_folder, stream="gyro", cache=True)
+        assert set(gyro.data_vars) == {"angular_velocity"}
+
+        shutil.rmtree(t265_folder / "cache")
+
     @pytest.mark.parametrize(
         "folder", ["folder_v1", "folder_v2"], indirect=True
     )
