@@ -1,6 +1,5 @@
 """"""
 import cv2
-import pandas as pd
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.packet import Packet
@@ -131,7 +130,7 @@ class CircleDetector(BaseProcess):
 
         Returns
         -------
-        marker_list : list of list
+        marker_list : list of dict
             List of detected markers if return_type="list".
 
         ds : xarray.Dataset
