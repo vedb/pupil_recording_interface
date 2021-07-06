@@ -2,7 +2,6 @@
 import logging
 
 import cv2
-import pandas as pd
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess

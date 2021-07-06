@@ -10,8 +10,6 @@ from queue import Queue
 from pathlib import Path
 import multiprocessing as mp
 
-import numpy as np
-
 logger = logging.getLogger(__name__)
 
 SyncManager.register("deque", deque)
