@@ -12,10 +12,23 @@ pupil detection, calibration and gaze mapping, similar to Pupil Player.
 Pupil detection
 ---------------
 
+.. note::
+
+    Make sure that you have installed the necessary
+    :ref:`dependencies for pupil detection<pupil_detection_dependencies>`.
+
+We start by creating a :py:class:`PupilDetector` in the same way as in the
+:ref:`processing tutorial<processing>`.
+
 .. doctest::
 
     >>> import pupil_recording_interface as pri
     >>> pupil_detector = pri.PupilDetector(camera_id=0)
+
+For post-hoc pupil detection we first create a :py:class:`VideoReader` instance
+that points to an eye camera video. Now we can use the
+:py:meth:`PupilDetector.batch_run` method, which will return a list containing
+pupil data for each frame:
 
 .. doctest::
 
@@ -38,6 +51,8 @@ Pupil detection
      'id': 0,
      'topic': 'pupil'}
 
+We can also tell the detector to stop after 100 frames and return a dataset:
+
 .. doctest::
 
     >>> pupil_detector.batch_run(eye0_reader, end=100, return_type="dataset")
@@ -58,9 +73,15 @@ Pupil detection
 Marker detection
 ----------------
 
+To detect calibration markers in the world camera images, we can use the
+:py:class:`CircleDetector`:
+
 .. doctest::
 
     >>> marker_detector = pri.CircleDetector()
+
+This process also has a :py:meth:`CircleDetector.batch_run` method, to which
+we pass a :py:class:`VideoReader` for the world video:
 
 .. doctest::
 
@@ -75,6 +96,8 @@ Marker detection
      'marker_type': 'Ref',
      'timestamp': 2294...,
      'frame_index': 0}
+
+Again, we can specify a stop (and start) index and return a dataset:
 
 .. doctest::
 
@@ -91,10 +114,15 @@ Marker detection
 Calibration
 -----------
 
+After detecting pupils and calibration markers, we can now run a calibration
+with a :py:class:`Calibration` instance:
 
 .. doctest::
 
     >>> calibration = pri.Calibration(resolution=(1280, 720))
+
+We pass the detected pupils and calibration markers to
+:py:meth:`Calibration.batch_run` to obtain a monocular calibration.
 
 .. doctest::
 
@@ -102,6 +130,11 @@ Calibration
     {'params': ([-28..., -29..., 15..., 14..., 41..., -29..., 13...],
                 [-2..., -14..., 2..., 13..., -0..., 0..., 4...],
                 7)}
+
+It is also possible to perform a binocular calibration, provided that we have
+detected pupils from the second eye camera. However, we need to take care that
+the detected pupils are in the correct chronological order. We can use
+:py:meth:`merge_pupils` for this:
 
 .. doctest::
 
@@ -111,6 +144,10 @@ Calibration
     >>> pupil_detector.camera_id = 1
     >>> pupil_list_eye1 = pupil_detector.batch_run(eye1_reader)
     >>> pupil_list = pri.merge_pupils(pupil_list_eye0, pupil_list_eye1)
+
+Now we can run a binocular calibration. As you can see, the result is different
+this time, as it includes binocular calibration coefficients as well as
+monocular coefficients for each eye:
 
 .. doctest::
 
@@ -133,9 +170,15 @@ Calibration
 Gaze mapping
 ------------
 
+Finally, we can use the :py:class:`GazeMapper` to map detected pupils to gaze
+data according to a previously obtained calibration:
+
 .. doctest::
 
     >>> gaze_mapper = pri.GazeMapper(calibration=calibration_result)
+
+As usual, we use the :py:meth:`GazeMapper.batch_run` method for post-hoc
+mapping:
 
 .. doctest::
 
@@ -146,6 +189,10 @@ Gaze mapping
       'confidence': 0.97...,
       'timestamp': 2294...,
       'base_data': [...]}
+
+The method can also return a dataset, although we need to provide a dictionary
+with the recording info to get the correspondence between recorded (monotonic)
+timestamps and datetime timestamps:
 
 .. doctest::
 
