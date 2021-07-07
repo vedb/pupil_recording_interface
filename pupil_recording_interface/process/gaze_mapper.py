@@ -139,7 +139,7 @@ class GazeMapper(BaseProcess):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(
+        cls_kwargs = cls._get_constructor_args(
             config, folder=config.folder or kwargs.get("folder", None),
         )
 

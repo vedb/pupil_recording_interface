@@ -463,7 +463,7 @@ class VideoFileDevice(BaseVideoDevice):
         """ Per-class implementation of from_config. """
         assert device.registry[config.device_type] is cls
 
-        cls_kwargs = cls.get_constructor_args(config)
+        cls_kwargs = cls._get_constructor_args(config)
         cls_kwargs["folder"] = kwargs.get("folder", None) or getattr(
             config, "folder", None
         )

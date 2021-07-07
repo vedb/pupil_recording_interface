@@ -58,7 +58,7 @@ class VideoDisplay(BaseProcess):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(
+        cls_kwargs = cls._get_constructor_args(
             config,
             name=stream_config.name or device.device_uid,
             resolution=getattr(stream_config, "resolution", None),

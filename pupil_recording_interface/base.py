@@ -58,7 +58,7 @@ class BaseConfigurable:
     _optional_args = tuple()  # make these positional constructor args optional
 
     @classmethod
-    def get_params(cls):
+    def _get_params(cls):
         """ Get constructor parameters for a class. """
         signature = inspect.signature(cls.__init__)
 
@@ -82,10 +82,10 @@ class BaseConfigurable:
         return args, kwargs
 
     @classmethod
-    def get_constructor_args(cls, config, **kwargs):
+    def _get_constructor_args(cls, config, **kwargs):
         """ Construct and instance of a class from a Config. """
         # get constructor signature
-        cls_args, cls_kwargs = cls.get_params()
+        cls_args, cls_kwargs = cls._get_params()
 
         # update from _additional_kwargs
         # TODO we probably should merge this with the Config method
@@ -122,7 +122,7 @@ class BaseConfigurable:
     def Config(cls, *args, **kwargs):
         """ Configuration for this class. """
         # TODO also get superclass kwargs?
-        cls_args, cls_kwargs = cls.get_params()
+        cls_args, cls_kwargs = cls._get_params()
 
         for arg in cls._ignore_args:
             cls_args.remove(arg)
