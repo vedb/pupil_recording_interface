@@ -74,6 +74,114 @@ class Calibration(BaseProcess):
 
         return cls(**cls_kwargs)
 
+    def _process_notifications(self, notifications):
+        """ Process new notifications. """
+        for notification in notifications:
+            # check for triggers
+            if (
+                "calculate_calibration" in notification
+                and notification["calculate_calibration"]
+            ):
+                self._collect = False
+                self._calculated = False
+                self.calculate_calibration()
+            elif (
+                "collect_calibration_data" in notification
+                and notification["collect_calibration_data"]
+            ):
+                self._collect = True
+                logger.debug("Collecting calibration data")
+
+            # collect new data
+            if self._collect:
+                try:
+                    self._pupil_queue.put(notification[self.left]["pupil"])
+                except KeyError:
+                    pass
+
+                try:
+                    self._pupil_queue.put(notification[self.right]["pupil"])
+                except KeyError:
+                    pass
+
+    def _process_packet(self, packet):
+        """ Process a packet. """
+        if self._collect and "circle_markers" in packet:
+            self._circle_marker_queue.put(packet["circle_markers"])
+            packet.collected_markers = self._circle_marker_queue.qsize()
+            packet.broadcasts.append("collected_markers")
+
+        if self._calculated:
+            if self.resolution != packet["frame"].shape[1::-1]:
+                logger.warning(
+                    f"Frame has resolution {packet['frame'].shape[1::-1]} "
+                    f"but calibration was calculated for {self.resolution}"
+                )
+            packet.calibration_calculated = True
+            packet.calibration_result = self.result
+            self._calculated = False
+        else:
+            packet.calibration_calculated = False
+
+        packet.broadcasts.append("calibration_calculated")
+
+        return packet
+
+    def calculate_calibration(self):
+        """ Calculate calibration from collected data. """
+        # gather pupils
+        pupil_list = []
+
+        while not self._pupil_queue.empty():
+            pupil_list.append(self._pupil_queue.get())
+
+        # gather reference markers
+        circle_marker_list = []
+        while not self._circle_marker_queue.empty():
+            # TODO get biggest circle marker
+            circle_markers = self._circle_marker_queue.get()
+            if len(circle_markers) > 0:
+                circle_marker_list.append(circle_markers[0])
+
+        filename = self._calibrate(circle_marker_list, pupil_list)
+
+        return circle_marker_list, pupil_list, filename
+
+    def _calibrate(self, circle_marker_list, pupil_list):
+        """ Calibrate and save result. """
+        # call calibration function
+        g_pool = GPoolDummy(
+            capture=GPoolDummy(frame_size=self.resolution),
+            detection_mapping_mode=self.mode,
+            min_calibration_confidence=self.min_confidence,
+            get_timestamp=monotonic,
+        )
+        method, result = select_method_and_perform_calibration(
+            g_pool, pupil_list, circle_marker_list
+        )
+        self._calculated = True
+
+        # process result
+        if result["subject"] == "calibration.failed":
+            self.result = None
+            filename = None
+            logger.error("Calibration failed")
+        else:
+            self.result = self._fix_result(method, result)
+            logger.info("Calibration successful")
+            logger.debug(result)
+
+            self.uuid = str(uuid4())
+
+            if self.save:
+                filename = self.save_result()
+                logger.debug("Calibration saved")
+            else:
+                filename = None
+                logger.debug("Calibration not saved")
+
+        return filename
+
     @classmethod
     def _fix_result(cls, method, result):
         """ Fix result to match calibration obtained by Pupil Software. """
@@ -128,114 +236,6 @@ class Calibration(BaseProcess):
         logger.info(f"Saved calibration to {filename}")
 
         return filename
-
-    def _calibrate(self, circle_marker_list, pupil_list):
-        """ Calibrate and save result. """
-        # call calibration function
-        g_pool = GPoolDummy(
-            capture=GPoolDummy(frame_size=self.resolution),
-            detection_mapping_mode=self.mode,
-            min_calibration_confidence=self.min_confidence,
-            get_timestamp=monotonic,
-        )
-        method, result = select_method_and_perform_calibration(
-            g_pool, pupil_list, circle_marker_list
-        )
-        self._calculated = True
-
-        # process result
-        if result["subject"] == "calibration.failed":
-            self.result = None
-            filename = None
-            logger.error("Calibration failed")
-        else:
-            self.result = self._fix_result(method, result)
-            logger.info("Calibration successful")
-            logger.debug(result)
-
-            self.uuid = str(uuid4())
-
-            if self.save:
-                filename = self.save_result()
-                logger.debug("Calibration saved")
-            else:
-                filename = None
-                logger.debug("Calibration not saved")
-
-        return filename
-
-    def calculate_calibration(self):
-        """ Calculate calibration from collected data. """
-        # gather pupils
-        pupil_list = []
-
-        while not self._pupil_queue.empty():
-            pupil_list.append(self._pupil_queue.get())
-
-        # gather reference markers
-        circle_marker_list = []
-        while not self._circle_marker_queue.empty():
-            # TODO get biggest circle marker
-            circle_markers = self._circle_marker_queue.get()
-            if len(circle_markers) > 0:
-                circle_marker_list.append(circle_markers[0])
-
-        filename = self._calibrate(circle_marker_list, pupil_list)
-
-        return circle_marker_list, pupil_list, filename
-
-    def _process_notifications(self, notifications, block=None):
-        """ Process new notifications. """
-        for notification in notifications:
-            # check for triggers
-            if (
-                "calculate_calibration" in notification
-                and notification["calculate_calibration"]
-            ):
-                self._collect = False
-                self._calculated = False
-                self.call(self.calculate_calibration, block=block)
-            elif (
-                "collect_calibration_data" in notification
-                and notification["collect_calibration_data"]
-            ):
-                self._collect = True
-                logger.debug("Collecting calibration data")
-
-            # collect new data
-            if self._collect:
-                try:
-                    self._pupil_queue.put(notification[self.left]["pupil"])
-                except KeyError:
-                    pass
-
-                try:
-                    self._pupil_queue.put(notification[self.right]["pupil"])
-                except KeyError:
-                    pass
-
-    def _process_packet(self, packet, block=None):
-        """ Process a packet. """
-        if self._collect and "circle_markers" in packet:
-            self._circle_marker_queue.put(packet["circle_markers"])
-            packet.collected_markers = self._circle_marker_queue.qsize()
-            packet.broadcasts.append("collected_markers")
-
-        if self._calculated:
-            if self.resolution != packet["frame"].shape[1::-1]:
-                logger.warning(
-                    f"Frame has resolution {packet['frame'].shape[1::-1]} "
-                    f"but calibration was calculated for {self.resolution}"
-                )
-            packet.calibration_calculated = True
-            packet.calibration_result = self.result
-            self._calculated = False
-        else:
-            packet.calibration_calculated = False
-
-        packet.broadcasts.append("calibration_calculated")
-
-        return packet
 
     def batch_run(self, pupils, markers, return_type="dict"):
         """ Run calibration on detected pupils and reference markers.

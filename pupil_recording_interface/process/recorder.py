@@ -37,7 +37,7 @@ class BaseRecorder(BaseProcess):
         super().__init__(**kwargs)
 
     @abc.abstractmethod
-    def write(self, data):
+    def write(self, *args):
         """ Write data to disk. """
 
 
@@ -167,24 +167,23 @@ class VideoRecorder(BaseRecorder):
             self.writer.file_handle.close()
             self.writer = None
 
-    def write(self, packet):
+    def write(self, frame, timestamp, source_timestamp):
         """ Write data to disk. """
         if len(self._timestamps) % self.encode_every == 0:
-            self.encoder.write(packet["frame"])
+            self.encoder.write(frame)
 
             if self.writer is not None:
                 self.writer.append(
                     {
                         "topic": self.name,
-                        "timestamp": packet.timestamp,
-                        "source_timestamp": packet.source_timestamp,
+                        "timestamp": timestamp,
+                        "source_timestamp": source_timestamp,
                     }
                 )
 
-    def _process_packet(self, packet, block=None):
+    def _process_packet(self, packet):
         """ Process a new packet. """
-        self.call(self.write, packet, block=block)
-
+        self.write(packet.frame, packet.timestamp, packet.source_timestamp)
         self._timestamps.append(packet.timestamp)
 
         return packet
@@ -238,15 +237,15 @@ class MotionRecorder(BaseRecorder):
         self.writer.close()
         self.writer = None
 
-    def write(self, packet):
+    def write(self, data):
         """ Write data to disk. """
+        self.writer.append(data)
+
+    def _process_packet(self, packet):
+        """ Process a new packet. """
         try:
-            self.writer.append(packet[self.motion_type])
+            self.write(packet[self.motion_type])
         except KeyError:
             logger.warning(f"Packet missing expected data: {self.motion_type}")
-
-    def _process_packet(self, packet, block=None):
-        """ Process a new packet. """
-        self.call(self.write, packet, block=block)
 
         return packet

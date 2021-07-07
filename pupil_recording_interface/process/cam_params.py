@@ -38,6 +38,45 @@ class CircleGridDetector(BaseProcess):
 
         super().__init__(**kwargs)
 
+    def display_hook(self, packet):
+        """ Add circle grid overlay onto frame. """
+        circle_grid = packet["circle_grid"]
+        if circle_grid is None:
+            # Return the attribute to avoid unnecessary waiting
+            return packet.display_frame
+        else:
+            grid_points = circle_grid["grid_points"]
+
+        frame = packet["display_frame"]
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+        if isinstance(grid_points, list):
+            calib_bounds = [
+                cv2.convexHull(gp).astype(np.int32) for gp in grid_points
+            ]
+        else:
+            calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
+
+        # TODO make constructor arguments
+        color = (0, 255, 0)
+
+        cv2.polylines(frame, calib_bounds, True, color)
+
+        return frame
+
+    def _process_packet(self, packet):
+        """ Process a new packet. """
+        packet.circle_grid = self.detect_grid(packet)
+
+        # TODO maybe don't broadcast on every single packet
+        packet.broadcasts.append("circle_grid")
+
+        if self.display:
+            packet.display_hooks.append(self.display_hook)
+
+        return packet
+
     def detect_grid(self, packet):
         """ Detect circle grid in frame. """
         frame = packet["frame"]
@@ -90,45 +129,6 @@ class CircleGridDetector(BaseProcess):
             }
         else:
             return None
-
-    def display_hook(self, packet):
-        """ Add circle grid overlay onto frame. """
-        circle_grid = packet["circle_grid"]
-        if circle_grid is None:
-            # Return the attribute to avoid unnecessary waiting
-            return packet.display_frame
-        else:
-            grid_points = circle_grid["grid_points"]
-
-        frame = packet["display_frame"]
-        if frame.ndim == 2:
-            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
-
-        if isinstance(grid_points, list):
-            calib_bounds = [
-                cv2.convexHull(gp).astype(np.int32) for gp in grid_points
-            ]
-        else:
-            calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
-
-        # TODO make constructor arguments
-        color = (0, 255, 0)
-
-        cv2.polylines(frame, calib_bounds, True, color)
-
-        return frame
-
-    def _process_packet(self, packet, block=None):
-        """ Process a new packet. """
-        packet.circle_grid = self.call(self.detect_grid, packet, block=block)
-
-        # TODO maybe don't broadcast on every single packet
-        packet.broadcasts.append("circle_grid")
-
-        if self.display:
-            packet.display_hooks.append(self.display_hook)
-
-        return packet
 
 
 def calculate_intrinsics(
@@ -275,6 +275,88 @@ class CamParamEstimator(BaseProcess):
         )
 
         return cls(**cls_kwargs)
+
+    def display_hook(self, packet):
+        """ Add circle grid overlay onto frame. """
+        if self.context is None:
+            # TODO check if it makes sense to show the grid without a context
+            return packet.display_frame
+
+        frame = packet["display_frame"]
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+        for pattern_dict in list(self._pattern_queue.queue):
+            try:
+                grid_points = pattern_dict[self.context.device.device_uid][
+                    "grid_points"
+                ]
+            except KeyError:
+                continue
+
+            if isinstance(grid_points, list):
+                calib_bounds = [
+                    cv2.convexHull(gp).astype(np.int32) for gp in grid_points
+                ]
+            else:
+                calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
+
+            # TODO make constructor arguments
+            color = (200, 100, 0)
+
+            cv2.polylines(frame, calib_bounds, True, color)
+
+        return frame
+
+    def _process_notifications(self, notifications):
+        """ Process new notifications. """
+        for notification in notifications:
+            # check for triggers
+            if (
+                "acquire_pattern" in notification
+                and notification["acquire_pattern"]
+            ):
+                self._acquire_pattern = True
+
+            # collect new data
+            if self._acquire_pattern:
+                # TODO with self._lock?
+                try:
+                    # Add data from notifications
+                    pattern_dict = {
+                        notification[stream]["device_uid"]: notification[
+                            stream
+                        ]["circle_grid"]
+                        for stream in self.streams
+                    }
+                    # Check if we got grid points from all streams
+                    if any(
+                        pattern is None for pattern in pattern_dict.values()
+                    ):
+                        continue
+                    else:
+                        self._acquire_pattern = False
+                    self._add_pattern(pattern_dict)
+                    self._pattern_acquired = True
+                except KeyError:
+                    pass
+                except Full:
+                    break
+
+    def _process_packet(self, packet):
+        """ Process a packet. """
+        if self._pattern_acquired:
+            packet.pattern_acquired = True
+            self._pattern_acquired = False
+        else:
+            packet.pattern_acquired = False
+
+        packet.broadcasts.append("pattern_acquired")
+
+        if self.display:
+            packet.display_hooks.append(self.display_hook)
+
+        return packet
 
     def _add_pattern(self, circle_grid):
         """ Add a new pattern to the queue. """
@@ -455,85 +537,3 @@ class CamParamEstimator(BaseProcess):
             self._save_extrinsics(self.folder, self._extrinsics_result)
 
         logger.info("Successfully estimated camera parameters")
-
-    def display_hook(self, packet):
-        """ Add circle grid overlay onto frame. """
-        if self.context is None:
-            # TODO check if it makes sense to show the grid without a context
-            return packet.display_frame
-
-        frame = packet["display_frame"]
-        if frame.ndim == 2:
-            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
-
-        for pattern_dict in list(self._pattern_queue.queue):
-            try:
-                grid_points = pattern_dict[self.context.device.device_uid][
-                    "grid_points"
-                ]
-            except KeyError:
-                continue
-
-            if isinstance(grid_points, list):
-                calib_bounds = [
-                    cv2.convexHull(gp).astype(np.int32) for gp in grid_points
-                ]
-            else:
-                calib_bounds = [cv2.convexHull(grid_points).astype(np.int32)]
-
-            # TODO make constructor arguments
-            color = (200, 100, 0)
-
-            cv2.polylines(frame, calib_bounds, True, color)
-
-        return frame
-
-    def _process_notifications(self, notifications, block=None):
-        """ Process new notifications. """
-        for notification in notifications:
-            # check for triggers
-            if (
-                "acquire_pattern" in notification
-                and notification["acquire_pattern"]
-            ):
-                self._acquire_pattern = True
-
-            # collect new data
-            if self._acquire_pattern:
-                # TODO with self._lock?
-                try:
-                    # Add data from notifications
-                    pattern_dict = {
-                        notification[stream]["device_uid"]: notification[
-                            stream
-                        ]["circle_grid"]
-                        for stream in self.streams
-                    }
-                    # Check if we got grid points from all streams
-                    if any(
-                        pattern is None for pattern in pattern_dict.values()
-                    ):
-                        continue
-                    else:
-                        self._acquire_pattern = False
-                    self._add_pattern(pattern_dict)
-                    self._pattern_acquired = True
-                except KeyError:
-                    pass
-                except Full:
-                    break
-
-    def _process_packet(self, packet, block=None):
-        """ Process a packet. """
-        if self._pattern_acquired:
-            packet.pattern_acquired = True
-            self._pattern_acquired = False
-        else:
-            packet.pattern_acquired = False
-
-        packet.broadcasts.append("pattern_acquired")
-
-        if self.display:
-            packet.display_hooks.append(self.display_hook)
-
-        return packet

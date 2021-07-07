@@ -4,9 +4,7 @@ import os
 import sys
 import io
 from collections import deque
-from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing.managers import SyncManager
-from queue import Queue
 from pathlib import Path
 import multiprocessing as mp
 
@@ -27,7 +25,7 @@ except ImportError:
 
 
 def identify_process(process_type, name=None):
-    """"""
+    """ Log process ID and set process title. """
     name = name or mp.current_process().name
     logger.debug(f"Process ID for {process_type} {name}: {os.getpid()}")
     if setproctitle is not None:
@@ -35,34 +33,10 @@ def identify_process(process_type, name=None):
 
 
 def multiprocessing_deque(maxlen=None):
-    """"""
+    """ deque object that can be used in a multiprocessing context. """
     manager = SyncManager()
     manager.start()
     return manager.deque(maxlen=maxlen)
-
-
-class DroppingThreadPoolExecutor(ThreadPoolExecutor):
-    """"""
-
-    def __init__(self, maxsize=None, *args, **kwargs):
-        """"""
-        super().__init__(*args, **kwargs)
-        self._work_queue = Queue(maxsize=maxsize)
-
-    def qsize(self):
-        """"""
-        return self._work_queue.qsize()
-
-    def full(self):
-        """"""
-        return self._work_queue.full()
-
-    def submit(self, fn, *args, return_if_full=None, **kwargs):
-        """"""
-        if self.full():
-            return return_if_full
-        else:
-            return super().submit(fn, *args, **kwargs)
 
 
 class SuppressStream:

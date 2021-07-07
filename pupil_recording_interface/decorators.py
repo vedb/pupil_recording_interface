@@ -65,4 +65,4 @@ class process(_base_decorator):
     registry = {}
     name = "Process"
     config_attr = "process_type"
-    add_kwargs = {"process_name": None, "paused": False, "block": False}
+    add_kwargs = {"process_name": None, "paused": False}

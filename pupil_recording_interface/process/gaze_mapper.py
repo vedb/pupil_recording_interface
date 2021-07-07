@@ -145,18 +145,23 @@ class GazeMapper(BaseProcess):
 
         return cls(**cls_kwargs)
 
-    def get_mapped_gaze(self):
-        """ Call the pupil gaze mapper. """
-        gaze = []
-        while not self._gaze_queue.empty():
-            gaze.append(self._gaze_queue.get())
+    def start(self):
+        """ Start the process. """
+        self.mapper = Binocular_Gaze_Mapper(
+            self.calibration["params"],
+            self.calibration["params_eye0"],
+            self.calibration["params_eye1"],
+        )
 
-        return gaze
+        if self.record:
+            self.writer = PLData_Writer(self.folder, "gaze")
 
-    def record_data(self, packet):
-        """ Record gaze to disk. """
-        for gaze in packet["gaze"]:
-            self.writer.append(gaze)
+    def stop(self):
+        """ Stop the process. """
+        self.mapper = None
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = None
 
     def display_hook(self, packet):
         """ Add gaze overlay onto frame. """
@@ -221,7 +226,7 @@ class GazeMapper(BaseProcess):
 
         return frame
 
-    def _process_notifications(self, notifications, block=None):
+    def _process_notifications(self, notifications):
         """ Process new notifications. """
         for notification in notifications:
             if (
@@ -241,7 +246,7 @@ class GazeMapper(BaseProcess):
                 ):
                     self._gaze_queue.put(gaze)
 
-    def _process_packet(self, packet, block=None):
+    def _process_packet(self, packet):
         """ Process new data. """
         if "calibration_result" in packet:
             try:
@@ -259,10 +264,10 @@ class GazeMapper(BaseProcess):
             except (KeyError, TypeError):
                 pass
 
-        packet.gaze = self.call(self.get_mapped_gaze, block=block)
+        packet.gaze = self.get_mapped_gaze()
 
         if self.record:
-            self.call(self.record_data, packet, block=block)
+            self.record_data(packet)
 
         packet.broadcasts.append("gaze")
 
@@ -271,23 +276,18 @@ class GazeMapper(BaseProcess):
 
         return packet
 
-    def start(self):
-        """ Start the process. """
-        self.mapper = Binocular_Gaze_Mapper(
-            self.calibration["params"],
-            self.calibration["params_eye0"],
-            self.calibration["params_eye1"],
-        )
+    def get_mapped_gaze(self):
+        """ Call the pupil gaze mapper. """
+        gaze = []
+        while not self._gaze_queue.empty():
+            gaze.append(self._gaze_queue.get())
 
-        if self.record:
-            self.writer = PLData_Writer(self.folder, "gaze")
+        return gaze
 
-    def stop(self):
-        """ Stop the process. """
-        self.mapper = None
-        if self.writer is not None:
-            self.writer.close()
-            self.writer = None
+    def record_data(self, packet):
+        """ Record gaze to disk. """
+        for gaze in packet["gaze"]:
+            self.writer.append(gaze)
 
     def batch_run(self, pupils, return_type="list", info=None):
         """ Map pupils to gaze data.

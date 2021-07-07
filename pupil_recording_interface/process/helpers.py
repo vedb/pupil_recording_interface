@@ -32,7 +32,7 @@ class VideoFileSyncer(BaseProcess):
                 "that wraps a VideoFileDevice"
             )
 
-    def _process_notifications(self, notifications, block=None):
+    def _process_notifications(self, notifications):
         """ Process new notifications. """
         notifications = [
             n[self.master_stream]

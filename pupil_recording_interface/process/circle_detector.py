@@ -44,21 +44,6 @@ class CircleDetector(BaseProcess):
         self.scale = scale
         self.display = display
 
-    def detect_circle(self, packet):
-        """ Detect circle markers. """
-        frame = packet["frame"]
-
-        if packet.color_format == "bgr24":
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        elif packet.color_format == "bggr8":
-            frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
-        circle_markers = self.circle_tracker.update(frame)
-
-        for marker in circle_markers:
-            marker["timestamp"] = packet.timestamp
-
-        return circle_markers
-
     def display_hook(self, packet):
         """ Add gaze overlay onto frame. """
         circle_markers = packet["circle_markers"]
@@ -92,11 +77,9 @@ class CircleDetector(BaseProcess):
 
         return frame
 
-    def _process_packet(self, packet, block=None):
+    def _process_packet(self, packet):
         """ Process a new packet. """
-        packet.circle_markers = self.call(
-            self.detect_circle, packet, block=block
-        )
+        packet.circle_markers = self.detect_circle(packet)
 
         packet.broadcasts.append("circle_markers")
 
@@ -104,6 +87,21 @@ class CircleDetector(BaseProcess):
             packet.display_hooks.append(self.display_hook)
 
         return packet
+
+    def detect_circle(self, packet):
+        """ Detect circle markers. """
+        frame = packet["frame"]
+
+        if packet.color_format == "bgr24":
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        elif packet.color_format == "bggr8":
+            frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
+        circle_markers = self.circle_tracker.update(frame)
+
+        for marker in circle_markers:
+            marker["timestamp"] = packet.timestamp
+
+        return circle_markers
 
     def batch_run(
         self, video_reader, start=None, end=None, return_type="list"
