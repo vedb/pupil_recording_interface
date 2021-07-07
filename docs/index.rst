@@ -23,9 +23,9 @@ The code is hosted on GitHub: https://github.com/vedb/pupil_recording_interface
    reading
    streaming
    processing
-   custom
    analysis
    additional
+   custom
    auto_examples/index
 
 .. toctree::

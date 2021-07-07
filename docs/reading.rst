@@ -405,10 +405,11 @@ of the loaded data:
     Data variables:
         frames   (time, frame_y, frame_x, color) uint8 8 7 23 9 8 21 ... 5 11 9 7 21
 
-Recording metadata
-------------------
+Other files
+-----------
 
-The recording metadata file created by Pupil Capture can be loaded with:
+The recording metadata file created by Pupil Capture (``info.player.json``)
+can be loaded with :py:meth:`load_info`:
 
 .. doctest::
 
@@ -424,7 +425,8 @@ The recording metadata file created by Pupil Capture can be loaded with:
      'start_time_system_s': 1570725800.220913,
      'system_info': 'User: test_user, Platform: Linux'}
 
-You can also load the user info with:
+You can also load the user info (``user_info.csv``) with
+:py:meth:`load_user_info`:
 
 .. doctest::
 
@@ -438,6 +440,25 @@ You can also load the user info with:
      'post_calibration_end': Timestamp('2019-10-10 16:43:26.220912933'),
      'height': 1.8}
 
+A recording usually also contains other msgpack-encoded files, for example
+the camera intrinsics. These can be loaded with :py:meth:`load_object`
+
+.. doctest::
+
+    >>> pri.load_object(folder / "world.intrinsics") # doctest:+NORMALIZE_WHITESPACE
+    {'version': 1,
+     '(1280, 720)': {'camera_matrix':
+                     [[826.1521272145403, 0.0, 627.8343012631811],
+                      [0.0, 769.1786602466223, 359.810742797992],
+                      [0.0, 0.0, 1.0]],
+     'dist_coefs': [[-0.14119955505495468],
+                    [0.024919584525371758],
+                    [-0.21233916934283625],
+                    [0.22636274811293397]],
+     'resolution': [1280, 720],
+     'cam_type': 'fisheye'}}
+
+
 Data export
 -----------
 
@@ -446,7 +467,8 @@ Data export
     Make sure you have installed the necessary
     :ref:`dependencies for data export<export_dependencies>`.
 
-Recorded data can also directly be written to disk:
+Recorded data can also directly be written to disk with
+:py:meth:`write_netcdf`:
 
 .. doctest::
 
