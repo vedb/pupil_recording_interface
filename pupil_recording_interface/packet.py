@@ -1,8 +1,4 @@
 """"""
-import logging
-from concurrent.futures import Future
-
-logger = logging.getLogger(__name__)
 
 
 class Packet:
@@ -16,7 +12,6 @@ class Packet:
         source_timestamp=None,
         source_timebase="monotonic",
         broadcasts=None,
-        timeout=None,
         display_hooks=None,
         **kwargs,
     ):
@@ -30,7 +25,6 @@ class Packet:
         else:
             self.source_timebase = source_timebase
         self.broadcasts = broadcasts or []
-        self.timeout = timeout
         self.display_hooks = display_hooks or []
 
         for key, value in kwargs.items():
@@ -40,7 +34,7 @@ class Packet:
         return hasattr(self, item)
 
     def __getitem__(self, item):
-        return self.get(item)
+        return getattr(self, item)
 
     def __str__(self):
         return (
@@ -52,29 +46,6 @@ class Packet:
 
     def __repr__(self):
         return self.__str__()
-
-    def get(self, attr, timeout=None):
-        """
-
-        Parameters
-        ----------
-        attr
-        timeout
-
-        Returns
-        -------
-
-        Raises
-        ------
-
-        """
-        value = getattr(self, attr)
-        if isinstance(value, Future):
-            if timeout is None:
-                timeout = self.timeout
-            return value.result(timeout=timeout)
-        else:
-            return value
 
     def get_broadcasts(self):
         """"""
