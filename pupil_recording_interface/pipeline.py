@@ -1,6 +1,5 @@
 """"""
 import logging
-from concurrent.futures import Future
 
 from pupil_recording_interface.process import BaseProcess
 
@@ -59,17 +58,20 @@ class Pipeline:
         for step in self.steps:
             step.start()
 
+    def stop(self):
+        """ Stop the pipeline. """
+        for step in self.steps:
+            step.stop()
+
+    def __enter__(self):
+        self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
     def process(self, packet, notifications=None):
         """ Process new data. """
         for step in self.steps:
             packet = step.process(packet, notifications or [])
 
-        if isinstance(packet, Future):
-            packet = packet.result()
-
         return packet
-
-    def stop(self):
-        """ Stop the pipeline. """
-        for step in self.steps:
-            step.stop()
