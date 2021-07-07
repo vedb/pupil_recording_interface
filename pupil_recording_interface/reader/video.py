@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from pupil_recording_interface import BaseReader
+from pupil_recording_interface.reader import BaseReader
+from pupil_recording_interface.externals.file_methods import load_object
 
 
 def _iter_wrapper(it, **kwargs):
@@ -25,6 +26,7 @@ class VideoReader(BaseReader):
         interpolation_method="linear",
         video_offset=0.0,
         subsampling=None,
+        undistort=False,
     ):
         """ Constructor.
 
@@ -68,6 +70,7 @@ class VideoReader(BaseReader):
         self.color_format = color_format
         self.roi_size = roi_size
         self.subsampling = subsampling
+        self.undistort = undistort
 
         self.timestamps = self._load_timestamps_as_datetimeindex(
             self.folder, self.stream, self.info, video_offset
@@ -85,15 +88,16 @@ class VideoReader(BaseReader):
         else:
             self.norm_pos = None
 
-        self.camera_matrix, self.distortion_coefs = self._load_intrinsics(
-            self.folder
-        )
-
         self.capture = self._get_capture(self.folder, stream)
         self.resolution = self._get_resolution(self.capture)
         self.frame_count = self._get_frame_count(self.capture)
-        self.frame_shape = self._get_frame_shape()
         self.fps = self._get_fps(self.capture)
+
+        self.camera_matrix, self.distortion_coefs = self._load_intrinsics(
+            self.folder, self.stream, self.resolution, self.undistort
+        )
+
+        self.frame_shape = self._get_frame_shape()
 
     @property
     def export_name(self):
@@ -115,14 +119,31 @@ class VideoReader(BaseReader):
         return int(self.capture.get(cv2.CAP_PROP_POS_FRAMES))
 
     @staticmethod
-    def _load_intrinsics(folder):
+    def _load_intrinsics(folder, stream, resolution, raise_error):
         """ Load world camera intrinsics. """
-        filepath = folder / "world.intrinsics"
+        filepath = folder / f"{stream}.intrinsics"
         if not filepath.exists():
-            return None, None
+            if raise_error:
+                raise FileNotFoundError(
+                    f"No intrinsics for stream {stream} found in "
+                    f"folder {folder}"
+                )
+            else:
+                return None, None
         else:
-            # TODO read intrinsics
-            return None, None
+            try:
+                intrinsics = load_object(filepath)[str(tuple(resolution))]
+                camera_matrix = np.array(intrinsics["camera_matrix"])
+                dist_coefs = np.array(intrinsics["dist_coefs"]).squeeze()
+                return camera_matrix, dist_coefs
+            except KeyError:
+                if raise_error:
+                    raise KeyError(
+                        f"No intrinsics at resolution {resolution} found in "
+                        f"{filepath}"
+                    )
+                else:
+                    return None, None
 
     @staticmethod
     def _get_capture(folder, topic):
@@ -298,17 +319,19 @@ class VideoReader(BaseReader):
         Parameters
         ----------
         point : iterable, len 2
-            The distorted point.
+            The distorted point in normalized camera coordinates.
 
         Returns
         -------
         tuple
-            The undistorted point.
+            The undistorted point in normalized camera coordinates.
         """
-        # TODO test
+        if self.camera_matrix is None:
+            raise ValueError("No camera intrinsics loaded, cannot undistort")
+
         frame_size = self.frame_shape[:2]
-        u = point[0] * frame_size[1]
-        v = (1 - point[1]) * frame_size[0]
+        u = float(point[0]) * frame_size[1]
+        v = (1 - float(point[1])) * frame_size[0]
 
         up, vp = np.squeeze(
             cv2.undistortPoints(
@@ -336,7 +359,9 @@ class VideoReader(BaseReader):
         numpy.ndarray
             The undistorted frame.
         """
-        # TODO test
+        if self.camera_matrix is None:
+            raise ValueError("No camera intrinsics loaded, cannot undistort")
+
         h, w = frame.shape[:2]
         new_camera_matrix, (rx, ry, rw, rh) = cv2.getOptimalNewCameraMatrix(
             self.camera_matrix, self.distortion_coefs, (w, h), 0, (w, h)
@@ -348,7 +373,11 @@ class VideoReader(BaseReader):
             newCameraMatrix=new_camera_matrix,
         )
 
-        frame_roi = np.nan * np.ones((h, w))
+        if frame.ndim == 2:
+            frame_roi = np.nan * np.ones((h, w))
+        else:
+            frame_roi = np.nan * np.ones((h, w, frame.shape[2]))
+
         frame_roi[ry : ry + rh, rx : rx + rw] = frame[
             ry : ry + rh, rx : rx + rw
         ]
@@ -414,7 +443,7 @@ class VideoReader(BaseReader):
         if self.color_format is not None:
             frame = self.convert_color(frame)
 
-        if self.distortion_coefs is not None:
+        if self.undistort:
             frame = self.undistort_frame(frame)
 
         if self.subsampling is not None:

@@ -964,6 +964,25 @@ class TestVideoReader:
             frame, np.zeros(self.frame_shape, dtype="uint8")
         )
 
+    def test_undistort_frame(self, folder_v1):
+        """"""
+        reader = VideoReader(folder_v1, undistort=True)
+        frame = np.zeros(reader.frame_shape)
+
+        # frame with color channel
+        undistorted = reader.undistort_frame(frame)
+        assert undistorted.shape == frame.shape
+
+        # monochromatic frame
+        undistorted = reader.undistort_frame(frame[..., 0])
+        assert undistorted.shape == frame.shape[:2]
+
+    def test_undistort_point(self, folder_v1):
+        """"""
+        reader = VideoReader(folder_v1)
+        point = reader.undistort_point((0.5, 0.5))
+        npt.assert_almost_equal(point, [0.5072918, 0.4998553])
+
     def test_load_raw_frame(self, folder_v1):
         """"""
         reader = VideoReader(folder_v1)
