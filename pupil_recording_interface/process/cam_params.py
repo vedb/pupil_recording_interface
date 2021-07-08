@@ -236,6 +236,7 @@ class CamParamEstimator(BaseProcess):
         streams,
         folder,
         grid_shape=(4, 11),
+        grid_scale=0.0206,
         num_patterns=10,
         distortion_model="radial",
         extrinsics=False,
@@ -261,7 +262,7 @@ class CamParamEstimator(BaseProcess):
         self._intrinsics_result = None
         self._extrinsics_result = None
 
-        self._obj_points = gen_pattern_grid(grid_shape)
+        self._obj_points = gen_pattern_grid(grid_shape) * grid_scale
         self._pattern_queue = Queue(maxsize=self.num_patterns)
         self._acquire_pattern = False
         self._pattern_acquired = False
