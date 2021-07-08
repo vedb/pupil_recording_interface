@@ -2,7 +2,6 @@
 import cv2
 
 from pupil_recording_interface.decorators import process
-from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.process import BaseProcess
 from pupil_recording_interface.reader.marker import MarkerReader
 from pupil_recording_interface.externals.circle_detector import CircleTracker
@@ -79,7 +78,9 @@ class CircleDetector(BaseProcess):
 
     def _process_packet(self, packet):
         """ Process a new packet. """
-        packet.circle_markers = self.detect_circle(packet)
+        packet.circle_markers = self.detect_circle(
+            packet.frame, packet.timestamp, packet.color_format
+        )
 
         packet.broadcasts.append("circle_markers")
 
@@ -88,18 +89,16 @@ class CircleDetector(BaseProcess):
 
         return packet
 
-    def detect_circle(self, packet):
+    def detect_circle(self, frame, timestamp, color_format):
         """ Detect circle markers. """
-        frame = packet["frame"]
-
-        if packet.color_format == "bgr24":
+        if color_format == "bgr24":
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        elif packet.color_format == "bggr8":
+        elif color_format == "bggr8":
             frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
         circle_markers = self.circle_tracker.update(frame)
 
         for marker in circle_markers:
-            marker["timestamp"] = packet.timestamp
+            marker["timestamp"] = timestamp
 
         return circle_markers
 
@@ -154,14 +153,8 @@ class CircleDetector(BaseProcess):
                 start, end, raw=True, return_timestamp=True, return_index=True
             ):
                 ts = float(ts.value) / 1e9 + monotonic_offset
-                packet = Packet(
-                    "video_reader",
-                    "video_reader",
-                    ts,
-                    frame=frame,
-                    color_format="bgr24",
-                )
-                circle_markers = self.detect_circle(packet)
+                # TODO get original color format from reader
+                circle_markers = self.detect_circle(frame, ts, "bgr24")
 
                 if circle_markers is None or len(circle_markers) == 0:
                     continue

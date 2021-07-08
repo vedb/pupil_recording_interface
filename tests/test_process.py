@@ -25,7 +25,6 @@ from pupil_recording_interface.externals.file_methods import (
     load_pldata_file,
 )
 from pupil_recording_interface.decorators import process
-from pupil_recording_interface.session import Session
 
 
 class TestAllProcesses:
@@ -295,10 +294,34 @@ class TestCircleDetector:
         self, circle_detector, world_video_stream, reference_locations
     ):
         """"""
-        with Session(world_video_stream):
+        with world_video_stream, circle_detector:
             packet = world_video_stream.get_packet()
+            circle_markers = circle_detector.detect_circle(
+                packet.frame, packet.timestamp, packet.color_format
+            )
 
-        circle_markers = circle_detector.detect_circle(packet)
+        assert isinstance(circle_markers, list)
+        assert set(circle_markers[0].keys()) == {
+            "ellipses",
+            "img_pos",
+            "norm_pos",
+            "marker_type",
+            "timestamp",
+        }
+        assert circle_markers[0]["img_pos"] == tuple(
+            reference_locations[0]["img_pos"]
+        )
+
+    def test_process_packet(
+        self, circle_detector, world_video_stream, reference_locations
+    ):
+        """"""
+        with world_video_stream, circle_detector:
+            packet = world_video_stream.get_packet()
+            packet = circle_detector.process_packet(packet)
+
+        circle_markers = packet.circle_markers
+
         assert isinstance(circle_markers, list)
         assert set(circle_markers[0].keys()) == {
             "ellipses",
