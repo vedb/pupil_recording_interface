@@ -5,7 +5,6 @@ import cv2
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
-from pupil_recording_interface.packet import Packet
 from pupil_recording_interface.reader.pupil import PupilReader
 from pupil_recording_interface.externals.methods import normalize
 from pupil_recording_interface.externals.file_methods import PLData_Writer
@@ -77,6 +76,10 @@ class PupilDetector(BaseProcess):
 
     def start(self):
         """ Start the process. """
+        import os
+
+        os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
+
         if self.method == "2d c++":
             from pupil_detectors import Detector2D
 
@@ -132,10 +135,10 @@ class PupilDetector(BaseProcess):
 
     def _process_packet(self, packet):
         """ Process a new packet. """
-        packet.pupil = self.detect_pupil(packet)
+        packet.pupil = self.detect_pupil(packet.frame, packet.timestamp)
 
         if self.record:
-            self.record_data(packet)
+            self.record_data(packet.pupil)
 
         packet.broadcasts.append("pupil")
 
@@ -144,17 +147,15 @@ class PupilDetector(BaseProcess):
 
         return packet
 
-    def detect_pupil(self, packet):
+    def detect_pupil(self, frame, timestamp):
         """ Detect pupil in frame. """
-        frame = packet["frame"]
-
         if frame.ndim == 3:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         pupil = self.detector.detect(frame)
 
         pupil["norm_pos"] = normalize(pupil["location"], frame.shape[1::-1])
-        pupil["timestamp"] = packet["timestamp"]
+        pupil["timestamp"] = timestamp
         pupil["method"] = self.method
         pupil["id"] = self.camera_id
         pupil["topic"] = (
@@ -168,9 +169,9 @@ class PupilDetector(BaseProcess):
 
         return pupil
 
-    def record_data(self, packet):
+    def record_data(self, pupil):
         """ Write pupil datum to disk. """
-        self.writer.append(packet["pupil"])
+        self.writer.append(pupil)
 
     def batch_run(
         self, video_reader, start=None, end=None, return_type="list"
@@ -223,16 +224,13 @@ class PupilDetector(BaseProcess):
                 start, end, raw=True, return_timestamp=True
             ):
                 ts = float(ts.value) / 1e9 + monotonic_offset
-                packet = Packet(
-                    "video_reader", "video_reader", ts, frame=frame,
-                )
-                packet.pupil = self.detect_pupil(packet)
+                pupil = self.detect_pupil(frame, ts)
 
                 if return_type is not None:
-                    pupil_list.append(packet.pupil)
+                    pupil_list.append(pupil)
 
                 if self.record:
-                    self.record_data(packet)
+                    self.record_data(pupil)
 
         if return_type == "list":
             return pupil_list
