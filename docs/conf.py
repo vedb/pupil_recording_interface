@@ -86,7 +86,7 @@ from sphinx_gallery.sorting import FileNameSortKey  # noqa
 sphinx_gallery_conf = {
     "examples_dirs": "../examples",  # path to your example scripts
     "gallery_dirs": "auto_examples",  # path to where to save generated output
-    "ignore_pattern": "validate.py",
+    "filename_pattern": r"/[0-9]_plot_",
     "within_subsection_order": FileNameSortKey,
 }
 
