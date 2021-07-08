@@ -14,7 +14,7 @@ or via ``conda`` from our own channel:
 
 .. code-block:: console
 
-    $ conda install -c vedb pupil_recording_interface
+    $ conda install -c vedb -c conda-forge pupil_recording_interface
 
 
 .. _optional_dependencies:
