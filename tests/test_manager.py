@@ -4,28 +4,28 @@ import numpy as np
 import pytest
 
 from pupil_recording_interface import __version__
-from pupil_recording_interface.manager import StreamManager
+import pupil_recording_interface as pri
 
 
 class TestManager:
     def test_init_folder(self, tmpdir):
         """"""
-        folder = StreamManager._init_folder(tmpdir, "here")
+        folder = pri.StreamManager._init_folder(tmpdir, "here")
         assert folder == tmpdir
 
-        folder = StreamManager._init_folder(tmpdir, "read")
+        folder = pri.StreamManager._init_folder(tmpdir, "read")
         assert folder == tmpdir
 
-        folder = StreamManager._init_folder(tmpdir, "new_folder")
+        folder = pri.StreamManager._init_folder(tmpdir, "new_folder")
         assert folder == tmpdir / "000"
         assert folder.exists()
 
-        folder = StreamManager._init_folder(tmpdir, "overwrite")
+        folder = pri.StreamManager._init_folder(tmpdir, "overwrite")
         assert folder == tmpdir
         assert not (folder / "000").exists()
 
         with pytest.raises(ValueError):
-            StreamManager._init_folder(tmpdir, "not_a_policy")
+            pri.StreamManager._init_folder(tmpdir, "not_a_policy")
 
     def test_get_configs_by_uids(self, stream_manager, config_list):
         """"""
@@ -127,7 +127,9 @@ class TestManager:
     def test_get_notifications(self, statuses, video_stream):
         """"""
         video_stream.pipeline.steps[0].listen_for = ["pupil"]
-        assert StreamManager._get_notifications(statuses, video_stream) == {
+        assert pri.StreamManager._get_notifications(
+            statuses, video_stream
+        ) == {
             "eye0": {
                 "name": "eye0",
                 "device_uid": "Pupil Cam1 ID0",
@@ -155,7 +157,7 @@ class TestManager:
         """"""
         import json
 
-        manager = StreamManager(
+        manager = pri.StreamManager(
             [mock_stream_config], folder=tmpdir, policy="here"
         )
 
@@ -168,7 +170,7 @@ class TestManager:
         assert info["recording_software_version"] == __version__
 
         # external app info
-        manager = StreamManager(
+        manager = pri.StreamManager(
             [mock_stream_config],
             folder=tmpdir,
             policy="here",
@@ -181,3 +183,49 @@ class TestManager:
 
         assert info["recording_software_name"] == "parent_app"
         assert info["recording_software_version"] == "1.0.0"
+
+
+class TestScenarios:
+    def test_pupil_detection(self, folder_v2):
+        """"""
+        configs = [
+            pri.VideoStream.Config(
+                device_type="video_file",
+                device_uid="eye0",
+                loop=False,
+                pipeline=[pri.PupilDetector.Config()],
+            ),
+        ]
+        manager = pri.StreamManager(
+            configs, duration=5, folder=folder_v2, policy="read",
+        )
+        manager.run()
+
+    def test_gaze_mapping(self, folder_v2):
+        """"""
+        configs = [
+            pri.VideoStream.Config(
+                device_type="video_file",
+                device_uid="world",
+                loop=False,
+                pipeline=[pri.GazeMapper.Config()],
+            ),
+            pri.VideoStream.Config(
+                device_type="video_file",
+                device_uid="eye0",
+                name="eye0",
+                loop=False,
+                pipeline=[pri.PupilDetector.Config()],
+            ),
+            pri.VideoStream.Config(
+                device_type="video_file",
+                device_uid="eye1",
+                name="eye1",
+                loop=False,
+                pipeline=[pri.PupilDetector.Config()],
+            ),
+        ]
+        manager = pri.StreamManager(
+            configs, duration=5, folder=folder_v2, policy="read",
+        )
+        manager.run()
