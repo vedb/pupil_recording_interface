@@ -229,3 +229,18 @@ class TestScenarios:
             configs, duration=5, folder=folder_v2, policy="read",
         )
         manager.run()
+
+    def test_circle_grid_detector(self, folder_v2):
+        """"""
+        configs = [
+            pri.VideoStream.Config(
+                device_type="video_file",
+                device_uid="world",
+                loop=False,
+                pipeline=[pri.CircleGridDetector.Config()],
+            ),
+        ]
+        manager = pri.StreamManager(
+            configs, duration=5, folder=folder_v2, policy="read",
+        )
+        manager.run()

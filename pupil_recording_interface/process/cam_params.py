@@ -67,7 +67,9 @@ class CircleGridDetector(BaseProcess):
 
     def _process_packet(self, packet):
         """ Process a new packet. """
-        packet.circle_grid = self.detect_grid(packet)
+        packet.circle_grid = self.detect_grid(
+            packet.frame, packet.color_format
+        )
 
         # TODO maybe don't broadcast on every single packet
         packet.broadcasts.append("circle_grid")
@@ -77,11 +79,9 @@ class CircleGridDetector(BaseProcess):
 
         return packet
 
-    def detect_grid(self, packet):
+    def detect_grid(self, frame, color_format):
         """ Detect circle grid in frame. """
-        frame = packet["frame"]
-
-        if packet.color_format == "bggr8":
+        if color_format == "bggr8":
             frame = cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY)
 
         resolution = frame.shape[1::-1]

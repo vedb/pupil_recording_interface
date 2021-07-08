@@ -130,12 +130,12 @@ class TestPupilDetector:
 
     def test_record_data(self, pupil_detector, pupil_packet):
         """"""
-        pytest.importorskip("pupil-detectors")
+        pytest.importorskip("pupil_detectors")
 
         pupil_packet.device_uid = "Pupil Cam1 ID0"
 
         with pupil_detector:
-            pupil_detector.record_data(pupil_packet)
+            pupil_detector.record_data(pupil_packet.pupil)
 
         pldata = [
             dict(d)
