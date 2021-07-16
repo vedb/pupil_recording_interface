@@ -9,37 +9,33 @@ from pupil_recording_interface.externals.circle_detector import CircleTracker
 
 @process("circle_detector")
 class CircleDetector(BaseProcess):
-    """ Circle detector for the world video stream. """
+    """ Detector for circular calibration markers.
+
+    This process detects the circular calibration marker used for calibrating
+    the gaze mapper. Attach this process to the world camera stream.
+    """
 
     def __init__(
-        self,
-        scale=0.5,
-        detection_method="pupil",
-        marker_size=(12, 300),
-        threshold_window_size=13,
-        min_area=500,
-        max_area=1000,
-        circularity=0.8,
-        convexity=0.7,
-        inertia=0.4,
-        display=True,
-        **kwargs,
+        self, scale: float = 0.5, display: bool = True, **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        scale:
+            If specified, resize the camera frame by this scale factor before
+            detection. This will increase the speed of detection at the
+            expense of accuracy.
+
+        display:
+            If True, add this instance's ``display_hook`` method to the packet
+            returned by ``process_packet``. A ``VideoDisplay`` later in the
+            pipeline will pick this up to draw the location of the currently
+            detected calibration marker over the camera image.
+        """
         super().__init__(**kwargs)
 
-        self.circle_tracker = CircleTracker(
-            scale=scale,
-            detection_method=detection_method,
-            marker_size=marker_size,
-            threshold_window_size=threshold_window_size,
-            min_area=min_area,
-            max_area=max_area,
-            circularity=circularity,
-            convexity=convexity,
-            inertia=inertia,
-            **kwargs,
-        )
+        self.circle_tracker = CircleTracker(scale=scale)
         self.scale = scale
         self.display = display
 
