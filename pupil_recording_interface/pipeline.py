@@ -1,5 +1,6 @@
 """"""
 import logging
+from concurrent.futures import Future
 
 from pupil_recording_interface.process import BaseProcess
 
@@ -73,5 +74,8 @@ class Pipeline:
         """ Process new data. """
         for step in self.steps:
             packet = step.process(packet, notifications or [])
+
+        if isinstance(packet, Future):
+            packet = packet.result()
 
         return packet

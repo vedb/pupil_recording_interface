@@ -27,6 +27,7 @@ class VideoDisplay(BaseProcess):
         flip: bool = False,
         resolution: Optional[tuple] = None,
         max_width: Optional[int] = None,
+        block=True,
         **kwargs,
     ):
         """ Constructor.
@@ -51,7 +52,7 @@ class VideoDisplay(BaseProcess):
         self.resolution = resolution
         self.max_width = max_width
 
-        super().__init__(**kwargs)
+        super().__init__(block=block, **kwargs)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):

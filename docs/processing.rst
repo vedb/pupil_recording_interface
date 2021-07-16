@@ -139,7 +139,7 @@ for use with a stream manager:
 
 .. doctest::
 
-    >>> manager.run() # doctest:+SKIP
+    >>> manager.run()
 
 
 Notifications
@@ -274,7 +274,7 @@ position overlaid on the respective camera images:
 
 .. doctest::
 
-    >>> manager.run() # doctest:+SKIP
+    >>> manager.run()
 
 .. note::
 

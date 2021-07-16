@@ -1,7 +1,9 @@
 import logging
+from concurrent.futures import Future
 
 from pupil_recording_interface.base import BaseConfigurable
 from pupil_recording_interface.decorators import process
+from pupil_recording_interface.utils import DroppingThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -10,13 +12,22 @@ class BaseProcess(BaseConfigurable):
     """ Base class for all processes. """
 
     def __init__(
-        self, process_name=None, paused=False, listen_for=None, context=None,
+        self,
+        process_name=None,
+        paused=False,
+        listen_for=None,
+        context=None,
+        block=True,
     ):
         """ Constructor. """
         self.process_name = process_name or type(self).__name__
         self.paused = paused
         self.listen_for = listen_for or []
         self.context = context
+        self.block = block
+
+        self._packet_executor = DroppingThreadPoolExecutor(maxsize=10)
+        self._notification_executor = DroppingThreadPoolExecutor(maxsize=10)
 
         logger.debug(f"Initialized process {self.process_name}")
 
@@ -79,7 +90,12 @@ class BaseProcess(BaseConfigurable):
                 self.paused = False
 
         if not self.paused:
-            return self._process_notifications(notifications)
+            if self.block:
+                return self._process_notifications(notifications)
+            else:
+                return self._notification_executor.submit(
+                    self._process_notifications, notifications
+                )
 
     def _process_notifications(self, notifications):
         """ Process new notifications. """
@@ -89,7 +105,13 @@ class BaseProcess(BaseConfigurable):
         if self.paused:
             return packet
 
-        return self._process_packet(packet)
+        if isinstance(packet, Future):
+            packet = packet.result()
+
+        if self.block:
+            return self._process_packet(packet)
+        else:
+            return self._packet_executor.submit(self._process_packet, packet)
 
     def _process_packet(self, packet):
         """ Process a new packet. """

@@ -4,7 +4,9 @@ import os
 import sys
 import io
 from collections import deque
+from concurrent.futures.thread import ThreadPoolExecutor
 from multiprocessing.managers import SyncManager
+from queue import Queue
 from pathlib import Path
 import multiprocessing as mp
 
@@ -37,6 +39,30 @@ def multiprocessing_deque(maxlen=None):
     manager = SyncManager()
     manager.start()
     return manager.deque(maxlen=maxlen)
+
+
+class DroppingThreadPoolExecutor(ThreadPoolExecutor):
+    """ Thread pool executor that drops jobs once full. """
+
+    def __init__(self, maxsize=None, *args, **kwargs):
+        """ Constructor. """
+        super().__init__(*args, **kwargs)
+        self._work_queue = Queue(maxsize=maxsize)
+
+    def qsize(self):
+        """ Size of queue. """
+        return self._work_queue.qsize()
+
+    def full(self):
+        """ Whether queue is full. """
+        return self._work_queue.full()
+
+    def submit(self, fn, *args, return_if_full=None, **kwargs):
+        """ Submit a method to be executed. """
+        if self.full():
+            return return_if_full
+        else:
+            return super().submit(fn, *args, **kwargs)
 
 
 class SuppressStream:

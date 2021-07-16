@@ -1,5 +1,4 @@
 """"""
-import os
 import warnings
 from pathlib import Path
 
@@ -90,9 +89,6 @@ __all__ = [
     "get_test_recording",
     "merge_pupils",
 ]
-
-# disable active threads when OpenCV is built with OpenMP support
-os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
 
 def load_dataset(

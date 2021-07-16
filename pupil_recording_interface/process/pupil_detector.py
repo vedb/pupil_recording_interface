@@ -115,8 +115,8 @@ class PupilDetector(BaseProcess):
 
     def start(self):
         """ Start the process. """
-        import os
-
+        # TODO figure out whether this is still necessary
+        #  disable active threads when OpenCV is built with OpenMP support
         os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
         if self.method == "2d c++":
