@@ -1,14 +1,12 @@
 """"""
 import logging
 
-from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process.calibration import Calibration
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
-@process("validation", optional=("resolution",))
 class Validation(Calibration):
     """ Validation during runtime class. """
 

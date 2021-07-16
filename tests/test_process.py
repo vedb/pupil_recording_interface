@@ -18,7 +18,6 @@ from pupil_recording_interface.process.pupil_detector import PupilDetector
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
-from pupil_recording_interface.process.validation import Validation
 from pupil_recording_interface.reader.video import VideoReader
 from pupil_recording_interface.externals.file_methods import (
     load_object,
@@ -426,40 +425,6 @@ class TestCalibration:
         for param, actual in result.items():
             expected = calibration_2d["data"][8][1][param]
             np.testing.assert_allclose(actual[:2], expected[:2])
-
-
-class TestValidation:
-    def test_from_config(
-        self, process_configs, video_stream_config, mock_video_device
-    ):
-        """"""
-        validation = BaseProcess.from_config(
-            process_configs["validation"],
-            video_stream_config,
-            mock_video_device,
-        )
-        assert validation.folder == process_configs["validation"].folder
-        assert validation.resolution == (1280, 720)
-        assert isinstance(validation, Validation)
-
-    def test_calculate_calibration(
-        self, validation, pupil, reference_locations, calibration_2d, tmpdir
-    ):
-        """"""
-        pytest.importorskip("matplotlib")
-
-        validation.folder = tmpdir
-        validation.save = True
-
-        for p in pupil:
-            validation._pupil_queue.put(p)
-
-        for r in reference_locations:
-            validation._circle_marker_queue.put([r])
-
-        _, _, filename = validation.calculate_calibration()
-        assert (filename.parent / "marker_coverage.png").exists()
-        assert (filename.parent / "pupil_coverage.png").exists()
 
 
 class TestCamParamEstimator:

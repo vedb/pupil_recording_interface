@@ -941,7 +941,6 @@ def process_configs(tmpdir):
         "motion_recorder": {"folder": tmpdir},
         "pupil_detector": {"folder": tmpdir},
         "calibration": {"folder": tmpdir},
-        "validation": {"folder": tmpdir},
         "cam_param_estimator": {"streams": ["world"], "folder": tmpdir},
         "video_file_syncer": {"master_stream": "world"},
     }
