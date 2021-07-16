@@ -40,18 +40,19 @@ release = "0.5.0"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autodoc.typehints",
     "sphinx.ext.doctest",
     "sphinx.ext.coverage",
     "sphinx.ext.githubpages",
     "sphinx.ext.autosummary",
-    "numpydoc",
+    "sphinx.ext.napoleon",
     "matplotlib.sphinxext.plot_directive",
     "sphinx_gallery.gen_gallery",
 ]
 
 autosummary_generate = True
-# numpydoc_class_members_toctree = True
-numpydoc_show_class_members = False
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

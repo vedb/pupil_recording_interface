@@ -43,6 +43,5 @@ dependencies:
   - pre_commit
   - sphinx=4.0
   - sphinx_rtd_theme
-  - numpydoc
   - sphinx-gallery
   - jinja2=2
