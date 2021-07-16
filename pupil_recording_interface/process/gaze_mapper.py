@@ -1,5 +1,7 @@
 """"""
+import os
 from collections import deque
+from typing import Optional
 from queue import Queue
 import logging
 import warnings
@@ -99,20 +101,55 @@ default_calibration = {
 
 @process("gaze_mapper")
 class GazeMapper(BaseProcess):
-    """ Gaze mapper. """
+    """ Gaze mapper.
+
+    This process maps gaze data based on the locations of detected pupils in
+    the eye camera stream(s). Attach this process to the world camera stream.
+    """
 
     def __init__(
         self,
-        left="eye1",
-        right="eye0",
-        min_confidence=0.8,
-        calibration=None,
-        folder=None,
-        record=False,
-        display=True,
+        left: str = "eye1",
+        right: str = "eye0",
+        min_confidence: float = 0.8,
+        calibration: Optional[dict] = None,
+        folder: Optional[os.PathLike] = None,
+        record: bool = False,
+        display: bool = True,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        left:
+            Name of the left eye camera stream.
+
+        right:
+            Name of the right eye camera stream.
+
+        min_confidence:
+            Minimal confidence of detected pupils. Pupil data with confidence
+            below this threshold will not be used for mapping.
+
+        calibration:
+            Calibration to use for mapping. If not specified, a default
+            calibration will be used that will most likely produce poor
+            results.
+
+        folder:
+            Folder for recording mapped gaze.
+
+        record:
+            If True, record mapped gaze to a ``gaze.pldata`` file in the
+            recording folder.
+
+        display:
+            If True, add this instance's ``display_hook`` method to the packet
+            returned by ``process_packet``. A ``VideoDisplay`` later in the
+            pipeline will pick this up to draw the current gaze point over the
+            camera image.
+        """
         self.left = left
         self.right = right
         self.min_confidence = min_confidence

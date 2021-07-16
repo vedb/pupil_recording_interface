@@ -2,7 +2,9 @@
 from queue import Queue
 from uuid import uuid4
 from pathlib import Path
+from typing import Optional
 import logging
+import os
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
@@ -18,22 +20,59 @@ logger = logging.getLogger(__name__)
 
 @process("calibration", optional=("resolution",))
 class Calibration(BaseProcess):
-    """ Calibration. """
+    """ Calibration.
+
+    This process calculates a calibration for gaze mapping based on the
+    locations of detected pupils in the eye camera stream(s) and calibration
+    markers in the world camera stream. Attach this process to the world
+    camera stream after the ``CircleDetector``.
+    """
 
     def __init__(
         self,
-        resolution,
-        mode="2d",
-        min_confidence=0.8,
-        left="eye1",
-        right="eye0",
-        world="world",
-        name=None,
-        folder=None,
-        save=False,
+        resolution: tuple,
+        mode: str = "2d",
+        min_confidence: float = 0.8,
+        left: str = "eye1",
+        right: str = "eye0",
+        world: str = "world",
+        name: Optional[str] = None,
+        folder: Optional[os.PathLike] = None,
+        save: bool = False,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        resolution:
+            Resolution of world camera.
+
+        mode:
+            Calibration mode. So far, only "2d" is supported.
+
+        min_confidence:
+            Minimal confidence of detected pupils. Pupil data with confidence
+            below this threshold will not be used for calibration.
+
+        left:
+            Name of the left eye camera stream.
+
+        right:
+            Name of the right eye camera stream.
+
+        world:
+            Name of the world camera stream.
+
+        name:
+            Name of this process
+
+        folder:
+            Folder for saving calibration result.
+
+        save:
+            If True, save calibration result.
+        """
         self.resolution = resolution
         self.mode = mode
         self.min_confidence = min_confidence

@@ -2,7 +2,9 @@
 from itertools import combinations
 from queue import Queue, Full
 from threading import Lock
+from typing import Optional, Iterable
 import logging
+import os
 
 import cv2
 import numpy as np
@@ -20,17 +22,43 @@ logger = logging.getLogger(__name__)
 
 @process("circle_grid_detector")
 class CircleGridDetector(BaseProcess):
-    """ Detector for circle grids. """
+    """ Detector for circle grids.
+
+    This process detects the asymmetrical circle grid for camera parameter
+    estimation (intrinsic and extrinsic). Attach one to each stream for which
+    you want to estimate camera parameters.
+    """
 
     def __init__(
         self,
-        grid_shape=(4, 11),
-        scale=None,
-        stereo=False,
-        display=True,
+        grid_shape: tuple = (4, 11),
+        scale: Optional[float] = None,
+        stereo: bool = False,
+        display: bool = True,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        grid_shape:
+            Number of rows and columns of the grid.
+
+        scale:
+            If specified, resize the camera frame by this scale factor before
+            detection. This will increase the speed of detection at the
+            expense of accuracy.
+
+        stereo:
+            If True, the camera frames are assumed to be stereo images and
+            grids will be detected both in the left and the right half.
+
+        display:
+            If True, add this instance's ``display_hook`` method to the packet
+            returned by ``process_packet``. A ``VideoDisplay`` later in the
+            pipeline will pick this up to draw the extent of the currently
+            detected grid over the camera image.
+        """
         self.grid_shape = grid_shape
         self.scale = scale
         self.stereo = stereo
@@ -229,21 +257,66 @@ def calculate_extrinsics(
 
 @process("cam_param_estimator", optional=("folder",))
 class CamParamEstimator(BaseProcess):
-    """ Camera parameter estimator. """
+    """ Camera parameter estimator.
+
+    This process estimates camera parameters (intrinsic and extrinsic) for one
+    or multiple cameras based on the locations of calibration patterns detected
+    e.g. by the CircleGridDetector. You only need to attach one to one of the
+    video streams, even when estimating extrinsics between multiple cameras.
+    """
 
     def __init__(
         self,
-        streams,
-        folder,
-        grid_shape=(4, 11),
-        grid_scale=0.0206,
-        num_patterns=10,
-        distortion_model="radial",
-        extrinsics=False,
-        display=True,
+        streams: Iterable[str],
+        folder: os.PathLike,
+        grid_shape: tuple = (4, 11),
+        grid_scale: float = 0.02,
+        num_patterns: int = 10,
+        distortion_model: str = "radial",
+        extrinsics: bool = False,
+        display: bool = True,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        streams:
+            Names of video streams for which to perform estimation.
+
+        folder:
+            Folder for saving estimation results.
+
+        grid_shape:
+            Number of rows and columns of the grid.
+
+        grid_scale:
+            Distance between grid positions in meters. Can be calculated by
+            measuring the distance between the centers of the outermost circles
+            in the first row (the longer on) on the printed calibration target.
+            Divide this distance by the number of horizontal grid positions
+            (default 11) to obtain the scale.
+
+        num_patterns:
+            Number of patterns to capture before performing estimation.
+
+        distortion_model:
+            Distortion model to use for estimation. Can be "radial" or
+            "fisheye".
+
+        extrinsics:
+            If True, perform extrinsics estimation (rotation and translation)
+            between cameras. Requires at least two streams or one fisheye
+            stream. This will not save the intrinsics because the calibration
+            data will most likely be poorer than when estimatingintrinsics for
+            each stream individually.
+
+        display:
+            If True, add this instance's ``display_hook`` method to the packet
+            returned by ``process_packet``. A ``VideoDisplay`` later in the
+            pipeline will pick this up to draw the extent of the all previously
+            detected grids over the camera image.
+        """
         self.streams = streams
         self.folder = folder
         self.num_patterns = num_patterns

@@ -1,5 +1,7 @@
 """"""
+from typing import Optional
 import logging
+import os
 
 import cv2
 
@@ -14,20 +16,57 @@ logger = logging.getLogger(__name__)
 
 @process("pupil_detector")
 class PupilDetector(BaseProcess):
-    """ Pupil detector for eye video streams. """
+    """ Pupil detector for eye video streams.
+
+    This process detects pupils in eye camera frames. Attach one to each eye
+    video stream.
+    """
 
     def __init__(
         self,
-        method="2d c++",
-        camera_id=None,
-        resolution=None,
-        focal_length=None,
-        folder=None,
-        record=False,
-        display=True,
+        method: str = "2d c++",
+        camera_id: Optional[int] = None,
+        resolution: Optional[tuple] = None,
+        focal_length: Optional[float] = None,
+        folder: Optional[os.PathLike] = None,
+        record: bool = False,
+        display: bool = True,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        method:
+            Detection method. Currently supported are "2d c++" and "pye3d",
+            provided that the necessary dependencies are installed.
+
+        camera_id:
+            ID of the eye camera (0 or 1). This is important if you use the
+            result of the pupil detection for a ``Calibration`` or
+            ``GazeMapper`` process.
+
+        resolution:
+            Resolution of the eye camera. Required for "pye3d" detection
+            method.
+
+        focal_length:
+            Focal length of the eye camera. Required for "pye3d" detection
+            method.
+
+        folder:
+            Folder for recording detected pupils.
+
+        record:
+            If True, record pupils to a ``pupil.pldata`` file in the
+            recording folder.
+
+        display:
+            If True, add this instance's ``display_hook`` method to the packet
+            returned by ``process_packet``. A ``VideoDisplay`` later in the
+            pipeline will pick this up to draw the extent of the currently
+            detected pupil over the camera image.
+        """
         self.method = method
         self.camera_id = camera_id
         self.resolution = resolution

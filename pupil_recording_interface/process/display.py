@@ -1,5 +1,6 @@
 """"""
 import logging
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -12,12 +13,39 @@ logger = logging.getLogger(__name__)
 
 @process("video_display", optional=("name",))
 class VideoDisplay(BaseProcess):
-    """ Display for video stream. """
+    """ Display for video stream.
+
+    This process displays camera frames produced by video streams. Previous
+    processes in the pipeline can add overlays onto the frame, e.g., detected
+    pupils or calibration markers, if they are created with ``display=True``.
+    This process should generally be the last in the pipeline.
+    """
 
     def __init__(
-        self, name, flip=False, resolution=None, max_width=None, **kwargs,
+        self,
+        name: str,
+        flip: bool = False,
+        resolution: Optional[tuple] = None,
+        max_width: Optional[int] = None,
+        **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        name:
+            Name of the video display.
+
+        flip:
+            If True, flip the image in the vertical direction. May be necessary
+            for one of the eye camera streams.
+
+        resolution:
+            If specified, scale the window to this resolution.
+
+        max_width:
+            If specified, scale the window to this width if it would be wider.
+        """
         self.name = name
         self.flip = flip
         self.resolution = resolution
