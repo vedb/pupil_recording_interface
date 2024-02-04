@@ -65,4 +65,7 @@ class process(_base_decorator):
     registry = {}
     name = "Process"
     config_attr = "process_type"
+    # TODO setting block to False here because it drastically improves
+    #  real-time performance in some cases, although the BaseProcess default
+    #  is True so that offline processes don't return futures
     add_kwargs = {"process_name": None, "paused": False, "block": False}

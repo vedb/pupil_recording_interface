@@ -59,6 +59,17 @@ class Pipeline:
         for step in self.steps:
             step.start()
 
+    def stop(self):
+        """ Stop the pipeline. """
+        for step in self.steps:
+            step.stop()
+
+    def __enter__(self):
+        self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
     def process(self, packet, notifications=None):
         """ Process new data. """
         for step in self.steps:
@@ -68,8 +79,3 @@ class Pipeline:
             packet = packet.result()
 
         return packet
-
-    def stop(self):
-        """ Stop the pipeline. """
-        for step in self.steps:
-            step.stop()

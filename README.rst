@@ -31,13 +31,13 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    $ pip install opencv-python git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install pupil-recording-interface
 
 or via ``conda`` from our own channel:
 
 .. code-block:: console
 
-    $ conda install -c vedb pupil_recording_interface
+    $ conda install -c vedb -c conda-forge pupil_recording_interface
 
 For features like streaming video from the Pupil Core cameras, recording data
 or pupil detection, please refer to the `installation instructions`_ in the

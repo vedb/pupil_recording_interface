@@ -22,7 +22,6 @@ from pupil_recording_interface.process.recorder import VideoRecorder
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
-from pupil_recording_interface.process.validation import Validation
 from pupil_recording_interface.process.cam_params import (
     CamParamEstimator,
     CircleGridDetector,
@@ -148,7 +147,7 @@ def statuses():
 @pytest.fixture()
 def pupil(folder_v1):
     """"""
-    pldata = load_pldata_file(folder_v1, "pupil",)
+    pldata = load_pldata_file(folder_v1, "pupil")
 
     pupil = [dict(d) for d in pldata.data]
 
@@ -191,23 +190,27 @@ def calibration_recorded(folder_v1):
 
 
 @pytest.fixture()
-def reference_locations(folder_v1):
+def reference_locations_raw(folder_v1):
     """"""
-    resolution = (1280, 720)
-
     locations = load_object(
         Path(folder_v1) / "offline_data" / "reference_locations.msgpack"
     )
 
+    return locations["data"]
+
+
+@pytest.fixture()
+def reference_locations(reference_locations_raw):
+    """"""
+    resolution = (1280, 720)
+
     locations = [
-        [
-            {
-                "img_pos": location[0],
-                "norm_pos": normalize(location[0], resolution),
-                "timestamp": location[2],
-            }
-        ]
-        for location in locations["data"]
+        {
+            "img_pos": location[0],
+            "norm_pos": normalize(location[0], resolution),
+            "timestamp": location[2],
+        }
+        for location in reference_locations_raw
     ]
 
     return locations
@@ -937,7 +940,6 @@ def process_configs(tmpdir):
         "motion_recorder": {"folder": tmpdir},
         "pupil_detector": {"folder": tmpdir},
         "calibration": {"folder": tmpdir},
-        "validation": {"folder": tmpdir},
         "cam_param_estimator": {"streams": ["world"], "folder": tmpdir},
         "video_file_syncer": {"master_stream": "world"},
     }
@@ -1019,12 +1021,6 @@ def circle_detector():
 def calibration():
     """"""
     return Calibration((1280, 720))
-
-
-@pytest.fixture()
-def validation():
-    """"""
-    return Validation((1280, 720), eye_resolution=(192, 192))
 
 
 @pytest.fixture()

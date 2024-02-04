@@ -1,10 +1,13 @@
 """"""
+from typing import Optional
 import logging
+import os
 
 import cv2
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
+from pupil_recording_interface.reader.pupil import PupilReader
 from pupil_recording_interface.externals.methods import normalize
 from pupil_recording_interface.externals.file_methods import PLData_Writer
 
@@ -13,51 +16,87 @@ logger = logging.getLogger(__name__)
 
 @process("pupil_detector")
 class PupilDetector(BaseProcess):
-    """ Pupil detector for eye video streams. """
+    """ Pupil detector for eye video streams.
+
+    This process detects pupils in eye camera frames. Attach one to each eye
+    video stream.
+    """
 
     def __init__(
         self,
-        method="2d c++",
-        camera_id=None,
-        folder=None,
-        record=False,
-        display=True,
+        method: str = "2d c++",
+        camera_id: Optional[int] = None,
+        resolution: Optional[tuple] = None,
+        focal_length: Optional[float] = None,
+        folder: Optional[os.PathLike] = None,
+        record: bool = False,
+        display: bool = True,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        method:
+            Detection method. Currently supported are "2d c++" and "pye3d",
+            provided that the necessary dependencies are installed.
+
+        camera_id:
+            ID of the eye camera (0 or 1). This is important if you use the
+            result of the pupil detection for a ``Calibration`` or
+            ``GazeMapper`` process.
+
+        resolution:
+            Resolution of the eye camera. Required for "pye3d" detection
+            method.
+
+        focal_length:
+            Focal length of the eye camera. Required for "pye3d" detection
+            method.
+
+        folder:
+            Folder for recording detected pupils.
+
+        record:
+            If True, record pupils to a ``pupil.pldata`` file in the
+            recording folder.
+
+        display:
+            If True, add this instance's ``display_hook`` method to the packet
+            returned by ``process_packet``. A ``VideoDisplay`` later in the
+            pipeline will pick this up to draw the extent of the currently
+            detected pupil over the camera image.
+        """
         self.method = method
         self.camera_id = camera_id
+        self.resolution = resolution
+        self.focal_length = focal_length
         self.folder = folder
         self.record = record
         self.display = display
 
         super().__init__(**kwargs)
 
-        if self.method not in ("2d c++",):
+        if self.method not in ("2d c++", "pye3d"):
             raise ValueError(f"Unsupported detection method: {self.method}")
+        if self.method == "pye3d" and (
+            self.resolution is None or self.focal_length is None
+        ):
+            raise ValueError(
+                "Resolution and focal length must be specified for pye3d"
+            )
 
         self.detector = None
+        self.detector_pye3d = None
+        self.writer = None
 
-        if self.record:
-            if self.folder is None:
-                raise ValueError("folder cannot be None")
-            self.writer = PLData_Writer(self.folder, "pupil")
-        else:
-            self.writer = None
-
-    def start(self):
-        """ Start the process. """
-        if self.method == "2d c++":
-            from pupil_detectors import Detector2D
-
-            self.detector = Detector2D()
-        else:
-            raise ValueError(f"Unsupported detection method: {self.method}")
+        if self.record and self.folder is None:
+            raise ValueError("folder cannot be None")
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(
+        cls_kwargs = cls._get_constructor_args(
             config, folder=config.folder or kwargs.get("folder", None),
         )
 
@@ -70,30 +109,44 @@ class PupilDetector(BaseProcess):
                 except (ValueError, TypeError):
                     logger.debug("Could not auto-determine eye camera ID")
 
+        # TODO focal length and resolution
+
         return cls(**cls_kwargs)
 
-    def detect_pupil(self, packet):
-        """ Detect pupil in frame. """
-        frame = packet["frame"]
+    def start(self):
+        """ Start the process. """
+        # TODO figure out whether this is still necessary
+        #  disable active threads when OpenCV is built with OpenMP support
+        os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
-        if frame.ndim == 3:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if self.method == "2d c++":
+            from pupil_detectors import Detector2D
 
-        pupil = self.detector.detect(frame)
+            self.detector = Detector2D()
 
-        pupil["norm_pos"] = normalize(pupil["location"], frame.shape[1::-1])
-        pupil["timestamp"] = packet["timestamp"]
-        pupil["method"] = self.method
-        pupil["id"] = self.camera_id
-        pupil["topic"] = (
-            f"pupil.{self.camera_id}" if self.camera_id else "pupil"
-        )
+        elif self.method == "pye3d":
+            from pupil_detectors import Detector2D
+            from pye3d.camera import CameraModel
+            from pye3d.detector_3d import Detector3D
 
-        return pupil
+            camera = CameraModel(self.focal_length, self.resolution)
+            self.detector = Detector2D()
+            self.detector_pye3d = Detector3D(camera)
 
-    def record_data(self, packet):
-        """ Write pupil datum to disk. """
-        self.writer.append(packet["pupil"])
+        else:
+            raise ValueError(f"Unsupported detection method: {self.method}")
+
+        if self.record:
+            self.writer = PLData_Writer(self.folder, "pupil")
+
+    def stop(self):
+        """ Stop the process. """
+        self.detector = None
+        self.detector_pye3d = None
+
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = None
 
     def display_hook(self, packet):
         """ Add pupil overlay onto frame. """
@@ -119,12 +172,12 @@ class PupilDetector(BaseProcess):
 
         return frame
 
-    def _process_packet(self, packet, block=None):
+    def _process_packet(self, packet):
         """ Process a new packet. """
-        packet.pupil = self.call(self.detect_pupil, packet, block=block)
+        packet.pupil = self.detect_pupil(packet.frame, packet.timestamp)
 
         if self.record:
-            self.call(self.record_data, packet, block=block)
+            self.record_data(packet.pupil)
 
         packet.broadcasts.append("pupil")
 
@@ -133,7 +186,96 @@ class PupilDetector(BaseProcess):
 
         return packet
 
-    def stop(self):
-        """ Stop the process. """
-        if self.writer is not None:
-            self.writer.close()
+    def detect_pupil(self, frame, timestamp):
+        """ Detect pupil in frame. """
+        if frame.ndim == 3:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        pupil = self.detector.detect(frame)
+
+        pupil["norm_pos"] = normalize(pupil["location"], frame.shape[1::-1])
+        pupil["timestamp"] = timestamp
+        pupil["method"] = self.method
+        pupil["id"] = self.camera_id
+        pupil["topic"] = (
+            f"pupil.{self.camera_id}" if self.camera_id else "pupil"
+        )
+
+        # second pass for pye3d detector
+        if self.method == "pye3d":
+            pupil_3d = self.detector_pye3d.update_and_detect(pupil, frame)
+            pupil.update(pupil_3d)
+
+        return pupil
+
+    def record_data(self, pupil):
+        """ Write pupil datum to disk. """
+        self.writer.append(pupil)
+
+    def batch_run(
+        self, video_reader, start=None, end=None, return_type="list"
+    ):
+        """ Detect pupils in an eye video.
+
+        Parameters
+        ----------
+        video_reader : pri.VideoReader instance
+            Video reader for an eye camera recording.
+
+        start : int or pandas.Timestamp, optional
+            If specified, start the detection at this frame index or timestamp.
+
+        end : int or pandas.Timestamp, optional
+            If specified, stop the detection at this frame index or timestamp.
+
+        return_type : str or None, default "list"
+            The data type that this method should return. "list" returns o list
+            of dicts with pupil data for each frame. "dataset" returns an
+            xarray Dataset. Can also be None, in that case pupil data is not
+            loaded into memory and this method returns nothing, which is useful
+            when recording detected pupils to disk.
+
+        Returns
+        -------
+        pupil_list : list of dict
+            List of detected pupils if return_type="list" (one per frame).
+
+        ds : xarray.Dataset
+            Dataset with pupil data if return_type="dataset".
+        """
+        if return_type not in ("list", "dataset", None):
+            raise ValueError(
+                f"return_type can be 'list', 'dataset' or None, "
+                f"got {return_type}"
+            )
+
+        pupil_list = []
+
+        # the video reader timestamps are datetime values but pupil timestamps
+        # should be monotonic
+        monotonic_offset = (
+            video_reader.info["start_time_synced_s"]
+            - video_reader.info["start_time_system_s"]
+        )
+
+        with self:
+            for frame, ts in video_reader.read_frames(
+                start, end, raw=True, return_timestamp=True
+            ):
+                ts = float(ts.value) / 1e9 + monotonic_offset
+                pupil = self.detect_pupil(frame, ts)
+
+                if return_type is not None:
+                    pupil_list.append(pupil)
+
+                if self.record:
+                    self.record_data(pupil)
+
+        if return_type == "list":
+            return pupil_list
+        elif return_type == "dataset":
+            # only the stem of the method (e.g. 2d instead of 2d c++)
+            method = self.method.split()[0]
+            return PupilReader._dataset_from_list(
+                pupil_list, video_reader.info, method
+            )

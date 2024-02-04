@@ -15,16 +15,16 @@ class BaseProcess(BaseConfigurable):
         self,
         process_name=None,
         paused=False,
-        block=True,
         listen_for=None,
         context=None,
+        block=True,
     ):
         """ Constructor. """
         self.process_name = process_name or type(self).__name__
         self.paused = paused
-        self.block = block
         self.listen_for = listen_for or []
         self.context = context
+        self.block = block
 
         self._packet_executor = DroppingThreadPoolExecutor(maxsize=10)
         self._notification_executor = DroppingThreadPoolExecutor(maxsize=10)
@@ -48,7 +48,7 @@ class BaseProcess(BaseConfigurable):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(config)
+        cls_kwargs = cls._get_constructor_args(config)
         # TODO this has to be duplicated if the sub-class overrides from_config
         if stream_config.name is not None:
             cls_kwargs["process_name"] = ".".join(
@@ -63,24 +63,15 @@ class BaseProcess(BaseConfigurable):
     def start(self):
         """ Start the process"""
 
+    def stop(self):
+        """ Stop the process. """
+
     def process(self, packet, notifications):
         """ Process new data. """
         if len(notifications) > 0:
             self.process_notifications(notifications)
 
         return self.process_packet(packet)
-
-    def call(self, fn, *args, block=None, return_if_full=None, **kwargs):
-        """ Call a function, either blocking or non-blocking. """
-        if block is None:
-            block = self.block
-
-        if block:
-            return fn(*args, **kwargs)
-        else:
-            return self._packet_executor.submit(
-                fn, *args, return_if_full=return_if_full, **kwargs
-            )
 
     def process_notifications(self, notifications):
         """ Process new notifications. """
@@ -100,13 +91,13 @@ class BaseProcess(BaseConfigurable):
 
         if not self.paused:
             if self.block:
-                return self._process_notifications(notifications, block=True)
+                return self._process_notifications(notifications)
             else:
                 return self._notification_executor.submit(
-                    self._process_notifications, notifications, block=True
+                    self._process_notifications, notifications
                 )
 
-    def _process_notifications(self, notifications, block=None):
+    def _process_notifications(self, notifications):
         """ Process new notifications. """
 
     def process_packet(self, packet):
@@ -114,20 +105,14 @@ class BaseProcess(BaseConfigurable):
         if self.paused:
             return packet
 
-        # TODO use per-attribute future mechanism of Packet
         if isinstance(packet, Future):
             packet = packet.result()
 
         if self.block:
-            return self._process_packet(packet, block=True)
+            return self._process_packet(packet)
         else:
-            return self._packet_executor.submit(
-                self._process_packet, packet, block=True
-            )
+            return self._packet_executor.submit(self._process_packet, packet)
 
-    def _process_packet(self, packet, block=None):
+    def _process_packet(self, packet):
         """ Process a new packet. """
         return packet
-
-    def stop(self):
-        """ Stop the process. """

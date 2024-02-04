@@ -2,9 +2,8 @@ pytest
 coverage
 flake8==3.7.9
 
-sphinx==2.4.4
+sphinx==4.0.3
 sphinx_rtd_theme
-numpydoc
 sphinx-gallery
 
 matplotlib

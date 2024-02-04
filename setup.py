@@ -6,7 +6,7 @@ requirements = [
     "xarray",
     "scipy",
     "msgpack<1.0",
-    # TODO figure out conda dev setup and add "opencv-python",
+    "opencv-python",
 ]
 
 setup(
@@ -15,6 +15,5 @@ setup(
     packages=find_packages(),
     long_description=open("README.rst").read(),
     install_requires=requirements,
-    extras_require={"cv": ["opencv-python"]},  # TODO remove (see above)
     include_package_data=True,
 )

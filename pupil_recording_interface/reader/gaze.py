@@ -4,7 +4,7 @@ import pandas as pd
 import xarray as xr
 from msgpack import Unpacker
 
-from pupil_recording_interface import BaseReader
+from pupil_recording_interface.reader import BaseReader
 
 
 class GazeReader(BaseReader):
@@ -39,13 +39,8 @@ class GazeReader(BaseReader):
         return "gaze"
 
     @staticmethod
-    def _load_gaze(folder, topic="gaze"):
-        """ Load gaze data from a .pldata file. """
-        df = BaseReader._load_pldata_as_dataframe(folder, topic)
-
-        if df.size == 0:
-            raise ValueError(f"No gaze data in {folder / (topic + '.pldata')}")
-
+    def _extract_gaze_data(df):
+        """ Extract gaze data from DataFrame"""
         data = {
             "timestamp": df.timestamp,
             "confidence": df.confidence,
@@ -119,6 +114,16 @@ class GazeReader(BaseReader):
         return data
 
     @staticmethod
+    def _load_gaze(folder, topic="gaze"):
+        """ Load gaze data from a .pldata file. """
+        df = BaseReader._load_pldata_as_dataframe(folder, topic)
+
+        if df.size == 0:
+            raise ValueError(f"No gaze data in {folder / (topic + '.pldata')}")
+
+        return GazeReader._extract_gaze_data(df)
+
+    @staticmethod
     def _merge_2d_3d_gaze(gaze_2d, gaze_3d):
         """ Merge data from a 2d and a 3d gaze mapper. """
         t, idx_2d, idx_3d = np.intersect1d(
@@ -168,30 +173,10 @@ class GazeReader(BaseReader):
 
         return GazeReader._merge_2d_3d_gaze(gaze_2d, gaze_3d)
 
-    def load_dataset(self):
-        """ Load gaze data as an xarray Dataset.
-
-        Returns
-        -------
-        xarray.Dataset
-            The gaze data as a dataset.
-        """
-        if self.source == "recording":
-            data = self._load_gaze(self.folder)
-        elif isinstance(self.source, str) and self.source in self.gaze_mappers:
-            data = self._load_gaze(
-                self.folder / "offline_data" / "gaze-mappings",
-                self.gaze_mappers[self.source],
-            )
-        elif isinstance(self.source, dict) and set(self.source.keys()) == {
-            "2d",
-            "3d",
-        }:
-            data = self._load_merged_gaze(self.folder, self.source)
-        else:
-            raise ValueError(f"Invalid gaze source: {self.source}")
-
-        t = self._timestamps_to_datetimeindex(data["timestamp"], self.info)
+    @staticmethod
+    def _create_dataset(data, info):
+        """ Create dataset from gaze data. """
+        t = GazeReader._timestamps_to_datetimeindex(data["timestamp"], info)
 
         coords = {
             "time": t.values,
@@ -236,5 +221,41 @@ class GazeReader(BaseReader):
         ds.sortby("time")
         _, index = np.unique(ds["time"], return_index=True)
         ds = ds.isel(time=index)
+
+        return ds
+
+    @staticmethod
+    def _dataset_from_list(gaze_list, info):
+        """ Create dataset from list of dicts. """
+        df = pd.DataFrame(gaze_list)
+        data = GazeReader._extract_gaze_data(df)
+        ds = GazeReader._create_dataset(data, info)
+
+        return ds
+
+    def load_dataset(self):
+        """ Load gaze data as an xarray Dataset.
+
+        Returns
+        -------
+        xarray.Dataset
+            The gaze data as a dataset.
+        """
+        if self.source == "recording":
+            data = self._load_gaze(self.folder)
+        elif isinstance(self.source, str) and self.source in self.gaze_mappers:
+            data = self._load_gaze(
+                self.folder / "offline_data" / "gaze-mappings",
+                self.gaze_mappers[self.source],
+            )
+        elif isinstance(self.source, dict) and set(self.source.keys()) == {
+            "2d",
+            "3d",
+        }:
+            data = self._load_merged_gaze(self.folder, self.source)
+        else:
+            raise ValueError(f"Invalid gaze source: {self.source}")
+
+        ds = self._create_dataset(data, self.info)
 
         return ds

@@ -11,10 +11,16 @@ from numpy import testing as npt
 from pupil_recording_interface import (
     GazeReader,
     load_dataset,
+    load_gaze,
+    load_pupils,
+    load_markers,
+    load_motion,
     write_netcdf,
     get_gaze_mappers,
     BaseReader,
+    PupilReader,
     MotionReader,
+    MarkerReader,
     VideoReader,
     OpticalFlowReader,
 )
@@ -49,15 +55,15 @@ class TestBaseReader:
         with pytest.raises(FileNotFoundError):
             BaseReader("not_a_folder")
 
-    def test_load_info(self, folder_v1):
+    def test_load_info(self, folder_v1, info):
         """"""
-        info = BaseReader._load_info(folder_v1)
-        assert info == info
+        loaded_info = BaseReader._load_info(folder_v1)
+        assert loaded_info == info
 
         # legacy format
-        info = BaseReader._load_info(folder_v1, "info.csv")
-        info["duration_s"] = 21.0
-        assert info == info
+        loaded_info = BaseReader._load_info(folder_v1, "info.csv")
+        loaded_info["duration_s"] = 21.111775958999715
+        assert loaded_info == info
 
         with pytest.raises(FileNotFoundError):
             BaseReader._load_info(folder_v1, "not_a_file")
@@ -197,6 +203,131 @@ class TestBaseReader:
 
 
 class TestFunctionalReader:
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_gaze(self, folder):
+        """"""
+        gaze = load_gaze(folder, cache=True)
+
+        assert set(gaze.data_vars) == {
+            "eye",
+            "gaze_confidence_3d",
+            "gaze_point",
+            "eye0_center",
+            "eye1_center",
+            "eye0_normal",
+            "eye1_normal",
+            "gaze_norm_pos",
+        }
+
+        shutil.rmtree(folder / "cache")
+
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_pupils(self, folder):
+        """"""
+        pupils = load_pupils(folder, method="3d", cache=True)
+
+        assert set(pupils.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "model_birth_timestamp",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+    def test_load_offline_pupils(self, folder_v2):
+        """"""
+        pupils = load_pupils(
+            folder_v2, source="offline", method="2d", cache=True
+        )
+
+        assert set(pupils.data_vars) == {
+            "confidence",
+            "diameter",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "pupil_norm_pos",
+        }
+
+        pupils = load_pupils(folder_v2, source="offline", cache=True)
+
+        assert set(pupils.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "location",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+        shutil.rmtree(folder_v2 / "cache")
+
+    @pytest.mark.parametrize(
+        "folder", ["folder_v1", "folder_v2"], indirect=True
+    )
+    def test_load_markers(self, folder):
+        """"""
+        markers = load_markers(folder, cache=True)
+
+        assert set(markers.data_vars) == {"frame_index", "location"}
+
+        shutil.rmtree(folder / "cache")
+
+    def test_load_motion(self, t265_folder):
+        """"""
+        odometry = load_motion(t265_folder, cache=True)
+        assert set(odometry.data_vars) == {
+            "confidence",
+            "linear_acceleration",
+            "angular_acceleration",
+            "linear_velocity",
+            "angular_velocity",
+            "position",
+            "orientation",
+        }
+
+        accel = load_motion(t265_folder, stream="accel", cache=True)
+        assert set(accel.data_vars) == {"linear_acceleration"}
+
+        gyro = load_motion(t265_folder, stream="gyro", cache=True)
+        assert set(gyro.data_vars) == {"angular_velocity"}
+
+        shutil.rmtree(t265_folder / "cache")
+
     @pytest.mark.parametrize(
         "folder", ["folder_v1", "folder_v2"], indirect=True
     )
@@ -461,6 +592,156 @@ class TestGazeReader:
         ds.close()
 
 
+class TestPupilReader:
+    @pytest.fixture(autouse=True)
+    def set_up(self):
+        """"""
+        self.n_pupil_2d = 5164
+        self.n_pupil_3d = 5170
+        self.n_pupil_pye3d = 5164
+
+    def test_load_pupil(self, folder_v1, folder_v2):
+        """"""
+        # v1 3d
+        data = PupilReader._load_pupil(folder_v1, "3d")
+        assert data["timestamp"].shape == (self.n_pupil_3d,)
+        assert data["confidence"].shape == (self.n_pupil_3d,)
+        assert data["norm_pos"].shape == (self.n_pupil_3d, 2)
+        assert data["eye"].shape == (self.n_pupil_3d,)
+        assert data["diameter"].shape == (self.n_pupil_3d,)
+        assert data["model_birth_timestamp"].shape == (self.n_pupil_3d,)
+
+        # v2 2d
+        data = PupilReader._load_pupil(
+            folder_v2 / "offline_data", "2d", "offline_pupil"
+        )
+        assert data["timestamp"].shape == (self.n_pupil_2d,)
+        assert data["confidence"].shape == (self.n_pupil_2d,)
+        assert data["norm_pos"].shape == (self.n_pupil_2d, 2)
+        assert data["eye"].shape == (self.n_pupil_2d,)
+        assert data["diameter"].shape == (self.n_pupil_2d,)
+
+        # v2 pye3d
+        data = PupilReader._load_pupil(
+            folder_v2 / "offline_data", "pye3d", "offline_pupil"
+        )
+        assert data["timestamp"].shape == (self.n_pupil_pye3d,)
+        assert data["confidence"].shape == (self.n_pupil_pye3d,)
+        assert data["norm_pos"].shape == (self.n_pupil_pye3d, 2)
+        assert data["eye"].shape == (self.n_pupil_pye3d,)
+        assert data["diameter"].shape == (self.n_pupil_pye3d,)
+        assert data["location"].shape == (self.n_pupil_pye3d, 2)
+
+    def test_load_dataset(self, folder_v1, folder_v2):
+        """"""
+        # from recording
+        ds = PupilReader(folder_v1, method="3d").load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_pupil_3d,
+            "cartesian_axis": 3,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "model_birth_timestamp",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+        # offline 2d
+        ds = PupilReader(
+            folder_v2, source="offline", method="2d"
+        ).load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_pupil_2d,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "confidence",
+            "diameter",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "pupil_norm_pos",
+        }
+
+        # offline pye3d
+        ds = PupilReader(folder_v2, source="offline").load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_pupil_pye3d,
+            "cartesian_axis": 3,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "circle_center",
+            "circle_normal",
+            "circle_radius",
+            "confidence",
+            "diameter",
+            "diameter_3d",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "location",
+            "model_confidence",
+            "phi",
+            "projected_sphere_angle",
+            "projected_sphere_axes",
+            "projected_sphere_center",
+            "pupil_norm_pos",
+            "sphere_center",
+            "sphere_radius",
+            "theta",
+        }
+
+        # bad gaze argument
+        with pytest.raises(ValueError):
+            PupilReader(folder_v1, source="not_a_pupil_source").load_dataset()
+
+
+class TestMarkerReader:
+    @pytest.fixture(autouse=True)
+    def set_up(self):
+        """"""
+        self.n_markers = 238
+
+    def test_load_markers(self, folder_v1):
+        """"""
+        data = MarkerReader._load_markers(folder_v1 / "offline_data")
+
+        assert data["timestamp"].shape == (self.n_markers,)
+        assert data["frame_index"].shape == (self.n_markers,)
+        assert data["location"].shape == (self.n_markers, 2)
+
+    def test_load_dataset(self, folder_v1, folder_v2):
+        """"""
+        # from recording
+        ds = MarkerReader(folder_v1).load_dataset()
+        assert dict(ds.sizes) == {
+            "time": self.n_markers,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {"frame_index", "location"}
+
+
 class TestMotionReader:
     @pytest.fixture(autouse=True)
     def set_up(self):
@@ -683,6 +964,25 @@ class TestVideoReader:
             frame, np.zeros(self.frame_shape, dtype="uint8")
         )
 
+    def test_undistort_frame(self, folder_v1):
+        """"""
+        reader = VideoReader(folder_v1, undistort=True)
+        frame = np.zeros(reader.frame_shape)
+
+        # frame with color channel
+        undistorted = reader.undistort_frame(frame)
+        assert undistorted.shape == frame.shape
+
+        # monochromatic frame
+        undistorted = reader.undistort_frame(frame[..., 0])
+        assert undistorted.shape == frame.shape[:2]
+
+    def test_undistort_point(self, folder_v1):
+        """"""
+        reader = VideoReader(folder_v1)
+        point = reader.undistort_point((0.5, 0.5))
+        npt.assert_almost_equal(point, [0.5072918, 0.4998553])
+
     def test_load_raw_frame(self, folder_v1):
         """"""
         reader = VideoReader(folder_v1)
@@ -756,6 +1056,13 @@ class TestVideoReader:
             self.roi_size,
             self.frame_shape[2],
         )
+
+        # raw
+        assert next(reader.read_frames(raw=True)).dtype == np.uint8
+
+        # with timestamp
+        _, ts = next(reader.read_frames(return_timestamp=True))
+        assert ts == pd.Timestamp("2019-10-10 16:43:20.238371849")
 
     def test_load_dataset(self, folder_v1):
         """"""

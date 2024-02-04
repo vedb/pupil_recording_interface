@@ -1,6 +1,6 @@
 import abc
-import os
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 
@@ -30,14 +30,14 @@ class BaseRecorder(BaseProcess):
         if folder is None:
             raise ValueError("Recording folder cannot be None")
         else:
-            self.folder = folder
+            self.folder = Path(folder).expanduser()
 
         self.name = name
 
         super().__init__(**kwargs)
 
     @abc.abstractmethod
-    def write(self, data):
+    def write(self, *args):
         """ Write data to disk. """
 
 
@@ -112,10 +112,8 @@ class VideoRecorder(BaseRecorder):
         self.encoder = None
         self.writer = None
 
-        self.timestamp_file = os.path.join(
-            self.folder, f"{self.name}_timestamps.npy"
-        )
-        if os.path.exists(self.timestamp_file):
+        self.timestamp_file = self.folder / f"{self.name}_timestamps.npy"
+        if self.timestamp_file.exists():
             raise FileExistsError(
                 f"{self.timestamp_file} exists, will not overwrite"
             )
@@ -125,7 +123,7 @@ class VideoRecorder(BaseRecorder):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(
+        cls_kwargs = cls._get_constructor_args(
             config,
             folder=config.folder or kwargs.get("folder", None),
             resolution=config.resolution or device.resolution,
@@ -159,37 +157,36 @@ class VideoRecorder(BaseRecorder):
         if self.source_timestamps:
             self.writer = PLData_Writer(self.folder, self.name)
 
-    def write(self, packet):
+    def stop(self):
+        """ Stop the recorder. """
+        self.encoder.stop()
+        self.encoder = None
+        np.save(str(self.timestamp_file), np.array(self._timestamps))
+
+        if self.writer is not None:
+            self.writer.file_handle.close()
+            self.writer = None
+
+    def write(self, frame, timestamp, source_timestamp):
         """ Write data to disk. """
         if len(self._timestamps) % self.encode_every == 0:
-            self.encoder.write(packet["frame"])
+            self.encoder.write(frame)
 
             if self.writer is not None:
                 self.writer.append(
                     {
                         "topic": self.name,
-                        "timestamp": packet.timestamp,
-                        "source_timestamp": packet.source_timestamp,
+                        "timestamp": timestamp,
+                        "source_timestamp": source_timestamp,
                     }
                 )
 
-    def _process_packet(self, packet, block=None):
+    def _process_packet(self, packet):
         """ Process a new packet. """
-        self.call(self.write, packet, block=block)
-
+        self.write(packet.frame, packet.timestamp, packet.source_timestamp)
         self._timestamps.append(packet.timestamp)
 
         return packet
-
-    def stop(self):
-        """ Stop the recorder. """
-        self.encoder.stop()
-        self.encoder = None
-        np.save(self.timestamp_file, np.array(self._timestamps))
-
-        if self.writer is not None:
-            self.writer.file_handle.close()
-            self.writer = None
 
 
 @process("motion_recorder", optional=("folder", "motion_type"))
@@ -203,17 +200,18 @@ class MotionRecorder(BaseRecorder):
 
         super().__init__(folder, name=name, **kwargs)
 
-        self.filename = os.path.join(self.folder, self.topic + ".pldata")
-        if os.path.exists(self.filename):
+        self.writer = None
+
+        self.filename = self.folder / f"{self.topic}.pldata"
+        if self.filename.exists():
             raise FileExistsError(
                 f"{self.filename} exists, will not overwrite"
             )
-        self.writer = PLData_Writer(self.folder, self.topic)
 
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(
+        cls_kwargs = cls._get_constructor_args(
             config,
             folder=config.folder or kwargs.get("folder", None),
             motion_type=stream_config.motion_type,
@@ -231,21 +229,23 @@ class MotionRecorder(BaseRecorder):
 
     def start(self):
         """ Start the recorder. """
+        self.writer = PLData_Writer(self.folder, self.topic)
         logger.debug(f"Started motion recorder, recording to {self.filename}")
-
-    def write(self, packet):
-        """ Write data to disk. """
-        try:
-            self.writer.append(packet[self.motion_type])
-        except KeyError:
-            logger.warning(f"Packet missing expected data: {self.motion_type}")
-
-    def _process_packet(self, packet, block=None):
-        """ Process a new packet. """
-        self.call(self.write, packet, block=block)
-
-        return packet
 
     def stop(self):
         """ Stop the recorder. """
         self.writer.close()
+        self.writer = None
+
+    def write(self, data):
+        """ Write data to disk. """
+        self.writer.append(data)
+
+    def _process_packet(self, packet):
+        """ Process a new packet. """
+        try:
+            self.write(packet[self.motion_type])
+        except KeyError:
+            logger.warning(f"Packet missing expected data: {self.motion_type}")
+
+        return packet

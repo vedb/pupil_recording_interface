@@ -1,10 +1,12 @@
 """"""
-import os
+import warnings
 from pathlib import Path
 
 from .reader import BaseReader, _load_dataset
 from .reader.motion import MotionReader
 from .reader.gaze import GazeReader
+from .reader.marker import MarkerReader
+from .reader.pupil import PupilReader
 from .reader.video import VideoReader, OpticalFlowReader
 
 from .device.video import VideoDeviceUVC, VideoFileDevice
@@ -23,14 +25,13 @@ from .process.pupil_detector import PupilDetector
 from .process.gaze_mapper import GazeMapper
 from .process.circle_detector import CircleDetector
 from .process.calibration import Calibration
-from .process.validation import Validation
 from .process.cam_params import CircleGridDetector, CamParamEstimator
 
 from .decorators import device, stream, process
 
 from .session import Session
 
-from .utils import get_test_recording
+from .utils import get_test_recording, merge_pupils
 
 from .externals.file_methods import load_object as _load_object
 from .externals.file_methods import save_object as _save_object
@@ -51,6 +52,8 @@ __all__ = [
     "save_object",
     # Readers
     "GazeReader",
+    "PupilReader",
+    "MarkerReader",
     "MotionReader",
     "VideoReader",
     "OpticalFlowReader",
@@ -83,10 +86,8 @@ __all__ = [
     # other
     "Session",
     "get_test_recording",
+    "merge_pupils",
 ]
-
-# disable active threads when OpenCV is built with OpenMP support
-os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
 
 def load_dataset(
@@ -124,25 +125,123 @@ def load_dataset(
         The recording data as a dataset or tuple thereof if multiple sources
         (`gaze`, `odometry`, ...) are specified.
     """
+    warnings.warn(
+        DeprecationWarning(
+            "load_dataset is deprecated, use load_gaze, load_pupils, "
+            "load_markers or load_motion instead"
+        )
+    )
+
     folder = Path(folder).expanduser()
     return_vals = tuple()
 
     if gaze:
-        return_vals += (_load_dataset(folder, "gaze", gaze, cache),)
+        return_vals += (_load_dataset(folder, "gaze", gaze, None, cache),)
 
     if odometry:
-        return_vals += (_load_dataset(folder, "odometry", odometry, cache),)
+        return_vals += (
+            _load_dataset(folder, "odometry", odometry, None, cache),
+        )
 
     if accel:
-        return_vals += (_load_dataset(folder, "accel", accel, cache),)
+        return_vals += (_load_dataset(folder, "accel", accel, None, cache),)
 
     if gyro:
-        return_vals += (_load_dataset(folder, "gyro", gyro, cache),)
+        return_vals += (_load_dataset(folder, "gyro", gyro, None, cache),)
 
     if len(return_vals) == 1:
         return_vals = return_vals[0]
 
     return return_vals
+
+
+def load_gaze(folder, source="recording", cache=False):
+    """ Load gaze data as an xarray.Dataset.
+
+    Parameters
+    ----------
+    folder : str or pathlib.Path
+        Path to the recording folder.
+
+    source : str, default "recording"
+        The source of the gaze data. If 'recording', the recorded data will
+        be used. Can also be the name of a gaze mapper or a dict in the
+        format ``{'2d': '<2d_gaze_mapper>', '3d': '<3d_gaze_mapper>'}`` in
+        which case the norm pos from the 2d mapper and the gaze point
+        from the 3d mapper will be used.
+
+    cache : bool, default False
+        If True, cache the dataset as a netCDF file in the recording folder.
+
+    Returns
+    -------
+    xarray.Dataset
+        The gaze data as a dataset.
+    """
+    return _load_dataset(folder, "gaze", source, None, cache)
+
+
+def load_pupils(folder, source="recording", method="pye3d", cache=False):
+    """ Load pupil data as an xarray.Dataset.
+
+    Parameters
+    ----------
+    folder : str or pathlib.Path
+        Path to the recording folder.
+
+    source : str, default "recording"
+        The source of the pupil data. Can be "recording" or "offline".
+
+    cache : bool, default False
+        If True, cache the dataset as a netCDF file in the recording folder.
+
+    Returns
+    -------
+    xarray.Dataset
+        The pupil data as a dataset.
+    """
+    return _load_dataset(folder, "pupil", source, method, cache)
+
+
+def load_markers(folder, cache=False):
+    """ Load calibration marker data as an xarray.Dataset.
+
+    Parameters
+    ----------
+    folder : str or pathlib.Path
+        Path to the recording folder.
+
+    cache : bool, default False
+        If True, cache the dataset as a netCDF file in the recording folder.
+
+    Returns
+    -------
+    xarray.Dataset
+        The pupil data as a dataset.
+    """
+    return _load_dataset(folder, "marker", "offline", None, cache)
+
+
+def load_motion(folder, stream="odometry", cache=False):
+    """ Load pupil data as an xarray.Dataset.
+
+    Parameters
+    ----------
+    folder : str or pathlib.Path
+        Path to the recording folder.
+
+    stream : str, default "odometry"
+        The motion stream to load.
+
+    cache : bool, default False
+        If True, cache the dataset as a netCDF file in the recording folder.
+
+    Returns
+    -------
+    xarray.Dataset
+        The pupil data as a dataset.
+    """
+    return _load_dataset(folder, stream, "recording", None, cache)
 
 
 def get_gaze_mappers(folder):

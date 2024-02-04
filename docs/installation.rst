@@ -8,13 +8,19 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    $ pip install opencv-python git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install pupil-recording-interface
 
 or via ``conda`` from our own channel:
 
 .. code-block:: console
 
-    $ conda install -c vedb pupil_recording_interface
+    $ conda install -c vedb -c conda-forge pupil_recording_interface
+
+The latest unreleased version can be installed from GitHub:
+
+.. code-block:: console
+
+    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
 
 
 .. _optional_dependencies:
@@ -29,9 +35,8 @@ pupil detection.
 Many of these dependencies are non-trivial to install, especially on Windows.
 Therefore, we recommend installing the library in a conda environment since
 conda provides a straightforward way of cross-platform distribution for
-non-Python dependencies. We are actively working on packaging those
-dependencies that aren't already available through conda. At the moment, only
-packages for Linux x64 and Python versions 3.6 and 3.7 are available.
+non-Python dependencies. We provide some of the dependencies for
+Linux x64 and Python versions 3.6 and 3.7 as conda packages via our own ``vedb`` channel.
 
 
 .. _example_dependencies:
@@ -60,8 +65,11 @@ Streaming
 To stream video from the pupil cameras you need to install the `PyUVC`_
 library.
 
-Linux
-~~~~~
+Install via pip:
+
+.. code-block:: console
+
+    $ pip install pupil-labs-uvc
 
 A conda package is available for Linux:
 
@@ -69,18 +77,12 @@ A conda package is available for Linux:
 
     $ conda install -c vedb -c conda-forge pyuvc
 
-Set these udev rules to access the cameras as a normal user:
+On Linux, set these udev rules to access the cameras as a normal user:
 
 .. code-block:: console
 
     $ echo 'SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", GROUP="plugdev", MODE="0664"' | sudo tee /etc/udev/rules.d/10-libuvc.rules > /dev/null
     $ sudo udevadm trigger
-
-Windows and MacOS
-~~~~~~~~~~~~~~~~~
-
-For these operating systems, follow the instructions on the `PyUVC`_ GitHub
-page.
 
 .. _PyUVC: https://github.com/pupil-labs/pyuvc
 
@@ -124,32 +126,22 @@ will need to install our own ``ffmpeg`` package instead:
 Pupil detection
 ...............
 
-Pupil detection is implemented based on Pupil Labs' `pupil-detectors`_
-package.
+Pupil detection is implemented based on Pupil Labs' `pupil-detectors`_ and `pye3d`_ packages.
 
 .. _pupil-detectors: https://github.com/pupil-labs/pupil-detectors
-
-Linux
-~~~~~
-
-A conda package is available for Linux:
-
-.. code-block:: console
-
-    $ conda install -c vedb -c conda-forge pupil-detectors
-
-Windows and MacOS
-~~~~~~~~~~~~~~~~~
+.. _pye3d: https://github.com/pupil-labs/pye3d-detector
 
 Install via pip:
 
 .. code-block:: console
 
-    $ pip install pupil-detectors
+    $ pip install pupil-detectors pye3d
 
-On MacOS, you will probably need to install some build dependencies. Please
-refer to the `pupil-detectors`_ GitHub pages for details.
+Also, conda packages are available for Linux:
 
+.. code-block:: console
+
+    $ conda install -c vedb -c conda-forge pupil-detectors pye3d
 
 .. _realsense_dependencies:
 

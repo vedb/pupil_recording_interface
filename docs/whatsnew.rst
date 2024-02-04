@@ -1,6 +1,30 @@
 What's New
 ==========
 
+v1.0.0 (unreleased)
+-------------------
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+* :py:class:`.CircleDetector` and :py:class:`.CircleTracker`: removed ``detection_method``, ``marker_size``, ``threshold_window_size``, ``min_area``, ``max_area``, ``circularity``, ``convexity``, and ``inertia`` arguments.
+* :py:class:`.VideoDisplay`: removed ``overlay_pupil``, ``overlay_gaze``, ``overlay_circle_marker`` and ``overlay_circle_grid`` arguments.
+* :py:class:`.BaseConfigurable`: removed ``get_params`` and ``get_constructor_args`` methods (now private methods with the same name).
+* :py:class:`.Packet`: removed ``get`` method.
+
+New features
+~~~~~~~~~~~~
+
+* New :py:func:`.get_test_recording`, :py:func:`.load_gaze`, :py:func:`.load_pupils`, :py:func:`.load_markers`, :py:func:`.load_motion`, :py:func:`.merge_pupils` functions.
+* New :py:class:`.PupilReader` and :py:class:`.MarkerReader` classes.
+* New :py:meth:`.Calibration.batch_run`, :py:meth:`.CircleDetector.batch_run`, :py:meth:`.GazeMapper.batch_run` and :py:meth:`.PupilDetector.batch_run` methods.
+* :py:class:`.CamParamEstimator`: new ``grid_scale`` argument.
+* :py:class:`.VideoReader`: new ``undistort`` argument.
+* :py:class:`.PupilDetector`: added support for ``method="pye3d"``; new ``resolution`` and ``focal_length`` arguments.
+* :py:class:`.Pipeline`: can now be used as a context manager.
+* :py:meth:`.VideoReader.read_frames`: New ``raw``, ``return_timestamp`` and ``return_index`` arguments
+
+
 v0.5.0 (June 23rd, 2021)
 ------------------------
 

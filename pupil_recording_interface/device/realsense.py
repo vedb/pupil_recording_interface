@@ -84,7 +84,7 @@ class RealSenseDeviceT265(BaseDevice):
     @classmethod
     def _from_config(cls, config, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(config, **kwargs)
+        cls_kwargs = cls._get_constructor_args(config, **kwargs)
 
         if config.stream_type == "video":
             # TODO this is a little hacky, maybe rename the parameter to "side"
@@ -105,7 +105,7 @@ class RealSenseDeviceT265(BaseDevice):
         # TODO make sure all configs have the same UID
         uid = config_list[0].device_uid
 
-        _, cls_kwargs = cls.get_params()
+        _, cls_kwargs = cls._get_params()
 
         # set parameters for video and odometry devices
         for config in config_list:

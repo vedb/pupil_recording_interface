@@ -33,7 +33,7 @@ class BaseDevice(BaseConfigurable):
         """ Per-class implementation of from_config. """
         assert device.registry[config.device_type] is cls
 
-        cls_kwargs = cls.get_constructor_args(config, **kwargs)
+        cls_kwargs = cls._get_constructor_args(config, **kwargs)
 
         return cls(**cls_kwargs)
 

@@ -18,13 +18,12 @@ from pupil_recording_interface.process.pupil_detector import PupilDetector
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
-from pupil_recording_interface.process.validation import Validation
+from pupil_recording_interface.reader.video import VideoReader
 from pupil_recording_interface.externals.file_methods import (
     load_object,
     load_pldata_file,
 )
 from pupil_recording_interface.decorators import process
-from pupil_recording_interface.session import Session
 
 
 class TestAllProcesses:
@@ -130,9 +129,12 @@ class TestPupilDetector:
 
     def test_record_data(self, pupil_detector, pupil_packet):
         """"""
+        pytest.importorskip("pupil_detectors")
+
         pupil_packet.device_uid = "Pupil Cam1 ID0"
-        pupil_detector.record_data(pupil_packet)
-        pupil_detector.stop()
+
+        with pupil_detector:
+            pupil_detector.record_data(pupil_packet.pupil)
 
         pldata = [
             dict(d)
@@ -145,6 +147,59 @@ class TestPupilDetector:
         """"""
         frame = pupil_detector.display_hook(pupil_packet)
         assert frame.ndim == 3
+
+    def test_batch_run(self, folder_v1, tmpdir):
+        """"""
+        pytest.importorskip("pupil_detectors")
+        pytest.importorskip("pye3d")
+
+        reader = VideoReader(folder_v1, stream="eye0", color_format="gray")
+
+        # returning list of dicts
+        detector = PupilDetector(camera_id=0)
+        pupil_list = detector.batch_run(reader)
+        assert len(pupil_list) == 2582
+        assert pupil_list[0]["timestamp"] == 2294.8672349452972
+
+        # returning a dataset
+        ds = detector.batch_run(reader, end=100, return_type="dataset")
+        assert dict(ds.sizes) == {
+            "time": 100,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "confidence",
+            "diameter",
+            "ellipse_angle",
+            "ellipse_axes",
+            "ellipse_center",
+            "eye",
+            "pupil_norm_pos",
+        }
+
+        # pye3d detector
+        detector = PupilDetector(
+            camera_id=0,
+            resolution=(192, 192),
+            focal_length=1.0,
+            method="pye3d",
+        )
+        pupil_list = detector.batch_run(reader, end=100)
+        assert len(pupil_list) == 100
+        assert pupil_list[0]["timestamp"] == 2294.8672349452972
+
+        # recording the first 100 frames
+        detector = PupilDetector(camera_id=0, record=True, folder=tmpdir)
+        detector.batch_run(reader, end=100, return_type=None)
+        pupil_list = [
+            dict(d) for d in load_pldata_file(detector.folder, "pupil").data
+        ]
+        assert len(pupil_list) == 100
+        assert pupil_list[0]["timestamp"] == 2294.8672349452972
+
+        # wrong return type
+        with pytest.raises(ValueError):
+            detector.batch_run(reader, return_type="not_a_return_type")
 
 
 class TestGazeMapper:
@@ -174,8 +229,8 @@ class TestGazeMapper:
 
     def test_record_data(self, gaze_mapper, gaze_packet):
         """"""
-        gaze_mapper.record_data(gaze_packet)
-        gaze_mapper.stop()
+        with gaze_mapper:
+            gaze_mapper.record_data(gaze_packet)
 
         pldata = [
             dict(d) for d in load_pldata_file(gaze_mapper.folder, "gaze").data
@@ -203,6 +258,24 @@ class TestGazeMapper:
         gaze_packet.gaze = []
         gaze_mapper.display_hook(gaze_packet)
 
+    def test_batch_run(self, gaze_mapper, pupil, info):
+        """"""
+        # as list
+        gaze_list = gaze_mapper.batch_run(pupil)
+        assert len(gaze_list) == 5160
+
+        # as dataset
+        ds = gaze_mapper.batch_run(pupil, return_type="dataset", info=info)
+        assert dict(ds.sizes) == {
+            "time": 5160,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {
+            "eye",
+            "gaze_confidence_2d",
+            "gaze_norm_pos",
+        }
+
 
 class TestCircleDetector:
     def test_from_config(
@@ -220,10 +293,12 @@ class TestCircleDetector:
         self, circle_detector, world_video_stream, reference_locations
     ):
         """"""
-        with Session(world_video_stream):
+        with world_video_stream, circle_detector:
             packet = world_video_stream.get_packet()
+            circle_markers = circle_detector.detect_circle(
+                packet.frame, packet.timestamp, packet.color_format
+            )
 
-        circle_markers = circle_detector.detect_circle(packet)
         assert isinstance(circle_markers, list)
         assert set(circle_markers[0].keys()) == {
             "ellipses",
@@ -233,13 +308,62 @@ class TestCircleDetector:
             "timestamp",
         }
         assert circle_markers[0]["img_pos"] == tuple(
-            reference_locations[0][0]["img_pos"]
+            reference_locations[0]["img_pos"]
+        )
+
+    def test_process_packet(
+        self, circle_detector, world_video_stream, reference_locations
+    ):
+        """"""
+        with world_video_stream, circle_detector:
+            packet = world_video_stream.get_packet()
+            packet = circle_detector.process_packet(packet)
+
+        circle_markers = packet.circle_markers
+
+        assert isinstance(circle_markers, list)
+        assert set(circle_markers[0].keys()) == {
+            "ellipses",
+            "img_pos",
+            "norm_pos",
+            "marker_type",
+            "timestamp",
+        }
+        assert circle_markers[0]["img_pos"] == tuple(
+            reference_locations[0]["img_pos"]
         )
 
     def test_display_hook(self, circle_detector, circle_marker_packet):
         """"""
         frame = circle_detector.display_hook(circle_marker_packet)
         assert frame.ndim == 3
+
+    def test_batch_run(self, folder_v1, tmpdir):
+        """"""
+        reader = VideoReader(folder_v1)
+
+        # returning list of lists
+        detector = CircleDetector()
+        marker_list = detector.batch_run(reader)
+        assert len(marker_list) == 265
+        assert marker_list[0]["frame_index"] == 0
+        assert marker_list[0]["norm_pos"] == (
+            0.15813225656747817,
+            0.6403690669271681,
+        )
+        assert marker_list[0]["img_pos"] == (
+            202.40928840637207,
+            258.93427181243896,
+        )
+        assert marker_list[0]["timestamp"] == 2294.8253149986267
+
+        # returning a dataset
+        ds = detector.batch_run(reader, end=100, return_type="dataset")
+        assert dict(ds.sizes) == {
+            "time": 34,
+            "pixel_axis": 2,
+        }
+        assert set(ds.data_vars) == {"frame_index", "location"}
 
 
 class TestCalibration:
@@ -264,7 +388,7 @@ class TestCalibration:
             calibration._pupil_queue.put(p)
 
         for r in reference_locations:
-            calibration._circle_marker_queue.put(r)
+            calibration._circle_marker_queue.put([r])
 
         calibration.calculate_calibration()
 
@@ -292,39 +416,15 @@ class TestCalibration:
 
         np.testing.assert_equal(load_object(filename), calibration_2d)
 
-
-class TestValidation:
-    def test_from_config(
-        self, process_configs, video_stream_config, mock_video_device
+    def test_batch_run(
+        self, calibration, pupil, reference_locations, calibration_2d, info
     ):
         """"""
-        validation = BaseProcess.from_config(
-            process_configs["validation"],
-            video_stream_config,
-            mock_video_device,
-        )
-        assert validation.folder == process_configs["validation"].folder
-        assert validation.resolution == (1280, 720)
-        assert isinstance(validation, Validation)
-
-    def test_calculate_calibration(
-        self, validation, pupil, reference_locations, calibration_2d, tmpdir
-    ):
-        """"""
-        pytest.importorskip("matplotlib")
-
-        validation.folder = tmpdir
-        validation.save = True
-
-        for p in pupil:
-            validation._pupil_queue.put(p)
-
-        for r in reference_locations:
-            validation._circle_marker_queue.put(r)
-
-        _, _, filename = validation.calculate_calibration()
-        assert (filename.parent / "marker_coverage.png").exists()
-        assert (filename.parent / "pupil_coverage.png").exists()
+        # from lists
+        result = calibration.batch_run(pupil, reference_locations)
+        for param, actual in result.items():
+            expected = calibration_2d["data"][8][1][param]
+            np.testing.assert_allclose(actual[:2], expected[:2])
 
 
 class TestCamParamEstimator:

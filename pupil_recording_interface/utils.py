@@ -27,7 +27,7 @@ except ImportError:
 
 
 def identify_process(process_type, name=None):
-    """"""
+    """ Log process ID and set process title. """
     name = name or mp.current_process().name
     logger.debug(f"Process ID for {process_type} {name}: {os.getpid()}")
     if setproctitle is not None:
@@ -35,30 +35,30 @@ def identify_process(process_type, name=None):
 
 
 def multiprocessing_deque(maxlen=None):
-    """"""
+    """ deque object that can be used in a multiprocessing context. """
     manager = SyncManager()
     manager.start()
     return manager.deque(maxlen=maxlen)
 
 
 class DroppingThreadPoolExecutor(ThreadPoolExecutor):
-    """"""
+    """ Thread pool executor that drops jobs once full. """
 
     def __init__(self, maxsize=None, *args, **kwargs):
-        """"""
+        """ Constructor. """
         super().__init__(*args, **kwargs)
         self._work_queue = Queue(maxsize=maxsize)
 
     def qsize(self):
-        """"""
+        """ Size of queue. """
         return self._work_queue.qsize()
 
     def full(self):
-        """"""
+        """ Whether queue is full. """
         return self._work_queue.full()
 
     def submit(self, fn, *args, return_if_full=None, **kwargs):
-        """"""
+        """ Submit a method to be executed. """
         if self.full():
             return return_if_full
         else:
@@ -128,3 +128,24 @@ def get_test_recording(version="2.0"):
     fnames = goodboy.fetch(f"branch-v{version}.zip", processor=Unzip())
 
     return Path(fnames[0]).parent
+
+
+def merge_pupils(pupils_eye0, pupils_eye1):
+    """ Merge detected pupils from both eyes, sorted by timestamp.
+
+    Parameters
+    ----------
+    pupils_eye0 : list of dict
+        Detected pupils from the first eye.
+
+    pupils_eye1 : list of dict
+        Detected pupils from the second eye.
+
+    Returns
+    -------
+    pupils : list of dict
+        Merged pupils.
+    """
+    pupils = sorted(pupils_eye0 + pupils_eye1, key=lambda p: p["timestamp"])
+
+    return pupils

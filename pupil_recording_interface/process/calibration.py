@@ -2,7 +2,9 @@
 from queue import Queue
 from uuid import uuid4
 from pathlib import Path
+from typing import Optional
 import logging
+import os
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
@@ -18,22 +20,59 @@ logger = logging.getLogger(__name__)
 
 @process("calibration", optional=("resolution",))
 class Calibration(BaseProcess):
-    """ Calibration. """
+    """ Calibration.
+
+    This process calculates a calibration for gaze mapping based on the
+    locations of detected pupils in the eye camera stream(s) and calibration
+    markers in the world camera stream. Attach this process to the world
+    camera stream after the ``CircleDetector``.
+    """
 
     def __init__(
         self,
-        resolution,
-        mode="2d",
-        min_confidence=0.8,
-        left="eye1",
-        right="eye0",
-        world="world",
-        name=None,
-        folder=None,
-        save=False,
+        resolution: tuple,
+        mode: str = "2d",
+        min_confidence: float = 0.8,
+        left: str = "eye1",
+        right: str = "eye0",
+        world: str = "world",
+        name: Optional[str] = None,
+        folder: Optional[os.PathLike] = None,
+        save: bool = False,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        resolution:
+            Resolution of world camera.
+
+        mode:
+            Calibration mode. So far, only "2d" is supported.
+
+        min_confidence:
+            Minimal confidence of detected pupils. Pupil data with confidence
+            below this threshold will not be used for calibration.
+
+        left:
+            Name of the left eye camera stream.
+
+        right:
+            Name of the right eye camera stream.
+
+        world:
+            Name of the world camera stream.
+
+        name:
+            Name of this process
+
+        folder:
+            Folder for saving calibration result.
+
+        save:
+            If True, save calibration result.
+        """
         self.resolution = resolution
         self.mode = mode
         self.min_confidence = min_confidence
@@ -66,13 +105,121 @@ class Calibration(BaseProcess):
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
         # TODO this breaks when resolution is changed on the fly
-        cls_kwargs = cls.get_constructor_args(
+        cls_kwargs = cls._get_constructor_args(
             config,
             resolution=stream_config.resolution,
             folder=config.folder or kwargs.get("folder", None),
         )
 
         return cls(**cls_kwargs)
+
+    def _process_notifications(self, notifications):
+        """ Process new notifications. """
+        for notification in notifications:
+            # check for triggers
+            if (
+                "calculate_calibration" in notification
+                and notification["calculate_calibration"]
+            ):
+                self._collect = False
+                self._calculated = False
+                self.calculate_calibration()
+            elif (
+                "collect_calibration_data" in notification
+                and notification["collect_calibration_data"]
+            ):
+                self._collect = True
+                logger.debug("Collecting calibration data")
+
+            # collect new data
+            if self._collect:
+                try:
+                    self._pupil_queue.put(notification[self.left]["pupil"])
+                except KeyError:
+                    pass
+
+                try:
+                    self._pupil_queue.put(notification[self.right]["pupil"])
+                except KeyError:
+                    pass
+
+    def _process_packet(self, packet):
+        """ Process a packet. """
+        if self._collect and "circle_markers" in packet:
+            self._circle_marker_queue.put(packet["circle_markers"])
+            packet.collected_markers = self._circle_marker_queue.qsize()
+            packet.broadcasts.append("collected_markers")
+
+        if self._calculated:
+            if self.resolution != packet["frame"].shape[1::-1]:
+                logger.warning(
+                    f"Frame has resolution {packet['frame'].shape[1::-1]} "
+                    f"but calibration was calculated for {self.resolution}"
+                )
+            packet.calibration_calculated = True
+            packet.calibration_result = self.result
+            self._calculated = False
+        else:
+            packet.calibration_calculated = False
+
+        packet.broadcasts.append("calibration_calculated")
+
+        return packet
+
+    def calculate_calibration(self):
+        """ Calculate calibration from collected data. """
+        # gather pupils
+        pupil_list = []
+
+        while not self._pupil_queue.empty():
+            pupil_list.append(self._pupil_queue.get())
+
+        # gather reference markers
+        circle_marker_list = []
+        while not self._circle_marker_queue.empty():
+            # TODO get biggest circle marker
+            circle_markers = self._circle_marker_queue.get()
+            if len(circle_markers) > 0:
+                circle_marker_list.append(circle_markers[0])
+
+        filename = self._calibrate(circle_marker_list, pupil_list)
+
+        return circle_marker_list, pupil_list, filename
+
+    def _calibrate(self, circle_marker_list, pupil_list):
+        """ Calibrate and save result. """
+        # call calibration function
+        g_pool = GPoolDummy(
+            capture=GPoolDummy(frame_size=self.resolution),
+            detection_mapping_mode=self.mode,
+            min_calibration_confidence=self.min_confidence,
+            get_timestamp=monotonic,
+        )
+        method, result = select_method_and_perform_calibration(
+            g_pool, pupil_list, circle_marker_list
+        )
+        self._calculated = True
+
+        # process result
+        if result["subject"] == "calibration.failed":
+            self.result = None
+            filename = None
+            logger.error("Calibration failed")
+        else:
+            self.result = self._fix_result(method, result)
+            logger.info("Calibration successful")
+            logger.debug(result)
+
+            self.uuid = str(uuid4())
+
+            if self.save:
+                filename = self.save_result()
+                logger.debug("Calibration saved")
+            else:
+                filename = None
+                logger.debug("Calibration not saved")
+
+        return filename
 
     @classmethod
     def _fix_result(cls, method, result):
@@ -129,105 +276,34 @@ class Calibration(BaseProcess):
 
         return filename
 
-    def calculate_calibration(self):
-        """ Calculate calibration from collected data. """
-        # gather pupils
-        pupil_list = []
+    def batch_run(self, pupils, markers, return_type="dict"):
+        """ Run calibration on detected pupils and reference markers.
 
-        while not self._pupil_queue.empty():
-            pupil_list.append(self._pupil_queue.get())
+        Parameters
+        ----------
+        pupils : list of dict
+            List of detected pupils.
 
-        # gather reference markers
-        circle_marker_list = []
-        while not self._circle_marker_queue.empty():
-            # TODO get biggest circle marker
-            circle_markers = self._circle_marker_queue.get()
-            if len(circle_markers) > 0:
-                circle_marker_list.append(circle_markers[0])
+        markers : list of dict
+            List of detected reference markers.
 
-        # call calibration function
-        g_pool = GPoolDummy(
-            capture=GPoolDummy(frame_size=self.resolution),
-            detection_mapping_mode=self.mode,
-            min_calibration_confidence=self.min_confidence,
-            get_timestamp=monotonic,
-        )
-        method, result = select_method_and_perform_calibration(
-            g_pool, pupil_list, circle_marker_list
-        )
+        return_type : str or None, default "dict"
+            The data type that this method should return. "dict" returns the
+            calibration result as a dict. Can also be None, in that case this
+            method returns nothing, which is useful when recording the
+            calibration directly to disk.
 
-        self._calculated = True
+        Returns
+        -------
+        result : dict
+            Calibration results if return_type="dict".
+        """
+        self._calibrate(markers, pupils)
 
-        # process result
-        if result["subject"] == "calibration.failed":
-            self.result = None
-            filename = None
-            logger.error("Calibration failed")
+        if self.result is None:
+            raise ValueError("Calibration failed")
         else:
-            self.result = self._fix_result(method, result)
-            logger.info("Calibration successful")
-            logger.debug(result)
-
-            self.uuid = str(uuid4())
-
-            if self.save:
-                filename = self.save_result()
-                logger.debug("Calibration saved")
-            else:
-                filename = None
-                logger.debug("Calibration not saved")
-
-        return circle_marker_list, pupil_list, filename
-
-    def _process_notifications(self, notifications, block=None):
-        """ Process new notifications. """
-        for notification in notifications:
-            # check for triggers
-            if (
-                "calculate_calibration" in notification
-                and notification["calculate_calibration"]
-            ):
-                self._collect = False
-                self._calculated = False
-                self.call(self.calculate_calibration, block=block)
-            elif (
-                "collect_calibration_data" in notification
-                and notification["collect_calibration_data"]
-            ):
-                self._collect = True
-                logger.debug("Collecting calibration data")
-
-            # collect new data
-            if self._collect:
-                try:
-                    self._pupil_queue.put(notification[self.left]["pupil"])
-                except KeyError:
-                    pass
-
-                try:
-                    self._pupil_queue.put(notification[self.right]["pupil"])
-                except KeyError:
-                    pass
-
-    def _process_packet(self, packet, block=None):
-        """ Process a packet. """
-        if self._collect and "circle_markers" in packet:
-            self._circle_marker_queue.put(packet["circle_markers"])
-            packet.collected_markers = self._circle_marker_queue.qsize()
-            packet.broadcasts.append("collected_markers")
-
-        if self._calculated:
-            if self.resolution != packet["frame"].shape[1::-1]:
-                logger.warning(
-                    f"Frame has resolution {packet['frame'].shape[1::-1]} "
-                    f"but calibration was calculated for {self.resolution}"
-                )
-            packet.calibration_calculated = True
-            packet.calibration_result = self.result
-            self._calculated = False
-        else:
-            packet.calibration_calculated = False
-
-        packet.broadcasts.append("calibration_calculated")
-
-        return packet
+            if return_type == "dict":
+                return self.result["args"]
+            elif return_type is not None:
+                raise ValueError(f"Unsupported return_type {return_type}")

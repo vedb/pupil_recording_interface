@@ -40,18 +40,20 @@ release = "0.5.0"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autodoc.typehints",
     "sphinx.ext.doctest",
     "sphinx.ext.coverage",
     "sphinx.ext.githubpages",
     "sphinx.ext.autosummary",
-    "numpydoc",
+    "sphinx.ext.napoleon",
     "matplotlib.sphinxext.plot_directive",
     "sphinx_gallery.gen_gallery",
+    "sphinxcontrib.jquery",
 ]
 
 autosummary_generate = True
-# numpydoc_class_members_toctree = True
-numpydoc_show_class_members = False
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -86,7 +88,7 @@ from sphinx_gallery.sorting import FileNameSortKey  # noqa
 sphinx_gallery_conf = {
     "examples_dirs": "../examples",  # path to your example scripts
     "gallery_dirs": "auto_examples",  # path to where to save generated output
-    "ignore_pattern": "validate.py",
+    "filename_pattern": r"/[0-9]_plot_",
     "within_subsection_order": FileNameSortKey,
 }
 
@@ -210,4 +212,4 @@ epub_exclude_files = ["search.html"]
 
 # -- Extension configuration -------------------------------------------------
 def setup(app):
-    app.add_javascript("copybutton.js")
+    app.add_js_file("copybutton.js")

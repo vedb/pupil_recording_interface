@@ -1,5 +1,7 @@
 """"""
+import os
 from collections import deque
+from typing import Optional
 from queue import Queue
 import logging
 import warnings
@@ -9,6 +11,7 @@ import numpy as np
 
 from pupil_recording_interface.decorators import process
 from pupil_recording_interface.process import BaseProcess
+from pupil_recording_interface.reader.gaze import GazeReader
 from pupil_recording_interface.externals.gaze_mappers import (
     Binocular_Gaze_Mapper,
 )
@@ -98,20 +101,55 @@ default_calibration = {
 
 @process("gaze_mapper")
 class GazeMapper(BaseProcess):
-    """ Gaze mapper. """
+    """ Gaze mapper.
+
+    This process maps gaze data based on the locations of detected pupils in
+    the eye camera stream(s). Attach this process to the world camera stream.
+    """
 
     def __init__(
         self,
-        left="eye1",
-        right="eye0",
-        min_confidence=0.8,
-        calibration=None,
-        folder=None,
-        record=False,
-        display=True,
+        left: str = "eye1",
+        right: str = "eye0",
+        min_confidence: float = 0.8,
+        calibration: Optional[dict] = None,
+        folder: Optional[os.PathLike] = None,
+        record: bool = False,
+        display: bool = True,
         **kwargs,
     ):
-        """ Constructor. """
+        """ Constructor.
+
+        Parameters
+        ----------
+        left:
+            Name of the left eye camera stream.
+
+        right:
+            Name of the right eye camera stream.
+
+        min_confidence:
+            Minimal confidence of detected pupils. Pupil data with confidence
+            below this threshold will not be used for mapping.
+
+        calibration:
+            Calibration to use for mapping. If not specified, a default
+            calibration will be used that will most likely produce poor
+            results.
+
+        folder:
+            Folder for recording mapped gaze.
+
+        record:
+            If True, record mapped gaze to a ``gaze.pldata`` file in the
+            recording folder.
+
+        display:
+            If True, add this instance's ``display_hook`` method to the packet
+            returned by ``process_packet``. A ``VideoDisplay`` later in the
+            pipeline will pick this up to draw the current gaze point over the
+            camera image.
+        """
         self.left = left
         self.right = right
         self.min_confidence = min_confidence
@@ -124,13 +162,10 @@ class GazeMapper(BaseProcess):
 
         self._gaze_queue = Queue()
         self.mapper = None
+        self.writer = None
 
-        if self.record:
-            if self.folder is None:
-                raise ValueError("folder cannot be None")
-            self.writer = PLData_Writer(self.folder, "gaze")
-        else:
-            self.writer = None
+        if self.record and self.folder is None:
+            raise ValueError("folder cannot be None")
 
         # gaze overlay
         _queue_len = 5  # TODO constructor argument?
@@ -141,24 +176,29 @@ class GazeMapper(BaseProcess):
     @classmethod
     def _from_config(cls, config, stream_config, device, **kwargs):
         """ Per-class implementation of from_config. """
-        cls_kwargs = cls.get_constructor_args(
+        cls_kwargs = cls._get_constructor_args(
             config, folder=config.folder or kwargs.get("folder", None),
         )
 
         return cls(**cls_kwargs)
 
-    def get_mapped_gaze(self):
-        """ Call the pupil gaze mapper. """
-        gaze = []
-        while not self._gaze_queue.empty():
-            gaze.append(self._gaze_queue.get())
+    def start(self):
+        """ Start the process. """
+        self.mapper = Binocular_Gaze_Mapper(
+            self.calibration["params"],
+            self.calibration["params_eye0"],
+            self.calibration["params_eye1"],
+        )
 
-        return gaze
+        if self.record:
+            self.writer = PLData_Writer(self.folder, "gaze")
 
-    def record_data(self, packet):
-        """ Record gaze to disk. """
-        for gaze in packet["gaze"]:
-            self.writer.append(gaze)
+    def stop(self):
+        """ Stop the process. """
+        self.mapper = None
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = None
 
     def display_hook(self, packet):
         """ Add gaze overlay onto frame. """
@@ -223,7 +263,7 @@ class GazeMapper(BaseProcess):
 
         return frame
 
-    def _process_notifications(self, notifications, block=None):
+    def _process_notifications(self, notifications):
         """ Process new notifications. """
         for notification in notifications:
             if (
@@ -243,7 +283,7 @@ class GazeMapper(BaseProcess):
                 ):
                     self._gaze_queue.put(gaze)
 
-    def _process_packet(self, packet, block=None):
+    def _process_packet(self, packet):
         """ Process new data. """
         if "calibration_result" in packet:
             try:
@@ -261,10 +301,10 @@ class GazeMapper(BaseProcess):
             except (KeyError, TypeError):
                 pass
 
-        packet.gaze = self.call(self.get_mapped_gaze, block=block)
+        packet.gaze = self.get_mapped_gaze()
 
         if self.record:
-            self.call(self.record_data, packet, block=block)
+            self.record_data(packet)
 
         packet.broadcasts.append("gaze")
 
@@ -273,16 +313,65 @@ class GazeMapper(BaseProcess):
 
         return packet
 
-    def start(self):
-        """ Start the process. """
-        self.mapper = Binocular_Gaze_Mapper(
-            self.calibration["params"],
-            self.calibration["params_eye0"],
-            self.calibration["params_eye1"],
-        )
+    def get_mapped_gaze(self):
+        """ Call the pupil gaze mapper. """
+        gaze = []
+        while not self._gaze_queue.empty():
+            gaze.append(self._gaze_queue.get())
 
-    def stop(self):
-        """ Stop the process. """
-        self.mapper = None
-        if self.writer is not None:
-            self.writer.close()
+        return gaze
+
+    def record_data(self, packet):
+        """ Record gaze to disk. """
+        for gaze in packet["gaze"]:
+            self.writer.append(gaze)
+
+    def batch_run(self, pupils, return_type="list", info=None):
+        """ Map pupils to gaze data.
+
+        Parameters
+        ----------
+        pupils : list of dict
+            List of previously detected pupils.
+
+        return_type : str or None, default "list"
+            The data type that this method should return. "list" returns o list
+            of dicts with gaze data. "dataset" returns an xarray Dataset.
+            Can also be None, in that case gaze data is not loaded into memory
+            and this method returns nothing, which is useful when recording
+            mapped gaze to disk.
+
+        info : dict, optional
+            dict containing recording info. Required for return_type="dataset".
+
+        Returns
+        -------
+        pupil_list : list of dict
+            List of mapped gaze if return_type="list".
+
+        ds : xarray.Dataset
+            Dataset with gaze data if return_type="dataset".
+        """
+        if return_type not in ("list", "dataset", None):
+            raise ValueError(
+                f"return_type can be 'list', 'dataset' or None, "
+                f"got {return_type}"
+            )
+
+        gaze_list = []
+
+        with self:
+            for pupil in pupils:
+                for gaze in self.mapper.on_pupil_datum(pupil):
+                    if return_type is not None:
+                        gaze_list.append(gaze)
+                    # TODO record
+
+        if return_type == "list":
+            return gaze_list
+        elif return_type == "dataset":
+            if info is None:
+                raise ValueError(
+                    "info must be provided for return_type='dataset'"
+                )
+            return GazeReader._dataset_from_list(gaze_list, info)

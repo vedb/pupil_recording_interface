@@ -253,7 +253,7 @@ class BaseReader:
         Parameters
         ----------
         topic : str
-            The topic to load, e.g. "gaze".
+            The topic to save, e.g. "gaze".
 
         data : list of dict
             The data to be saved.
@@ -269,7 +269,7 @@ class BaseReader:
 
         Parameters
         ----------
-        filename : str, optional
+        filename : path-like, optional
             The name of the exported file. Defaults to
             ``<recording_folder>/exports/<no>/<datatype>.nc`` where
             ``<datatype>`` is `gaze`, `odometry` etc.
@@ -297,19 +297,34 @@ def _compute_hash(*args):
     return m.hexdigest()
 
 
-def _load_dataset(folder, topic, source, cache):
+def _load_dataset(folder, topic, source, method, cache):
     """ Load a single (cached) dataset. """
     import xarray as xr
     from .gaze import GazeReader
     from .motion import MotionReader
+    from .pupil import PupilReader
+    from .marker import MarkerReader
 
     if topic == "gaze":
         reader = GazeReader(folder, source=source)
-    else:
+    elif topic == "pupil":
+        reader = PupilReader(folder, source=source, method=method)
+    elif topic == "marker":
+        reader = MarkerReader(folder)
+    elif topic in ("odometry", "accel", "gyro"):
         reader = MotionReader(folder, stream=topic, source=source)
+    else:
+        raise ValueError(f"Unsupported topic {topic}")
 
     if cache:
-        filepath = folder / "cache" / f"{topic}-{_compute_hash(source)}.nc"
+        if method is None:
+            filepath = folder / "cache" / f"{topic}-{_compute_hash(source)}.nc"
+        else:
+            filepath = (
+                folder
+                / "cache"
+                / f"{topic}-{_compute_hash(source)}-{method}.nc"
+            )
         if not filepath.exists():
             reader.write_netcdf(filename=filepath)
         return xr.open_dataset(filepath)
