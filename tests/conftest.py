@@ -22,7 +22,6 @@ from pupil_recording_interface.process.recorder import VideoRecorder
 from pupil_recording_interface.process.gaze_mapper import GazeMapper
 from pupil_recording_interface.process.circle_detector import CircleDetector
 from pupil_recording_interface.process.calibration import Calibration
-from pupil_recording_interface.process.validation import Validation
 from pupil_recording_interface.process.cam_params import (
     CamParamEstimator,
     CircleGridDetector,
@@ -1022,12 +1021,6 @@ def circle_detector():
 def calibration():
     """"""
     return Calibration((1280, 720))
-
-
-@pytest.fixture()
-def validation():
-    """"""
-    return Validation((1280, 720), eye_resolution=(192, 192))
 
 
 @pytest.fixture()
