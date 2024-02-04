@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gaze mapping pipeline &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Stream from a recording" href="../online/1_stream_recording.html" />
+    <link rel="prev" title="Examples" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#offline-examples">Offline examples</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Gaze mapping pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#set-recording-folder">Set recording folder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#create-readers-for-video-streams">Create readers for video streams</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#detect-pupils">Detect pupils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#detect-calibration-markers">Detect calibration markers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#merge-pupil-data-and-run-calibration">Merge pupil data and run calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#map-gaze-as-dataset">Map gaze as dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#plot-gaze">Plot gaze</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#online-examples">Online examples</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Gaze mapping pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/auto_examples/offline/1_plot_gaze_pipeline.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-offline-1-plot-gaze-pipeline-py"><span class="std std-ref">here</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="gaze-mapping-pipeline">
+<span id="gaze-pipeline-example"></span><span id="sphx-glr-auto-examples-offline-1-plot-gaze-pipeline-py"></span><h1>Gaze mapping pipeline<a class="headerlink" href="#gaze-mapping-pipeline" title="Permalink to this headline"></a></h1>
+<p>This example shows how to perform post-hoc pupil detection, calibration marker
+detection, calibration and gaze mapping.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This example requires the dependencies for
+<a class="reference internal" href="../../installation.html#pupil-detection-dependencies"><span class="std std-ref">pupil detection</span></a> as well as
+<code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pupil_recording_interface</span> <span class="k">as</span> <span class="nn">pri</span>
+</pre></div>
+</div>
+<section id="set-recording-folder">
+<h2>Set recording folder<a class="headerlink" href="#set-recording-folder" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">folder</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading file &#39;branch-v2.0.zip&#39; from &#39;https://github.com/vedb/pupil-example-data/archive/refs/heads/branch-v2.0.zip&#39; to &#39;/home/runner/.cache/pupil-example-data&#39;.
+Unzipping contents of &#39;/home/runner/.cache/pupil-example-data/branch-v2.0.zip&#39; to &#39;/home/runner/.cache/pupil-example-data/branch-v2.0.zip.unzip&#39;
+</pre></div>
+</div>
+</section>
+<section id="create-readers-for-video-streams">
+<h2>Create readers for video streams<a class="headerlink" href="#create-readers-for-video-streams" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">world_reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+<span class="n">eye0_reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="s2">&quot;eye0&quot;</span><span class="p">,</span> <span class="n">color_format</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">)</span>
+<span class="n">eye1_reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="s2">&quot;eye1&quot;</span><span class="p">,</span> <span class="n">color_format</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="detect-pupils">
+<h2>Detect pupils<a class="headerlink" href="#detect-pupils" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pupil_detector_eye0</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="p">(</span><span class="n">camera_id</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pupil_list_eye0</span> <span class="o">=</span> <span class="n">pupil_detector_eye0</span><span class="o">.</span><span class="n">batch_run</span><span class="p">(</span><span class="n">eye0_reader</span><span class="p">)</span>
+
+<span class="n">pupil_detector_eye1</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">PupilDetector</span><span class="p">(</span><span class="n">camera_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">pupil_list_eye1</span> <span class="o">=</span> <span class="n">pupil_detector_eye1</span><span class="o">.</span><span class="n">batch_run</span><span class="p">(</span><span class="n">eye1_reader</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="detect-calibration-markers">
+<h2>Detect calibration markers<a class="headerlink" href="#detect-calibration-markers" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">marker_detector</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">CircleDetector</span><span class="p">()</span>
+<span class="n">marker_list</span> <span class="o">=</span> <span class="n">marker_detector</span><span class="o">.</span><span class="n">batch_run</span><span class="p">(</span><span class="n">world_reader</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="merge-pupil-data-and-run-calibration">
+<h2>Merge pupil data and run calibration<a class="headerlink" href="#merge-pupil-data-and-run-calibration" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">calibration</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">Calibration</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="n">world_reader</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+<span class="n">pupil_list</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">merge_pupils</span><span class="p">(</span><span class="n">pupil_list_eye0</span><span class="p">,</span> <span class="n">pupil_list_eye1</span><span class="p">)</span>
+<span class="n">calibration_result</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">batch_run</span><span class="p">(</span><span class="n">pupil_list</span><span class="p">,</span> <span class="n">marker_list</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="map-gaze-as-dataset">
+<h2>Map gaze as dataset<a class="headerlink" href="#map-gaze-as-dataset" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gaze_mapper</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">GazeMapper</span><span class="p">(</span><span class="n">calibration</span><span class="o">=</span><span class="n">calibration_result</span><span class="p">)</span>
+<span class="n">gaze</span> <span class="o">=</span> <span class="n">gaze_mapper</span><span class="o">.</span><span class="n">batch_run</span><span class="p">(</span>
+    <span class="n">pupil_list</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">world_reader</span><span class="o">.</span><span class="n">info</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="plot-gaze">
+<h2>Plot gaze<a class="headerlink" href="#plot-gaze" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">norm_pos</span> <span class="o">=</span> <span class="n">gaze</span><span class="o">.</span><span class="n">gaze_norm_pos</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gaze</span><span class="o">.</span><span class="n">gaze_confidence_2d</span> <span class="o">&gt;</span> <span class="mf">0.7</span><span class="p">)</span>
+<span class="n">norm_pos</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_1_plot_gaze_pipeline_001.png" srcset="../../_images/sphx_glr_1_plot_gaze_pipeline_001.png" alt="1 plot gaze pipeline" class = "sphx-glr-single-img"/><p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[&lt;matplotlib.lines.Line2D object at 0x7fc7d5b13828&gt;, &lt;matplotlib.lines.Line2D object at 0x7fc7d5ac8cf8&gt;]
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  21.196 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-offline-1-plot-gaze-pipeline-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/553e6445460593299cbe43e4bbf31c44/1_plot_gaze_pipeline.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">1_plot_gaze_pipeline.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/6de29d18e706bf0cd32d01aca6a0b99d/1_plot_gaze_pipeline.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">1_plot_gaze_pipeline.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../online/1_stream_recording.html" class="btn btn-neutral float-right" title="Stream from a recording" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

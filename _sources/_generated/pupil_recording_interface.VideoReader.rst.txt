@@ -1,0 +1,45 @@
+﻿pupil\_recording\_interface.VideoReader
+=======================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: VideoReader
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VideoReader.__init__
+      ~VideoReader.convert_color
+      ~VideoReader.convert_to_uint8
+      ~VideoReader.get_roi
+      ~VideoReader.load_dataset
+      ~VideoReader.load_frame
+      ~VideoReader.load_pldata
+      ~VideoReader.load_raw_frame
+      ~VideoReader.load_timestamps
+      ~VideoReader.process_frame
+      ~VideoReader.read_frames
+      ~VideoReader.save_pldata
+      ~VideoReader.subsample_frame
+      ~VideoReader.undistort_frame
+      ~VideoReader.undistort_point
+      ~VideoReader.write_netcdf
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VideoReader.current_frame_index
+      ~VideoReader.export_name
+      ~VideoReader.video_info
+   
+   

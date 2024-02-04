@@ -1,0 +1,43 @@
+﻿pupil\_recording\_interface.RealSenseDeviceT265
+===============================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: RealSenseDeviceT265
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RealSenseDeviceT265.Config
+      ~RealSenseDeviceT265.__init__
+      ~RealSenseDeviceT265.from_config
+      ~RealSenseDeviceT265.from_config_list
+      ~RealSenseDeviceT265.get_frame_and_timestamp
+      ~RealSenseDeviceT265.get_motion_and_timestamp
+      ~RealSenseDeviceT265.get_serial_numbers
+      ~RealSenseDeviceT265.run_post_thread_hooks
+      ~RealSenseDeviceT265.run_pre_thread_hooks
+      ~RealSenseDeviceT265.start
+      ~RealSenseDeviceT265.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RealSenseDeviceT265.context
+      ~RealSenseDeviceT265.device_type
+      ~RealSenseDeviceT265.is_started
+   
+   

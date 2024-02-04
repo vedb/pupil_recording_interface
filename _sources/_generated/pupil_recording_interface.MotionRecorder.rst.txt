@@ -1,0 +1,39 @@
+﻿pupil\_recording\_interface.MotionRecorder
+==========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: MotionRecorder
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MotionRecorder.Config
+      ~MotionRecorder.__init__
+      ~MotionRecorder.from_config
+      ~MotionRecorder.process
+      ~MotionRecorder.process_notifications
+      ~MotionRecorder.process_packet
+      ~MotionRecorder.start
+      ~MotionRecorder.stop
+      ~MotionRecorder.write
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MotionRecorder.process_type
+   
+   

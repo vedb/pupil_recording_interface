@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.load\_user\_info
+============================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: load_user_info

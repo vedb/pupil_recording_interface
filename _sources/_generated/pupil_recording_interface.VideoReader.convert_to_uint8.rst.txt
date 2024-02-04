@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.VideoReader.convert\_to\_uint8
+==========================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: VideoReader.convert_to_uint8

@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.load\_gaze
+======================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: load_gaze

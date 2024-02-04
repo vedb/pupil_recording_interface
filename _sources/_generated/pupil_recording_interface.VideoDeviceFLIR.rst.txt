@@ -1,0 +1,42 @@
+﻿pupil\_recording\_interface.VideoDeviceFLIR
+===========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: VideoDeviceFLIR
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VideoDeviceFLIR.Config
+      ~VideoDeviceFLIR.__init__
+      ~VideoDeviceFLIR.from_config
+      ~VideoDeviceFLIR.from_config_list
+      ~VideoDeviceFLIR.get_capture
+      ~VideoDeviceFLIR.get_frame_and_timestamp
+      ~VideoDeviceFLIR.restart
+      ~VideoDeviceFLIR.run_post_thread_hooks
+      ~VideoDeviceFLIR.run_pre_thread_hooks
+      ~VideoDeviceFLIR.start
+      ~VideoDeviceFLIR.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VideoDeviceFLIR.device_type
+      ~VideoDeviceFLIR.is_started
+   
+   

@@ -1,0 +1,32 @@
+﻿pupil\_recording\_interface.GazeReader
+======================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: GazeReader
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GazeReader.__init__
+      ~GazeReader.load_dataset
+      ~GazeReader.load_pldata
+      ~GazeReader.save_pldata
+      ~GazeReader.write_netcdf
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GazeReader.export_name
+   
+   

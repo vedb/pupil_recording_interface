@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.merge\_pupils
+=========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: merge_pupils

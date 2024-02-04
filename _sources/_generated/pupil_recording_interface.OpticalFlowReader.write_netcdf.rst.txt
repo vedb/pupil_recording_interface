@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.OpticalFlowReader.write\_netcdf
+===========================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: OpticalFlowReader.write_netcdf

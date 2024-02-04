@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.OpticalFlowReader.load\_dataset
+===========================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: OpticalFlowReader.load_dataset

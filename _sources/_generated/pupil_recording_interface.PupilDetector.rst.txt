@@ -1,0 +1,42 @@
+﻿pupil\_recording\_interface.PupilDetector
+=========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: PupilDetector
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PupilDetector.Config
+      ~PupilDetector.__init__
+      ~PupilDetector.batch_run
+      ~PupilDetector.detect_pupil
+      ~PupilDetector.display_hook
+      ~PupilDetector.from_config
+      ~PupilDetector.process
+      ~PupilDetector.process_notifications
+      ~PupilDetector.process_packet
+      ~PupilDetector.record_data
+      ~PupilDetector.start
+      ~PupilDetector.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PupilDetector.process_type
+   
+   

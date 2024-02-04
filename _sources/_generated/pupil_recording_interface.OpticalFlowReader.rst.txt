@@ -1,0 +1,48 @@
+﻿pupil\_recording\_interface.OpticalFlowReader
+=============================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: OpticalFlowReader
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OpticalFlowReader.__init__
+      ~OpticalFlowReader.calculate_optical_flow
+      ~OpticalFlowReader.convert_color
+      ~OpticalFlowReader.convert_to_uint8
+      ~OpticalFlowReader.get_roi
+      ~OpticalFlowReader.load_dataset
+      ~OpticalFlowReader.load_frame
+      ~OpticalFlowReader.load_optical_flow
+      ~OpticalFlowReader.load_pldata
+      ~OpticalFlowReader.load_raw_frame
+      ~OpticalFlowReader.load_timestamps
+      ~OpticalFlowReader.process_frame
+      ~OpticalFlowReader.read_frames
+      ~OpticalFlowReader.read_optical_flow
+      ~OpticalFlowReader.save_pldata
+      ~OpticalFlowReader.subsample_frame
+      ~OpticalFlowReader.undistort_frame
+      ~OpticalFlowReader.undistort_point
+      ~OpticalFlowReader.write_netcdf
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OpticalFlowReader.current_frame_index
+      ~OpticalFlowReader.export_name
+      ~OpticalFlowReader.video_info
+   
+   

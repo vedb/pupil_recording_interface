@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading data &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Streaming data" href="streaming.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reading data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#loading-recordings">Loading recordings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gaze">Gaze</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pupils">Pupils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calibration-markers">Calibration markers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#caching">Caching</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-videos">Loading videos</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#roi-extraction">ROI extraction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-video-functionality">Other video functionality</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#other-files">Other files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-export">Data export</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Reading data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/reading.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="reading-data">
+<span id="reading"></span><h1>Reading data<a class="headerlink" href="#reading-data" title="Permalink to this headline"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Make sure that you have installed the necessary
+<a class="reference internal" href="installation.html#example-dependencies"><span class="std std-ref">dependencies for running the examples</span></a>.</p>
+</div>
+<section id="loading-recordings">
+<h2>Loading recordings<a class="headerlink" href="#loading-recordings" title="Permalink to this headline"></a></h2>
+<p>pupil_recording_interface provides a simple interface for loading recordings
+made with Pupil Capture into Python. Recordings are loaded as <a class="reference external" href="https://xarray.pydata.org">xarray</a>
+Datasets which provide an elegant way of working with multi-dimensional
+labeled data.</p>
+<p>To get started, we use <a class="reference internal" href="_generated/pupil_recording_interface.get_test_recording.html#pupil_recording_interface.get_test_recording" title="pupil_recording_interface.get_test_recording"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_test_recording()</span></code></a> to download and cache a
+very short example recording. The method returns the path to the cached folder:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pupil_recording_interface</span> <span class="k">as</span> <span class="nn">pri</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">folder</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="gaze">
+<h3>Gaze<a class="headerlink" href="#gaze" title="Permalink to this headline"></a></h3>
+<p>You can easily load recorded gaze data with <a class="reference internal" href="_generated/pupil_recording_interface.load_gaze.html#pupil_recording_interface.load_gaze" title="pupil_recording_interface.load_gaze"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_gaze()</span></code></a>:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_gaze</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5160)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time                (time) datetime64[ns] 2019-10-10T16:43:20.149777889 ... 2019-10-10T16:43:41.262381792</span>
+<span class="go">  * pixel_axis          (pixel_axis) &lt;U1 &#39;x&#39; &#39;y&#39;</span>
+<span class="go">  * cartesian_axis      (cartesian_axis) &lt;U1 &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2</span>
+<span class="go">    gaze_norm_pos       (time, pixel_axis) float64 0.4082 0.3912 ... 0.1286</span>
+<span class="go">    gaze_point          (time, cartesian_axis) float64 nan nan ... 0.1299</span>
+<span class="go">    eye0_center         (time, cartesian_axis) float64 nan nan ... -0.02006</span>
+<span class="go">    eye1_center         (time, cartesian_axis) float64 nan nan ... -0.02153</span>
+<span class="go">    eye0_normal         (time, cartesian_axis) float64 nan nan ... 0.267 0.9269</span>
+<span class="go">    eye1_normal         (time, cartesian_axis) float64 nan nan ... 0.1646 0.9797</span>
+<span class="go">    gaze_confidence_3d  (time) float64 0.8787 0.8769 0.9233 ... 0.9528 0.9528</span>
+</pre></div>
+</div>
+<p>The gaze dataset contains the following arrays:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">eye</span></code>: the eye data that produced the mapping, 0 for eye 0 (usually right),
+1 for eye 1 (usually left), 2 for binocular mapping</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaze_norm_pos</span></code>: the two dimensional norm pos, i.e. the normalized position
+of the gaze in the video frame where (0, 0) is the lower left and (1, 1) is
+the upper right corner of the frame</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaze_point</span></code>: the three-dimensional gaze point represented in the world
+camera coordinate system (x right, y down, z forward), in meters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eye{0,1}_center</span></code>: the center of each eye represented in the world
+camera coordinate system, in meters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eye{0,1}_normal</span></code>: the normal of each eye represented in the world
+camera coordinate system</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaze_confidence_3d</span></code>: the confidence of the mapping between 0 and 1</p></li>
+</ul>
+<p>All arrays behave like numpy arrays, (i.e. you can use functions like
+<code class="docutils literal notranslate"><span class="pre">np.sum</span></code> on them), but will preserve their labels (called coordinates) in
+most cases.</p>
+<p>If you performed post-hoc gaze mapping, it is also possible to reference an
+offline gaze mapper by name and load its data:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_gaze</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">&#39;3d Gaze Mapper&#39;</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5125)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time                (time) datetime64[ns] 2019-10-10T16:43:20.278882265 ... 2019-10-10T16:43:41.209933281</span>
+<span class="go">  * pixel_axis          (pixel_axis) &lt;U1 &#39;x&#39; &#39;y&#39;</span>
+<span class="go">  * cartesian_axis      (cartesian_axis) &lt;U1 &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2</span>
+<span class="go">    gaze_norm_pos       (time, pixel_axis) float64 0.551 -0.2074 ... -0.07305</span>
+<span class="go">    gaze_point          (time, cartesian_axis) float64 0.003464 ... 0.03572</span>
+<span class="go">    eye0_center         (time, cartesian_axis) float64 0.005147 ... -0.02</span>
+<span class="go">    eye1_center         (time, cartesian_axis) float64 -0.04123 ... -0.02</span>
+<span class="go">    eye0_normal         (time, cartesian_axis) float64 -0.252 ... 0.9327</span>
+<span class="go">    eye1_normal         (time, cartesian_axis) float64 0.8417 -0.1958 ... 0.8089</span>
+<span class="go">    gaze_confidence_3d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207</span>
+</pre></div>
+</div>
+<p>Finally, it is also possible to merge the data from a 2d and a 3d gaze
+mapper, in which case the norm pos will come from the 2d mapper and the gaze
+point from the 3d mapper:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_gaze</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">folder</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;2d&#39;</span><span class="p">:</span> <span class="s1">&#39;2d Gaze Mapper &#39;</span><span class="p">,</span> <span class="s1">&#39;3d&#39;</span><span class="p">:</span> <span class="s1">&#39;3d Gaze Mapper&#39;</span><span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 4987)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time                (time) datetime64[ns] 2019-10-10T16:43:20.278882265 ... 2019-10-10T16:43:41.209933281</span>
+<span class="go">  * pixel_axis          (pixel_axis) &lt;U1 &#39;x&#39; &#39;y&#39;</span>
+<span class="go">  * cartesian_axis      (cartesian_axis) &lt;U1 &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    eye                 (time) int64 2 2 2 2 2 2 2 2 2 2 ... 2 2 2 2 2 2 2 2 2 2</span>
+<span class="go">    gaze_norm_pos       (time, pixel_axis) float64 0.4303 0.3921 ... 0.1736</span>
+<span class="go">    gaze_point          (time, cartesian_axis) float64 0.003464 ... 0.03572</span>
+<span class="go">    eye0_center         (time, cartesian_axis) float64 0.005147 ... -0.02</span>
+<span class="go">    eye1_center         (time, cartesian_axis) float64 -0.04123 ... -0.02</span>
+<span class="go">    eye0_normal         (time, cartesian_axis) float64 -0.252 ... 0.9327</span>
+<span class="go">    eye1_normal         (time, cartesian_axis) float64 0.8417 -0.1958 ... 0.8089</span>
+<span class="go">    gaze_confidence_2d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207</span>
+<span class="go">    gaze_confidence_3d  (time) float64 0.9761 0.9586 0.9473 ... 0.9487 0.9207</span>
+</pre></div>
+</div>
+<p>We can get a set of all available gaze mappers for a recording with:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">get_gaze_mappers</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> 
+<span class="go">{&#39;2d Gaze Mapper &#39;, &#39;3d Gaze Mapper&#39;, &#39;recording&#39;}</span>
+</pre></div>
+</div>
+</section>
+<section id="pupils">
+<h3>Pupils<a class="headerlink" href="#pupils" title="Permalink to this headline"></a></h3>
+<p>Pupil data can be loaded in a similar manner with <a class="reference internal" href="_generated/pupil_recording_interface.load_pupils.html#pupil_recording_interface.load_pupils" title="pupil_recording_interface.load_pupils"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_pupils()</span></code></a>.
+Since the recorded pupil data in the example recording uses the 3d pupil
+detector, we need to specify <code class="docutils literal notranslate"><span class="pre">method=&quot;3d&quot;</span></code>:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_pupils</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:                  (cartesian_axis: 3, pixel_axis: 2, time: 5170)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time                     (time) datetime64[ns] 2019-10-10T16:43:20.188713789 ... 2019-10-10T16:43:41.300101757</span>
+<span class="go">  * pixel_axis               (pixel_axis) &lt;U1 &#39;x&#39; &#39;y&#39;</span>
+<span class="go">  * cartesian_axis           (cartesian_axis) &lt;U1 &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    eye                      (time) int64 1 0 1 0 1 0 1 0 1 ... 1 0 1 0 1 0 1 0</span>
+<span class="go">    confidence               (time) float64 0.9374 0.9412 0.9036 ... 1.0 0.9771</span>
+<span class="go">    diameter                 (time) float64 49.14 43.71 49.01 ... 47.23 39.66</span>
+<span class="go">    ellipse_angle            (time) float64 61.4 85.65 61.37 ... 53.67 76.26</span>
+<span class="go">    pupil_norm_pos           (time, pixel_axis) float64 0.2423 0.663 ... 0.4504</span>
+<span class="go">    ellipse_center           (time, pixel_axis) float64 46.52 64.7 ... 105.5</span>
+<span class="go">    ellipse_axes             (time, pixel_axis) float64 42.82 49.14 ... 39.66</span>
+<span class="go">    circle_center            (time, cartesian_axis) float64 -5.992 ... 81.2</span>
+<span class="go">    circle_normal            (time, cartesian_axis) float64 -0.1717 ... -0.9904</span>
+<span class="go">    sphere_center            (time, cartesian_axis) float64 -3.931 ... 93.08</span>
+<span class="go">    projected_sphere_center  (time, pixel_axis) float64 67.58 101.9 ... 93.74</span>
+<span class="go">    projected_sphere_axes    (time, pixel_axis) float64 173.5 173.5 ... 159.9</span>
+<span class="go">    diameter_3d              (time) float64 5.928 5.864 5.913 ... 5.876 5.194</span>
+<span class="go">    theta                    (time) float64 1.175 1.993 1.174 ... 1.354 1.704</span>
+<span class="go">    phi                      (time) float64 -1.758 -1.533 ... -1.691 -1.534</span>
+<span class="go">    model_confidence         (time) float64 0.5911 0.851 ... 0.1845 0.6902</span>
+<span class="go">    circle_radius            (time) float64 2.964 2.932 2.956 ... 2.938 2.597</span>
+<span class="go">    sphere_radius            (time) float64 12.0 12.0 12.0 ... 12.0 12.0 12.0</span>
+<span class="go">    projected_sphere_angle   (time) float64 90.0 90.0 90.0 ... 90.0 90.0 90.0</span>
+<span class="go">    model_birth_timestamp    (time) float64 2.286e+03 2.284e+03 ... 2.284e+03</span>
+</pre></div>
+</div>
+<p>It is also possible to load pupil data that was computed post-hoc by
+specifying <code class="docutils literal notranslate"><span class="pre">source=&quot;offline&quot;</span></code>. The post-hoc data contains 2d pupil data which
+we can load with <code class="docutils literal notranslate"><span class="pre">method=&quot;2d&quot;</span></code>:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_pupils</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;offline&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;2d&quot;</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:         (pixel_axis: 2, time: 5164)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time            (time) datetime64[ns] 2019-10-10T16:43:20.277472973 ... 2019-10-10T16:43:41.364654779</span>
+<span class="go">  * pixel_axis      (pixel_axis) &lt;U1 &#39;x&#39; &#39;y&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    eye             (time) int64 1 0 1 0 1 0 1 0 1 0 1 ... 0 1 0 1 0 1 0 1 0 1 0</span>
+<span class="go">    confidence      (time) float64 0.9622 0.99 0.9273 0.9674 ... 0.99 0.99 0.0</span>
+<span class="go">    diameter        (time) float64 49.46 44.2 49.62 44.2 ... 39.84 47.64 0.0</span>
+<span class="go">    ellipse_angle   (time) float64 62.86 77.64 61.91 78.05 ... 83.34 124.2 -90.0</span>
+<span class="go">    pupil_norm_pos  (time, pixel_axis) float64 0.242 0.6634 0.5005 ... 0.0 1.0</span>
+<span class="go">    ellipse_center  (time, pixel_axis) float64 46.46 64.62 96.1 ... 0.0 0.0</span>
+<span class="go">    ellipse_axes    (time, pixel_axis) float64 43.06 49.46 39.78 ... 0.0 0.0</span>
+</pre></div>
+</div>
+</section>
+<section id="calibration-markers">
+<h3>Calibration markers<a class="headerlink" href="#calibration-markers" title="Permalink to this headline"></a></h3>
+<p>Locations of calibration markers that were detected post-hoc can be loaded
+with <a class="reference internal" href="_generated/pupil_recording_interface.load_markers.html#pupil_recording_interface.load_markers" title="pupil_recording_interface.load_markers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_markers()</span></code></a>:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_markers</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:      (pixel_axis: 2, time: 240)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time         (time) datetime64[ns] 2019-10-10T16:43:20.238371849 ... 2019-10-10T16:43:41.232636929</span>
+<span class="go">  * pixel_axis   (pixel_axis) &lt;U1 &#39;x&#39; &#39;y&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    frame_index  (time) int64 0 1 3 4 90 91 92 ... 427 428 429 430 431 513 540</span>
+<span class="go">    location     (time, pixel_axis) float64 202.4 258.9 202.8 ... 822.5 598.0</span>
+</pre></div>
+</div>
+</section>
+<section id="caching">
+<h3>Caching<a class="headerlink" href="#caching" title="Permalink to this headline"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This functionality requires the <code class="docutils literal notranslate"><span class="pre">netcdf4</span></code> library, see the
+<a class="reference internal" href="installation.html#export-dependencies"><span class="std std-ref">dependencies for data export</span></a>.</p>
+</div>
+<p>All of the above methods accept a <code class="docutils literal notranslate"><span class="pre">cache</span></code> argument that will cache the loaded
+data in the netCDF format, making subsequent loading significantly faster:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_gaze</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5160)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time                (time) datetime64[ns] 2019-10-10T16:43:20.149777889 ... 2019-10-10T16:43:41.262381792</span>
+<span class="go">  * pixel_axis          (pixel_axis) object &#39;x&#39; &#39;y&#39;</span>
+<span class="go">  * cartesian_axis      (cartesian_axis) object &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    eye                 (time) float64 ...</span>
+<span class="go">    gaze_norm_pos       (time, pixel_axis) float64 ...</span>
+<span class="go">    gaze_point          (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye0_center         (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye1_center         (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye0_normal         (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye1_normal         (time, cartesian_axis) float64 ...</span>
+<span class="go">    gaze_confidence_3d  (time) float64 ...</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="loading-videos">
+<h2>Loading videos<a class="headerlink" href="#loading-videos" title="Permalink to this headline"></a></h2>
+<p>Since video data is rather large, we rarely bulk-load entire video
+recordings (although it is possible, see <a class="reference internal" href="#other-video-functionality">Other video functionality</a>).
+Rather, this library provides a <a class="reference internal" href="_generated/pupil_recording_interface.VideoReader.html#pupil_recording_interface.VideoReader" title="pupil_recording_interface.VideoReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoReader</span></code></a> class with which
+we can go through videos frame by frame. You can get information about the
+world camera video with:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span><span class="o">.</span><span class="n">video_info</span>
+<span class="go">{&#39;resolution&#39;: (1280, 720), &#39;frame_count&#39;: 504, &#39;fps&#39;: 23.987}</span>
+</pre></div>
+</div>
+<p>With <a class="reference internal" href="_generated/pupil_recording_interface.VideoReader.load_raw_frame.html#pupil_recording_interface.VideoReader.load_raw_frame" title="pupil_recording_interface.VideoReader.load_raw_frame"><code class="xref py py-func docutils literal notranslate"><span class="pre">VideoReader.load_raw_frame()</span></code></a> you can retrieve a raw video
+frame by index:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">load_raw_frame</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(720, 1280, 3)</span>
+</pre></div>
+</div>
+<p>or by timestamp:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">load_raw_frame</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">timestamps</span><span class="p">[</span><span class="mi">100</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(720, 1280, 3)</span>
+</pre></div>
+</div>
+<p>Here, we used the <code class="docutils literal notranslate"><span class="pre">timestamps</span></code> attribute of the reader which contains the
+timestamps for each frame to get the timestamp of the frame with index 100.</p>
+<p>If you have the <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> library installed, you can show the frame
+with <code class="docutils literal notranslate"><span class="pre">imshow()</span></code>. Note that you have to reverse the last axis as the frame
+is loaded as a BGR image but imshow expects RGB:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href=".//reading-1.py">Source code</a>, <a class="reference external" href=".//reading-1.png">png</a>, <a class="reference external" href=".//reading-1.hires.png">hires.png</a>, <a class="reference external" href=".//reading-1.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="_images/reading-1.png" src="_images/reading-1.png" />
+</figure>
+<p>Eye videos can be loaded by specifying the <code class="docutils literal notranslate"><span class="pre">stream</span></code> parameter:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eye_reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="s1">&#39;eye0&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">return_timestamp=True</span></code> you can get the corresponding timestamp for a
+frame:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">eye_reader</span><span class="o">.</span><span class="n">load_frame</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">return_timestamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span>
+<span class="go">Timestamp(&#39;2019-10-10 16:43:21.087194920&#39;)</span>
+</pre></div>
+</div>
+<p>This timestamp can now be used to get the closest world video frame:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">load_frame</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(720, 1280, 3)</span>
+</pre></div>
+</div>
+<section id="roi-extraction">
+<h3>ROI extraction<a class="headerlink" href="#roi-extraction" title="Permalink to this headline"></a></h3>
+<p>You can easily extract an ROI around the current gaze point in the image by
+specifying the <code class="docutils literal notranslate"><span class="pre">norm_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">roi_size</span></code> parameters and using the
+<a class="reference internal" href="_generated/pupil_recording_interface.VideoReader.load_frame.html#pupil_recording_interface.VideoReader.load_frame" title="pupil_recording_interface.VideoReader.load_frame"><code class="xref py py-func docutils literal notranslate"><span class="pre">VideoReader.load_frame()</span></code></a> method:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gaze</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">gaze</span><span class="o">=</span><span class="s1">&#39;2d Gaze Mapper &#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">folder</span><span class="p">,</span> <span class="n">norm_pos</span><span class="o">=</span><span class="n">gaze</span><span class="o">.</span><span class="n">gaze_norm_pos</span><span class="p">,</span> <span class="n">roi_size</span><span class="o">=</span><span class="mi">64</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">load_frame</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(64, 64, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+</pre></div>
+</div>
+<p>(<a class="reference external" href=".//reading-2.py">Source code</a>, <a class="reference external" href=".//reading-2.png">png</a>, <a class="reference external" href=".//reading-2.hires.png">hires.png</a>, <a class="reference external" href=".//reading-2.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="_images/reading-2.png" src="_images/reading-2.png" />
+</figure>
+</section>
+<section id="other-video-functionality">
+<h3>Other video functionality<a class="headerlink" href="#other-video-functionality" title="Permalink to this headline"></a></h3>
+<p>Video frames can also be sub-sampled and converted to grayscale with the
+<code class="docutils literal notranslate"><span class="pre">subsampling</span></code> and <code class="docutils literal notranslate"><span class="pre">color_format</span></code> parameters:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">folder</span><span class="p">,</span> <span class="n">color_format</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">subsampling</span><span class="o">=</span><span class="mf">4.</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">load_frame</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(180, 320)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="_generated/pupil_recording_interface.VideoReader.read_frames.html#pupil_recording_interface.VideoReader.read_frames" title="pupil_recording_interface.VideoReader.read_frames"><code class="xref py py-func docutils literal notranslate"><span class="pre">VideoReader.read_frames()</span></code></a> provides a generator for frames that
+can be restricted to an index or timestamp range with the <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code>
+parameters:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span><span class="o">.</span><span class="n">read_frames</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span> 
+<span class="go">&lt;generator object VideoReader.read_frames at ...&gt;</span>
+</pre></div>
+</div>
+<p>The video reader also provides a <a class="reference internal" href="_generated/pupil_recording_interface.VideoReader.load_dataset.html#pupil_recording_interface.VideoReader.load_dataset" title="pupil_recording_interface.VideoReader.load_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">VideoReader.load_dataset()</span></code></a>
+method. The method is rather slow as it has to load each frame individually.
+You can provide <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> timestamps to specify the time frame
+of the loaded data:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoReader</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">subsampling</span><span class="o">=</span><span class="mf">8.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">start</span><span class="o">=</span><span class="n">reader</span><span class="o">.</span><span class="n">user_info</span><span class="p">[</span><span class="s1">&#39;experiment_start&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">end</span><span class="o">=</span><span class="n">reader</span><span class="o">.</span><span class="n">user_info</span><span class="p">[</span><span class="s1">&#39;experiment_end&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:  (color: 3, frame_x: 160, frame_y: 90, time: 22)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time     (time) datetime64[ns] 2019-10-10T16:43:23.237552881 ... 2019-10-10T16:43:24.175843954</span>
+<span class="go">  * frame_x  (frame_x) int64 0 1 2 3 4 5 6 7 ... 152 153 154 155 156 157 158 159</span>
+<span class="go">  * frame_y  (frame_y) int64 0 1 2 3 4 5 6 7 8 9 ... 81 82 83 84 85 86 87 88 89</span>
+<span class="go">  * color    (color) &lt;U1 &#39;B&#39; &#39;G&#39; &#39;R&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    frames   (time, frame_y, frame_x, color) uint8 8 7 23 9 8 21 ... 5 11 9 7 21</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="other-files">
+<h2>Other files<a class="headerlink" href="#other-files" title="Permalink to this headline"></a></h2>
+<p>The recording metadata file created by Pupil Capture (<code class="docutils literal notranslate"><span class="pre">info.player.json</span></code>)
+can be loaded with <a class="reference internal" href="_generated/pupil_recording_interface.load_info.html#pupil_recording_interface.load_info" title="pupil_recording_interface.load_info"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_info()</span></code></a>:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_info</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> 
+<span class="go">{&#39;duration_s&#39;: 21.111775958999715,</span>
+<span class="go"> &#39;meta_version&#39;: &#39;2.3&#39;,</span>
+<span class="go"> &#39;min_player_version&#39;: &#39;2.0&#39;,</span>
+<span class="go"> &#39;recording_name&#39;: &#39;2019_10_10&#39;,</span>
+<span class="go"> &#39;recording_software_name&#39;: &#39;Pupil Capture&#39;,</span>
+<span class="go"> &#39;recording_software_version&#39;: &#39;1.16.95&#39;,</span>
+<span class="go"> &#39;recording_uuid&#39;: &#39;e5059604-26f1-42ed-8e35-354198b56021&#39;,</span>
+<span class="go"> &#39;start_time_synced_s&#39;: 2294.807856069,</span>
+<span class="go"> &#39;start_time_system_s&#39;: 1570725800.220913,</span>
+<span class="go"> &#39;system_info&#39;: &#39;User: test_user, Platform: Linux&#39;}</span>
+</pre></div>
+</div>
+<p>You can also load the user info (<code class="docutils literal notranslate"><span class="pre">user_info.csv</span></code>) with
+<a class="reference internal" href="_generated/pupil_recording_interface.load_user_info.html#pupil_recording_interface.load_user_info" title="pupil_recording_interface.load_user_info"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_user_info()</span></code></a>:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_user_info</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> 
+<span class="go">{&#39;name&#39;: &#39;TEST&#39;,</span>
+<span class="go"> &#39;pre_calibration_start&#39;: Timestamp(&#39;2019-10-10 16:43:21.220912933&#39;),</span>
+<span class="go"> &#39;pre_calibration_end&#39;: Timestamp(&#39;2019-10-10 16:43:22.220912933&#39;),</span>
+<span class="go"> &#39;experiment_start&#39;: Timestamp(&#39;2019-10-10 16:43:23.220912933&#39;),</span>
+<span class="go"> &#39;experiment_end&#39;: Timestamp(&#39;2019-10-10 16:43:24.220912933&#39;),</span>
+<span class="go"> &#39;post_calibration_start&#39;: Timestamp(&#39;2019-10-10 16:43:25.220912933&#39;),</span>
+<span class="go"> &#39;post_calibration_end&#39;: Timestamp(&#39;2019-10-10 16:43:26.220912933&#39;),</span>
+<span class="go"> &#39;height&#39;: 1.8}</span>
+</pre></div>
+</div>
+<p>A recording usually also contains other msgpack-encoded files, for example
+the camera intrinsics. These can be loaded with <a class="reference internal" href="_generated/pupil_recording_interface.load_object.html#pupil_recording_interface.load_object" title="pupil_recording_interface.load_object"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_object()</span></code></a></p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_object</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">&quot;world.intrinsics&quot;</span><span class="p">)</span> 
+<span class="go">{&#39;version&#39;: 1,</span>
+<span class="go"> &#39;(1280, 720)&#39;:</span>
+<span class="go">     {&#39;camera_matrix&#39;: [[826.1521272145403, 0.0, 627.8343012631811],</span>
+<span class="go">                       [0.0, 769.1786602466223, 359.810742797992],</span>
+<span class="go">                       [0.0, 0.0, 1.0]],</span>
+<span class="go">      &#39;dist_coefs&#39;: [[-0.14119955505495468],</span>
+<span class="go">                     [0.024919584525371758],</span>
+<span class="go">                     [-0.21233916934283625],</span>
+<span class="go">                     [0.22636274811293397]],</span>
+<span class="go">      &#39;resolution&#39;: [1280, 720],</span>
+<span class="go">      &#39;cam_type&#39;: &#39;fisheye&#39;}}</span>
+</pre></div>
+</div>
+</section>
+<section id="data-export">
+<h2>Data export<a class="headerlink" href="#data-export" title="Permalink to this headline"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Make sure you have installed the necessary
+<a class="reference internal" href="installation.html#export-dependencies"><span class="std std-ref">dependencies for data export</span></a>.</p>
+</div>
+<p>Recorded data can also directly be written to disk with
+<a class="reference internal" href="_generated/pupil_recording_interface.write_netcdf.html#pupil_recording_interface.write_netcdf" title="pupil_recording_interface.write_netcdf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write_netcdf()</span></code></a>:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">write_netcdf</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">gaze</span><span class="o">=</span><span class="s1">&#39;recording&#39;</span><span class="p">,</span> <span class="n">output_folder</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create a <code class="docutils literal notranslate"><span class="pre">gaze.nc</span></code> file in the current folder. This file type can
+directly be loaded by xarray:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s1">&#39;gaze.nc&#39;</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:             (cartesian_axis: 3, pixel_axis: 2, time: 5160)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time                (time) datetime64[ns] 2019-10-10T16:43:20.149777889 ... 2019-10-10T16:43:41.262381792</span>
+<span class="go">  * pixel_axis          (pixel_axis) object &#39;x&#39; &#39;y&#39;</span>
+<span class="go">  * cartesian_axis      (cartesian_axis) object &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    eye                 (time) float64 ...</span>
+<span class="go">    gaze_norm_pos       (time, pixel_axis) float64 ...</span>
+<span class="go">    gaze_point          (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye0_center         (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye1_center         (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye0_normal         (time, cartesian_axis) float64 ...</span>
+<span class="go">    eye1_normal         (time, cartesian_axis) float64 ...</span>
+<span class="go">    gaze_confidence_3d  (time) float64 ...</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="streaming.html" class="btn btn-neutral float-right" title="Streaming data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

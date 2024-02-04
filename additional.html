@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Additional features &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Custom devices, streams and processes" href="custom.html" />
+    <link rel="prev" title="Offline analysis" href="analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Offline analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Additional features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#head-tracking-odometry">Head tracking (Odometry)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading">Loading</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#optical-flow">Optical flow</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Additional features</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/additional.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="additional-features">
+<h1>Additional features<a class="headerlink" href="#additional-features" title="Permalink to this headline"></a></h1>
+<section id="head-tracking-odometry">
+<h2>Head tracking (Odometry)<a class="headerlink" href="#head-tracking-odometry" title="Permalink to this headline"></a></h2>
+<p>The package also includes a mechanism for loading head
+tracking data from an Intel RealSense T265 tracking camera attached to the
+Pupil Core system. Head tracking data is referred to as odometry throughout
+the package as it includes positions and velocities.</p>
+<section id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline"></a></h3>
+<p>Recorded odometry data can be loaded the same way as gaze data:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pupil_recording_interface</span> <span class="k">as</span> <span class="nn">pri</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pri</span><span class="o">.</span><span class="n">load_motion</span><span class="p">(</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="n">stream</span><span class="o">=</span><span class="s2">&quot;odometry&quot;</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:           (cartesian_axis: 3, quaternion_axis: 4, time: 4220)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time              (time) datetime64[ns] 2019-10-10T16:43:20.287212849 ... 2019-10-10T16:43:41.390241861</span>
+<span class="go">  * cartesian_axis    (cartesian_axis) &lt;U1 &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">  * quaternion_axis   (quaternion_axis) &lt;U1 &#39;w&#39; &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="go">Data variables:</span>
+<span class="go">    position          (time, cartesian_axis) float64 -0.1463 0.2765 ... 0.001237</span>
+<span class="go">    linear_velocity   (time, cartesian_axis) float64 0.001013 ... 0.004487</span>
+<span class="go">    angular_velocity  (time, cartesian_axis) float64 -0.01463 ... -0.008532</span>
+<span class="go">    confidence        (time) int64 3 3 3 3 3 3 3 3 3 3 3 ... 3 3 3 3 3 3 3 3 3 3</span>
+<span class="go">    orientation       (time, quaternion_axis) float64 0.004093 ... 0.06829</span>
+</pre></div>
+</div>
+<p>The dataset contains position and orientation, linear and angular
+velocity as well as the confidence of the tracking.</p>
+</section>
+</section>
+<section id="optical-flow">
+<h2>Optical flow<a class="headerlink" href="#optical-flow" title="Permalink to this headline"></a></h2>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">OpticalFlowReader</span></code> is a subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">VideoReader</span></code>
+that provides methods for calculating optical flow between consecutive frames:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">OpticalFlowReader</span><span class="p">(</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="n">subsampling</span><span class="o">=</span><span class="mf">8.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">start</span><span class="o">=</span><span class="n">reader</span><span class="o">.</span><span class="n">user_info</span><span class="p">[</span><span class="s1">&#39;experiment_start&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">end</span><span class="o">=</span><span class="n">reader</span><span class="o">.</span><span class="n">user_info</span><span class="p">[</span><span class="s1">&#39;experiment_end&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:       (pixel_axis: 2, roi_x: 160, roi_y: 90, time: 22)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * time          (time) datetime64[ns] 2019-10-10T16:43:23.237552881 ... 2019-10-10T16:43:24.175843954</span>
+<span class="go">  * pixel_axis    (pixel_axis) &lt;U1 &#39;x&#39; &#39;y&#39;</span>
+<span class="go">  * roi_x         (roi_x) float64 -636.0 -628.0 -620.0 ... 620.0 628.0 636.0</span>
+<span class="go">  * roi_y         (roi_y) float64 356.0 348.0 340.0 ... -340.0 -348.0 -356.0</span>
+<span class="go">Data variables:</span>
+<span class="go">    optical_flow  (time, roi_y, roi_x, pixel_axis) float64 nan nan ... 7.908e-11</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For more details on this class please refer to the <a class="reference internal" href="api.html#api-reference"><span class="std std-ref">API Reference</span></a>
+section.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="analysis.html" class="btn btn-neutral float-left" title="Offline analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="custom.html" class="btn btn-neutral float-right" title="Custom devices, streams and processes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

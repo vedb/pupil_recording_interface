@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pupil_recording_interface.CamParamEstimator &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pupil_recording_interface.MotionRecorder" href="pupil_recording_interface.MotionRecorder.html" />
+    <link rel="prev" title="pupil_recording_interface.CircleGridDetector" href="pupil_recording_interface.CircleGridDetector.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#top-level-functions-and-classes">Top-level functions and classes</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#i-o-functions">I/O functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#other-functions">Other functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#reader-classes">Reader classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#device-classes">Device classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#stream-classes">Stream classes</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#process-classes">Process classes</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.Pipeline.html">pupil_recording_interface.Pipeline</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.VideoDisplay.html">pupil_recording_interface.VideoDisplay</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.VideoRecorder.html">pupil_recording_interface.VideoRecorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.PupilDetector.html">pupil_recording_interface.PupilDetector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.GazeMapper.html">pupil_recording_interface.GazeMapper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.CircleDetector.html">pupil_recording_interface.CircleDetector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.Calibration.html">pupil_recording_interface.Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.CircleGridDetector.html">pupil_recording_interface.CircleGridDetector</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pupil_recording_interface.CamParamEstimator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.MotionRecorder.html">pupil_recording_interface.MotionRecorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.VideoFileSyncer.html">pupil_recording_interface.VideoFileSyncer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#class-member-details">Class member details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Reference</a></li>
+      <li class="breadcrumb-item active">pupil_recording_interface.CamParamEstimator</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_generated/pupil_recording_interface.CamParamEstimator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pupil-recording-interface-camparamestimator">
+<h1>pupil_recording_interface.CamParamEstimator<a class="headerlink" href="#pupil-recording-interface-camparamestimator" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pupil_recording_interface.</span></span><span class="sig-name descname"><span class="pre">CamParamEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(4,</span> <span class="pre">11)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distortion_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'radial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrinsics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pupil_recording_interface.process.BaseProcess</span></code></p>
+<p>Camera parameter estimator.</p>
+<p>This process estimates camera parameters (intrinsic and extrinsic) for one
+or multiple cameras based on the locations of calibration patterns detected
+e.g. by the CircleGridDetector. You only need to attach one to one of the
+video streams, even when estimating extrinsics between multiple cameras.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(4,</span> <span class="pre">11)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distortion_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'radial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrinsics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>streams</strong> (<em>Iterable</em><em>[</em><em>str</em><em>]</em>) – Names of video streams for which to perform estimation.</p></li>
+<li><p><strong>folder</strong> (<em>os.PathLike</em>) – Folder for saving estimation results.</p></li>
+<li><p><strong>grid_shape</strong> (<em>tuple</em>) – Number of rows and columns of the grid.</p></li>
+<li><p><strong>grid_scale</strong> (<em>float</em>) – Distance between grid positions in meters. Can be calculated by
+measuring the distance between the centers of the outermost circles
+in the first row (the longer on) on the printed calibration target.
+Divide this distance by the number of horizontal grid positions
+(default 11) to obtain the scale.</p></li>
+<li><p><strong>num_patterns</strong> (<em>int</em>) – Number of patterns to capture before performing estimation.</p></li>
+<li><p><strong>distortion_model</strong> (<em>str</em>) – Distortion model to use for estimation. Can be “radial” or
+“fisheye”.</p></li>
+<li><p><strong>extrinsics</strong> (<em>bool</em>) – If True, perform extrinsics estimation (rotation and translation)
+between cameras. Requires at least two streams or one fisheye
+stream. This will not save the intrinsics because the calibration
+data will most likely be poorer than when estimatingintrinsics for
+each stream individually.</p></li>
+<li><p><strong>display</strong> (<em>bool</em>) – If True, add this instance’s <code class="docutils literal notranslate"><span class="pre">display_hook</span></code> method to the packet
+returned by <code class="docutils literal notranslate"><span class="pre">process_packet</span></code>. A <code class="docutils literal notranslate"><span class="pre">VideoDisplay</span></code> later in the
+pipeline will pick this up to draw the extent of the all previously
+detected grids over the camera image.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.Config" title="pupil_recording_interface.CamParamEstimator.Config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Config</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Configuration for this class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.__init__" title="pupil_recording_interface.CamParamEstimator.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(streams, folder[, grid_shape, …])</p></td>
+<td><p>Constructor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.display_hook" title="pupil_recording_interface.CamParamEstimator.display_hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">display_hook</span></code></a>(packet)</p></td>
+<td><p>Add circle grid overlay onto frame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.from_config" title="pupil_recording_interface.CamParamEstimator.from_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_config</span></code></a>(config, stream_config, device, …)</p></td>
+<td><p>Create a process from a ProcessConfig.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.process" title="pupil_recording_interface.CamParamEstimator.process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process</span></code></a>(packet, notifications)</p></td>
+<td><p>Process new data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.process_notifications" title="pupil_recording_interface.CamParamEstimator.process_notifications"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_notifications</span></code></a>(notifications)</p></td>
+<td><p>Process new notifications.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.process_packet" title="pupil_recording_interface.CamParamEstimator.process_packet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_packet</span></code></a>(packet)</p></td>
+<td><p>Process a new packet.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.start" title="pupil_recording_interface.CamParamEstimator.start"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code></a>()</p></td>
+<td><p>Start the process</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.CamParamEstimator.stop" title="pupil_recording_interface.CamParamEstimator.stop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code></a>()</p></td>
+<td><p>Stop the process.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_type</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.Config">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.Config" title="Permalink to this definition"></a></dt>
+<dd><p>Configuration for this class.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.display_hook">
+<span class="sig-name descname"><span class="pre">display_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packet</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.display_hook" title="Permalink to this definition"></a></dt>
+<dd><p>Add circle grid overlay onto frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.from_config">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.from_config" title="Permalink to this definition"></a></dt>
+<dd><p>Create a process from a ProcessConfig.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notifications</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.process" title="Permalink to this definition"></a></dt>
+<dd><p>Process new data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.process_notifications">
+<span class="sig-name descname"><span class="pre">process_notifications</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">notifications</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.process_notifications" title="Permalink to this definition"></a></dt>
+<dd><p>Process new notifications.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.process_packet">
+<span class="sig-name descname"><span class="pre">process_packet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packet</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.process_packet" title="Permalink to this definition"></a></dt>
+<dd><p>Process a new packet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.start" title="Permalink to this definition"></a></dt>
+<dd><p>Start the process</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.CamParamEstimator.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.CamParamEstimator.stop" title="Permalink to this definition"></a></dt>
+<dd><p>Stop the process.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pupil_recording_interface.CircleGridDetector.html" class="btn btn-neutral float-left" title="pupil_recording_interface.CircleGridDetector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pupil_recording_interface.MotionRecorder.html" class="btn btn-neutral float-right" title="pupil_recording_interface.MotionRecorder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

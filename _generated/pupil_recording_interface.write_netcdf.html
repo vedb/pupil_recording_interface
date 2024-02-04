@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pupil_recording_interface.write_netcdf &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pupil_recording_interface.load_info" href="pupil_recording_interface.load_info.html" />
+    <link rel="prev" title="pupil_recording_interface.load_motion" href="pupil_recording_interface.load_motion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#top-level-functions-and-classes">Top-level functions and classes</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#i-o-functions">I/O functions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.get_test_recording.html">pupil_recording_interface.get_test_recording</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_gaze.html">pupil_recording_interface.load_gaze</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_pupils.html">pupil_recording_interface.load_pupils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_markers.html">pupil_recording_interface.load_markers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_motion.html">pupil_recording_interface.load_motion</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pupil_recording_interface.write_netcdf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_info.html">pupil_recording_interface.load_info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_user_info.html">pupil_recording_interface.load_user_info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_pldata.html">pupil_recording_interface.load_pldata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.save_pldata.html">pupil_recording_interface.save_pldata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.get_gaze_mappers.html">pupil_recording_interface.get_gaze_mappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.load_object.html">pupil_recording_interface.load_object</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.save_object.html">pupil_recording_interface.save_object</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#other-functions">Other functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#reader-classes">Reader classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#device-classes">Device classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#stream-classes">Stream classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#process-classes">Process classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#class-member-details">Class member details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Reference</a></li>
+      <li class="breadcrumb-item active">pupil_recording_interface.write_netcdf</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_generated/pupil_recording_interface.write_netcdf.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pupil-recording-interface-write-netcdf">
+<h1>pupil_recording_interface.write_netcdf<a class="headerlink" href="#pupil-recording-interface-write-netcdf" title="Permalink to this headline"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="pupil_recording_interface.write_netcdf">
+<span class="sig-prename descclassname"><span class="pre">pupil_recording_interface.</span></span><span class="sig-name descname"><span class="pre">write_netcdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odometry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gyro</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.write_netcdf" title="Permalink to this definition"></a></dt>
+<dd><p>Export a recording in the netCDF format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Path to the recording folder.</p></li>
+<li><p><strong>output_folder</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the folder where the recording will be exported to. Defaults
+to <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;/exports/&lt;export_number&gt;</span></code>.</p></li>
+<li><p><strong>gaze</strong> (<em>str</em><em>, </em><em>optional</em>) – The source of the gaze data. If ‘recording’, the recorded data will
+be used. Can also be the name of a gaze mapper or a dict in the
+format <code class="docutils literal notranslate"><span class="pre">{'2d':</span> <span class="pre">'&lt;2d_gaze_mapper&gt;',</span> <span class="pre">'3d':</span> <span class="pre">'&lt;3d_gaze_mapper&gt;'}</span></code> in
+which case the norm pos from the 2d mapper and the gaze point
+from the 3d mapper will be used.</p></li>
+<li><p><strong>odometry</strong> (<em>str</em><em>, </em><em>optional</em>) – The source of the odometry data. Can be ‘recording’.</p></li>
+<li><p><strong>accel</strong> (<em>str</em><em>, </em><em>optional</em>) – The source of the accel data. Can be ‘recording’.</p></li>
+<li><p><strong>gyro</strong> (<em>str</em><em>, </em><em>optional</em>) – The source of the gyro data. Can be ‘recording’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pupil_recording_interface.load_motion.html" class="btn btn-neutral float-left" title="pupil_recording_interface.load_motion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pupil_recording_interface.load_info.html" class="btn btn-neutral float-right" title="pupil_recording_interface.load_info" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

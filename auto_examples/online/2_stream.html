@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stream from connected devices &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Record from connected devices" href="3_record.html" />
+    <link rel="prev" title="Stream from a recording" href="1_stream_recording.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#offline-examples">Offline examples</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#online-examples">Online examples</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="1_stream_recording.html">Stream from a recording</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Stream from connected devices</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#set-pupil-core-generation">Set Pupil Core generation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#set-up-stream-configurations">Set up stream configurations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#set-up-logger">Set up logger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run-manager">Run manager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="3_record.html">Record from connected devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="4_calibrate.html">Calibrate gaze mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="5_map_gaze.html">Run gaze mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="6_estimate_cam_params.html">Estimate camera parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Stream from connected devices</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/auto_examples/online/2_stream.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-online-2-stream-py"><span class="std std-ref">here</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="stream-from-connected-devices">
+<span id="streaming-example"></span><span id="sphx-glr-auto-examples-online-2-stream-py"></span><h1>Stream from connected devices<a class="headerlink" href="#stream-from-connected-devices" title="Permalink to this headline"></a></h1>
+<p>This example shows how to stream video data from a connected Pupil Core
+headset.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This example requires the dependencies for
+<a class="reference internal" href="../../installation.html#streaming-dependencies"><span class="std std-ref">streaming</span></a>.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">pupil_recording_interface</span> <span class="k">as</span> <span class="nn">pri</span>
+</pre></div>
+</div>
+<section id="set-pupil-core-generation">
+<h2>Set Pupil Core generation<a class="headerlink" href="#set-pupil-core-generation" title="Permalink to this headline"></a></h2>
+<p>Set the generation of your Pupil Core device (1, 2 or 3)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pupil_gen</span> <span class="o">=</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</section>
+<section id="set-up-stream-configurations">
+<h2>Set up stream configurations<a class="headerlink" href="#set-up-stream-configurations" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;uvc&quot;</span><span class="p">,</span>
+        <span class="n">device_uid</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Pupil Cam</span><span class="si">{</span><span class="n">pupil_gen</span><span class="si">}</span><span class="s2"> ID2&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;world&quot;</span><span class="p">,</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">1280</span><span class="p">,</span> <span class="mi">720</span><span class="p">),</span>
+        <span class="n">fps</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+    <span class="p">),</span>
+    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;uvc&quot;</span><span class="p">,</span>
+        <span class="n">device_uid</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Pupil Cam</span><span class="si">{</span><span class="n">pupil_gen</span><span class="si">}</span><span class="s2"> ID0&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eye0&quot;</span><span class="p">,</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">240</span><span class="p">)</span> <span class="k">if</span> <span class="n">pupil_gen</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
+        <span class="n">fps</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+        <span class="n">color_format</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">flip</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+    <span class="p">),</span>
+    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;uvc&quot;</span><span class="p">,</span>
+        <span class="n">device_uid</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Pupil Cam</span><span class="si">{</span><span class="n">pupil_gen</span><span class="si">}</span><span class="s2"> ID1&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eye1&quot;</span><span class="p">,</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">240</span><span class="p">)</span> <span class="k">if</span> <span class="n">pupil_gen</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
+        <span class="n">fps</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+        <span class="n">color_format</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="set-up-logger">
+<h2>Set up logger<a class="headerlink" href="#set-up-logger" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="run-manager">
+<h2>Run manager<a class="headerlink" href="#run-manager" title="Permalink to this headline"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When running the script from the command line, press ‘Ctrl+C’ to stop the
+manager. When running from a Jupyter notebook, interrupt the kernel
+(<em>Kernel &gt; Interrupt Kernel</em> or press ‘Esc’ and then twice ‘i’).</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">pri</span><span class="o">.</span><span class="n">StreamManager</span><span class="p">(</span><span class="n">configs</span><span class="p">)</span> <span class="k">as</span> <span class="n">manager</span><span class="p">:</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">manager</span><span class="o">.</span><span class="n">stopped</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">manager</span><span class="o">.</span><span class="n">all_streams_running</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">format_status</span><span class="p">(</span>
+                <span class="s2">&quot;fps&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2"> Hz&quot;</span><span class="p">,</span> <span class="n">max_cols</span><span class="o">=</span><span class="mi">72</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="mf">0.1</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">status</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Stopped&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-online-2-stream-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/de5d20a7e8243c6c139f5c8aba79a3e9/2_stream.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">2_stream.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/a881156b18865bf52d2dcbe60d263dc7/2_stream.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">2_stream.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="1_stream_recording.html" class="btn btn-neutral float-left" title="Stream from a recording" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="3_record.html" class="btn btn-neutral float-right" title="Record from connected devices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

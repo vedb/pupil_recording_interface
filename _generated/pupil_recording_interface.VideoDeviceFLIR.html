@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pupil_recording_interface.VideoDeviceFLIR &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pupil_recording_interface.RealSenseDeviceT265" href="pupil_recording_interface.RealSenseDeviceT265.html" />
+    <link rel="prev" title="pupil_recording_interface.VideoDeviceUVC" href="pupil_recording_interface.VideoDeviceUVC.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#top-level-functions-and-classes">Top-level functions and classes</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#i-o-functions">I/O functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#other-functions">Other functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#reader-classes">Reader classes</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#device-classes">Device classes</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.VideoDeviceUVC.html">pupil_recording_interface.VideoDeviceUVC</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pupil_recording_interface.VideoDeviceFLIR</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.RealSenseDeviceT265.html">pupil_recording_interface.RealSenseDeviceT265</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#stream-classes">Stream classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#process-classes">Process classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#class-member-details">Class member details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Reference</a></li>
+      <li class="breadcrumb-item active">pupil_recording_interface.VideoDeviceFLIR</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_generated/pupil_recording_interface.VideoDeviceFLIR.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pupil-recording-interface-videodeviceflir">
+<h1>pupil_recording_interface.VideoDeviceFLIR<a class="headerlink" href="#pupil-recording-interface-videodeviceflir" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pupil_recording_interface.</span></span><span class="sig-name descname"><span class="pre">VideoDeviceFLIR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_uid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pupil_recording_interface.device.video.BaseVideoDevice</span></code></p>
+<p>FLIR video device.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_uid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device_uid</strong> (<em>str</em>) – The serial number of the device. If None, will use the first
+camera in the Spinnaker device list.</p></li>
+<li><p><strong>resolution</strong> (<em>tuple</em><em>, </em><em>len 2</em>) – Desired horizontal and vertical camera resolution.</p></li>
+<li><p><strong>fps</strong> (<em>int</em>) – Desired camera refresh rate.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.Config" title="pupil_recording_interface.VideoDeviceFLIR.Config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Config</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Configuration for this class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.__init__" title="pupil_recording_interface.VideoDeviceFLIR.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(device_uid, resolution, fps[, settings])</p></td>
+<td><p>Constructor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.from_config" title="pupil_recording_interface.VideoDeviceFLIR.from_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_config</span></code></a>(config, **kwargs)</p></td>
+<td><p>Create a device from a StreamConfig.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.from_config_list" title="pupil_recording_interface.VideoDeviceFLIR.from_config_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_config_list</span></code></a>(config_list)</p></td>
+<td><p>Create a device from a list of StreamConfigs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.get_capture" title="pupil_recording_interface.VideoDeviceFLIR.get_capture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_capture</span></code></a>(serial_number, resolution, fps)</p></td>
+<td><p>Get a capture instance for a device by name.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.get_frame_and_timestamp" title="pupil_recording_interface.VideoDeviceFLIR.get_frame_and_timestamp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_frame_and_timestamp</span></code></a>([mode])</p></td>
+<td><p>Get a frame and its associated timestamp.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.restart" title="pupil_recording_interface.VideoDeviceFLIR.restart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">restart</span></code></a>()</p></td>
+<td><p>Try restarting this device.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.run_post_thread_hooks" title="pupil_recording_interface.VideoDeviceFLIR.run_post_thread_hooks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_post_thread_hooks</span></code></a>()</p></td>
+<td><p>Run hook(s) after processing thread(s) finish(es).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.run_pre_thread_hooks" title="pupil_recording_interface.VideoDeviceFLIR.run_pre_thread_hooks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_pre_thread_hooks</span></code></a>()</p></td>
+<td><p>Run hook(s) before dispatching processing thread(s).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.start" title="pupil_recording_interface.VideoDeviceFLIR.start"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code></a>()</p></td>
+<td><p>Start the device.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.stop" title="pupil_recording_interface.VideoDeviceFLIR.stop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code></a>()</p></td>
+<td><p>Stop the device.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">device_type</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDeviceFLIR.is_started" title="pupil_recording_interface.VideoDeviceFLIR.is_started"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_started</span></code></a></p></td>
+<td><p>Whether this device has been started.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.Config">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.Config" title="Permalink to this definition"></a></dt>
+<dd><p>Configuration for this class.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.from_config">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.from_config" title="Permalink to this definition"></a></dt>
+<dd><p>Create a device from a StreamConfig.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.from_config_list">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_config_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.from_config_list" title="Permalink to this definition"></a></dt>
+<dd><p>Create a device from a list of StreamConfigs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.get_capture">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">get_capture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">serial_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.get_capture" title="Permalink to this definition"></a></dt>
+<dd><p>Get a capture instance for a device by name.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.get_frame_and_timestamp">
+<span class="sig-name descname"><span class="pre">get_frame_and_timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'img'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.get_frame_and_timestamp" title="Permalink to this definition"></a></dt>
+<dd><p>Get a frame and its associated timestamp.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.is_started">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">is_started</span></span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.is_started" title="Permalink to this definition"></a></dt>
+<dd><p>Whether this device has been started.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.restart">
+<span class="sig-name descname"><span class="pre">restart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.restart" title="Permalink to this definition"></a></dt>
+<dd><p>Try restarting this device.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.run_post_thread_hooks">
+<span class="sig-name descname"><span class="pre">run_post_thread_hooks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.run_post_thread_hooks" title="Permalink to this definition"></a></dt>
+<dd><p>Run hook(s) after processing thread(s) finish(es).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.run_pre_thread_hooks">
+<span class="sig-name descname"><span class="pre">run_pre_thread_hooks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.run_pre_thread_hooks" title="Permalink to this definition"></a></dt>
+<dd><p>Run hook(s) before dispatching processing thread(s).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.start" title="Permalink to this definition"></a></dt>
+<dd><p>Start the device.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDeviceFLIR.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDeviceFLIR.stop" title="Permalink to this definition"></a></dt>
+<dd><p>Stop the device.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pupil_recording_interface.VideoDeviceUVC.html" class="btn btn-neutral float-left" title="pupil_recording_interface.VideoDeviceUVC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pupil_recording_interface.RealSenseDeviceT265.html" class="btn btn-neutral float-right" title="pupil_recording_interface.RealSenseDeviceT265" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

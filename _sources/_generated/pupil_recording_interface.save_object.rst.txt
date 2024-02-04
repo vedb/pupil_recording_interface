@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.save\_object
+========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: save_object

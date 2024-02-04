@@ -1,0 +1,48 @@
+﻿pupil\_recording\_interface.VideoDeviceUVC
+==========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: VideoDeviceUVC
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VideoDeviceUVC.Config
+      ~VideoDeviceUVC.__init__
+      ~VideoDeviceUVC.from_config
+      ~VideoDeviceUVC.from_config_list
+      ~VideoDeviceUVC.get_capture
+      ~VideoDeviceUVC.get_frame_and_timestamp
+      ~VideoDeviceUVC.get_timestamp
+      ~VideoDeviceUVC.get_uvc_frame
+      ~VideoDeviceUVC.restart
+      ~VideoDeviceUVC.run_post_thread_hooks
+      ~VideoDeviceUVC.run_pre_thread_hooks
+      ~VideoDeviceUVC.start
+      ~VideoDeviceUVC.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VideoDeviceUVC.available_controls
+      ~VideoDeviceUVC.available_modes
+      ~VideoDeviceUVC.controls
+      ~VideoDeviceUVC.device_type
+      ~VideoDeviceUVC.is_started
+      ~VideoDeviceUVC.uvc_device_uid
+   
+   

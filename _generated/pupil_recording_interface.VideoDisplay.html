@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pupil_recording_interface.VideoDisplay &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pupil_recording_interface.VideoRecorder" href="pupil_recording_interface.VideoRecorder.html" />
+    <link rel="prev" title="pupil_recording_interface.Pipeline" href="pupil_recording_interface.Pipeline.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#top-level-functions-and-classes">Top-level functions and classes</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#i-o-functions">I/O functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#other-functions">Other functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#reader-classes">Reader classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#device-classes">Device classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#stream-classes">Stream classes</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#process-classes">Process classes</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.Pipeline.html">pupil_recording_interface.Pipeline</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pupil_recording_interface.VideoDisplay</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.VideoRecorder.html">pupil_recording_interface.VideoRecorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.PupilDetector.html">pupil_recording_interface.PupilDetector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.GazeMapper.html">pupil_recording_interface.GazeMapper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.CircleDetector.html">pupil_recording_interface.CircleDetector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.Calibration.html">pupil_recording_interface.Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.CircleGridDetector.html">pupil_recording_interface.CircleGridDetector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.CamParamEstimator.html">pupil_recording_interface.CamParamEstimator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.MotionRecorder.html">pupil_recording_interface.MotionRecorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pupil_recording_interface.VideoFileSyncer.html">pupil_recording_interface.VideoFileSyncer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#class-member-details">Class member details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Reference</a></li>
+      <li class="breadcrumb-item active">pupil_recording_interface.VideoDisplay</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_generated/pupil_recording_interface.VideoDisplay.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pupil-recording-interface-videodisplay">
+<h1>pupil_recording_interface.VideoDisplay<a class="headerlink" href="#pupil-recording-interface-videodisplay" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pupil_recording_interface.</span></span><span class="sig-name descname"><span class="pre">VideoDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pupil_recording_interface.process.BaseProcess</span></code></p>
+<p>Display for video stream.</p>
+<p>This process displays camera frames produced by video streams. Previous
+processes in the pipeline can add overlays onto the frame, e.g., detected
+pupils or calibration markers, if they are created with <code class="docutils literal notranslate"><span class="pre">display=True</span></code>.
+This process should generally be the last in the pipeline.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the video display.</p></li>
+<li><p><strong>flip</strong> (<em>bool</em>) – If True, flip the image in the vertical direction. May be necessary
+for one of the eye camera streams.</p></li>
+<li><p><strong>resolution</strong> (<em>Optional</em><em>[</em><em>tuple</em><em>]</em>) – If specified, scale the window to this resolution.</p></li>
+<li><p><strong>max_width</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – If specified, scale the window to this width if it would be wider.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.Config" title="pupil_recording_interface.VideoDisplay.Config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Config</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Configuration for this class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.__init__" title="pupil_recording_interface.VideoDisplay.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name[, flip, resolution, …])</p></td>
+<td><p>Constructor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.close_window" title="pupil_recording_interface.VideoDisplay.close_window"><code class="xref py py-obj docutils literal notranslate"><span class="pre">close_window</span></code></a>()</p></td>
+<td><p>Close the window for this process.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.create_window" title="pupil_recording_interface.VideoDisplay.create_window"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_window</span></code></a>()</p></td>
+<td><p>Create a cv2.namedWindow.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.from_config" title="pupil_recording_interface.VideoDisplay.from_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_config</span></code></a>(config, stream_config, device, …)</p></td>
+<td><p>Create a process from a ProcessConfig.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.process" title="pupil_recording_interface.VideoDisplay.process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process</span></code></a>(packet, notifications)</p></td>
+<td><p>Process new data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.process_notifications" title="pupil_recording_interface.VideoDisplay.process_notifications"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_notifications</span></code></a>(notifications)</p></td>
+<td><p>Process new notifications.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.process_packet" title="pupil_recording_interface.VideoDisplay.process_packet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_packet</span></code></a>(packet)</p></td>
+<td><p>Process a new packet.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.show_frame" title="pupil_recording_interface.VideoDisplay.show_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_frame</span></code></a>(packet)</p></td>
+<td><p>Show video frame in window.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.start" title="pupil_recording_interface.VideoDisplay.start"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code></a>()</p></td>
+<td><p>Start the process.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pupil_recording_interface.VideoDisplay.stop" title="pupil_recording_interface.VideoDisplay.stop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code></a>()</p></td>
+<td><p>Stop the process.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_type</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.Config">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.Config" title="Permalink to this definition"></a></dt>
+<dd><p>Configuration for this class.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.close_window">
+<span class="sig-name descname"><span class="pre">close_window</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.close_window" title="Permalink to this definition"></a></dt>
+<dd><p>Close the window for this process.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.create_window">
+<span class="sig-name descname"><span class="pre">create_window</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.create_window" title="Permalink to this definition"></a></dt>
+<dd><p>Create a cv2.namedWindow.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.from_config">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.from_config" title="Permalink to this definition"></a></dt>
+<dd><p>Create a process from a ProcessConfig.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notifications</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.process" title="Permalink to this definition"></a></dt>
+<dd><p>Process new data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.process_notifications">
+<span class="sig-name descname"><span class="pre">process_notifications</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">notifications</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.process_notifications" title="Permalink to this definition"></a></dt>
+<dd><p>Process new notifications.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.process_packet">
+<span class="sig-name descname"><span class="pre">process_packet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packet</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.process_packet" title="Permalink to this definition"></a></dt>
+<dd><p>Process a new packet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.show_frame">
+<span class="sig-name descname"><span class="pre">show_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packet</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.show_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Show video frame in window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.start" title="Permalink to this definition"></a></dt>
+<dd><p>Start the process.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pupil_recording_interface.VideoDisplay.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pupil_recording_interface.VideoDisplay.stop" title="Permalink to this definition"></a></dt>
+<dd><p>Stop the process.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pupil_recording_interface.Pipeline.html" class="btn btn-neutral float-left" title="pupil_recording_interface.Pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pupil_recording_interface.VideoRecorder.html" class="btn btn-neutral float-right" title="pupil_recording_interface.VideoRecorder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

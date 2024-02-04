@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What’s New &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="pupil_recording_interface.OpticalFlowReader.calculate_optical_flow" href="_generated/pupil_recording_interface.OpticalFlowReader.calculate_optical_flow.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">What’s New</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v1-0-0-unreleased">v1.0.0 (unreleased)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#breaking-changes">Breaking changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#new-features">New features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-5-0-june-23rd-2021">v0.5.0 (June 23rd, 2021)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Breaking changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bug-fixes-improvements">Bug fixes &amp; improvements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-4-1-february-22nd-2021">v0.4.1 (February 22nd, 2021)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Bug fixes &amp; improvements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-4-0-january-28th-2021">v0.4.0 (January 28th, 2021)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Bug fixes &amp; improvements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-3-0-december-8th-2020">v0.3.0 (December 8th, 2020)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Bug fixes &amp; improvements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-2-1-october-23rd-2020">v0.2.1 (October 23rd, 2020)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Bug fixes &amp; improvements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-2-0-october-6th-2020">v0.2.0 (October 6th, 2020)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug fixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-1-0-june-3rd-2020">v0.1.0 (June 3rd, 2020)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">What’s New</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/whatsnew.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="what-s-new">
+<h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this headline"></a></h1>
+<section id="v1-0-0-unreleased">
+<h2>v1.0.0 (unreleased)<a class="headerlink" href="#v1-0-0-unreleased" title="Permalink to this headline"></a></h2>
+<section id="breaking-changes">
+<h3>Breaking changes<a class="headerlink" href="#breaking-changes" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.CircleDetector.html#pupil_recording_interface.CircleDetector" title="pupil_recording_interface.CircleDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">CircleDetector</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">CircleTracker</span></code>: removed <code class="docutils literal notranslate"><span class="pre">detection_method</span></code>, <code class="docutils literal notranslate"><span class="pre">marker_size</span></code>, <code class="docutils literal notranslate"><span class="pre">threshold_window_size</span></code>, <code class="docutils literal notranslate"><span class="pre">min_area</span></code>, <code class="docutils literal notranslate"><span class="pre">max_area</span></code>, <code class="docutils literal notranslate"><span class="pre">circularity</span></code>, <code class="docutils literal notranslate"><span class="pre">convexity</span></code>, and <code class="docutils literal notranslate"><span class="pre">inertia</span></code> arguments.</p></li>
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.VideoDisplay.html#pupil_recording_interface.VideoDisplay" title="pupil_recording_interface.VideoDisplay"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoDisplay</span></code></a>: removed <code class="docutils literal notranslate"><span class="pre">overlay_pupil</span></code>, <code class="docutils literal notranslate"><span class="pre">overlay_gaze</span></code>, <code class="docutils literal notranslate"><span class="pre">overlay_circle_marker</span></code> and <code class="docutils literal notranslate"><span class="pre">overlay_circle_grid</span></code> arguments.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseConfigurable</span></code>: removed <code class="docutils literal notranslate"><span class="pre">get_params</span></code> and <code class="docutils literal notranslate"><span class="pre">get_constructor_args</span></code> methods (now private methods with the same name).</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Packet</span></code>: removed <code class="docutils literal notranslate"><span class="pre">get</span></code> method.</p></li>
+</ul>
+</section>
+<section id="new-features">
+<h3>New features<a class="headerlink" href="#new-features" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>New <a class="reference internal" href="_generated/pupil_recording_interface.get_test_recording.html#pupil_recording_interface.get_test_recording" title="pupil_recording_interface.get_test_recording"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_test_recording()</span></code></a>, <a class="reference internal" href="_generated/pupil_recording_interface.load_gaze.html#pupil_recording_interface.load_gaze" title="pupil_recording_interface.load_gaze"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_gaze()</span></code></a>, <a class="reference internal" href="_generated/pupil_recording_interface.load_pupils.html#pupil_recording_interface.load_pupils" title="pupil_recording_interface.load_pupils"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_pupils()</span></code></a>, <a class="reference internal" href="_generated/pupil_recording_interface.load_markers.html#pupil_recording_interface.load_markers" title="pupil_recording_interface.load_markers"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_markers()</span></code></a>, <a class="reference internal" href="_generated/pupil_recording_interface.load_motion.html#pupil_recording_interface.load_motion" title="pupil_recording_interface.load_motion"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_motion()</span></code></a>, <a class="reference internal" href="_generated/pupil_recording_interface.merge_pupils.html#pupil_recording_interface.merge_pupils" title="pupil_recording_interface.merge_pupils"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_pupils()</span></code></a> functions.</p></li>
+<li><p>New <code class="xref py py-class docutils literal notranslate"><span class="pre">PupilReader</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerReader</span></code> classes.</p></li>
+<li><p>New <a class="reference internal" href="_generated/pupil_recording_interface.Calibration.html#pupil_recording_interface.Calibration.batch_run" title="pupil_recording_interface.Calibration.batch_run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Calibration.batch_run()</span></code></a>, <a class="reference internal" href="_generated/pupil_recording_interface.CircleDetector.html#pupil_recording_interface.CircleDetector.batch_run" title="pupil_recording_interface.CircleDetector.batch_run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CircleDetector.batch_run()</span></code></a>, <a class="reference internal" href="_generated/pupil_recording_interface.GazeMapper.html#pupil_recording_interface.GazeMapper.batch_run" title="pupil_recording_interface.GazeMapper.batch_run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GazeMapper.batch_run()</span></code></a> and <a class="reference internal" href="_generated/pupil_recording_interface.PupilDetector.html#pupil_recording_interface.PupilDetector.batch_run" title="pupil_recording_interface.PupilDetector.batch_run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PupilDetector.batch_run()</span></code></a> methods.</p></li>
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.CamParamEstimator.html#pupil_recording_interface.CamParamEstimator" title="pupil_recording_interface.CamParamEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">CamParamEstimator</span></code></a>: new <code class="docutils literal notranslate"><span class="pre">grid_scale</span></code> argument.</p></li>
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.VideoReader.html#pupil_recording_interface.VideoReader" title="pupil_recording_interface.VideoReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoReader</span></code></a>: new <code class="docutils literal notranslate"><span class="pre">undistort</span></code> argument.</p></li>
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.PupilDetector.html#pupil_recording_interface.PupilDetector" title="pupil_recording_interface.PupilDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">PupilDetector</span></code></a>: new <code class="docutils literal notranslate"><span class="pre">resolution</span></code> and <code class="docutils literal notranslate"><span class="pre">focal_length</span></code> arguments.</p></li>
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.Pipeline.html#pupil_recording_interface.Pipeline" title="pupil_recording_interface.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>: can now be used as a context manager.</p></li>
+<li><p><a class="reference internal" href="_generated/pupil_recording_interface.VideoReader.read_frames.html#pupil_recording_interface.VideoReader.read_frames" title="pupil_recording_interface.VideoReader.read_frames"><code class="xref py py-meth docutils literal notranslate"><span class="pre">VideoReader.read_frames()</span></code></a>: New <code class="docutils literal notranslate"><span class="pre">raw</span></code>, <code class="docutils literal notranslate"><span class="pre">return_timestamp</span></code> and <code class="docutils literal notranslate"><span class="pre">return_index</span></code> arguments</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-5-0-june-23rd-2021">
+<h2>v0.5.0 (June 23rd, 2021)<a class="headerlink" href="#v0-5-0-june-23rd-2021" title="Permalink to this headline"></a></h2>
+<section id="id1">
+<h3>Breaking changes<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>The test recording in the examples is not part of the package anymore but
+instead downloaded and cached through the <code class="docutils literal notranslate"><span class="pre">pooch</span></code> library.
+This means that <code class="docutils literal notranslate"><span class="pre">TEST_RECORDING</span></code> is not working anymore and is replaced
+by <code class="docutils literal notranslate"><span class="pre">get_test_recording</span></code>.</p></li>
+</ul>
+</section>
+<section id="bug-fixes-improvements">
+<h3>Bug fixes &amp; improvements<a class="headerlink" href="#bug-fixes-improvements" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Updated the default test recording to contain post-hoc gaze mapped by
+Pupil Player v3.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-4-1-february-22nd-2021">
+<h2>v0.4.1 (February 22nd, 2021)<a class="headerlink" href="#v0-4-1-february-22nd-2021" title="Permalink to this headline"></a></h2>
+<section id="id2">
+<h3>Bug fixes &amp; improvements<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">exposure_mode=&quot;auto&quot;</span></code> not working in <code class="docutils literal notranslate"><span class="pre">VideoDeviceUVC</span></code>.</p></li>
+<li><p>Fixed extrinsics not being saved by <code class="docutils literal notranslate"><span class="pre">CamParamEstimator</span></code>.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">available_controls</span></code> attribute to <code class="docutils literal notranslate"><span class="pre">VideoDeviceUVC</span></code> that returns
+legal values for UVC controls and <code class="docutils literal notranslate"><span class="pre">controls</span></code> can be set by assigning
+a mapping from control names to new values.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-4-0-january-28th-2021">
+<h2>v0.4.0 (January 28th, 2021)<a class="headerlink" href="#v0-4-0-january-28th-2021" title="Permalink to this headline"></a></h2>
+<section id="id3">
+<h3>New features<a class="headerlink" href="#id3" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Package is now available via conda from our own channel.</p></li>
+<li><p>Devices, streams and processes can now be used as context managers which
+starts and stops them automatically. This makes the <code class="docutils literal notranslate"><span class="pre">Session</span></code> context
+manager obsolete, which is being deprecated.</p></li>
+<li><p>New <code class="docutils literal notranslate"><span class="pre">VideoFileSyncer</span></code> process for syncing video streamed from files.</p></li>
+</ul>
+</section>
+<section id="id4">
+<h3>Bug fixes &amp; improvements<a class="headerlink" href="#id4" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">VideoDeviceUVC.get_frame_and_timestamp</span></code> not working in Jupyter
+notebook.</p></li>
+<li><p>Fixed bug in <code class="docutils literal notranslate"><span class="pre">load_dataset</span></code> for accelerometer and gyroscope streams.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-3-0-december-8th-2020">
+<h2>v0.3.0 (December 8th, 2020)<a class="headerlink" href="#v0-3-0-december-8th-2020" title="Permalink to this headline"></a></h2>
+<section id="id5">
+<h3>New features<a class="headerlink" href="#id5" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Key presses from <code class="docutils literal notranslate"><span class="pre">VideoDisplay</span></code> windows are broadcast and stored in the
+<code class="docutils literal notranslate"><span class="pre">keypresses</span></code> deque by the manager.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CircleGridDetector</span></code> now accepts a <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter to speed up
+detection at the expense of accuracy for high-resolution streams.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CamParamEstimator</span></code> now shows a persistent overlay of previously detected
+circle patterns for the stream it is attached to.</p></li>
+<li><p>Processes and pipelines have access to their parent stream via the
+<code class="docutils literal notranslate"><span class="pre">context</span></code> attribute, if applicable.</p></li>
+<li><p>Processes can add display hooks to the packet that are picked up by
+<code class="docutils literal notranslate"><span class="pre">VideoDisplay</span></code>.</p></li>
+<li><p>New <code class="docutils literal notranslate"><span class="pre">load_pldata</span></code> and <code class="docutils literal notranslate"><span class="pre">save_pldata</span></code> top-level methods.</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>Bug fixes &amp; improvements<a class="headerlink" href="#id6" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Fixed several bugs in <code class="docutils literal notranslate"><span class="pre">CamParamEstimator</span></code> regarding extrinsics estimation.</p></li>
+<li><p>Additionally save <code class="docutils literal notranslate"><span class="pre">info.player.json</span></code> at the start of the recording.</p></li>
+<li><p>Support loading source timestamps from .pldata files for video streams.</p></li>
+<li><p>Don’t reopen <code class="docutils literal notranslate"><span class="pre">VideoDisplay</span></code> windows closed by user.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-2-1-october-23rd-2020">
+<h2>v0.2.1 (October 23rd, 2020)<a class="headerlink" href="#v0-2-1-october-23rd-2020" title="Permalink to this headline"></a></h2>
+<section id="id7">
+<h3>Bug fixes &amp; improvements<a class="headerlink" href="#id7" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Set default exposure mode of <code class="docutils literal notranslate"><span class="pre">VideoDeviceUVC</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">max_width</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">VideoDisplay</span></code>.</p></li>
+<li><p>Disabled showing plots in Validation class.</p></li>
+<li><p>Fixed loading of broken recordings (with missing timestamps or corrupt
+pldata files).</p></li>
+<li><p>Fixed bug when loading 3D gaze with only binocular data.</p></li>
+<li><p>Fixed support for configs with <code class="docutils literal notranslate"><span class="pre">device_uid=None</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-2-0-october-6th-2020">
+<h2>v0.2.0 (October 6th, 2020)<a class="headerlink" href="#v0-2-0-october-6th-2020" title="Permalink to this headline"></a></h2>
+<section id="id8">
+<h3>New features<a class="headerlink" href="#id8" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Loaded gaze now contains the eye data that produced the mapping (left, right,
+both eyes) as well as the 3D eye centers and gaze normals.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">load_raw_frame</span></code>, <code class="docutils literal notranslate"><span class="pre">load_frame</span></code>, <code class="docutils literal notranslate"><span class="pre">read_frames</span></code> and <code class="docutils literal notranslate"><span class="pre">load_dataset</span></code>
+methods of <code class="docutils literal notranslate"><span class="pre">VideoReader</span></code> and <code class="docutils literal notranslate"><span class="pre">OpticalFlowReader</span></code> now accept both
+timestamps and indexes as parameters.</p></li>
+<li><p>Streams can be started even when the underlying devices aren’t connected
+with <code class="docutils literal notranslate"><span class="pre">allow_failure=True</span></code>.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">scale</span></code>, <code class="docutils literal notranslate"><span class="pre">detection_method</span></code> and <code class="docutils literal notranslate"><span class="pre">marker_size</span></code> parameters to
+<code class="docutils literal notranslate"><span class="pre">CircleDetector</span></code> to allow more fine-grained control over detection.
+<code class="docutils literal notranslate"><span class="pre">detection_method=&quot;vedb&quot;</span></code> is a new detection method that is less stable
+but significantly faster than the default.</p></li>
+<li><p>Added a <code class="docutils literal notranslate"><span class="pre">Validation</span></code> process that extends <code class="docutils literal notranslate"><span class="pre">Calibration</span></code>, adding plots
+showing the coverage of the world camera FOV by the calibration marker and
+of the eye camera FOV by the pupils.</p></li>
+<li><p>Added a new example <code class="docutils literal notranslate"><span class="pre">validate.py</span></code> that demonstrates usage of the new
+circle detection method and the validation.</p></li>
+<li><p>Added experimental support for a <code class="docutils literal notranslate"><span class="pre">PyAV</span></code>-based video encoder
+(<code class="docutils literal notranslate"><span class="pre">VideoEncoderAV</span></code>).</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">nan_format</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">StreamManager.format_status</span></code>.</p></li>
+</ul>
+</section>
+<section id="bug-fixes">
+<h3>Bug fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Fixed devices not being able to shut down when in restart loop.</p></li>
+<li><p>Fixed blank window opening when starting a <code class="docutils literal notranslate"><span class="pre">VideoDisplay</span></code> process with
+<code class="docutils literal notranslate"><span class="pre">paused=True</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-1-0-june-3rd-2020">
+<h2>v0.1.0 (June 3rd, 2020)<a class="headerlink" href="#v0-1-0-june-3rd-2020" title="Permalink to this headline"></a></h2>
+<p>Mostly feature-complete release that supports streaming, recording and
+processing of Pupil Core streams as well as reading of recordings.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="_generated/pupil_recording_interface.OpticalFlowReader.calculate_optical_flow.html" class="btn btn-neutral float-left" title="pupil_recording_interface.OpticalFlowReader.calculate_optical_flow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

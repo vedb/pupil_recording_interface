@@ -1,0 +1,40 @@
+﻿pupil\_recording\_interface.CircleGridDetector
+==============================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: CircleGridDetector
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CircleGridDetector.Config
+      ~CircleGridDetector.__init__
+      ~CircleGridDetector.detect_grid
+      ~CircleGridDetector.display_hook
+      ~CircleGridDetector.from_config
+      ~CircleGridDetector.process
+      ~CircleGridDetector.process_notifications
+      ~CircleGridDetector.process_packet
+      ~CircleGridDetector.start
+      ~CircleGridDetector.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CircleGridDetector.process_type
+   
+   

@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.load\_markers
+=========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: load_markers

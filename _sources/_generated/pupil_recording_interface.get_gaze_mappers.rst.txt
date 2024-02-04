@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.get\_gaze\_mappers
+==============================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autofunction:: get_gaze_mappers

@@ -1,0 +1,12 @@
+
+:orphan:
+
+.. _sphx_glr_auto_examples_offline_sg_execution_times:
+
+Computation times
+=================
+**00:21.196** total execution time for **auto_examples_offline** files:
+
++---------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_auto_examples_offline_1_plot_gaze_pipeline.py` (``1_plot_gaze_pipeline.py``) | 00:21.196 | 0.0 MB |
++---------------------------------------------------------------------------------------------+-----------+--------+

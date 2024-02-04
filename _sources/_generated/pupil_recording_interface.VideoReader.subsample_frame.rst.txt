@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.VideoReader.subsample\_frame
+========================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: VideoReader.subsample_frame

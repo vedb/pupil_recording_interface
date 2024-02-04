@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Examples &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Gaze mapping pipeline" href="offline/1_plot_gaze_pipeline.html" />
+    <link rel="prev" title="Custom devices, streams and processes" href="../custom.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../reading.html">Reading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streaming.html">Streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#offline-examples">Offline examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="offline/1_plot_gaze_pipeline.html">Gaze mapping pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#online-examples">Online examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="online/1_stream_recording.html">Stream from a recording</a></li>
+<li class="toctree-l3"><a class="reference internal" href="online/2_stream.html">Stream from connected devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="online/3_record.html">Record from connected devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="online/4_calibrate.html">Calibrate gaze mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="online/5_map_gaze.html">Run gaze mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="online/6_estimate_cam_params.html">Estimate camera parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Examples</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/auto_examples/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="examples">
+<span id="sphx-glr-auto-examples"></span><span id="id1"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline"></a></h1>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h2>
+<p>We recommend using pupil_recording_interface in a dedicated conda environment,
+especially if you want to use the online functionality. For Linux users, we
+provide an <a class="reference download internal" download="" href="../_downloads/e7ae70c6d8a45158a02f2b257dc49d37/environment-lnx64.yml"><code class="xref download docutils literal notranslate"><span class="pre">environment</span> <span class="pre">file</span></code></a>
+that you can download and set up with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment-lnx64.yml
+</pre></div>
+</div>
+<p>For the notebook versions of the examples, it is sufficient to have Jupyter
+notebook installed in your base environment alongside <code class="docutils literal notranslate"><span class="pre">nb_conda</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>base<span class="w"> </span>nb_conda
+</pre></div>
+</div>
+<p>Now you can open any of the example notebooks, go to <em>Kernel &gt; Change kernel</em>
+and select <em>Python [conda env:pri-examples]</em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For streaming from the Pupil Core cameras as a normal user on Linux you
+will also have to set up the udev rules specified in the
+<a class="reference internal" href="../installation.html#streaming-dependencies"><span class="std std-ref">streaming dependencies section</span></a>.</p>
+</div>
+<div class="sphx-glr-clear"></div></section>
+<section id="offline-examples">
+<span id="sphx-glr-auto-examples-offline"></span><span id="id2"></span><h2>Offline examples<a class="headerlink" href="#offline-examples" title="Permalink to this headline"></a></h2>
+<p>A collection of examples that demonstrate how pupil_recording_interface
+can be used to replace certain functionalities of Pupil Player.</p>
+<div class="sphx-glr-thumbcontainer" tooltip="This example shows how to perform post-hoc pupil detection, calibration marker detection, calib..."><figure class="align-default" id="id4">
+<img alt="Gaze mapping pipeline" src="../_images/sphx_glr_1_plot_gaze_pipeline_thumb.png" />
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="offline/1_plot_gaze_pipeline.html#sphx-glr-auto-examples-offline-1-plot-gaze-pipeline-py"><span class="std std-ref">Gaze mapping pipeline</span></a></span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-clear"></div></section>
+<section id="online-examples">
+<span id="sphx-glr-auto-examples-online"></span><span id="id3"></span><h2>Online examples<a class="headerlink" href="#online-examples" title="Permalink to this headline"></a></h2>
+<p>A collection of examples that demonstrate how pupil_recording_interface
+can be used to replace certain functionalities of Pupil Capture.</p>
+<div class="sphx-glr-thumbcontainer" tooltip="This example shows a dummy streaming setup that uses the recording included in the package. "><figure class="align-default" id="id5">
+<img alt="Stream from a recording" src="../_images/sphx_glr_1_stream_recording_thumb.png" />
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="online/1_stream_recording.html#sphx-glr-auto-examples-online-1-stream-recording-py"><span class="std std-ref">Stream from a recording</span></a></span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="This example shows how to stream video data from a connected Pupil Core headset."><figure class="align-default" id="id6">
+<img alt="Stream from connected devices" src="../_images/sphx_glr_2_stream_thumb.png" />
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="online/2_stream.html#sphx-glr-auto-examples-online-2-stream-py"><span class="std std-ref">Stream from connected devices</span></a></span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="This example shows how to record video streams from a connected Pupil Core headset."><figure class="align-default" id="id7">
+<img alt="Record from connected devices" src="../_images/sphx_glr_3_record_thumb.png" />
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="online/3_record.html#sphx-glr-auto-examples-online-3-record-py"><span class="std std-ref">Record from connected devices</span></a></span><a class="headerlink" href="#id7" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="This examples shows how to calibrate the gaze mapper with a connected Pupil Core headset."><figure class="align-default" id="id8">
+<img alt="Calibrate gaze mapping" src="../_images/sphx_glr_4_calibrate_thumb.png" />
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="online/4_calibrate.html#sphx-glr-auto-examples-online-4-calibrate-py"><span class="std std-ref">Calibrate gaze mapping</span></a></span><a class="headerlink" href="#id8" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="This example shows how to run gaze mapping with a connected Pupil Core headset."><figure class="align-default" id="id9">
+<img alt="Run gaze mapping" src="../_images/sphx_glr_5_map_gaze_thumb.png" />
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="online/5_map_gaze.html#sphx-glr-auto-examples-online-5-map-gaze-py"><span class="std std-ref">Run gaze mapping</span></a></span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="This examples shows how to estimate the intrinsic parameters of a connected Pupil Core world ca..."><figure class="align-default" id="id10">
+<img alt="Estimate camera parameters" src="../_images/sphx_glr_6_estimate_cam_params_thumb.png" />
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="online/6_estimate_cam_params.html#sphx-glr-auto-examples-online-6-estimate-cam-params-py"><span class="std std-ref">Estimate camera parameters</span></a></span><a class="headerlink" href="#id10" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-clear"></div><div class="sphx-glr-footer class sphx-glr-footer-gallery docutils container">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/07fcc19ba03226cd3d83d4e40ec44385/auto_examples_python.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">all</span> <span class="pre">examples</span> <span class="pre">in</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">auto_examples_python.zip</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/6f1e7a639e0699d6164445b55e6c116d/auto_examples_jupyter.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">all</span> <span class="pre">examples</span> <span class="pre">in</span> <span class="pre">Jupyter</span> <span class="pre">notebooks:</span> <span class="pre">auto_examples_jupyter.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../custom.html" class="btn btn-neutral float-left" title="Custom devices, streams and processes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="offline/1_plot_gaze_pipeline.html" class="btn btn-neutral float-right" title="Gaze mapping pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

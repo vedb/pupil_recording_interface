@@ -1,0 +1,41 @@
+﻿pupil\_recording\_interface.Calibration
+=======================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: Calibration
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Calibration.Config
+      ~Calibration.__init__
+      ~Calibration.batch_run
+      ~Calibration.calculate_calibration
+      ~Calibration.from_config
+      ~Calibration.process
+      ~Calibration.process_notifications
+      ~Calibration.process_packet
+      ~Calibration.save_result
+      ~Calibration.start
+      ~Calibration.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Calibration.process_type
+   
+   

@@ -1,0 +1,32 @@
+﻿pupil\_recording\_interface.MotionReader
+========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: MotionReader
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MotionReader.__init__
+      ~MotionReader.load_dataset
+      ~MotionReader.load_pldata
+      ~MotionReader.save_pldata
+      ~MotionReader.write_netcdf
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MotionReader.export_name
+   
+   

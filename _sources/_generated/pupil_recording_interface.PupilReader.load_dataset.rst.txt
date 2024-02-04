@@ -1,0 +1,6 @@
+﻿pupil\_recording\_interface.PupilReader.load\_dataset
+=====================================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. automethod:: PupilReader.load_dataset

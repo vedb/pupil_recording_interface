@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Streaming data &mdash; pupil_recording_interface 0.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Processing and recording data" href="processing.html" />
+    <link rel="prev" title="Reading data" href="reading.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pupil_recording_interface
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="reading.html">Reading data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Streaming data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#video-devices">Video devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#video-streams">Video streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multiple-streams">Multiple streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#uvc-camera-settings">UVC camera settings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="processing.html">Processing and recording data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Offline analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional.html">Additional features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom.html">Custom devices, streams and processes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pupil_recording_interface</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Streaming data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/streaming.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="streaming-data">
+<h1>Streaming data<a class="headerlink" href="#streaming-data" title="Permalink to this headline"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Make sure that you have installed the necessary
+<a class="reference internal" href="installation.html#streaming-dependencies"><span class="std std-ref">dependencies for streaming</span></a>. If not, you can
+still go through large parts of this guide by streaming from a recording
+included in the package instead of an actual Pupil Core device.</p>
+</div>
+<section id="video-devices">
+<h2>Video devices<a class="headerlink" href="#video-devices" title="Permalink to this headline"></a></h2>
+<p>The Pupil Core cameras can be accessed via the <a class="reference internal" href="_generated/pupil_recording_interface.VideoDeviceUVC.html#pupil_recording_interface.VideoDeviceUVC" title="pupil_recording_interface.VideoDeviceUVC"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoDeviceUVC</span></code></a>
+class:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pupil_recording_interface</span> <span class="k">as</span> <span class="nn">pri</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">world_cam</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoDeviceUVC</span><span class="p">(</span><span class="s2">&quot;Pupil Cam2 ID2&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1280</span><span class="p">,</span> <span class="mi">720</span><span class="p">),</span> <span class="mi">60</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">world_cam</span> 
+<span class="go">&lt;pupil_recording_interface.device.video.VideoDeviceUVC object at ...&gt;</span>
+</pre></div>
+</div>
+<p>The first argument is the name of the video device (<code class="docutils literal notranslate"><span class="pre">&quot;Cam1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Cam2&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;Cam3&quot;</span></code> for different generations of the Pupil hardware; <code class="docutils literal notranslate"><span class="pre">&quot;ID0&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;ID1&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;ID2&quot;</span></code> for left and right eye or world camera, respectively).
+If you don’t have a Pupil Core device or are missing the necessary
+dependencies, you can use a dummy device that streams from a recording instead:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">world_cam</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoFileDevice</span><span class="p">(</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="s2">&quot;world&quot;</span><span class="p">,</span> <span class="n">timestamps</span><span class="o">=</span><span class="s2">&quot;file&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A device needs to be started before streaming any data and stopped afterwards
+in order to release the resource. To facilitate this, using the device as a
+context manager automatically calls its <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code> methods upon
+entering and exiting, respectively.</p>
+<p>You can grab a video frame and its timestamp from the device with the
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">get_frame_and_timestamp()</span></code> method:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">world_cam</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">frame</span><span class="p">,</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">world_cam</span><span class="o">.</span><span class="n">get_frame_and_timestamp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(720, 1280, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span>
+<span class="go">1570725800.2383718</span>
+</pre></div>
+</div>
+</section>
+<section id="video-streams">
+<h2>Video streams<a class="headerlink" href="#video-streams" title="Permalink to this headline"></a></h2>
+<p>The <a class="reference internal" href="_generated/pupil_recording_interface.VideoStream.html#pupil_recording_interface.VideoStream" title="pupil_recording_interface.VideoStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoStream</span></code></a> class is a wrapper for video devices that handles
+functionality such as polling for new video frames and processing (pupil
+detection, recording, …):</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stream</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="p">(</span><span class="n">world_cam</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;world&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stream</span> 
+<span class="go">&lt;pupil_recording_interface.stream.VideoStream object at ...&gt;</span>
+</pre></div>
+</div>
+<p>The <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_packet()</span></code> returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">Packet</span></code> that bundles the data
+retrieved from the device. We use a context manager again to handle starting
+and stopping of the stream:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">stream</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">packet</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">get_packet</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">packet</span> 
+<span class="go">pupil_recording_interface.Packet with data:</span>
+<span class="go">* stream_name: world</span>
+<span class="go">* device_uid: world</span>
+<span class="go">* timestamp: 1570725800.2383718</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">packet</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(720, 1280, 3)</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-streams">
+<h2>Multiple streams<a class="headerlink" href="#multiple-streams" title="Permalink to this headline"></a></h2>
+<p>For simultaneous streaming from multiple devices, the <a class="reference internal" href="_generated/pupil_recording_interface.StreamManager.html#pupil_recording_interface.StreamManager" title="pupil_recording_interface.StreamManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamManager</span></code></a>
+is used. The manager dispatches each stream to a separate process and handles
+communication between those processes. Instead of constructing
+<a class="reference internal" href="_generated/pupil_recording_interface.VideoStream.html#pupil_recording_interface.VideoStream" title="pupil_recording_interface.VideoStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoStream</span></code></a> instances, we use a list of
+<a class="reference internal" href="_generated/pupil_recording_interface.VideoStream.html#pupil_recording_interface.VideoStream.Config" title="pupil_recording_interface.VideoStream.Config"><code class="xref py py-meth docutils literal notranslate"><span class="pre">VideoStream.Config()</span></code></a> instances:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;uvc&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;Pupil Cam2 ID2&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;world&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">1280</span><span class="p">,</span> <span class="mi">720</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">fps</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;uvc&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;Pupil Cam2 ID0&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eye0&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">fps</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;uvc&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;Pupil Cam2 ID1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eye1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">fps</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The manager then constructs the proper streams and devices from this list.
+With <code class="docutils literal notranslate"><span class="pre">duration=30</span></code>, the manager will stop streaming after 30 seconds.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The concept of pipelines and processes such as <a class="reference internal" href="_generated/pupil_recording_interface.VideoDisplay.html#pupil_recording_interface.VideoDisplay" title="pupil_recording_interface.VideoDisplay"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoDisplay</span></code></a>
+is explained in detail in <a class="reference internal" href="processing.html#processing"><span class="std std-ref">Processing and recording data</span></a> and the config mechanism
+in <a class="reference internal" href="custom.html#custom"><span class="std std-ref">Custom devices, streams and processes</span></a>.</p>
+</div>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">StreamManager</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">streams</span> 
+<span class="go">{&#39;world&#39;: &lt;...&gt;, &#39;eye0&#39;: &lt;...&gt;, &#39;eye1&#39;: &lt;...&gt;}</span>
+</pre></div>
+</div>
+<p>Alternatively, use this dummy configuration:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;video_file&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;world&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;video_file&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;eye0&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span>    <span class="n">pri</span><span class="o">.</span><span class="n">VideoStream</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;video_file&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">device_uid</span><span class="o">=</span><span class="s2">&quot;eye1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">pipeline</span><span class="o">=</span><span class="p">[</span><span class="n">pri</span><span class="o">.</span><span class="n">VideoDisplay</span><span class="o">.</span><span class="n">Config</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">StreamManager</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">configs</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">folder</span><span class="o">=</span><span class="n">pri</span><span class="o">.</span><span class="n">get_test_recording</span><span class="p">(),</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;read&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we can run the manager to start streaming. You should see three windows
+opening with the eye and world video streams.</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The manager will automatically stop after the specified duration and can also
+be stopped with a keyboard interrupt. When no duration is set, the manager
+will run indefinitely.</p>
+<p>It is also possible to run the manager in a non-blocking fashion
+by using it as a context manager. This allows us for example to print the
+current frame rates for each stream to the command line:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">manager</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">while</span> <span class="ow">not</span> <span class="n">manager</span><span class="o">.</span><span class="n">stopped</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">manager</span><span class="o">.</span><span class="n">all_streams_running</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">manager</span><span class="o">.</span><span class="n">format_status</span><span class="p">(</span><span class="s2">&quot;fps&quot;</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> 
+<span class="go">eye0: ..., eye1: ..., world: ...</span>
+</pre></div>
+</div>
+<p>Self-contained scripts and Jupyter notebooks for streaming that you can
+download and modify can be found in the
+<a class="reference internal" href="auto_examples/index.html#online-examples"><span class="std std-ref">online examples section</span></a>.</p>
+</section>
+<section id="uvc-camera-settings">
+<h2>UVC camera settings<a class="headerlink" href="#uvc-camera-settings" title="Permalink to this headline"></a></h2>
+<p>The Pupil Core cameras implement the USB Video Class (UVC) protocol and Pupil
+Labs provides a Python wrapper for accessing the cameras called <code class="docutils literal notranslate"><span class="pre">pyuvc</span></code>.
+In turn, pupil_recording_interface provides a high-level interface to this via
+the <a class="reference internal" href="_generated/pupil_recording_interface.VideoDeviceUVC.html#pupil_recording_interface.VideoDeviceUVC" title="pupil_recording_interface.VideoDeviceUVC"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoDeviceUVC</span></code></a> class.</p>
+<p>Possible combinations of resolutions and FPS can be queried via the
+<code class="docutils literal notranslate"><span class="pre">available_modes</span></code> attribute, returning a list of
+<code class="docutils literal notranslate"><span class="pre">(horizontal_res,</span> <span class="pre">vertical_res,</span> <span class="pre">fps)</span></code> tuples:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">world_cam</span><span class="o">.</span><span class="n">available_modes</span><span class="p">)</span> 
+<span class="go">[(1920, 1080, 30),</span>
+<span class="go"> (640, 480, 120),</span>
+<span class="go"> (640, 480, 90),</span>
+<span class="go"> (640, 480, 60),</span>
+<span class="go"> (640, 480, 30),</span>
+<span class="go"> (1280, 720, 60),</span>
+<span class="go"> (1280, 720, 30),</span>
+<span class="go"> (1024, 768, 30),</span>
+<span class="go"> (800, 600, 60),</span>
+<span class="go"> (1280, 1024, 30),</span>
+<span class="go"> (320, 240, 120)]</span>
+</pre></div>
+</div>
+<p>Other settings (called controls) together with valid ranges of values can be
+obtained via <code class="docutils literal notranslate"><span class="pre">available_controls</span></code>.</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">world_cam</span><span class="o">.</span><span class="n">available_controls</span><span class="p">)</span> 
+<span class="go">{&#39;Absolute Exposure Time&#39;: range(1, 500),</span>
+<span class="go"> &#39;Auto Exposure Mode&#39;: {&#39;aperture priority mode&#39;: 8,</span>
+<span class="go">                        &#39;auto mode&#39;: 2,</span>
+<span class="go">                        &#39;manual mode&#39;: 1,</span>
+<span class="go">                        &#39;shutter priority mode&#39;: 4},</span>
+<span class="go"> &#39;Auto Exposure Priority&#39;: (0, 1),</span>
+<span class="go"> &#39;Backlight Compensation&#39;: range(0, 2),</span>
+<span class="go"> &#39;Brightness&#39;: range(-64, 64),</span>
+<span class="go"> &#39;Contrast&#39;: range(0, 64),</span>
+<span class="go"> &#39;Gain&#39;: range(0, 100),</span>
+<span class="go"> &#39;Gamma&#39;: range(72, 500),</span>
+<span class="go"> &#39;Hue&#39;: range(-40, 40),</span>
+<span class="go"> &#39;Power Line frequency&#39;: {&#39;50Hz&#39;: 1, &#39;60Hz&#39;: 2, &#39;Disabled&#39;: 0},</span>
+<span class="go"> &#39;Saturation&#39;: range(0, 128),</span>
+<span class="go"> &#39;Sharpness&#39;: range(0, 6),</span>
+<span class="go"> &#39;White Balance temperature&#39;: range(2800, 6500),</span>
+<span class="go"> &#39;White Balance temperature,Auto&#39;: (0, 1)}</span>
+</pre></div>
+</div>
+<p>The current settings of a running device are stored in the <code class="docutils literal notranslate"><span class="pre">controls</span></code>
+attribute.</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">world_cam</span><span class="p">:</span> 
+<span class="gp">... </span>    <span class="n">pprint</span><span class="p">(</span><span class="n">world_cam</span><span class="o">.</span><span class="n">controls</span><span class="p">)</span>
+<span class="go">{&#39;Absolute Exposure Time&#39;: 32,</span>
+<span class="go"> &#39;Auto Exposure Mode&#39;: 8,</span>
+<span class="go"> &#39;Auto Exposure Priority&#39;: 1,</span>
+<span class="go"> &#39;Backlight Compensation&#39;: 1,</span>
+<span class="go"> &#39;Brightness&#39;: 0,</span>
+<span class="go"> &#39;Contrast&#39;: 32,</span>
+<span class="go"> &#39;Gain&#39;: 0,</span>
+<span class="go"> &#39;Gamma&#39;: 100,</span>
+<span class="go"> &#39;Hue&#39;: 0,</span>
+<span class="go"> &#39;Power Line frequency&#39;: 1,</span>
+<span class="go"> &#39;Saturation&#39;: 60,</span>
+<span class="go"> &#39;Sharpness&#39;: 2,</span>
+<span class="go"> &#39;White Balance temperature&#39;: 4600,</span>
+<span class="go"> &#39;White Balance temperature,Auto&#39;: 1}</span>
+</pre></div>
+</div>
+<p>You can also assign controls by passing a dictionary as the <code class="docutils literal notranslate"><span class="pre">controls</span></code>
+constructor argument…</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">world_cam</span> <span class="o">=</span> <span class="n">pri</span><span class="o">.</span><span class="n">VideoDeviceUVC</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;Pupil Cam2 ID2&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1280</span><span class="p">,</span> <span class="mi">720</span><span class="p">),</span> <span class="mi">30</span><span class="p">,</span> <span class="n">controls</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Gamma&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">... </span><span class="k">with</span> <span class="n">world_cam</span><span class="p">:</span> 
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">world_cam</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="s2">&quot;Gamma&quot;</span><span class="p">])</span>
+<span class="go">200</span>
+</pre></div>
+</div>
+<p>…or to a running device in the same manner:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">world_cam</span><span class="p">:</span> 
+<span class="gp">... </span>    <span class="n">world_cam</span><span class="o">.</span><span class="n">controls</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Gamma&quot;</span><span class="p">:</span> <span class="mi">120</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">world_cam</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="s2">&quot;Gamma&quot;</span><span class="p">])</span>
+<span class="go">120</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reading.html" class="btn btn-neutral float-left" title="Reading data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="processing.html" class="btn btn-neutral float-right" title="Processing and recording data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Peter Hausamann / The Visual Experience Database.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

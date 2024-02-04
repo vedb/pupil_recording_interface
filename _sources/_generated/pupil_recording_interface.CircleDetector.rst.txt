@@ -1,0 +1,41 @@
+﻿pupil\_recording\_interface.CircleDetector
+==========================================
+
+.. currentmodule:: pupil_recording_interface
+
+.. autoclass:: CircleDetector
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CircleDetector.Config
+      ~CircleDetector.__init__
+      ~CircleDetector.batch_run
+      ~CircleDetector.detect_circle
+      ~CircleDetector.display_hook
+      ~CircleDetector.from_config
+      ~CircleDetector.process
+      ~CircleDetector.process_notifications
+      ~CircleDetector.process_packet
+      ~CircleDetector.start
+      ~CircleDetector.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CircleDetector.process_type
+   
+   

@@ -1,0 +1,248 @@
+:orphan:
+
+
+
+.. _sphx_glr_auto_examples:
+
+.. _examples:
+
+Examples
+========
+
+Prerequisites
+-------------
+
+We recommend using pupil_recording_interface in a dedicated conda environment,
+especially if you want to use the online functionality. For Linux users, we
+provide an :download:`environment file<../_static/envs/environment-lnx64.yml>`
+that you can download and set up with:
+
+.. code-block:: console
+
+    $ conda env create -f environment-lnx64.yml
+
+For the notebook versions of the examples, it is sufficient to have Jupyter
+notebook installed in your base environment alongside ``nb_conda``:
+
+.. code-block:: console
+
+    $ conda install -n base nb_conda
+
+Now you can open any of the example notebooks, go to *Kernel > Change kernel*
+and select *Python [conda env:pri-examples]*.
+
+.. note::
+
+    For streaming from the Pupil Core cameras as a normal user on Linux you
+    will also have to set up the udev rules specified in the
+    :ref:`streaming dependencies section<streaming_dependencies>`.
+
+
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. _sphx_glr_auto_examples_offline:
+
+.. _offline_examples:
+
+Offline examples
+----------------
+
+A collection of examples that demonstrate how pupil_recording_interface
+can be used to replace certain functionalities of Pupil Player.
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to perform post-hoc pupil detection, calibration marker detection, calib...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/offline/images/thumb/sphx_glr_1_plot_gaze_pipeline_thumb.png
+     :alt: Gaze mapping pipeline
+
+     :ref:`sphx_glr_auto_examples_offline_1_plot_gaze_pipeline.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/offline/1_plot_gaze_pipeline
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. _sphx_glr_auto_examples_online:
+
+.. _online_examples:
+
+Online examples
+---------------
+
+A collection of examples that demonstrate how pupil_recording_interface
+can be used to replace certain functionalities of Pupil Capture.
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows a dummy streaming setup that uses the recording included in the package. ">
+
+.. only:: html
+
+ .. figure:: /auto_examples/online/images/thumb/sphx_glr_1_stream_recording_thumb.png
+     :alt: Stream from a recording
+
+     :ref:`sphx_glr_auto_examples_online_1_stream_recording.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/online/1_stream_recording
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to stream video data from a connected Pupil Core headset.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/online/images/thumb/sphx_glr_2_stream_thumb.png
+     :alt: Stream from connected devices
+
+     :ref:`sphx_glr_auto_examples_online_2_stream.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/online/2_stream
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to record video streams from a connected Pupil Core headset.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/online/images/thumb/sphx_glr_3_record_thumb.png
+     :alt: Record from connected devices
+
+     :ref:`sphx_glr_auto_examples_online_3_record.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/online/3_record
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This examples shows how to calibrate the gaze mapper with a connected Pupil Core headset.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/online/images/thumb/sphx_glr_4_calibrate_thumb.png
+     :alt: Calibrate gaze mapping
+
+     :ref:`sphx_glr_auto_examples_online_4_calibrate.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/online/4_calibrate
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to run gaze mapping with a connected Pupil Core headset.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/online/images/thumb/sphx_glr_5_map_gaze_thumb.png
+     :alt: Run gaze mapping
+
+     :ref:`sphx_glr_auto_examples_online_5_map_gaze.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/online/5_map_gaze
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This examples shows how to estimate the intrinsic parameters of a connected Pupil Core world ca...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/online/images/thumb/sphx_glr_6_estimate_cam_params_thumb.png
+     :alt: Estimate camera parameters
+
+     :ref:`sphx_glr_auto_examples_online_6_estimate_cam_params.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/online/6_estimate_cam_params
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. only :: html
+
+ .. container:: sphx-glr-footer
+    :class: sphx-glr-footer-gallery
+
+
+  .. container:: sphx-glr-download sphx-glr-download-python
+
+    :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
+
+
+
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_
