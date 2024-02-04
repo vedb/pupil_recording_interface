@@ -97,20 +97,13 @@ jobs:
           make -C docs/ html
           make -C docs/ doctest
       - name: Deploy docs on master
-#        if: github.ref == 'refs/heads/master'
-        run: |
-          sudo mkdir /docs -m 777
-          touch docs/_build/html/.nojekyll
-          mv docs/_build/html/* /docs
-          git config user.name CI
-          git config user.email ""
-          git checkout -f --orphan gh-pages
-          git rm --cached -rfq .
-          git clean -fxdq
-          mv /docs/* .
-          git add .
-          git commit -qm "Update docs"
-          git push -f --set-upstream origin gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+#        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
+          force_orphan: true
 
   black:
     runs-on: ubuntu-20.04
