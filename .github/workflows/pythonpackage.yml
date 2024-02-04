@@ -9,7 +9,7 @@ jobs:
     strategy:
       max-parallel: 3
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
@@ -116,10 +116,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
-      - name: Set up Python 3.6
+      - name: Set up Python 3.
         uses: actions/setup-python@v1
         with:
-          python-version: 3.6
+          python-version: 3.8
       - name: Check black code style
         run: |
           pip install black==19.10b0
