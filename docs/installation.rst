@@ -8,7 +8,7 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    $ pip install opencv-python git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
 
 or via ``conda`` from our own channel:
 
