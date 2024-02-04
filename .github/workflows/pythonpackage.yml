@@ -5,7 +5,7 @@ on: [push]
 jobs:
 
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       max-parallel: 3
       matrix:
@@ -30,7 +30,7 @@ jobs:
           pytest
 
   conda:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
@@ -53,7 +53,7 @@ jobs:
           pytest
 
   conda-build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
@@ -74,7 +74,7 @@ jobs:
           anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u vedb /usr/share/miniconda/conda-bld/noarch/pupil_recording_interface*.tar.bz2 --force
 
   docs:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
@@ -113,7 +113,7 @@ jobs:
           git push -f --set-upstream origin privpage
 
   black:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python 3.6
