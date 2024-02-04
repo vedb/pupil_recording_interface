@@ -31,7 +31,7 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install pupil-recording-interface
 
 or via ``conda`` from our own channel:
 

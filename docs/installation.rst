@@ -8,13 +8,19 @@ pupil_recording_interface can be installed via ``pip``:
 
 .. code-block:: console
 
-    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
+    $ pip install pupil-recording-interface
 
 or via ``conda`` from our own channel:
 
 .. code-block:: console
 
     $ conda install -c vedb -c conda-forge pupil_recording_interface
+
+The latest unreleased version can be installed from GitHub:
+
+.. code-block:: console
+
+    $ pip install git+https://github.com/vedb/pupil_recording_interface.git
 
 
 .. _optional_dependencies:
