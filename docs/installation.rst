@@ -130,19 +130,20 @@ will need to install our own ``ffmpeg`` package instead:
 Pupil detection
 ...............
 
-Pupil detection is implemented based on Pupil Labs' `pupil-detectors`_
+Pupil detection is implemented based on Pupil Labs' `pupil-detectors`_ and `pye3d`_ packages.
 package.
 
 .. _pupil-detectors: https://github.com/pupil-labs/pupil-detectors
+.. _pye3d: https://github.com/pupil-labs/pye3d-detector
 
 Linux
 ~~~~~
 
-A conda package is available for Linux:
+Conda packages are available for Linux:
 
 .. code-block:: console
 
-    $ conda install -c vedb -c conda-forge pupil-detectors
+    $ conda install -c vedb -c conda-forge pupil-detectors pye3d
 
 Windows and MacOS
 ~~~~~~~~~~~~~~~~~
@@ -151,10 +152,10 @@ Install via pip:
 
 .. code-block:: console
 
-    $ pip install pupil-detectors
+    $ pip install pupil-detectors pye3d
 
 On MacOS, you will probably need to install some build dependencies. Please
-refer to the `pupil-detectors`_ GitHub pages for details.
+refer to the `pupil-detectors`_ and `pye3d`_ GitHub pages for details.
 
 
 .. _realsense_dependencies:

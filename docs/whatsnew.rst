@@ -20,7 +20,7 @@ New features
 * New :py:meth:`.Calibration.batch_run`, :py:meth:`.CircleDetector.batch_run`, :py:meth:`.GazeMapper.batch_run` and :py:meth:`.PupilDetector.batch_run` methods.
 * :py:class:`.CamParamEstimator`: new ``grid_scale`` argument.
 * :py:class:`.VideoReader`: new ``undistort`` argument.
-* :py:class:`.PupilDetector`: new ``resolution`` and ``focal_length`` arguments.
+* :py:class:`.PupilDetector`: added support for ``method="pye3d"``; new ``resolution`` and ``focal_length`` arguments.
 * :py:class:`.Pipeline`: can now be used as a context manager.
 * :py:meth:`.VideoReader.read_frames`: New ``raw``, ``return_timestamp`` and ``return_index`` arguments
 
