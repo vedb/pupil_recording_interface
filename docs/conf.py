@@ -48,6 +48,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "matplotlib.sphinxext.plot_directive",
     "sphinx_gallery.gen_gallery",
+    "sphinxcontrib.jquery",
 ]
 
 autosummary_generate = True
