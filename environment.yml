@@ -43,5 +43,5 @@ dependencies:
   - pre_commit
   - sphinx=4.0
   - sphinx_rtd_theme
-  - sphinx-gallery
+  - sphinx-gallery==0.10.0
   - jinja2=2
